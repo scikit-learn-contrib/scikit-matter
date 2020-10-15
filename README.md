@@ -1,5 +1,7 @@
 # Sklearn-cosmo
 
+![Test](https://github.com/cosmo-epfl/sklearn-cosmo/workflows/Test/badge.svg)
+
 A collection of scikit-learn compatible utilities that implement methods
 developed in the COSMO laboratory
 
