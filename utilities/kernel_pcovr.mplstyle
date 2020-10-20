@@ -1,0 +1,67 @@
+
+
+# AXES
+axes.edgecolor : (0.1,0.1,0.1) #Normalized RGB colours (from 0 to 1 instead of 0 to 255)
+axes.grid : False
+axes.labelcolor : (0.1,0.1,0.1)
+axes.labelsize : 12
+axes.linewidth : 1.0
+axes.prop_cycle : cycler('color', [ '0046b8', '2464c9', '4d87e3', '7899cf', '8ea1bf']) #hex colours
+axes.spines.bottom : True
+axes.spines.left : True
+axes.spines.right : True 
+axes.spines.top : True
+axes.titlesize : 16
+
+# TEXT OPTIONS
+font.size : 12
+legend.fontsize : 12
+figure.titlesize : large      ## size of the figure title (Figure.suptitle())
+                                  ## when plotting very large data sets,
+
+# FIGURE OUTPUT 
+text.color : black
+figure.dpi : 150
+figure.figsize : 6, 5
+savefig.dpi : 200
+
+# GRID
+grid.alpha : 0.7
+grid.linestyle : --
+grid.linewidth : 0.6
+hatch.linewidth : 1.0
+
+# LINES
+lines.linewidth : 1.0
+lines.markeredgewidth : 0.5 
+lines.markeredgecolor : black 
+lines.markersize : 10 
+patch.linewidth : 0.4 
+patch.edgecolor : black
+patch.force_edgecolor : True
+patch.antialiased : True
+
+# SCATTER PLOT
+scatter.marker : o 
+
+# TICKS
+xtick.bottom : True
+xtick.color : black
+xtick.direction : in
+xtick.labelsize : 12
+xtick.major.pad : 5.0
+xtick.major.size : 4.0
+xtick.minor.pad : 5.0
+xtick.minor.size : 2.0
+xtick.minor.visible : True
+xtick.top : True
+ytick.color : black
+ytick.direction : in
+ytick.labelsize : 12
+ytick.left : True
+ytick.major.pad : 5.0
+ytick.major.size : 4.0
+ytick.minor.pad : 5.0
+ytick.minor.size : 2.0
+ytick.minor.visible : True
+ytick.right : True
