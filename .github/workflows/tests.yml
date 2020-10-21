@@ -26,3 +26,6 @@ jobs:
       - name: Run tests
         run: |
           tox -e py
+      - uses: codecov/codecov-action@v1
+        with:
+          file: ./.tox/coverage.xml
