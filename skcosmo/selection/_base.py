@@ -1,7 +1,7 @@
 from abc import abstractmethod
 
 
-class _BaseSelection():
+class _BaseSelection:
     """
     Super-class defined for selection methods
 
@@ -53,7 +53,7 @@ class _BaseSelection():
         self.tol = tolerance
         self.progress_bar = progress_bar
 
-        if(mixing < 1):
+        if mixing < 1:
             try:
                 assert "Y" in kwargs
                 self.Y = kwargs.get("Y")
@@ -65,21 +65,21 @@ class _BaseSelection():
 
         self.idx = []
 
-        if(precompute is not None):
-            self.idx = self.compute(precompute)
+        if precompute is not None:
+            self.idx = self.select(precompute)
 
     def progress(self, iterable):
         """Option to show the progress of an iterable"""
-        if(callable(self.progress_bar)):
+        if callable(self.progress_bar):
             return self.progress_bar(iterable)
-        elif(self.progress_bar == True):
+        if self.progress_bar:
             try:
                 from tqdm import tqdm
                 return tqdm(iterable)
             except ModuleNotFoundError:
                 return iterable
-        else:
-            return iterable
+
+        return iterable
 
     @abstractmethod
     def select(self, n, **kwargs):

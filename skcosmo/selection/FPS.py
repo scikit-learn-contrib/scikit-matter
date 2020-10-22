@@ -1,11 +1,11 @@
-from ._base import _BaseSelection
-import numpy as np
 from abc import abstractmethod
+import numpy as np
 import scipy
 
+from ._base import _BaseSelection
 
 def calculate_pcov_distances(points, ref_idx, idxs=None):
-    if(idxs is None):
+    if idxs is None:
         idxs = range(points.shape[0])
     return np.array([np.real(points[j][j] - 2*points[j][ref_idx] + points[ref_idx][ref_idx]) for j in idxs])
 
@@ -68,7 +68,7 @@ class _FPS(_BaseSelection):
 
         self.product = self.get_product()
 
-        if(idxs is not None):
+        if idxs is not None:
             self.idx = idxs
         else:
             self.idx = [np.random.randint(self.product.shape[0])]
@@ -87,23 +87,22 @@ class _FPS(_BaseSelection):
         -------
         idx: list of n selections
         """
-        if(len(self.idx) > n):
+        if len(self.idx) > n:
             return self.idx[:n]
-        else:
 
-            # Loop over the remaining points...
-            for i in self.progress(range(len(self.idx)-1, n-1)):
-                for j in np.where(self.distances > 0)[0]:
-                    self.distances[j] = min(self.distances[j],
-                                            calculate_pcov_distances(self.product,
-                                                                     self.idx[i], [j]))
-                self.idx.append(np.argmax(self.distances))
-                self.distance_when_selected[self.idx[-1]
-                                            ] = self.distances[self.idx[-1]]
+        # Loop over the remaining points...
+        for i in self.progress(range(len(self.idx)-1, n-1)):
+            for j in np.where(self.distances > 0)[0]:
+                self.distances[j] = min(self.distances[j],
+                                        calculate_pcov_distances(self.product,
+                                                                 self.idx[i], [j]))
+            self.idx.append(np.argmax(self.distances))
+            self.distance_when_selected[self.idx[-1]
+                                        ] = self.distances[self.idx[-1]]
 
-                if np.abs(self.distances).max() < self.tol:
-                    return self.idx
-            return self.idx
+            if np.abs(self.distances).max() < self.tol:
+                return self.idx
+        return self.idx
 
     @abstractmethod
     def get_product(self):
@@ -125,9 +124,9 @@ class sampleFPS(_FPS):
         """
 
         K = np.zeros((self.A.shape[0], self.A.shape[0]))
-        if(self.mixing < 1):
+        if self.mixing < 1:
             K += (1 - self.mixing) * self.Y @ self.Y.T
-        if(self.mixing > 0):
+        if self.mixing > 0:
             K += (self.mixing) * self.A @ self.A.T
 
         return K
@@ -151,7 +150,7 @@ class featureFPS(_FPS):
 
         cov = self.A.T @ self.A
 
-        if(self.mixing < 1):
+        if self.mixing < 1:
             # changing these next two lines can cause a LARGE error
             Cinv = np.linalg.pinv(cov)
             Cisqrt = scipy.linalg.sqrtm(Cinv)
@@ -163,7 +162,7 @@ class featureFPS(_FPS):
 
             C += (1 - self.mixing) * Y_hat @ Y_hat.T
 
-        if(self.mixing > 0):
+        if self.mixing > 0:
             C += (self.mixing) * cov
 
         return C
