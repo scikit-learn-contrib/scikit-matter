@@ -1,0 +1,32 @@
+[build-system]
+requires = [
+    "setuptools",
+    "wheel",
+    "attr",
+]
+build-backend = "setuptools.build_meta"
+
+[tool.tox]
+legacy_tox_ini = """
+[tox]
+
+[testenv]
+deps =
+    coverage[toml]
+
+commands =
+    coverage run -m unittest discover -p "*.py" -s tests
+    coverage xml
+"""
+
+[tool.coverage.run]
+branch = true
+data_file = '.tox/.coverage'
+
+[tool.coverage.report]
+include = [
+    "skcosmo/*"
+]
+
+[tool.coverage.xml]
+output = '.tox/coverage.xml'
