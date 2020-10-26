@@ -1,6 +1,7 @@
 # Sklearn-cosmo
 
-![Test](https://github.com/cosmo-epfl/sklearn-cosmo/workflows/Test/badge.svg)
+[![Test](https://github.com/cosmo-epfl/sklearn-cosmo/workflows/Test/badge.svg)](https://github.com/cosmo-epfl/sklearn-cosmo/actions?query=workflow%3ATest)
+[![codecov](https://codecov.io/gh/cosmo-epfl/sklearn-cosmo/branch/main/graph/badge.svg?token=UZJPJG34SM)](https://codecov.io/gh/cosmo-epfl/sklearn-cosmo/)
 
 A collection of scikit-learn compatible utilities that implement methods
 developed in the COSMO laboratory
