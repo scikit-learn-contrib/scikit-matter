@@ -55,4 +55,5 @@ editors](https://black.readthedocs.io/en/stable/editor_integration.html).
 
 ## License and developers
 
-TODO
+This project is distributed under the BSD-3-Clauses license. By contributing to
+it you agree to distribute your changes under the same license.
