@@ -7,7 +7,7 @@ from ._base import _BaseSelection
 
 class _CUR(_BaseSelection):
     """
-    Super-class defined for CUR selection methods
+    Base class for CUR selection methods
 
     Parameters
     ----------
