@@ -1,6 +1,6 @@
 import numpy as np
 
-def feature_orthogonalizer(self, idx, A_proxy, Y_proxy, tol=1E-12):
+def feature_orthogonalizer(idx, A_proxy, Y_proxy, tol=1E-12):
     if A_proxy is not None:
         Aci = A_proxy[:, idx]
 
@@ -18,7 +18,7 @@ def feature_orthogonalizer(self, idx, A_proxy, Y_proxy, tol=1E-12):
             A_proxy[:, i] -= v * np.dot(v, A_proxy[:, i])
     return A_proxy, Y_proxy
 
-def sample_orthogonalizer(self, idx, A_proxy, Y_proxy, tol=1E-12):
+def sample_orthogonalizer(idx, A_proxy, Y_proxy, tol=1E-12):
     if A_proxy is not None:
         if Y_proxy is not None:
             Y_proxy -= A_proxy @ (np.linalg.pinv(
@@ -27,7 +27,7 @@ def sample_orthogonalizer(self, idx, A_proxy, Y_proxy, tol=1E-12):
 
         Ajnorm = np.dot(A_proxy[idx[-1]],
                         A_proxy[idx[-1]])
-        for i in range(self.A.shape[0]):
+        for i in range(A_proxy.shape[0]):
             A_proxy[i] -= (np.dot(A_proxy[i], A_proxy[idx[-1]]
                                          ) / Ajnorm) * A_proxy[idx[-1]]
     return A_proxy, Y_proxy
