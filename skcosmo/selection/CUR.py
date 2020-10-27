@@ -6,6 +6,7 @@ from skcosmo.pcovr.pcovr_distances import get_Ct, get_Kt
 from .orthogonalizers import feature_orthogonalizer, sample_orthogonalizer
 from ._base import _BaseSelection
 
+
 class _CUR(_BaseSelection):
     """
     Base class for CUR selection methods
@@ -27,8 +28,7 @@ class _CUR(_BaseSelection):
 
     # """
 
-    def __init__(self, iterative=True,
-                 tolerance=1E-12, k=1, **kwargs):
+    def __init__(self, iterative=True, tolerance=1e-12, k=1, **kwargs):
 
         self.k = k
         self.iter = iterative
@@ -52,66 +52,68 @@ class _CUR(_BaseSelection):
 
         for i in range(len(self.idx), n):
             # try:
-                if self.iter:
-                    v, U = speig(self.product, k=self.k, tol=self.tol)
-                    U = U[:, np.flip(np.argsort(v))]
-                    pi = (np.real(U)[:, :self.k]**2.0).sum(axis=1)
-                pi[self.idx] = 0.0
-                self.idx.append(pi.argmax())
+            if self.iter:
+                v, U = speig(self.product, k=self.k, tol=self.tol)
+                U = U[:, np.flip(np.argsort(v))]
+                pi = (np.real(U)[:, : self.k] ** 2.0).sum(axis=1)
+            pi[self.idx] = 0.0
+            self.idx.append(pi.argmax())
 
-                self.orthogonalize()
-                self.product = self.get_product()
+            self.orthogonalize()
+            self.product = self.get_product()
 
-                if np.isnan(self.product).any():
-                    print(f"The product matrix has rank {i}. " + \
-                          f"n_select reduced from {n} to {i}.")
-                    return self.idx
-            # except: # Left as bare except because exception is ArpackError
-            #     print(f"The product matrix has rank {i}. " + \
-            #           f"n_select reduced from {n} to {i}.")
-            #     return self.idx
+            if np.isnan(self.product).any():
+                print(
+                    f"The product matrix has rank {i}. "
+                    + f"n_select reduced from {n} to {i}."
+                )
+                return self.idx
+        # except: # Left as bare except because exception is ArpackError
+        #     print(f"The product matrix has rank {i}. " + \
+        #           f"n_select reduced from {n} to {i}.")
+        #     return self.idx
 
         return self.idx
 
     @abstractmethod
     def get_product(self):
-        """Abstract method for computing the inner or outer product of the input matrices
-        """
+        """Abstract method for computing the inner or outer product of the input matrices"""
         return
 
     @abstractmethod
     def orthogonalize(self):
-        """Method to orthogonalize matrices
-        """
+        """Method to orthogonalize matrices"""
         return
+
 
 class sampleCUR(_CUR):
     """
-        Instantiation of CUR for sample selection using left singular vectors
-        When mixing < 1, this will use PCov-CUR, where the property and
-        structure matrices are used to construct augmented singular vectors
+    Instantiation of CUR for sample selection using left singular vectors
+    When mixing < 1, this will use PCov-CUR, where the property and
+    structure matrices are used to construct augmented singular vectors
 
-        Parameters
-        ----------
-        matrix : ndarray of shape (n x m)
-            Data to select from -
-            Samples selection will choose a subset of the `n` rows
-            stored in `self.A`
-        mixing : float
-            mixing parameter, as described in PCovR as `alpha`
-            stored in `self.mixing`
-        iterative : boolean
-            whether or not to compute CUR iteratively
-        tolerance : float
-            Threshold below which values will be considered 0
-            stored in `self.tol`
-        Y (optional) : ndarray of shape (n x p)
-            Array to include in biased selection when mixing < 1
-            Required when mixing < 1, throws AssertionError otherwise
-            stored in `self.Y`
+    Parameters
+    ----------
+    matrix : ndarray of shape (n x m)
+        Data to select from -
+        Samples selection will choose a subset of the `n` rows
+        stored in `self.A`
+    mixing : float
+        mixing parameter, as described in PCovR as `alpha`
+        stored in `self.mixing`
+    iterative : boolean
+        whether or not to compute CUR iteratively
+    tolerance : float
+        Threshold below which values will be considered 0
+        stored in `self.tol`
+    Y (optional) : ndarray of shape (n x p)
+        Array to include in biased selection when mixing < 1
+        Required when mixing < 1, throws AssertionError otherwise
+        stored in `self.Y`
 
     """
-    def __init__(self, matrix, mixing=1.0, iterative=True, tolerance=1E-12, **kwargs):
+
+    def __init__(self, matrix, mixing=1.0, iterative=True, tolerance=1e-12, **kwargs):
         super().__init__(iterative=iterative, tolerance=tolerance, **kwargs)
 
         self.mixing = mixing
@@ -123,62 +125,59 @@ class sampleCUR(_CUR):
                 assert "Y" in kwargs
                 self.Y = kwargs.get("Y")
             except AssertionError:
-                print(
-                    r"For $\mixing < 1$, $Y$ must be in the constructor parameters")
+                print(r"For $\mixing < 1$, $Y$ must be in the constructor parameters")
         else:
             self.Y = None
 
-        if(not self.iter):
+        if not self.iter:
             self.A_current = None
             self.Y_current = None
         else:
             self.A_current = self.A.copy()
-            if(self.Y is not None):
+            if self.Y is not None:
                 self.Y_current = self.Y.copy()
 
     def get_product(self):
-        """Abstract method for computing the PCovR Gram Matrix
-        """
+        """Abstract method for computing the PCovR Gram Matrix"""
         return get_Kt(self.mixing, self.A_current, self.Y_current, self.tol)
 
     def orthogonalize(self):
-        """Orthogonalizes the remaining samples by those already selected
-        """
-        if(self.iter):
-            self.A_current, \
-            self.Y_current = sample_orthogonalizer(self.idx,
-                                                   self.A_current,
-                                                   self.Y_current,
-                                                   self.tol
-                                                    )
+        """Orthogonalizes the remaining samples by those already selected"""
+        if self.iter:
+            self.A_current, self.Y_current = sample_orthogonalizer(
+                self.idx, self.A_current, self.Y_current, self.tol
+            )
 
 
 class featureCUR(_CUR):
     """
-        Instantiation of CUR for feature selection using right singular vectors
-        When mixing < 1, this will use PCov-CUR, where the property and
-        structure matrices are used to construct augmented singular vectors
+    Instantiation of CUR for feature selection using right singular vectors
+    When mixing < 1, this will use PCov-CUR, where the property and
+    structure matrices are used to construct augmented singular vectors
 
-        Parameters
-        ----------
-        matrix : ndarray of shape (n x m)
-            Data to select from -
-            Samples selection will choose a subset of the `m` columns
-            stored in `self.A`
-        mixing : float
-            mixing parameter, as described in PCovR as `alpha`
-            stored in `self.mixing`
-        iterative : boolean
-            whether or not to compute CUR iteratively
-        tolerance : float
-            Threshold below which values will be considered 0
-            stored in `self.tol`
-        Y (optional) : ndarray of shape (n x p)
-            Array to include in biased selection when mixing < 1
-            Required when mixing < 1, throws AssertionError otherwise
-            stored in `self.Y`
+    Parameters
+    ----------
+    matrix : ndarray of shape (n x m)
+        Data to select from -
+        Samples selection will choose a subset of the `m` columns
+        stored in `self.A`
+    mixing : float
+        mixing parameter, as described in PCovR as `alpha`
+        stored in `self.mixing`
+    iterative : boolean
+        whether or not to compute CUR iteratively
+    tolerance : float
+        Threshold below which values will be considered 0
+        stored in `self.tol`
+    Y (optional) : ndarray of shape (n x p)
+        Array to include in biased selection when mixing < 1
+        Required when mixing < 1, throws AssertionError otherwise
+        stored in `self.Y`
     """
-    def __init__(self, matrix, mixing=1.0, iterative=True, tolerance=1E-12, k=1, **kwargs):
+
+    def __init__(
+        self, matrix, mixing=1.0, iterative=True, tolerance=1e-12, k=1, **kwargs
+    ):
         super().__init__(iterative=iterative, tolerance=tolerance, k=k, **kwargs)
 
         self.mixing = mixing
@@ -190,33 +189,27 @@ class featureCUR(_CUR):
                 assert "Y" in kwargs
                 self.Y = kwargs.get("Y")
             except AssertionError:
-                print(
-                    r"For $\mixing < 1$, $Y$ must be in the constructor parameters")
+                print(r"For $\mixing < 1$, $Y$ must be in the constructor parameters")
         else:
             self.Y = None
 
-        if(not self.iter):
+        if not self.iter:
             self.A_current = None
             self.Y_current = None
         else:
             self.A_current = self.A.copy()
-            if(self.Y is not None):
+            if self.Y is not None:
                 self.Y_current = self.Y.copy()
 
         self.product = self.get_product()
 
     def get_product(self):
-        """Abstract method for computing the PCovR Covariance Matrix
-        """
+        """Abstract method for computing the PCovR Covariance Matrix"""
         return get_Ct(self.mixing, self.A_current, self.Y_current, self.tol)
 
     def orthogonalize(self):
-        """Orthogonalizes the remaining features by those already selected
-        """
-        if(self.iter):
-            self.A_current, \
-            self.Y_current = feature_orthogonalizer(self.idx,
-                                                    self.A_current,
-                                                    self.Y_current,
-                                                    self.tol
-                                                    )
+        """Orthogonalizes the remaining features by those already selected"""
+        if self.iter:
+            self.A_current, self.Y_current = feature_orthogonalizer(
+                self.idx, self.A_current, self.Y_current, self.tol
+            )

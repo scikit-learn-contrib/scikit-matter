@@ -1,13 +1,14 @@
 import numpy as np
 import scipy
 
+
 def get_Ct(mixing, X_proxy, Y_proxy, rcond):
     """
-        Creates the PCovR modified covariance
-        ~C = (mixing) * X^T X +
-             (1-mixing) * (X^T X)^(-1/2) ~Y ~Y^T (X^T X)^(-1/2)
+    Creates the PCovR modified covariance
+    ~C = (mixing) * X^T X +
+         (1-mixing) * (X^T X)^(-1/2) ~Y ~Y^T (X^T X)^(-1/2)
 
-        where ~Y is the properties obtained by linear regression.
+    where ~Y is the properties obtained by linear regression.
     """
 
     C = np.zeros((X_proxy.shape[1], X_proxy.shape[1]), dtype=np.float64)
@@ -31,11 +32,12 @@ def get_Ct(mixing, X_proxy, Y_proxy, rcond):
 
     return C
 
+
 def get_Kt(mixing, X_proxy, Y_proxy, rcond):
     """
-        Creates the PCovR modified kernel distances
-        ~K = (mixing) * X X^T +
-             (1-mixing) * Y Y^T
+    Creates the PCovR modified kernel distances
+    ~K = (mixing) * X X^T +
+         (1-mixing) * Y Y^T
 
     """
 
