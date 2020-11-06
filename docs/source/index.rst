@@ -26,5 +26,6 @@ it you agree to distribute your changes under the same license.
   :caption: Contents:
 
   selection
+  preprocessing
   reference
   contributing
