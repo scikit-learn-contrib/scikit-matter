@@ -2,7 +2,6 @@
 requires = [
     "setuptools",
     "wheel",
-    "attr",
 ]
 build-backend = "setuptools.build_meta"
 
@@ -11,17 +10,18 @@ legacy_tox_ini = """
 [tox]
 
 [testenv]
+changedir = tests
 deps =
     coverage[toml]
 
 commands =
-    coverage run -m unittest discover -p "*.py" -s tests
+    coverage run -m unittest discover -p "*.py"
     coverage xml
 """
 
 [tool.coverage.run]
 branch = true
-data_file = '.tox/.coverage'
+data_file = 'tests/.coverage'
 
 [tool.coverage.report]
 include = [
@@ -29,4 +29,4 @@ include = [
 ]
 
 [tool.coverage.xml]
-output = '.tox/coverage.xml'
+output = 'tests/coverage.xml'
