@@ -139,6 +139,8 @@ class sampleCUR(_CUR):
             if self.Y is not None:
                 self.Y_current = self.Y.copy()
 
+        self.product = self.get_product()
+
     def get_product(self):
         """Abstract method for computing the PCovR Gram Matrix"""
         return get_Kt(self.mixing, self.A_current, self.Y_current, self.tol)
