@@ -34,6 +34,7 @@ class _CUR(_BaseSelection):
         self.iter = iterative
         self.tol = tolerance
         self.idx = []
+        self.pi = []
 
     def select(self, n):
         """Method for CUR select based upon a product of the input matrices
@@ -58,6 +59,7 @@ class _CUR(_BaseSelection):
                 pi = (np.real(U)[:, : self.k] ** 2.0).sum(axis=1)
             pi[self.idx] = 0.0
             self.idx.append(pi.argmax())
+            self.pi.append(max(pi))
 
             self.orthogonalize()
             self.product = self.get_product()
