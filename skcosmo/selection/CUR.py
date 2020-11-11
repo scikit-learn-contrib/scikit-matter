@@ -138,6 +138,8 @@ class sampleCUR(_CUR):
             self.A_current = self.A.copy()
             if self.Y is not None:
                 self.Y_current = self.Y.copy()
+            else:
+                self.Y_current = None
 
         self.product = self.get_product()
 
