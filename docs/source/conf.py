@@ -22,7 +22,7 @@ copyright = "2020, Rose K. Cersonsky, Guillaume Fraux, Sergei Kliavinek, Alexand
 author = "Rose K. Cersonsky, Guillaume Fraux, Sergei Kliavinek, Alexander Goscinski, Benjamin Helfrect, and Michele Ceriotti"
 
 # The full version, including alpha/beta/rc tags
-release = "0.0.1"
+release = "0.1.0"
 
 
 # -- General configuration ---------------------------------------------------
