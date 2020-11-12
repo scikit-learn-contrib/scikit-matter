@@ -13,13 +13,14 @@
 # import os
 # import sys
 # sys.path.insert(0, os.path.abspath('.'))
+import sphinx_rtd_theme
 
 
 # -- Project information -----------------------------------------------------
 
 project = "sklearn-COSMO"
-copyright = "2020, Rose K. Cersonsky, Guillaume Fraux, Sergei Kliavinek, Alexander Goscinski, Benjamin Helfrect, and Michele Ceriotti"
-author = "Rose K. Cersonsky, Guillaume Fraux, Sergei Kliavinek, Alexander Goscinski, Benjamin Helfrect, and Michele Ceriotti"
+author = ', '.join(open('../../contributors.txt'))
+copyright = "2020, " + author
 
 # The full version, including alpha/beta/rc tags
 release = "0.1.0"
