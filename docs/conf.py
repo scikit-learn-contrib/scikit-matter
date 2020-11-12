@@ -9,24 +9,25 @@
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
-#
-# import os
-# import sys
-# sys.path.insert(0, os.path.abspath('.'))
-import sphinx_rtd_theme
-import skcosmo
+
+import os
+import sys
+
+sys.path.insert(0, os.path.abspath(".."))
+import sphinx_rtd_theme  # noqa
+import skcosmo  # noqa
 
 # -- Project information -----------------------------------------------------
 
 # The master toctree document.
-master_doc = "index"
+master_doc = "source/index"
 
 project = "sklearn-COSMO"
-author = ", ".join(open("../../contributors.txt"))
+author = ", ".join(open(os.path.join(os.path.abspath(".."), "contributors.txt")))
 copyright = "2020, " + author
 
 # The full version, including alpha/beta/rc tags
-release = str(skcosmo.__version__)
+release = skcosmo.__version__
 
 
 # -- General configuration ---------------------------------------------------
@@ -34,7 +35,9 @@ release = str(skcosmo.__version__)
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = []
+extensions = [
+    "sphinx.ext.autodoc",
+]
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ["_templates"]
