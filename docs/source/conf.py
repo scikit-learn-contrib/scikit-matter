@@ -20,10 +20,10 @@ import skcosmo  # noqa
 # -- Project information -----------------------------------------------------
 
 # The master toctree document.
-master_doc = "source/index"
+master_doc = "index"
 
 project = "sklearn-COSMO"
-author = ", ".join(open(os.path.join(os.path.abspath(".."), "contributors.txt")))
+author = ", ".join(open(os.path.join("..", "..", "contributors.txt")))
 copyright = "2020, " + author
 
 # The full version, including alpha/beta/rc tags
