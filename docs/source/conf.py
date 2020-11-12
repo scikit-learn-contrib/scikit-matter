@@ -22,7 +22,7 @@ import skcosmo
 master_doc = "index"
 
 project = "sklearn-COSMO"
-author = ", ".join(open("../../contributors.txt"))
+author = ", ".join(open(os.path.join(os.path.abspath(".."), "contributors.txt")))
 copyright = "2020, " + author
 
 # The full version, including alpha/beta/rc tags
