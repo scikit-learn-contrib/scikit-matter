@@ -15,7 +15,7 @@ Indices and tables
 * :ref:`modindex`
 * :ref:`search`
 
-Sklearn-cosmo
+sklearn-COSMO
 #############
 
 A collection of scikit-learn compatible utilities that implement methods
