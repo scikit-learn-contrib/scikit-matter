@@ -12,9 +12,10 @@
 
 import os
 import sys
+import sphinx_rtd_theme
 
-sys.path.insert(0, os.path.abspath(".."))
-import sphinx_rtd_theme  # noqa
+ROOT = os.path.abspath(os.path.join("..", ".."))
+sys.path.insert(0, ROOT)
 import skcosmo  # noqa
 
 # -- Project information -----------------------------------------------------
@@ -23,7 +24,7 @@ import skcosmo  # noqa
 master_doc = "index"
 
 project = "sklearn-COSMO"
-author = ", ".join(open(os.path.join("..", "..", "contributors.txt")))
+author = ", ".join(open(os.path.join(ROOT, "contributors.txt")))
 copyright = "2020, " + author
 
 # The full version, including alpha/beta/rc tags
