@@ -23,7 +23,7 @@ developed in the COSMO laboratory.
 
 **WARNING**: this package is a work in progress, you can
 currently find the prototype code in the
-[kernel-tutorials](https://github.com/cosmo-epfl/kernel-tutorials) repository.
+`kernel-tutorials <https://github.com/cosmo-epfl/kernel-tutorials>`_ repository.
 
 Installation
 ############
@@ -32,7 +32,7 @@ Installation
 
   pip install https://github.com/cosmo-epfl/sklearn-cosmo
 
-You can then `import skcosmo` in your code!
+You can then import skcosmo in your code!
 
 Developing the package
 ######################
@@ -52,7 +52,7 @@ Then this package itself
   cd sklearn-cosmo
   pip install -e .
 
-This install the package in development mode, making is importable globally
+This install the package in development mode, making it importable globally
 and allowing you to edit the code and directly use the updated version.
 
 Running the tests
@@ -69,9 +69,9 @@ Running the tests
   flake8
 
 You may want to setup your editor to automatically apply the
-[black](https://black.readthedocs.io/en/stable/) code formatter when saving your
-files, there are plugins to do this with [all major
-editors](https://black.readthedocs.io/en/stable/editor_integration.html).
+`black <https://black.readthedocs.io/en/stable/>`_ code formatter when saving your
+files, there are plugins to do this with `all major
+editors <https://black.readthedocs.io/en/stable/editor_integration.html>`_.
 
 License and developers
 ######################
