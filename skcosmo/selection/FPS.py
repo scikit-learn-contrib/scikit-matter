@@ -125,7 +125,7 @@ class sampleFPS(_FPS):
         super().__init__(tolerance=tolerance, **kwargs)
 
 
-class featureFPS(_FPS):
+class FeatureFPS(_FPS):
     """
     Instantiation of FPS for feature selection using Euclidean Distances
     When mixing < 1, this will use PCov-FPS, where the property and
