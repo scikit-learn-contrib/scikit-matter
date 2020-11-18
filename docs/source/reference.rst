@@ -3,5 +3,5 @@
 API reference
 =============
 
-.. automodule:: skcosmo
+.. automodule:: skcosmo.datasets
     :members:
