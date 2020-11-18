@@ -87,7 +87,7 @@ class _CUR:
         return
 
 
-class sampleCUR(_CUR):
+class SampleCUR(_CUR):
     """
     Instantiation of CUR for sample selection using left singular vectors
     When mixing < 1, this will use PCov-CUR, where the property and
@@ -154,7 +154,7 @@ class sampleCUR(_CUR):
             )
 
 
-class featureCUR(_CUR):
+class FeatureCUR(_CUR):
     """
     Instantiation of CUR for feature selection using right singular vectors
     When mixing < 1, this will use PCov-CUR, where the property and

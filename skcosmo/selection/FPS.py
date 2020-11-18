@@ -80,7 +80,7 @@ class _FPS:
         return self.idx
 
 
-class sampleFPS(_FPS):
+class SampleFPS(_FPS):
     """
     Instantiation of FPS for sample selection using Euclidean Distances
     When mixing < 1, this will use PCov-FPS, where the property and

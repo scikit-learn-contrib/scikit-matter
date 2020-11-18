@@ -22,7 +22,7 @@ This iterative approach, albeit comparatively time consuming, is the most determ
 
 These selection methods can be modified to be semi-supervised by using augmented right or left singular vectors, as shown in [Cersonsky 2021].
 
-.. autoclass:: featureCUR
+.. autoclass:: FeatureCUR
     :show-inheritance:
     :special-members:
 
@@ -30,7 +30,7 @@ These selection methods can be modified to be semi-supervised by using augmented
     .. automethod:: orthogonalize
     .. automethod:: select
 
-.. autoclass:: sampleCUR
+.. autoclass:: SampleCUR
     :show-inheritance:
     :special-members:
 
@@ -53,12 +53,12 @@ It is common to use the Euclidean distance, however other distance metrics may b
 
 These selection methods can be modified to be semi-supervised by using the PCovR covariance and Gram matrices to compute the distances, as shown in [Cersonsky 2021].
 
-.. autoclass:: featureFPS
+.. autoclass:: FeatureFPS
     :show-inheritance:
 
     .. automethod:: select
 
-.. autoclass:: sampleFPS
+.. autoclass:: SampleFPS
     :show-inheritance:
 
     .. automethod:: select
