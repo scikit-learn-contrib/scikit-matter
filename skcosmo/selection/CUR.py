@@ -4,10 +4,9 @@ from scipy.sparse.linalg import eigs as speig
 
 from skcosmo.pcovr.pcovr_distances import get_Ct, get_Kt
 from .orthogonalizers import feature_orthogonalizer, sample_orthogonalizer
-from ._base import _BaseSelection
 
 
-class _CUR(_BaseSelection):
+class _CUR:
     """
     Base class for CUR selection methods
     Requires a product, typically the gram or covariance matrix, \

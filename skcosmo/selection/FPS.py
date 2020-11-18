@@ -1,6 +1,5 @@
 import numpy as np
 from skcosmo.pcovr.pcovr_distances import get_Ct, get_Kt
-from ._base import _BaseSelection
 
 
 def _calculate_pcov_distances_(points, ref_idx, idxs=None):
@@ -14,7 +13,7 @@ def _calculate_pcov_distances_(points, ref_idx, idxs=None):
     )
 
 
-class _FPS(_BaseSelection):
+class _FPS:
     """
     Base Class defined for FPS selection methods
 
