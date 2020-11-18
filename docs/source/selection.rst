@@ -62,3 +62,15 @@ These selection methods can be modified to be semi-supervised by using the PCovR
     :show-inheritance:
 
     .. automethod:: select
+
+.. _ortho-api:
+
+Orthogonalizers for CUR
+#######################
+
+.. currentmodule:: skcosmo.selection.orthogonalizers
+
+When computing non-iterative CUR, it is necessary to orthogonalize the input matrices after each selection. For this, we have supplied a feature and a sample orthogonalizer for feature and sample selection.
+
+.. autofunction:: feature_orthogonalizer
+.. autofunction:: sample_orthogonalizer
