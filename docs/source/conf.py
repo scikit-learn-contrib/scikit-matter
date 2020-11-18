@@ -38,7 +38,11 @@ release = skcosmo.__version__
 # ones.
 extensions = [
     "sphinx.ext.autodoc",
+    "sphinx.ext.napoleon",
 ]
+
+# If set to False return type and description are put into one paragraph
+napoleon_use_rtype = False
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ["_templates"]
