@@ -2,6 +2,7 @@ from abc import abstractmethod
 import numpy as np
 from scipy.sparse.linalg import eigs as speig
 
+from sklearn.utils import check_X_y, check_array
 from skcosmo.pcovr.pcovr_distances import get_Ct, get_Kt
 from .orthogonalizers import feature_orthogonalizer, sample_orthogonalizer
 
@@ -119,16 +120,13 @@ class SampleCUR(_CUR):
 
         self.mixing = mixing
 
-        self.A = matrix.copy()
-
         if mixing < 1:
             try:
-                assert Y is not None
-                self.Y = Y
+                self.A, self.Y = check_X_y(X, Y, copy=True, multi_output=True)
             except AssertionError:
                 raise Exception(r"For $\alpha < 1$, $Y$ must be supplied.")
         else:
-            self.Y = None
+            self.A, self.Y = check_array(X, copy=True), None
 
         if not self.iter:
             self.A_current = None
@@ -185,16 +183,13 @@ class FeatureCUR(_CUR):
 
         self.mixing = mixing
 
-        self.A = matrix.copy()
-
         if mixing < 1:
             try:
-                assert Y is not None
-                self.Y = Y
+                self.A, self.Y = check_X_y(X, Y, copy=True, multi_output=True)
             except AssertionError:
                 raise Exception(r"For $\alpha < 1$, $Y$ must be supplied.")
         else:
-            self.Y = None
+            self.A, self.Y = check_array(X, copy=True), None
 
         if not self.iter:
             self.A_current = None

@@ -1,5 +1,6 @@
 import numpy as np
 from skcosmo.pcovr.pcovr_distances import get_Ct, get_Kt
+from sklearn.utils import check_X_y, check_array
 
 
 def _calculate_pcov_distances_(points, ref_idx, idxs=None):
@@ -110,16 +111,13 @@ class SampleFPS(_FPS):
         self.mixing = mixing
         self.tol = tolerance
 
-        self.A = matrix.copy()
-
         if mixing < 1:
             try:
-                assert Y is not None
-                self.Y = Y
+                self.A, self.Y = check_X_y(X, Y, copy=True, multi_output=True)
             except AssertionError:
                 raise Exception(r"For $\alpha < 1$, $Y$ must be supplied.")
         else:
-            self.Y = None
+            self.A, self.Y = check_array(X, copy=True), None
 
         self.product = get_Kt(self.mixing, self.A, self.Y, rcond=self.tol)
         super().__init__(tolerance=tolerance, **kwargs)
@@ -155,15 +153,13 @@ class FeatureFPS(_FPS):
         self.mixing = mixing
         self.tol = tolerance
 
-        self.A = X.copy()
         if mixing < 1:
             try:
-                assert Y is not None
-                self.Y = Y
+                self.A, self.Y = check_X_y(X, Y, copy=True, multi_output=True)
             except AssertionError:
                 raise Exception(r"For $\alpha < 1$, $Y$ must be supplied.")
         else:
-            self.Y = None
+            self.A, self.Y = check_array(X, copy=True), None
 
         self.product = get_Ct(self.mixing, self.A, self.Y, rcond=self.tol)
         super().__init__(tolerance=tolerance, **kwargs)
