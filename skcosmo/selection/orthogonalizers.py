@@ -1,3 +1,14 @@
+# -*- coding: utf-8 -*-
+"""
+
+This module contains the necessary orthogonalizers for the CUR decomposition
+subselection method.
+
+Authors: Rose K. Cersonsky
+         Michele Ceriotti
+
+"""
+
 import numpy as np
 
 

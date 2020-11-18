@@ -1,3 +1,17 @@
+# -*- coding: utf-8 -*-
+"""
+
+This module contains Farthest Point Sampling (FPS) classes for sub-selecting
+features or samples from given datasets. Each class supports a Principal
+Covariates Regression (PCov)-inspired variant, using a mixing parameter and
+target values to bias the selections.
+
+"""
+
+# Authors: Rose K. Cersonsky
+#          Michele Ceriotti
+# License: BSD 3 clause
+
 import numpy as np
 from skcosmo.pcovr.pcovr_distances import get_Ct, get_Kt
 from sklearn.utils import check_X_y, check_array

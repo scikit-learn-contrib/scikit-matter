@@ -1,4 +1,18 @@
+# -*- coding: utf-8 -*-
+"""
+
+This module contains classes for sub-selecting features or samples from given
+datasets using the CUR decomposition method. Each class supports a Principal
+Covariates Regression (PCov)-inspired variant, using a mixing parameter and
+target values to bias the selections.
+
+Authors: Rose K. Cersonsky
+         Michele Ceriotti
+
+"""
+
 from abc import abstractmethod
+
 import numpy as np
 from scipy.sparse.linalg import eigs as speig
 
