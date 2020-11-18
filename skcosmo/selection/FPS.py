@@ -117,7 +117,7 @@ class sampleFPS(_FPS):
                 assert Y is not None
                 self.Y = Y
             except AssertionError:
-                print(r"For $\mixing < 1$, $Y$ must be in the constructor parameters")
+                raise Exception(r"For $\alpha < 1$, $Y$ must be supplied.")
         else:
             self.Y = None
 
@@ -161,7 +161,7 @@ class featureFPS(_FPS):
                 assert Y is not None
                 self.Y = Y
             except AssertionError:
-                print(r"For $\alpha < 1$, $Y$ must be supplied.")
+                raise Exception(r"For $\alpha < 1$, $Y$ must be supplied.")
         else:
             self.Y = None
 

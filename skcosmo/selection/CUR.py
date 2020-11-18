@@ -126,7 +126,7 @@ class sampleCUR(_CUR):
                 assert Y is not None
                 self.Y = Y
             except AssertionError:
-                print(r"For $\mixing < 1$, $Y$ must be in the constructor parameters")
+                raise Exception(r"For $\alpha < 1$, $Y$ must be supplied.")
         else:
             self.Y = None
 
@@ -192,7 +192,7 @@ class featureCUR(_CUR):
                 assert Y is not None
                 self.Y = Y
             except AssertionError:
-                print(r"For $\mixing < 1$, $Y$ must be in the constructor parameters")
+                raise Exception(r"For $\alpha < 1$, $Y$ must be supplied.")
         else:
             self.Y = None
 
