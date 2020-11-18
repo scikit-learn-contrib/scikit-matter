@@ -1,7 +1,10 @@
 #!/usr/bin/env python3
-# this is a shim file to allow `python setup.py develop`/`pip install -e` to
-# work
 from setuptools import setup
+import re
+
+__version__ = re.search(
+    r'__version__\s*=\s*[\'"]([^\'"]*)[\'"]', open("skcosmo/__init__.py").read()
+).group(1)
 
 if __name__ == "__main__":
-    setup()
+    setup(version=__version__)
