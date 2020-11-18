@@ -106,7 +106,7 @@ class sampleFPS(_FPS):
 
     """
 
-    def __init__(self, matrix, mixing=1.0, tolerance=1e-12, **kwargs):
+    def __init__(self, X, mixing=1.0, tolerance=1e-12, Y=None, **kwargs):
 
         self.mixing = mixing
         self.tol = tolerance
@@ -115,8 +115,8 @@ class sampleFPS(_FPS):
 
         if mixing < 1:
             try:
-                assert "Y" in kwargs
-                self.Y = kwargs.get("Y")
+                assert Y is not None
+                self.Y = Y
             except AssertionError:
                 print(r"For $\mixing < 1$, $Y$ must be in the constructor parameters")
         else:
@@ -151,13 +151,20 @@ class featureFPS(_FPS):
 
     """
 
-    def __init__(self, matrix, mixing=1.0, tolerance=1e-12, **kwargs):
+    def __init__(self, X, mixing=1.0, tolerance=1e-12, Y=None, **kwargs):
 
         self.mixing = mixing
         self.tol = tolerance
 
-        self.A = matrix.copy()
-        self.Y = kwargs.get("Y")
+        self.A = X.copy()
+        if mixing < 1:
+            try:
+                assert Y is not None
+                self.Y = Y
+            except AssertionError:
+                print(r"For $\alpha < 1$, $Y$ must be supplied.")
+        else:
+            self.Y = None
 
         self.product = get_Ct(self.mixing, self.A, self.Y, rcond=self.tol)
         super().__init__(tolerance=tolerance, **kwargs)

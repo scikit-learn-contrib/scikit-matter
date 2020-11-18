@@ -115,8 +115,8 @@ class sampleCUR(_CUR):
 
     """
 
-    def __init__(self, matrix, mixing=1.0, iterative=True, tolerance=1e-12, **kwargs):
-        super().__init__(iterative=iterative, tolerance=tolerance, **kwargs)
+    def __init__(self, X, mixing=1.0, iterative=True, tol=1e-12, Y=None, **kwargs):
+        super().__init__(iterative=iterative, tol=tol, **kwargs)
 
         self.mixing = mixing
 
@@ -124,8 +124,8 @@ class sampleCUR(_CUR):
 
         if mixing < 1:
             try:
-                assert "Y" in kwargs
-                self.Y = kwargs.get("Y")
+                assert Y is not None
+                self.Y = Y
             except AssertionError:
                 print(r"For $\mixing < 1$, $Y$ must be in the constructor parameters")
         else:
@@ -181,10 +181,8 @@ class featureCUR(_CUR):
         stored in `self.Y`
     """
 
-    def __init__(
-        self, matrix, mixing=1.0, iterative=True, tolerance=1e-12, k=1, **kwargs
-    ):
-        super().__init__(iterative=iterative, tolerance=tolerance, k=k, **kwargs)
+    def __init__(self, X, mixing=1.0, iterative=True, tol=1e-12, Y=None, **kwargs):
+        super().__init__(iterative=iterative, tol=tol, **kwargs)
 
         self.mixing = mixing
 
@@ -192,8 +190,8 @@ class featureCUR(_CUR):
 
         if mixing < 1:
             try:
-                assert "Y" in kwargs
-                self.Y = kwargs.get("Y")
+                assert Y is not None
+                self.Y = Y
             except AssertionError:
                 print(r"For $\mixing < 1$, $Y$ must be in the constructor parameters")
         else:
