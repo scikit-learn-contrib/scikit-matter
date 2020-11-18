@@ -1,2 +1,4 @@
+numpy
+sklearn
 sphinx >=3.3
 sphinx_rtd_theme
