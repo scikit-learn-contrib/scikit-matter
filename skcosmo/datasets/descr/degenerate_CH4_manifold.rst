@@ -15,7 +15,7 @@ In contrast for higher body order representations as the (SOAP) bispectrum the c
 Following the naming convention of Ref. [1]_ for each representation the first 81 samples correspond to the X minus manifold and the second 81 samples contain the X plus manifold 
 The representations were computed with [2]_ using the hyperparameters:
 
-    :rascal hypers:
+    :rascal hyperparameters:
 
     +---------------------------+------------+
     | key                       |   value    |
