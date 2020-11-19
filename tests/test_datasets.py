@@ -4,13 +4,18 @@ from skcosmo.datasets import load_degenerate_manifold
 
 
 class BaseTests(unittest.TestCase):
-    def test_load_degenerate_manifold(self):
+    def setUp(self):
+        self.degenerate_manifold = load_degenerate_manifold()
+
+    def test_load_degenerate_manifold_power_spectrum_shape(self):
         # test if representations have correct shape
-        degenerate_manifold = load_degenerate_manifold()
-        self.assertTrue(degenerate_manifold.data.SOAP_power_spectrum.shape == (162, 12))
-        self.assertTrue(degenerate_manifold.data.SOAP_bispectrum.shape == (162, 12))
-        # test access
-        degenerate_manifold.DESCR
+        self.assertTrue(self.degenerate_manifold.data.SOAP_power_spectrum.shape == (162, 12))
+
+    def test_load_degenerate_manifold_bispectrum_shape(self):
+        self.assertTrue(self.degenerate_manifold.data.SOAP_bispectrum.shape == (162, 12))
+
+    def test_load_degenerate_manifold_access_descr(self):
+        self.degenerate_manifold.DESCR
 
 
 if __name__ == "__main__":
