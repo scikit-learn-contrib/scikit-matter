@@ -66,7 +66,6 @@ class _CUR:
             return self.idx[:n]
 
         for i in range(len(self.idx), n):
-            # try:
             if self.iter:
                 v, U = speig(self.product, k=self.k, tol=self.tol)
                 U = U[:, np.flip(np.argsort(v))]
