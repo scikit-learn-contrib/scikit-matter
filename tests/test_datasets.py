@@ -9,10 +9,14 @@ class BaseTests(unittest.TestCase):
 
     def test_load_degenerate_CH4_manifold_power_spectrum_shape(self):
         # test if representations have correct shape
-        self.assertTrue(self.degenerate_CH4_manifold.data.SOAP_power_spectrum.shape == (162, 12))
+        self.assertTrue(
+            self.degenerate_CH4_manifold.data.SOAP_power_spectrum.shape == (162, 12)
+        )
 
     def test_load_degenerate_CH4_manifold_bispectrum_shape(self):
-        self.assertTrue(self.degenerate_CH4_manifold.data.SOAP_bispectrum.shape == (162, 12))
+        self.assertTrue(
+            self.degenerate_CH4_manifold.data.SOAP_bispectrum.shape == (162, 12)
+        )
 
     def test_load_degenerate_CH4_manifold_access_descr(self):
         self.degenerate_CH4_manifold.DESCR
