@@ -24,7 +24,7 @@ from .orthogonalizers import feature_orthogonalizer, sample_orthogonalizer
 class _CUR:
     """
     Base class for CUR selection methods
-    Requires a product, typically the gram or covariance matrix, \
+    Requires a product, typically the gram or covariance matrix,
     from which to compute the importance score
 
     If the model is iterative, the orthogonalize method must be overwritten
