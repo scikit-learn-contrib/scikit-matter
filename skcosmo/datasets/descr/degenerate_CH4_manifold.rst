@@ -43,5 +43,5 @@ References
 ----------
 
    .. [1] Pozdnyakov, S. N., Willatt, M. J., Bartók, A. P., Ortner, C., Csányi, G., & Ceriotti, M. (2020). Incompleteness of Atomic Structure Representations. Physical Review Letters, 125(16). https://doi.org/10.1103/physrevlett.125.166001
-   .. [2] https://github.com/cosmo-epfl/librascal
+   .. [2] https://github.com/cosmo-epfl/librascal commit 8d9ad7a
    .. [3] https://scikit-learn.org/stable/modules/generated/sklearn.decomposition.PCA.html  
