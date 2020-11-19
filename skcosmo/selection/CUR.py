@@ -21,7 +21,7 @@ from skcosmo.pcovr.pcovr_distances import pcovr_covariance, pcovr_kernel_distanc
 from .orthogonalizers import feature_orthogonalizer, sample_orthogonalizer
 
 
-class _CUR:
+class _BaseCUR:
     """
     Base class for CUR selection methods
     Requires a product, typically the gram or covariance matrix,
@@ -97,7 +97,7 @@ class _CUR:
         return
 
 
-class SampleCUR(_CUR):
+class SampleCUR(_BaseCUR):
     """
     Instantiation of CUR for sample selection using left singular vectors
     When mixing < 1, this will use PCov-CUR, where the property and
@@ -167,7 +167,7 @@ class SampleCUR(_CUR):
             )
 
 
-class FeatureCUR(_CUR):
+class FeatureCUR(_BaseCUR):
     """
     Instantiation of CUR for feature selection using right singular vectors
     When mixing < 1, this will use PCov-CUR, where the property and

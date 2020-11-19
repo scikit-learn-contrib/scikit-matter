@@ -28,7 +28,7 @@ def _calculate_pcov_distances_(points, ref_idx, idxs=None):
     )
 
 
-class _FPS:
+class _BaseFPS:
     """
     Base Class defined for FPS selection methods
 
@@ -108,7 +108,7 @@ class _FPS:
         pass
 
 
-class SampleFPS(_FPS):
+class SampleFPS(_BaseFPS):
     """
     Instantiation of FPS for sample selection using Euclidean Distances
     When mixing < 1, this will use PCov-FPS, where the property and
@@ -155,7 +155,7 @@ class SampleFPS(_FPS):
         return _calc_distances_(self.product, idx_1, idx_2)
 
 
-class FeatureFPS(_FPS):
+class FeatureFPS(_BaseFPS):
     """
     Instantiation of FPS for feature selection using Euclidean Distances
     When mixing < 1, this will use PCov-FPS, where the property and
