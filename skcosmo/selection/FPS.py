@@ -17,7 +17,7 @@ from skcosmo.pcovr.pcovr_distances import pcovr_covariance, pcovr_kernel_distanc
 from sklearn.utils import check_X_y, check_array
 
 
-def _calculate_distances_(K, ref_idx, idxs=None):
+def _calc_distances_(K, ref_idx, idxs=None):
     """
     Calculates the distance between points in ref_idx and idx
 
@@ -144,7 +144,7 @@ class SampleFPS(_BaseFPS):
 
     """
 
-    def __init__(self, X, mixing=1.0, tolerance=1e-12, Y=None, **kwargs):
+    def __init__(self, X, mixing=1.0, tolerance=1e-12, Y=None):
 
         self.mixing = mixing
         self.tol = tolerance
@@ -160,7 +160,7 @@ class SampleFPS(_BaseFPS):
         self.product = pcovr_kernel_distance(
             self.mixing, self.A, self.Y, rcond=self.tol
         )
-        super().__init__(tolerance=tolerance, **kwargs)
+        super().__init__(tolerance=tolerance)
 
     def calc_distance(self, idx_1, idx_2=None):
         return _calc_distances_(self.product, idx_1, idx_2)
@@ -206,7 +206,7 @@ class FeatureFPS(_BaseFPS):
 
     """
 
-    def __init__(self, X, mixing=1.0, tolerance=1e-12, Y=None, **kwargs):
+    def __init__(self, X, mixing=1.0, tolerance=1e-12, Y=None):
 
         self.mixing = mixing
         self.tol = tolerance
@@ -220,7 +220,7 @@ class FeatureFPS(_BaseFPS):
             self.A, self.Y = check_array(X, copy=True), None
 
         self.product = pcovr_covariance(self.mixing, self.A, self.Y, rcond=self.tol)
-        super().__init__(tolerance=tolerance, **kwargs)
+        super().__init__(tolerance=tolerance)
 
     def calc_distance(self, idx_1, idx_2=None):
         return _calc_distances_(self.product, idx_1, idx_2)

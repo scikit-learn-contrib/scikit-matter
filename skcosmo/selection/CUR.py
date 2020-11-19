@@ -43,7 +43,7 @@ class _BaseCUR:
     :type tol: float
     """
 
-    def __init__(self, iterative=True, tolerance=1e-12, k=1, **kwargs):
+    def __init__(self, iterative=True, tolerance=1e-12, k=1):
 
         self.k = k
         self.iter = iterative
@@ -143,8 +143,8 @@ class SampleCUR(_BaseCUR):
 
     """
 
-    def __init__(self, X, mixing=1.0, iterative=True, tol=1e-12, Y=None, **kwargs):
-        super().__init__(iterative=iterative, tol=tol, **kwargs)
+    def __init__(self, X, mixing=1.0, iterative=True, tol=1e-12, Y=None):
+        super().__init__(iterative=iterative, tol=tol)
 
         self.mixing = mixing
 
@@ -245,8 +245,8 @@ class FeatureCUR(_BaseCUR):
     :type Y: array of shape (n x p), optional when :math:`{\\alpha = 1}`
     """
 
-    def __init__(self, X, mixing=1.0, iterative=True, tol=1e-12, Y=None, **kwargs):
-        super().__init__(iterative=iterative, tol=tol, **kwargs)
+    def __init__(self, X, mixing=1.0, iterative=True, tol=1e-12, Y=None):
+        super().__init__(iterative=iterative, tol=tol)
 
         self.mixing = mixing
 
