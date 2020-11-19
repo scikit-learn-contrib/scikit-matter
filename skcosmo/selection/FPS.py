@@ -17,14 +17,29 @@ from skcosmo.pcovr.pcovr_distances import pcovr_covariance, pcovr_kernel_distanc
 from sklearn.utils import check_X_y, check_array
 
 
-def _calculate_pcov_distances_(points, ref_idx, idxs=None):
+def _calculate_distances_(K, ref_idx, idxs=None):
+    """
+    Calculates the distance between points in ref_idx and idx
+
+    Assumes
+
+    .. math::
+        d(i, j) = K_{i,i} - 2 * K_{i,j} + K_{j,j}
+
+    : param K : distance matrix, must contain distances for ref_idx and idxs
+    : type K : array
+
+    : param ref_idx : index of reference points
+    : type ref_idx : int
+
+    : param idxs : indices of points to compute distance to ref_idx
+                   defaults to all indices in K
+    : type idxs : list of int, None
+    """
     if idxs is None:
-        idxs = range(points.shape[0])
+        idxs = range(K.shape[0])
     return np.array(
-        [
-            np.real(points[j][j] - 2 * points[j][ref_idx] + points[ref_idx][ref_idx])
-            for j in idxs
-        ]
+        [np.real(K[j][j] - 2 * K[j][ref_idx] + K[ref_idx][ref_idx]) for j in idxs]
     )
 
 
