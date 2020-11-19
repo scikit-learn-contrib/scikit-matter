@@ -83,10 +83,6 @@ class _CUR:
                     + f"n_select reduced from {n} to {i}."
                 )
                 return self.idx
-        # except: # Left as bare except because exception is ArpackError
-        #     print(f"The product matrix has rank {i}. " + \
-        #           f"n_select reduced from {n} to {i}.")
-        #     return self.idx
 
         return self.idx
 
