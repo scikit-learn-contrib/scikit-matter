@@ -2,13 +2,28 @@ import numpy as np
 import scipy
 
 
-def get_Ct(mixing, X_proxy, Y_proxy, rcond):
+def pcovr_covariance(mixing, X_proxy, Y_proxy, rcond=1e-12):
     """
     Creates the PCovR modified covariance
     ~C = (mixing) * X^T X +
          (1-mixing) * (X^T X)^(-1/2) ~Y ~Y^T (X^T X)^(-1/2)
 
     where ~Y is the properties obtained by linear regression.
+
+    :param mixing: mixing parameter,
+                   as described in PCovR as :math:`{\\alpha}`, defaults to 1
+    :type mixing: float
+
+    :param X_proxy: Data matrix :math:`\\mathbf{X}`
+    :type X_proxy: array of shape (n x m)
+
+    :param Y_proxy: array to include in biased selection when mixing < 1
+    :type Y_proxy: array of shape (n x p)
+
+    :param rcond: threshold below which eigenvalues will be considered 0,
+                      defaults to 1E-12
+    :type rcond: float
+
     """
 
     C = np.zeros((X_proxy.shape[1], X_proxy.shape[1]), dtype=np.float64)
@@ -33,11 +48,25 @@ def get_Ct(mixing, X_proxy, Y_proxy, rcond):
     return C
 
 
-def get_Kt(mixing, X_proxy, Y_proxy, rcond):
+def pcovr_kernel_distance(mixing, X_proxy, Y_proxy, rcond):
     """
     Creates the PCovR modified kernel distances
     ~K = (mixing) * X X^T +
          (1-mixing) * Y Y^T
+
+    :param mixing: mixing parameter,
+                   as described in PCovR as :math:`{\\alpha}`, defaults to 1
+    :type mixing: float
+
+    :param X_proxy: Data matrix :math:`\\mathbf{X}`
+    :type X_proxy: array of shape (n x m)
+
+    :param Y_proxy: array to include in biased selection when mixing < 1
+    :type Y_proxy: array of shape (n x p)
+
+    :param rcond: threshold below which eigenvalues will be considered 0,
+                      defaults to 1E-12
+    :type rcond: float
 
     """
 

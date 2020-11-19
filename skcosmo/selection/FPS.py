@@ -6,14 +6,14 @@ features or samples from given datasets. Each class supports a Principal
 Covariates Regression (PCov)-inspired variant, using a mixing parameter and
 target values to bias the selections.
 
+Authors: Rose K. Cersonsky
+         Michele Ceriotti
+
 """
 
-# Authors: Rose K. Cersonsky
-#          Michele Ceriotti
-# License: BSD 3 clause
 
 import numpy as np
-from skcosmo.pcovr.pcovr_distances import get_Ct, get_Kt
+from skcosmo.pcovr.pcovr_distances import pcovr_covariance, pcovr_kernel_distance
 from sklearn.utils import check_X_y, check_array
 
 
@@ -133,7 +133,9 @@ class SampleFPS(_FPS):
         else:
             self.A, self.Y = check_array(X, copy=True), None
 
-        self.product = get_Kt(self.mixing, self.A, self.Y, rcond=self.tol)
+        self.product = pcovr_kernel_distance(
+            self.mixing, self.A, self.Y, rcond=self.tol
+        )
         super().__init__(tolerance=tolerance, **kwargs)
 
 
@@ -175,5 +177,5 @@ class FeatureFPS(_FPS):
         else:
             self.A, self.Y = check_array(X, copy=True), None
 
-        self.product = get_Ct(self.mixing, self.A, self.Y, rcond=self.tol)
+        self.product = pcovr_covariance(self.mixing, self.A, self.Y, rcond=self.tol)
         super().__init__(tolerance=tolerance, **kwargs)

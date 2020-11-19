@@ -17,7 +17,7 @@ import numpy as np
 from scipy.sparse.linalg import eigs as speig
 
 from sklearn.utils import check_X_y, check_array
-from skcosmo.pcovr.pcovr_distances import get_Ct, get_Kt
+from skcosmo.pcovr.pcovr_distances import pcovr_covariance, pcovr_kernel_distance
 from .orthogonalizers import feature_orthogonalizer, sample_orthogonalizer
 
 
@@ -154,8 +154,14 @@ class SampleCUR(_CUR):
         self.product = self.get_product()
 
     def get_product(self):
-        """Abstract method for computing the PCovR Gram Matrix"""
-        return get_Kt(self.mixing, self.A_current, self.Y_current, self.tol)
+        """
+        Computes the modified PCovR Gram Matrix
+        :math:`{\\mathbf{\\tilde{K}} = \\alpha \\mathbf{XX}^T +
+        (1 - \\alpha)\\mathbf{\\hat{Y}\\hat{Y}}^T}`
+        """
+        return pcovr_kernel_distance(
+            self.mixing, self.A_current, self.Y_current, self.tol
+        )
 
     def orthogonalize(self):
         """Orthogonalizes the remaining samples by those already selected"""
@@ -215,8 +221,14 @@ class FeatureCUR(_CUR):
         self.product = self.get_product()
 
     def get_product(self):
-        """Abstract method for computing the PCovR Covariance Matrix"""
-        return get_Ct(self.mixing, self.A_current, self.Y_current, self.tol)
+        """
+        Computes the modified PCovR Covariance Matrix
+        :math:`{\\mathbf{\\tilde{C}} = \\alpha \\mathbf{X}^T\\mathbf{X} +
+        (1 - \\alpha)(\\mathbf{X}^T\\mathbf{X})^{-1/2}\\mathbf{X}^T
+        \\mathbf{\\hat{Y}\\hat{Y}}^T\\mathbf{X}(\\mathbf{X}^T
+        \\mathbf{X})^{-1/2}}`
+        """
+        return pcovr_covariance(self.mixing, self.A_current, self.Y_current, self.tol)
 
     def orthogonalize(self):
         """Orthogonalizes the remaining features by those already selected"""
