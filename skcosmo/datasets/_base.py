@@ -3,12 +3,12 @@ import numpy as np
 from sklearn.utils import Bunch
 
 
-def load_degenerate_manifold():
+def load_degenerate_CH4_manifold():
     """Load and return the degenerate manifold dataset.
 
     Returns
     -------
-    degenerate_manifold_data : sklearn.utils.Bunch
+    degenerate_CH4_manifold_data : sklearn.utils.Bunch
         Dictionary-like object, with the following attributes:
 
         data : `sklearn.utils.Bunch` --
@@ -20,13 +20,13 @@ def load_degenerate_manifold():
         The full description of the dataset.
     """
     module_path = dirname(__file__)
-    target_filename = join(module_path, "data", "degenerate_manifold.npz")
+    target_filename = join(module_path, "data", "degenerate_CH4_manifold.npz")
     raw_data = np.load(target_filename)
     data = Bunch(
         SOAP_power_spectrum=raw_data["SOAP_power_spectrum"],
         SOAP_bispectrum=raw_data["SOAP_bispectrum"],
     )
-    with open(join(module_path, "descr", "degenerate_manifold.rst")) as rst_file:
+    with open(join(module_path, "descr", "degenerate_CH4_manifold.rst")) as rst_file:
         fdescr = rst_file.read()
 
     return Bunch(data=data, DESCR=fdescr)
