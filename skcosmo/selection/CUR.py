@@ -24,23 +24,24 @@ from .orthogonalizers import feature_orthogonalizer, sample_orthogonalizer
 class _BaseCUR:
     """
     Base class for CUR selection methods
-    Requires a product, typically the gram or covariance matrix,
+    Requires a product, typically the gram or covariance matrix, \
     from which to compute the importance score
 
     If the model is iterative, the orthogonalize method must be overwritten
     to orthogonalize the input matrices after each iteration.
 
-    Parameters
-    ----------
-    iterative: boolean
-        whether to orthogonalize the matrices after each selection
-    k : int
-        number of eigenvectors to compute the importance score with
-    tolerance : float
-        Threshold below which values will be considered 0
-        stored in `self.tol`
+    :param iterative: whether to orthogonalize after each selection,
+                      defaults to `true`
+    :type iterative: boolean
 
-    # """
+    :param k: number of eigenvectors to compute the importance score with,
+              defaults to 1
+    :type k: int
+
+    :param tol: threshold below which values will be considered 0,
+                      defaults to 1E-12
+    :type tol: float
+    """
 
     def __init__(self, iterative=True, tolerance=1e-12, k=1, **kwargs):
 
@@ -88,7 +89,10 @@ class _BaseCUR:
 
     @abstractmethod
     def get_product(self):
-        """Abstract method for computing the inner or outer product of the input matrices"""
+        """
+        Abstract method for computing the inner or outer product of the
+        input matrices
+        """
         return
 
     @abstractmethod
@@ -99,28 +103,43 @@ class _BaseCUR:
 
 class SampleCUR(_BaseCUR):
     """
-    Instantiation of CUR for sample selection using left singular vectors
-    When mixing < 1, this will use PCov-CUR, where the property and
-    structure matrices are used to construct augmented singular vectors
+    For sample selection, the importance score :math:`\\pi` is the sum over
+    the squares of the first :math:`k` components of the left singular vectors
 
-    Parameters
-    ----------
-    matrix : ndarray of shape (n x m)
-        Data to select from -
-        Samples selection will choose a subset of the `n` rows
-        stored in `self.A`
-    mixing : float
-        mixing parameter, as described in PCovR as `alpha`
-        stored in `self.mixing`
-    iterative : boolean
-        whether or not to compute CUR iteratively
-    tolerance : float
-        Threshold below which values will be considered 0
-        stored in `self.tol`
-    Y (optional) : ndarray of shape (n x p)
-        Array to include in biased selection when mixing < 1
-        Required when mixing < 1, throws AssertionError otherwise
-        stored in `self.Y`
+    .. math::
+
+        \\pi_j =
+        \\sum_i^k \\left(\\mathbf{U}_\\mathbf{\\tilde{K}}\\right)_{ij}^2.
+
+    where :math:`{\\mathbf{\\tilde{K}} = \\alpha \\mathbf{XX}^T +
+    (1 - \\alpha)\\mathbf{\\hat{Y}\\hat{Y}}^T}` for some mixing parameter
+    :math:`{\\alpha}`. When :math:`{\\alpha = 1}`, this defaults to the Gram
+    matrix :math:`{\\mathbf{K} = \\mathbf{X}\\mathbf{X}^T}`.
+
+    :param iterative: whether to orthogonalize after each selection,
+                      defaults to `true`
+    :type iterative: boolean
+
+    :param k: number of eigenvectors to compute the importance score with,
+              defaults to 1
+    :type k: int
+
+    :param X: Data matrix :math:`\\mathbf{X}` from which to select a
+                   subset of the `n` rows
+    :type X: array of shape (n x m)
+
+    :param mixing: mixing parameter,
+                   as described in PCovR as :math:`{\\alpha}`, defaults to 1
+    :type mixing: float
+
+    :param tol: threshold below which values will be considered 0,
+                      defaults to 1E-12
+    :type tol: float
+
+    :param Y: array to include in biased selection when mixing < 1; required
+              when mixing < 1, throws AssertionError otherwise
+    :type Y: array of shape (n x p), optional when :math:`{\\alpha = 1}`
+
 
     """
 
@@ -160,7 +179,24 @@ class SampleCUR(_BaseCUR):
         )
 
     def orthogonalize(self):
-        """Orthogonalizes the remaining samples by those already selected"""
+        """
+        Orthogonalizes the remaining samples by those already selected
+
+        .. math::
+            \\mathbf{X} \\leftarrow \\mathbf{X} -
+            \\mathbf{X} \\left(\\frac{\\mathbf{x}_{r}^T \\mathbf{x}_{r}}
+                                {\\lVert \\mathbf{x}_{r}\\rVert^2}\\right)`.
+
+        When `mixing < 1`, this also includes orthogonalization of
+        :math:`\\mathbf{Y}`
+
+        .. math::
+            \\mathbf{Y} \\leftarrow \\mathbf{Y} -
+            \\mathbf{X} \\left(\\mathbf{X}_\\mathbf{r}^T
+            \\mathbf{X}_\\mathbf{r}\\right)^{-1}
+            \\mathbf{X}_\\mathbf{r}^T \\mathbf{Y}_\\mathbf{r}`.
+
+        """
         if self.iter:
             self.A_current, self.Y_current = sample_orthogonalizer(
                 self.idx, self.A_current, self.Y_current, self.tol
@@ -169,28 +205,44 @@ class SampleCUR(_BaseCUR):
 
 class FeatureCUR(_BaseCUR):
     """
-    Instantiation of CUR for feature selection using right singular vectors
-    When mixing < 1, this will use PCov-CUR, where the property and
-    structure matrices are used to construct augmented singular vectors
+    For feature selection, the importance score :math:`\\pi` is the sum over
+    the squares of the first :math:`k` components of the right singular vectors
 
-    Parameters
-    ----------
-    matrix : ndarray of shape (n x m)
-        Data to select from -
-        Samples selection will choose a subset of the `m` columns
-        stored in `self.A`
-    mixing : float
-        mixing parameter, as described in PCovR as `alpha`
-        stored in `self.mixing`
-    iterative : boolean
-        whether or not to compute CUR iteratively
-    tolerance : float
-        Threshold below which values will be considered 0
-        stored in `self.tol`
-    Y (optional) : ndarray of shape (n x p)
-        Array to include in biased selection when mixing < 1
-        Required when mixing < 1, throws AssertionError otherwise
-        stored in `self.Y`
+    .. math::
+
+        \\pi_j =
+        \\sum_i^k \\left(\\mathbf{U}_\\mathbf{\\tilde{C}}\\right)_{ij}^2.
+
+    where :math:`{\\mathbf{\\tilde{C}} = \\alpha \\mathbf{X}^T\\mathbf{X} +
+    (1 - \\alpha)(\\mathbf{X}^T\\mathbf{X})^{-1/2}\\mathbf{X}^T
+    \\mathbf{\\hat{Y}\\hat{Y}}^T\\mathbf{X}(\\mathbf{X}^T\\mathbf{X})^{-1/2}}`
+    for some mixing parameter :math:`{\\alpha}`. When :math:`{\\alpha = 1}`,
+    this defaults to the covariance matrix
+    :math:`{\\mathbf{C} = \\mathbf{X}^T\\mathbf{X}}`.
+
+    :param iterative: whether to orthogonalize after each selection,
+                      defaults to `true`
+    :type iterative: boolean
+
+    :param k: number of eigenvectors to compute the importance score with,
+              defaults to 1
+    :type k: int
+
+    :param X: Data matrix :math:`\\mathbf{X}` from which to select a
+                   subset of the `n` columns
+    :type X: array of shape (n x m)
+
+    :param mixing: mixing parameter, as described in PCovR as
+                   :math:`{\\alpha}`, defaults to 1
+    :type mixing: float
+
+    :param tol: threshold below which values will be considered 0,
+                      defaults to 1E-12
+    :type tol: float
+
+    :param Y: array to include in biased selection when mixing < 1;
+              required when mixing < 1, throws AssertionError otherwise
+    :type Y: array of shape (n x p), optional when :math:`{\\alpha = 1}`
     """
 
     def __init__(self, X, mixing=1.0, iterative=True, tol=1e-12, Y=None, **kwargs):
@@ -227,7 +279,22 @@ class FeatureCUR(_BaseCUR):
         return pcovr_covariance(self.mixing, self.A_current, self.Y_current, self.tol)
 
     def orthogonalize(self):
-        """Orthogonalizes the remaining features by those already selected"""
+        """
+        Orthogonalizes the remaining features by those already selected, such
+        that
+
+        :math:`{\\mathbf{X} \\leftarrow \\mathbf{X} -
+        \\left(\\frac{\\mathbf{X}_{c}\\mathbf{X}_{c}^T\\cdot}
+        {\\lVert\\mathbf{X}_{c}\\rVert^2}\\right)\\mathbf{X}}`.
+
+        When `mixing < 1`, this also includes orthogonalization of
+        :math:`\\mathbf{Y}`
+
+        :math:`{\\mathbf{Y} \\leftarrow \\mathbf{Y} - \\mathbf{X}_\\mathbf{c}
+        \\left(\\mathbf{X}_\\mathbf{c}^T \\mathbf{X}_\\mathbf{c}\\right)^{-1}
+        \\mathbf{X}_\\mathbf{c}^T \\mathbf{Y}}`.
+
+        """
         if self.iter:
             self.A_current, self.Y_current = feature_orthogonalizer(
                 self.idx, self.A_current, self.Y_current, self.tol

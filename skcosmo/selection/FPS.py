@@ -32,27 +32,9 @@ class _BaseFPS:
     """
     Base Class defined for FPS selection methods
 
-    Parameters
-    ----------
-    idxs : list of int, None
-        predetermined indices
-        if None provided, first index selected is random
-
-    Attributes
-    ----------
-    distances : ndarray
-        at the current iteration, minimum distances between each feature
-        or sample with those selected
-    distance_when_selected : ndarray
-        distance for each feature or sample when it was selected, nan otherwise
-    idx : list
-        contains the indices of the feature or sample selections made
-    product : ndarray
-        shape is (m x m) (feature selection) or (n x n) (sample selection)
-        defines the distances matrix between features/samples
-    tol : float
-        corresponds to `tolerance` passed in constructor
-
+    :param idxs: predetermined indices; if None provided, first index selected
+                 is random
+    :type idxs: list of int, None
 
     """
 
@@ -110,26 +92,40 @@ class _BaseFPS:
 
 class SampleFPS(_BaseFPS):
     """
-    Instantiation of FPS for sample selection using Euclidean Distances
-    When mixing < 1, this will use PCov-FPS, where the property and
-    structure matrices are used to construct a combined distance
 
-    Parameters
-    ----------
-    matrix : ndarray of shape (n x m)
-        Data to select from -
-        Samples selection will choose a subset of the `n` rows
-        stored in `self.A`
-    mixing : float
-        mixing parameter, as described in PCovR as `alpha`
-        stored in `self.mixing`
-    tolerance : float
-        Threshold below which values will be considered 0
-        stored in `self.tol`
-    Y (optional) : ndarray of shape (n x p)
-        Array to include in biased selection when mixing < 1
-        Required when mixing < 1, throws AssertionError otherwise
-        stored in `self.Y`
+    For sample selection, traditional FPS employs a row-wise Euclidean
+    distance, which can be expressed using the Gram matrix
+    :math:`\\mathbf{K} = \\mathbf{X} \\mathbf{X}^T`
+
+    .. math::
+        \\operatorname{d}_r(i, j) = K_{ii} - 2 K_{ij} + K_{jj}.
+
+    When mixing < 1, this will use PCov-FPS, where a modified Gram matrix is
+    used to express the distances
+
+    .. math::
+        \\mathbf{\\tilde{K}} = \\alpha \\mathbf{XX}^T +
+        (1 - \\alpha)\\mathbf{\\hat{Y}\\hat{Y}}^T
+
+    :param idxs: predetermined indices; if None provided, first index selected
+                 is random
+    :type idxs: list of int, None
+
+    :param X: Data matrix :math:`\\mathbf{X}` from which to select a
+                   subset of the `n` rows
+    :type X: array of shape (n x m)
+
+    :param mixing: mixing parameter, as described in PCovR as
+                  :math:`{\\alpha}`, defaults to 1
+    :type mixing: float
+
+    :param tolerance: threshold below which values will be considered 0,
+                      defaults to 1E-12
+    :type tolerance: float
+
+    :param Y: array to include in biased selection when mixing < 1;
+              required when mixing < 1, throws AssertionError otherwise
+    :type Y: array of shape (n x p), optional when :math:`{\\alpha = 1}`
 
     """
 
@@ -157,26 +153,41 @@ class SampleFPS(_BaseFPS):
 
 class FeatureFPS(_BaseFPS):
     """
-    Instantiation of FPS for feature selection using Euclidean Distances
-    When mixing < 1, this will use PCov-FPS, where the property and
-    structure matrices are used to construct a combined distance
 
-    Parameters
-    ----------
-    matrix : ndarray of shape (n x m)
-        Data to select from -
-        Feature selection will choose a subset of the `m` columns
-        stored in `self.A`
-    mixing : float
-        mixing parameter, as described in PCovR as `alpha`
-        stored in `self.mixing`
-    tolerance : float
-        Threshold below which values will be considered 0
-        stored in `self.tol`
-    Y (optional) : ndarray of shape (n x p)
-        Array to include in biased selection when mixing < 1
-        Required when mixing < 1, throws AssertionError otherwise
-        stored in `self.Y`
+    For feature selection, traditional FPS employs a column-wise Euclidean
+    distance, which can be expressed using the covariance matrix
+    :math:`\\mathbf{C} = \\mathbf{X} ^ T \\mathbf{X}`
+
+    .. math::
+        \\operatorname{d}_c(i, j) = C_{ii} - 2 C_{ij} + C_{jj}.
+
+    When mixing < 1, this will use PCov-FPS, where a modified covariance matrix
+    is used to express the distances
+
+    .. math::
+        \\mathbf{\\tilde{C}} = \\alpha \\mathbf{X}^T\\mathbf{X} +
+        (1 - \\alpha)(\\mathbf{X}^T\\mathbf{X})^{-1/2}\\mathbf{X}^T
+        \\mathbf{\\hat{Y}\\hat{Y}}^T\\mathbf{X}(\\mathbf{X}^T\\mathbf{X})^{-1/2}
+
+    :param idxs: predetermined indices; if None provided, first index selected
+                 is random
+    :type idxs: list of int, None
+
+    :param X: Data matrix :math:`\\mathbf{X}` from which to select a
+                   subset of the `n` columns
+    :type X: array of shape (n x m)
+
+    :param mixing: mixing parameter, as described in PCovR as
+                   :math:`{\\alpha}`, defaults to 1
+    :type mixing: float
+
+    :param tolerance: threshold below which values will be considered 0,
+                      defaults to 1E-12
+    :type tolerance: float
+
+    :param Y: array to include in biased selection when mixing < 1;
+              required when mixing < 1, throws AssertionError otherwise
+    :type Y: array of shape (n x p), optional when :math:`{\\alpha = 1}`
 
     """
 
