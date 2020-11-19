@@ -7,8 +7,11 @@ class PCovSelectionTest:
     def test_no_Y(self):
         X, Y = load_boston(return_X_y=True)
 
-        with self.assertRaises(Exception):
+        with self.assertRaises(Exception) as cm:
             self.model(X=X, mixing=0.5)
+            self.assertEqual(
+                str(cm.exception), r"For $\alpha < 1$, $Y$ must be supplied."
+            )
 
     def test_no_X(self):
         X, Y = load_boston(return_X_y=True)
