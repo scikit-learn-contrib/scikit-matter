@@ -11,7 +11,7 @@ Authors: Rose K. Cersonsky
 
 """
 
-
+from abc import abstractmethod
 import numpy as np
 from skcosmo.pcovr.pcovr_distances import pcovr_covariance, pcovr_kernel_distance
 from sklearn.utils import check_X_y, check_array
@@ -56,15 +56,13 @@ class _FPS:
 
     """
 
-    def __init__(self, idxs=None, **kwargs):
+    def __init__(self, idxs=None):
         if idxs is not None:
             self.idx = idxs
         else:
             self.idx = [np.random.randint(self.product.shape[0])]
-        self.distances = np.min(
-            [_calculate_pcov_distances_(self.product, idx) for idx in self.idx], axis=0
-        )
-        self.distance_when_selected = np.nan * np.zeros(self.product.shape[0])
+        self.distances = np.min([self.calc_distance(i) for i in self.idx], axis=0)
+        self.distance_selected = np.nan * np.zeros(self.product.shape[0])
 
     def select(self, n):
         """Method for FPS select based upon a product of the input matrices
@@ -84,15 +82,30 @@ class _FPS:
         for i in range(len(self.idx) - 1, n - 1):
             for j in np.where(self.distances > 0)[0]:
                 self.distances[j] = min(
-                    self.distances[j],
-                    _calculate_pcov_distances_(self.product, self.idx[i], [j]),
+                    self.distances[j], self.calc_distance(self.idx[i], j)
                 )
+
             self.idx.append(np.argmax(self.distances))
             self.distance_when_selected[self.idx[-1]] = self.distances[self.idx[-1]]
 
             if np.abs(self.distances).max() < self.tol:
                 return self.idx
         return self.idx
+
+    @abstractmethod
+    def calc_distance(self, idx_1, idx_2=None):
+        """
+            Abstract method to be used for calculating the distances
+            between two indexed points
+
+        : param idx_1 : index of first point to use
+        : type idx_1 : int
+
+        : param idx_2 : index of first point to use; if None, calculates the
+                        distance between idx_1 and all points
+        : type idx_2 : int
+        """
+        pass
 
 
 class SampleFPS(_FPS):
@@ -138,6 +151,9 @@ class SampleFPS(_FPS):
         )
         super().__init__(tolerance=tolerance, **kwargs)
 
+    def calc_distance(self, idx_1, idx_2=None):
+        return _calc_distances_(self.product, idx_1, idx_2)
+
 
 class FeatureFPS(_FPS):
     """
@@ -179,3 +195,6 @@ class FeatureFPS(_FPS):
 
         self.product = pcovr_covariance(self.mixing, self.A, self.Y, rcond=self.tol)
         super().__init__(tolerance=tolerance, **kwargs)
+
+    def calc_distance(self, idx_1, idx_2=None):
+        return _calc_distances_(self.product, idx_1, idx_2)
