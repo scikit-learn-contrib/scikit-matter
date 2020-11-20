@@ -13,9 +13,9 @@ CUR
 CUR decomposition begins by approximating a matrix :math:`{\mathbf{X}}` using a subset of columns and rows
 
 .. math::
-    \mathbf{\hat{X}} \approx \mathbf{X}_f \left(\mathbf{X}_f^- \mathbf{X} \mathbf{X}_s^-\right) \mathbf{X}_s.
+    \mathbf{\hat{X}} \approx \mathbf{X}_\mathbf{c} \left(\mathbf{X}_\mathbf{c}^- \mathbf{X} \mathbf{X}_\mathbf{r}^-\right) \mathbf{X}_\mathbf{r}.
 
-These subsets of rows and columns are determined by iterative maximization of a leverage score :math:`\pi`, representative of the relative importance of each column or row.
+These subsets of rows and columns, denoted :math:`\mathbf{X}_\mathbf{r}` and :math:`\mathbf{X}_\mathbf{c}`, respectively, are determined by iterative maximization of a leverage score :math:`\pi`, representative of the relative importance of each column or row.
 In each iteration of CUR, we select the column or row that maximizes :math:`\pi` and orthogonalize the remaining columns or rows.
 These steps are iterated until a sufficient number of features has been selected.
 This iterative approach, albeit comparatively time consuming, is the most deterministic and efficient route in reducing the number of features needed to approximate :math:`\mathbf{X}` when compared to selecting all features in a single iteration based upon the relative :math:`\\pi` importance.
