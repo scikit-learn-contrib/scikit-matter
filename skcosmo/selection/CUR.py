@@ -43,11 +43,11 @@ class _BaseCUR:
     :type tol: float
     """
 
-    def __init__(self, iterative=True, tolerance=1e-12, k=1):
+    def __init__(self, iterative=True, tol=1e-12, k=1):
 
         self.k = k
         self.iter = iterative
-        self.tol = tolerance
+        self.tol = tol
         self.idx = []
         self.pi = []
 
@@ -265,6 +265,8 @@ class FeatureCUR(_BaseCUR):
             self.A_current = self.A.copy()
             if self.Y is not None:
                 self.Y_current = self.Y.copy()
+            else:
+                self.Y_current = None
 
         self.product = self.get_product()
 
