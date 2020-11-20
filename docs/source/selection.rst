@@ -1,7 +1,7 @@
 Data Sub-Selection
 ============================
 
-:sklearn-COSMO: contains two feature and sample selection modules corresponding to CUR selection and Farthest Point Sampling.  Each method can be modified to include aspects of supervised methods using the `mixing` parameter (0 - 1), where `mixing = 1` corresponds to traditional, unsupervised CUR and FPS. These methods are the focus of `Imbalzano [2018] <https://aip.scitation.org/doi/10.1063/1.5024611>` and Cersonsky [2021] (forthcoming).
+This module contains two feature and sample selection modules corresponding to CUR selection and Farthest Point Sampling.  Each method can be modified to include aspects of supervised methods using the `mixing` parameter (0 - 1), where `mixing = 1` corresponds to traditional, unsupervised CUR and FPS. These methods are the focus of `Imbalzano [2018] <https://aip.scitation.org/doi/10.1063/1.5024611>`_ and Cersonsky [2021] (forthcoming).
 
 .. _CUR-api:
 
