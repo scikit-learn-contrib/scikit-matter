@@ -4,7 +4,7 @@ import numpy as np
 
 from skcosmo.selection import FeatureCUR, FeatureFPS, SampleCUR, SampleFPS
 
-zero = 1e-8
+EPSILON = 1e-8
 
 
 class PCovSelectionTest:
@@ -75,7 +75,7 @@ class FeatureCURTest(unittest.TestCase, PCovSelectionTest):
             with self.subTest(i=i):
                 cur.select(1)
                 self.assertLessEqual(
-                    np.linalg.norm(cur.A_current[:, cur.idx[-1]]), zero
+                    np.linalg.norm(cur.A_current[:, cur.idx[-1]]), EPSILON
                 )
 
 
@@ -101,7 +101,10 @@ class SampleCURTest(unittest.TestCase, PCovSelectionTest):
         for i in range(X.shape[0]):
             with self.subTest(i=i):
                 cur.select(1)
-                self.assertLessEqual(np.linalg.norm(cur.A_current[cur.idx[-1]]), zero)
+                self.assertLessEqual(
+                    np.linalg.norm(cur.A_current[cur.idx[-1]]), EPSILON
+                )
+
 
 
 if __name__ == "__main__":
