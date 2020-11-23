@@ -1,10 +1,18 @@
 import unittest
-import skcosmo
 from sklearn.datasets import load_boston
+import numpy as np
+
+from skcosmo.selection import FeatureCUR, FeatureFPS, SampleCUR, SampleFPS
+
+zero = 1e-8
 
 
 class PCovSelectionTest:
     def test_no_Y(self):
+        """
+        This test checks that if mixing < 1, the selection method raises an
+        exception when no Y is supplied
+        """
         X, Y = load_boston(return_X_y=True)
 
         with self.assertRaises(Exception) as cm:
@@ -14,18 +22,29 @@ class PCovSelectionTest:
             )
 
     def test_no_X(self):
+        """
+        This test checks that X is supplied
+        """
         X, Y = load_boston(return_X_y=True)
 
         with self.assertRaises(Exception):
             self.model(mixing=0.5, Y=Y)
 
     def test_bad_Y(self):
+        """
+        This test checks that the model errors when Y contains a different
+        number of samples from X
+        """
         X, Y = load_boston(return_X_y=True)
 
         with self.assertRaises(Exception):
             self.model(X=X, mixing=0.5, Y=Y[:20])
 
     def test_bad_X(self):
+        """
+        This test checks that the model errors when X contains a different
+        number of samples from Y
+        """
         X, Y = load_boston(return_X_y=True)
 
         with self.assertRaises(Exception):
@@ -34,22 +53,55 @@ class PCovSelectionTest:
 
 class FeatureFPSTest(unittest.TestCase, PCovSelectionTest):
     def setup(self):
-        self.model = skcosmo.selection.FeatureFPS
+        self.model = FeatureFPS
 
 
 class FeatureCURTest(unittest.TestCase, PCovSelectionTest):
     def setup(self):
-        self.model = skcosmo.selection.FeatureCUR
+        self.model = FeatureCUR
+
+    def test_orthogonalize(self):
+        """
+        This test checks that the orthogonalization that occurs after each
+        selection leads to a null feature column
+        """
+
+        self.setup()
+        X, Y = load_boston(return_X_y=True)
+
+        cur = self.model(mixing=0.5, X=X, Y=Y, iterative=True)
+
+        for i in range(X.shape[1]):
+            with self.subTest(i=i):
+                cur.select(1)
+                self.assertLessEqual(
+                    np.linalg.norm(cur.A_current[:, cur.idx[-1]]), zero
+                )
 
 
 class SampleFPSTest(unittest.TestCase, PCovSelectionTest):
     def setup(self):
-        self.model = skcosmo.selection.SampleFPS
+        self.model = SampleFPS
 
 
 class SampleCURTest(unittest.TestCase, PCovSelectionTest):
     def setup(self):
-        self.model = skcosmo.selection.SampleCUR
+        self.model = SampleCUR
+
+    def test_orthogonalize(self):
+        """
+        This test checks that the orthogonalization that occurs after each
+        selection leads to a null sample row
+        """
+        self.setup()
+        X, Y = load_boston(return_X_y=True)
+
+        cur = self.model(mixing=0.5, X=X, Y=Y, iterative=True)
+
+        for i in range(X.shape[0]):
+            with self.subTest(i=i):
+                cur.select(1)
+                self.assertLessEqual(np.linalg.norm(cur.A_current[cur.idx[-1]]), zero)
 
 
 if __name__ == "__main__":
