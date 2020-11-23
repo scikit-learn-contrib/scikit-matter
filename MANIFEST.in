@@ -1,0 +1,2 @@
+recursive-include skcosmo/datasets/data/ *
+recursive-include skcosmo/datasets/descr/ *
