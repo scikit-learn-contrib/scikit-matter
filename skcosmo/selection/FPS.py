@@ -49,15 +49,19 @@ class _BaseFPS:
 
     :param idxs: predetermined indices; if None provided, first index selected
                  is random
+    :param tol: threshold below which values will be considered 0,
+                      defaults to 1E-12
+    :type tol: float
     :type idxs: list of int, None
 
     """
 
-    def __init__(self, idxs=None):
+    def __init__(self, idxs=None, tol = 1e10-12):
         if idxs is not None:
             self.idx = idxs
         else:
             self.idx = [np.random.randint(self.product.shape[0])]
+        self.tol = tol
         self.distances = np.min([self.calc_distance(i) for i in self.idx], axis=0)
         self.distance_selected = np.nan * np.zeros(self.product.shape[0])
 
@@ -83,7 +87,7 @@ class _BaseFPS:
                 )
 
             self.idx.append(np.argmax(self.distances))
-            self.distance_when_selected[self.idx[-1]] = self.distances[self.idx[-1]]
+            self.distance_selected[self.idx[-1]] = self.distances[self.idx[-1]]
 
             if np.abs(self.distances).max() < self.tol:
                 return self.idx
