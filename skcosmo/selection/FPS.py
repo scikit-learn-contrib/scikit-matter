@@ -56,7 +56,7 @@ class _BaseFPS:
 
     """
 
-    def __init__(self, idxs=None, tol=1e10 - 12):
+    def __init__(self, idxs=None, tol=1e-12):
         if idxs is not None:
             self.idx = idxs
         else:
