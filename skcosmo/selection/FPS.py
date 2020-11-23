@@ -134,9 +134,9 @@ class SampleFPS(_BaseFPS):
                   :math:`{\\alpha}`, defaults to 1
     :type mixing: float
 
-    :param tolerance: threshold below which values will be considered 0,
+    :param tol: threshold below which values will be considered 0,
                       defaults to 1E-12
-    :type tolerance: float
+    :type tol: float
 
     :param Y: array to include in biased selection when mixing < 1;
               required when mixing < 1, throws AssertionError otherwise
@@ -144,10 +144,10 @@ class SampleFPS(_BaseFPS):
 
     """
 
-    def __init__(self, X, mixing=1.0, tolerance=1e-12, Y=None):
+    def __init__(self, X, mixing=1.0, tol=1e-12, Y=None):
 
         self.mixing = mixing
-        self.tol = tolerance
+        self.tol = tol
 
         if mixing < 1:
             try:
@@ -160,7 +160,7 @@ class SampleFPS(_BaseFPS):
         self.product = pcovr_kernel_distance(
             self.mixing, self.A, self.Y, rcond=self.tol
         )
-        super().__init__(tolerance=tolerance)
+        super().__init__(tol=tol)
 
     def calc_distance(self, idx_1, idx_2=None):
         return _calc_distances_(self.product, idx_1, idx_2)
@@ -196,9 +196,9 @@ class FeatureFPS(_BaseFPS):
                    :math:`{\\alpha}`, defaults to 1
     :type mixing: float
 
-    :param tolerance: threshold below which values will be considered 0,
+    :param tol: threshold below which values will be considered 0,
                       defaults to 1E-12
-    :type tolerance: float
+    :type tol: float
 
     :param Y: array to include in biased selection when mixing < 1;
               required when mixing < 1, throws AssertionError otherwise
@@ -206,10 +206,10 @@ class FeatureFPS(_BaseFPS):
 
     """
 
-    def __init__(self, X, mixing=1.0, tolerance=1e-12, Y=None):
+    def __init__(self, X, mixing=1.0, tol=1e-12, Y=None):
 
         self.mixing = mixing
-        self.tol = tolerance
+        self.tol = tol
 
         if mixing < 1:
             try:
@@ -220,7 +220,7 @@ class FeatureFPS(_BaseFPS):
             self.A, self.Y = check_array(X, copy=True), None
 
         self.product = pcovr_covariance(self.mixing, self.A, self.Y, rcond=self.tol)
-        super().__init__(tolerance=tolerance)
+        super().__init__(tol=tol)
 
     def calc_distance(self, idx_1, idx_2=None):
         return _calc_distances_(self.product, idx_1, idx_2)
