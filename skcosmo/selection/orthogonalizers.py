@@ -11,6 +11,16 @@ Authors: Rose K. Cersonsky
 
 import numpy as np
 
+def X_orthogonalizer(X_proxy, c):
+
+    v = X_proxy[:, c] / np.sqrt(
+        np.matmul(X_proxy[:, c], X_proxy[:, c])
+    )
+
+    for i in range(X_proxy.shape[1]):
+        X_proxy[:, i] -= v * np.dot(v, X_proxy[:, i])
+
+    return X_proxy
 
 def X_orthogonalizer(X_proxy, c):
     """
@@ -83,7 +93,6 @@ def feature_orthogonalizer(idx, X_proxy, Y_proxy, tol=1e-12):
         X_proxy = X_orthogonalizer(X_proxy, idx[-1])
 
     return X_proxy, Y_proxy
-
 
 def sample_orthogonalizer(idx, X_proxy, Y_proxy, tol=1e-12):
     """
