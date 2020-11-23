@@ -78,6 +78,25 @@ class FeatureCURTest(unittest.TestCase, PCovSelectionTest):
                     np.linalg.norm(cur.A_current[:, cur.idx[-1]]), EPSILON
                 )
 
+    def test_others_orthogonal(self):
+        """
+        This test checks that the orthogonalization that occurs after each
+        selection leads to orthogonal feature columns
+        """
+        self.setup()
+        X, Y = load_boston(return_X_y=True)
+
+        cur = self.model(mixing=0.5, X=X, Y=Y, iterative=True)
+
+        for i in range(X.shape[1]):
+            with self.subTest(i=i):
+                cur.select(1)
+                for j in range(X.shape[1]):
+                    self.assertLessEqual(
+                        np.dot(cur.A_current[:, cur.idx[-1]], cur.A_current[:, j]),
+                        EPSILON,
+                    )
+
 
 class SampleFPSTest(unittest.TestCase, PCovSelectionTest):
     def setup(self):
@@ -105,6 +124,23 @@ class SampleCURTest(unittest.TestCase, PCovSelectionTest):
                     np.linalg.norm(cur.A_current[cur.idx[-1]]), EPSILON
                 )
 
+    def test_others_orthogonal(self):
+        """
+        This test checks that the orthogonalization that occurs after each
+        selection leads to orthogonal sample rows
+        """
+        self.setup()
+        X, Y = load_boston(return_X_y=True)
+
+        cur = self.model(mixing=0.5, X=X, Y=Y, iterative=True)
+
+        for i in range(X.shape[0]):
+            with self.subTest(i=i):
+                cur.select(1)
+                for j in range(X.shape[0]):
+                    self.assertLessEqual(
+                        np.dot(cur.A_current[cur.idx[-1]], cur.A_current[j]), EPSILON
+                    )
 
 
 if __name__ == "__main__":
