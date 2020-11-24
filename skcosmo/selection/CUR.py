@@ -56,12 +56,15 @@ class _BaseCUR:
 
         Parameters
         ----------
-        n : number of selections to make
+        n : number of selections to make, must be > 0
 
         Returns
         -------
         idx: list of n selections
         """
+
+        if n <= 0:
+            raise ValueError("You must call select(n) with n > 0.")
 
         if len(self.idx) > n:
             return self.idx[:n]

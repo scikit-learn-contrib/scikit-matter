@@ -50,15 +50,55 @@ class PCovSelectionTest:
         with self.assertRaises(Exception):
             self.model(X=X[:10], mixing=0.5, Y=Y)
 
+    def test_quick_run(self):
+        """
+        This test checks that the model can select 2 indices
+        """
+        X, Y = load_boston(return_X_y=True)
+
+        model = self.model(X=X, mixing=0.5, Y=Y)
+        model.select(n=2)
+        self.assertEqual(len(model.idx), 2)
+
+    def test_negative_select(self):
+        """
+        This test checks that the model errors when asked to select negative indices
+        """
+        X, Y = load_boston(return_X_y=True)
+
+        with self.assertRaises(ValueError):
+            model = self.model(X=X, mixing=0.5, Y=Y)
+            model.select(n=-1)
+
 
 class FeatureFPSTest(unittest.TestCase, PCovSelectionTest):
-    def setup(self):
+    def setUp(self):
         self.model = FeatureFPS
+        self.idx = [9, 3, 11, 6, 1, 10, 8, 12, 0, 5, 2, 7, 4]
 
+    def test_supplied_indices(self):
+        """
+        This test checks FPS will accept pre-defined indices.
+        """
+        X, Y = load_boston(return_X_y=True)
+        model = self.model(X=X, mixing=0.5, Y=Y, idxs=[self.idx[0]])
+        model.select(4)
+
+    def test_features(self):
+        """
+        This test checks FPS returns the standard set of features
+        """
+        X, Y = load_boston(return_X_y=True)
+        model = self.model(X=X, mixing=0.5, Y=Y, idxs=[self.idx[0]])
+        for i in range(2, len(self.idx)+1):
+            with self.subTest(i=i):
+                model.select(n=i)
+                self.assertEqual(model.idx[-1], self.idx[i-1])
 
 class FeatureCURTest(unittest.TestCase, PCovSelectionTest):
-    def setup(self):
+    def setUp(self):
         self.model = FeatureCUR
+        self.idx = [9, 11, 6, 1, 12, 0, 5, 2, 8, 10, 7, 3, 4]
 
     def test_orthogonalize(self):
         """
@@ -66,7 +106,6 @@ class FeatureCURTest(unittest.TestCase, PCovSelectionTest):
         selection leads to a null feature column
         """
 
-        self.setup()
         X, Y = load_boston(return_X_y=True)
 
         cur = self.model(mixing=0.5, X=X, Y=Y, iterative=True)
@@ -83,7 +122,6 @@ class FeatureCURTest(unittest.TestCase, PCovSelectionTest):
         This test checks that the orthogonalization that occurs after each
         selection leads to orthogonal feature columns
         """
-        self.setup()
         X, Y = load_boston(return_X_y=True)
 
         cur = self.model(mixing=0.5, X=X, Y=Y, iterative=True)
@@ -97,14 +135,32 @@ class FeatureCURTest(unittest.TestCase, PCovSelectionTest):
                         EPSILON,
                     )
 
+    def test_features(self):
+        """
+        This test checks CUR returns the standard set of features
+        """
+        X, Y = load_boston(return_X_y=True)
+        model = self.model(X=X, mixing=0.5, Y=Y)
+        for i in range(1, len(self.idx)+1):
+            with self.subTest(i=i):
+                model.select(n=i)
+                self.assertEqual(model.idx[-1], self.idx[i-1])
 
 class SampleFPSTest(unittest.TestCase, PCovSelectionTest):
-    def setup(self):
+    def setUp(self):
         self.model = SampleFPS
+
+    def test_supplied_indices(self):
+        """
+        This test checks FPS will accept pre-defined indices.
+        """
+        X, Y = load_boston(return_X_y=True)
+        model = self.model(X=X, mixing=0.5, Y=Y, idxs=[488])
+        model.select(n=4)
 
 
 class SampleCURTest(unittest.TestCase, PCovSelectionTest):
-    def setup(self):
+    def setUp(self):
         self.model = SampleCUR
 
     def test_orthogonalize(self):
@@ -112,7 +168,6 @@ class SampleCURTest(unittest.TestCase, PCovSelectionTest):
         This test checks that the orthogonalization that occurs after each
         selection leads to a null sample row
         """
-        self.setup()
         X, Y = load_boston(return_X_y=True)
 
         cur = self.model(mixing=0.5, X=X, Y=Y, iterative=True)
@@ -129,7 +184,6 @@ class SampleCURTest(unittest.TestCase, PCovSelectionTest):
         This test checks that the orthogonalization that occurs after each
         selection leads to orthogonal sample rows
         """
-        self.setup()
         X, Y = load_boston(return_X_y=True)
 
         cur = self.model(mixing=0.5, X=X, Y=Y, iterative=True)
@@ -144,4 +198,4 @@ class SampleCURTest(unittest.TestCase, PCovSelectionTest):
 
 
 if __name__ == "__main__":
-    unittest.main()
+    unittest.main(verbosity=2)

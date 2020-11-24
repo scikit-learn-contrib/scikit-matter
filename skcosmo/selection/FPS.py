@@ -53,7 +53,7 @@ class _BaseFPS:
 
     """
 
-    def __init__(self, idxs=None):
+    def __init__(self, tol=1e-12, idxs=None):
         if idxs is not None:
             self.idx = idxs
         else:
@@ -66,12 +66,16 @@ class _BaseFPS:
 
         Parameters
         ----------
-        n : number of selections to make
+        n : number of selections to make, must be > 0
 
         Returns
         -------
         idx: list of n selections
         """
+
+        if n <= 0:
+            raise ValueError("You must call select(n) with n > 0.")
+
         if len(self.idx) > n:
             return self.idx[:n]
 
@@ -79,11 +83,11 @@ class _BaseFPS:
         for i in range(len(self.idx) - 1, n - 1):
             for j in np.where(self.distances > 0)[0]:
                 self.distances[j] = min(
-                    self.distances[j], self.calc_distance(self.idx[i], j)
+                    self.distances[j], self.calc_distance(self.idx[i], [j])
                 )
 
             self.idx.append(np.argmax(self.distances))
-            self.distance_selected[self.idx[-1]] = self.distances[self.idx[-1]]
+            self.distance_selected[i + 1] = self.distances[i + 1]
 
             if np.abs(self.distances).max() < self.tol:
                 return self.idx
@@ -100,7 +104,7 @@ class _BaseFPS:
 
         : param idx_2 : index of first point to use; if None, calculates the
                         distance between idx_1 and all points
-        : type idx_2 : int
+        : type idx_2 : list of int or None
         """
         pass
 
