@@ -90,10 +90,11 @@ class FeatureFPSTest(unittest.TestCase, PCovSelectionTest):
         """
         X, Y = load_boston(return_X_y=True)
         model = self.model(X=X, mixing=0.5, Y=Y, idxs=[self.idx[0]])
-        for i in range(2, len(self.idx)+1):
+        for i in range(2, len(self.idx) + 1):
             with self.subTest(i=i):
                 model.select(n=i)
-                self.assertEqual(model.idx[-1], self.idx[i-1])
+                self.assertEqual(model.idx[-1], self.idx[i - 1])
+
 
 class FeatureCURTest(unittest.TestCase, PCovSelectionTest):
     def setUp(self):
@@ -141,10 +142,11 @@ class FeatureCURTest(unittest.TestCase, PCovSelectionTest):
         """
         X, Y = load_boston(return_X_y=True)
         model = self.model(X=X, mixing=0.5, Y=Y)
-        for i in range(1, len(self.idx)+1):
+        for i in range(1, len(self.idx) + 1):
             with self.subTest(i=i):
                 model.select(n=i)
-                self.assertEqual(model.idx[-1], self.idx[i-1])
+                self.assertEqual(model.idx[-1], self.idx[i - 1])
+
 
 class SampleFPSTest(unittest.TestCase, PCovSelectionTest):
     def setUp(self):

@@ -21,7 +21,7 @@ commands =
 
 [tool.coverage.run]
 branch = true
-data_file = '.tox/.coverage'
+data_file = 'tests/.coverage'
 
 [tool.coverage.report]
 include = [
@@ -29,4 +29,4 @@ include = [
 ]
 
 [tool.coverage.xml]
-output = '.tox/coverage.xml'
+output = 'tests/coverage.xml'
