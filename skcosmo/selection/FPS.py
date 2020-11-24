@@ -144,7 +144,7 @@ class SampleFPS(_BaseFPS):
 
     """
 
-    def __init__(self, X, mixing=1.0, tol=1e-12, Y=None):
+    def __init__(self, X, mixing=1.0, tol=1e-12, Y=None, **kwargs):
 
         self.mixing = mixing
         self.tol = tol
@@ -160,7 +160,7 @@ class SampleFPS(_BaseFPS):
         self.product = pcovr_kernel_distance(
             self.mixing, self.A, self.Y, rcond=self.tol
         )
-        super().__init__(tol=tol)
+        super().__init__(tol=tol, **kwargs)
 
     def calc_distance(self, idx_1, idx_2=None):
         return _calc_distances_(self.product, idx_1, idx_2)
@@ -206,7 +206,7 @@ class FeatureFPS(_BaseFPS):
 
     """
 
-    def __init__(self, X, mixing=1.0, tol=1e-12, Y=None):
+    def __init__(self, X, mixing=1.0, tol=1e-12, Y=None, **kwargs):
 
         self.mixing = mixing
         self.tol = tol
@@ -220,7 +220,7 @@ class FeatureFPS(_BaseFPS):
             self.A, self.Y = check_array(X, copy=True), None
 
         self.product = pcovr_covariance(self.mixing, self.A, self.Y, rcond=self.tol)
-        super().__init__(tol=tol)
+        super().__init__(tol=tol, **kwargs)
 
     def calc_distance(self, idx_1, idx_2=None):
         return _calc_distances_(self.product, idx_1, idx_2)
