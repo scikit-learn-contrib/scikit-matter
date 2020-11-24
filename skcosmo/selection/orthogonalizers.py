@@ -12,6 +12,27 @@ Authors: Rose K. Cersonsky
 import numpy as np
 
 
+def X_orthogonalizer(X_proxy, c):
+    """
+    Orthogonalizes a feature matrix by the given column. Can be used to
+    orthogonalize by samples by calling `X = X_orthogonalizer(X.T, row_index).T`.
+
+    :param X_proxy: feature matrix to orthogonalize
+    :type X_proxy: matrix of shape (n x m)
+
+    :param c: index of the column to orthogonalize by
+    :type c: int, less than m
+
+    """
+
+    v = X_proxy[:, c] / np.sqrt(np.matmul(X_proxy[:, c], X_proxy[:, c]))
+
+    for i in range(X_proxy.shape[1]):
+        X_proxy[:, i] -= v * np.dot(v, X_proxy[:, i])
+
+    return X_proxy
+
+
 def feature_orthogonalizer(idx, X_proxy, Y_proxy, tol=1e-12):
     """
     Orthogonalizes two matrices, meant to represent a feature matrix
@@ -59,12 +80,8 @@ def feature_orthogonalizer(idx, X_proxy, Y_proxy, tol=1e-12):
 
             Y_proxy -= np.matmul(v, Y_proxy)
 
-        v = X_proxy[:, idx[-1]] / np.sqrt(
-            np.matmul(X_proxy[:, idx[-1]], X_proxy[:, idx[-1]])
-        )
+        X_proxy = X_orthogonalizer(X_proxy, idx[-1])
 
-        for i in range(X_proxy.shape[1]):
-            X_proxy[:, i] -= v * np.dot(v, X_proxy[:, i])
     return X_proxy, Y_proxy
 
 
@@ -118,9 +135,6 @@ def sample_orthogonalizer(idx, X_proxy, Y_proxy, tol=1e-12):
                 @ Y_proxy[idx]
             )
 
-        Ajnorm = np.dot(X_proxy[idx[-1]], X_proxy[idx[-1]])
-        for i in range(X_proxy.shape[0]):
-            X_proxy[i] -= (np.dot(X_proxy[i], X_proxy[idx[-1]]) / Ajnorm) * X_proxy[
-                idx[-1]
-            ]
+        X_proxy = X_orthogonalizer(X_proxy.T, idx[-1]).T
+
     return X_proxy, Y_proxy
