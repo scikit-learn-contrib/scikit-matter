@@ -83,7 +83,7 @@ class _BaseFPS:
                 )
 
             self.idx.append(np.argmax(self.distances))
-            self.distance_when_selected[self.idx[-1]] = self.distances[self.idx[-1]]
+            self.distance_selected[self.idx[-1]] = self.distances[self.idx[-1]]
 
             if np.abs(self.distances).max() < self.tol:
                 return self.idx
