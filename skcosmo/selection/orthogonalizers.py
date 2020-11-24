@@ -13,16 +13,6 @@ import numpy as np
 
 
 def X_orthogonalizer(X_proxy, c):
-
-    v = X_proxy[:, c] / np.sqrt(np.matmul(X_proxy[:, c], X_proxy[:, c]))
-
-    for i in range(X_proxy.shape[1]):
-        X_proxy[:, i] -= v * np.dot(v, X_proxy[:, i])
-
-    return X_proxy
-
-
-def X_orthogonalizer(X_proxy, c):
     """
     Orthogonalizes a feature matrix by the given column. Can be used to
     orthogonalize by samples by calling `X = X_orthogonalizer(X.T, row_index).T`.
