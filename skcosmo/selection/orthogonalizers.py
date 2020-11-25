@@ -12,7 +12,7 @@ Authors: Rose K. Cersonsky
 import numpy as np
 
 
-def X_orthogonalizer(X_proxy, c, tol=1E-12):
+def X_orthogonalizer(X_proxy, c, tol=1e-12):
     """
     Orthogonalizes a feature matrix by the given column. Can be used to
     orthogonalize by samples by calling `X = X_orthogonalizer(X.T, row_index).T`.
@@ -25,7 +25,7 @@ def X_orthogonalizer(X_proxy, c, tol=1E-12):
 
     """
 
-    if(np.sqrt(np.matmul(X_proxy[:, c], X_proxy[:, c])) < tol):
+    if np.sqrt(np.matmul(X_proxy[:, c], X_proxy[:, c])) < tol:
         raise ValueError("Cannot orthogonalize by a null vector.")
 
     v = X_proxy[:, c] / np.sqrt(np.matmul(X_proxy[:, c], X_proxy[:, c]))
