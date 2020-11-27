@@ -25,6 +25,7 @@ it you agree to distribute your changes under the same license.
   :maxdepth: 1
   :caption: Contents:
 
+  pcovr
   selection
   preprocessing
   reference

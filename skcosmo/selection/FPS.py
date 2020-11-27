@@ -13,7 +13,7 @@ Authors: Rose K. Cersonsky
 
 from abc import abstractmethod
 import numpy as np
-from skcosmo.pcovr.pcovr_distances import pcovr_covariance, pcovr_kernel_distance
+from skcosmo.pcovr.pcovr_distances import pcovr_covariance, pcovr_kernel
 from sklearn.utils import check_X_y, check_array
 
 
@@ -161,9 +161,7 @@ class SampleFPS(_BaseFPS):
         else:
             self.A, self.Y = check_array(X, copy=True), None
 
-        self.product = pcovr_kernel_distance(
-            self.mixing, self.A, self.Y, rcond=self.tol
-        )
+        self.product = pcovr_kernel(self.mixing, self.A, self.Y)
         super().__init__(tol=tol, **kwargs)
 
     def calc_distance(self, idx_1, idx_2=None):
