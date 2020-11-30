@@ -13,7 +13,7 @@ currently find the prototype code in the
 ## Installation
 
 ```bash
-pip install https://github.com/cosmo-epfl/sklearn-cosmo
+pip install https://github.com/cosmo-epfl/scikit-cosmo
 ```
 
 You can then `import skcosmo` in your code!
@@ -40,7 +40,7 @@ and allowing you to edit the code and directly use the updated version.
 ### Running the tests
 
 ```bash
-cd <sklearn-cosmo PATH>
+cd <scikit-cosmo PATH>
 # run unit tests
 tox
 # run the code formatter
