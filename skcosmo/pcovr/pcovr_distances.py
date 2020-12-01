@@ -51,7 +51,7 @@ def pcovr_covariance(mixing, X_proxy, Y_proxy, rcond=1e-12, return_isqrt=False):
         return C
 
 
-def pcovr_kernel_distance(mixing, X_proxy, Y_proxy):
+def pcovr_kernel_distance(mixing, X_proxy, Y_proxy, rcond=None):
     """
     Creates the PCovR modified kernel distances
     ~K = (mixing) * X X^T +
