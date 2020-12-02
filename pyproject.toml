@@ -29,7 +29,7 @@ deps =
     tqdm
 
 commands =
-    bash -c "for f in *.ipynb; do jupyter nbconvert --execute "$f" --to python; done"
+    bash -c "for file in *.ipynb; do jupyter nbconvert --to notebook --output "../.tox/examples/$file" --execute "$file"; done"
 """
 
 [tool.coverage.run]
