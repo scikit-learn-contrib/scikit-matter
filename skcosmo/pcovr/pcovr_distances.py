@@ -2,7 +2,7 @@ import numpy as np
 import scipy
 
 
-def pcovr_covariance(mixing, X_proxy, Y_proxy, rcond=1e-12):
+def pcovr_covariance(mixing, X_proxy, Y_proxy, rcond=1e-12, return_isqrt=False):
     """
     Creates the PCovR modified covariance
     ~C = (mixing) * X^T X +
@@ -30,9 +30,9 @@ def pcovr_covariance(mixing, X_proxy, Y_proxy, rcond=1e-12):
 
     cov = X_proxy.T @ X_proxy
 
-    if mixing < 1:
+    if mixing < 1 or return_isqrt:
         # Do not try to approximate C_inv, it will affect results
-        C_inv = np.linalg.pinv(cov)
+        C_inv = np.linalg.pinv(cov, rcond=rcond)
         C_isqrt = scipy.linalg.sqrtm(C_inv)
 
         # parentheses speed up calculation greatly
@@ -45,10 +45,13 @@ def pcovr_covariance(mixing, X_proxy, Y_proxy, rcond=1e-12):
     if mixing > 0:
         C += (mixing) * cov
 
-    return C
+    if return_isqrt:
+        return C, C_isqrt
+    else:
+        return C
 
 
-def pcovr_kernel_distance(mixing, X_proxy, Y_proxy, rcond):
+def pcovr_kernel_distance(mixing, X_proxy, Y_proxy, rcond=None):
     """
     Creates the PCovR modified kernel distances
     ~K = (mixing) * X X^T +
@@ -63,10 +66,6 @@ def pcovr_kernel_distance(mixing, X_proxy, Y_proxy, rcond):
 
     :param Y_proxy: array to include in biased selection when mixing < 1
     :type Y_proxy: array of shape (n x p)
-
-    :param rcond: threshold below which eigenvalues will be considered 0,
-                      defaults to 1E-12
-    :type rcond: float
 
     """
 
