@@ -12,8 +12,8 @@ Then this package itself
 
 .. code-block:: bash
 
-  git clone https://github.com/cosmo-epfl/sklearn-cosmo
-  cd sklearn-cosmo
+  git clone https://github.com/cosmo-epfl/scikit-cosmo
+  cd scikit-cosmo
   pip install -e .
 
 This install the package in development mode, making it importable globally
@@ -24,7 +24,7 @@ Running the tests
 
 .. code-block:: bash
 
-  cd <sklearn-cosmo PATH>
+  cd <scikit-cosmo PATH>
   # run unit tests
   tox
   # run the code formatter

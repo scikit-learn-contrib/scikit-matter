@@ -23,7 +23,7 @@ import skcosmo  # noqa
 # The master toctree document.
 master_doc = "index"
 
-project = "sklearn-COSMO"
+project = "scikit-COSMO"
 author = ", ".join(open(os.path.join(ROOT, "contributors.txt")))
 copyright = "2020, " + author
 
@@ -167,7 +167,7 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-    (master_doc, "skcosmo.tex", u"sklearn-COSMO Documentation", author, "manual"),
+    (master_doc, "skcosmo.tex", u"scikit-COSMO Documentation", author, "manual"),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of
