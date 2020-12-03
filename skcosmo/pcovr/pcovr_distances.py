@@ -5,10 +5,16 @@ import scipy
 def pcovr_covariance(mixing, X_proxy, Y_proxy, rcond=1e-12, return_isqrt=False):
     """
     Creates the PCovR modified covariance
-    ~C = (mixing) * X^T X +
-         (1-mixing) * (X^T X)^(-1/2) ~Y ~Y^T (X^T X)^(-1/2)
 
-    where ~Y is the properties obtained by linear regression.
+    .. math::
+
+        \\mathbf{\\tilde{C}} = \\alpha \\mathbf{X}^T \\mathbf{X} +
+        (1 - \\alpha) \\left(\\left(\\mathbf{X}^T
+        \\mathbf{X}\\right)^{-\\frac{1}{2}} \\mathbf{X}^T
+        \\mathbf{\\hat{Y}}\\mathbf{\\hat{Y}}^T \\mathbf{X} \\left(\\mathbf{X}^T
+        \\mathbf{X}\\right)^{-\\frac{1}{2}}\\right)
+
+    where :math:`\\mathbf{\\hat{Y}}`` are the properties obtained by linear regression.
 
     :param mixing: mixing parameter,
                    as described in PCovR as :math:`{\\alpha}`, defaults to 1
@@ -54,8 +60,11 @@ def pcovr_covariance(mixing, X_proxy, Y_proxy, rcond=1e-12, return_isqrt=False):
 def pcovr_kernel(mixing, X_proxy, Y_proxy):
     """
     Creates the PCovR modified kernel distances
-    ~K = (mixing) * X X^T +
-         (1-mixing) * Y Y^T
+
+    .. math::
+
+        \\mathbf{\\tilde{K}} = \\alpha \\mathbf{X} \\mathbf{X}^T +
+        (1 - \\alpha) \\mathbf{\\hat{Y}}\\mathbf{\\hat{Y}}^T
 
     :param mixing: mixing parameter,
                    as described in PCovR as :math:`{\\alpha}`, defaults to 1
