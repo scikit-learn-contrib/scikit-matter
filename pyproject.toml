@@ -22,11 +22,7 @@ commands =
 changedir = examples
 allowlist_externals = /bin/bash
 
-deps =
-    jupyter
-    jupyter_contrib_nbextensions
-    matplotlib
-    tqdm
+deps = -rexamples/requirements.txt
 
 commands =
     bash -c "for file in *.ipynb; do jupyter nbconvert --to notebook --output "../.tox/examples/$file" --execute "$file"; done"
