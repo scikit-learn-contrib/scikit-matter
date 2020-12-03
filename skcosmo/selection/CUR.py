@@ -41,15 +41,26 @@ class _BaseCUR:
     :param tol: threshold below which values will be considered 0,
                       defaults to 1E-12
     :type tol: float
+
+    :param progress_wrapper: optional wrapper with which to monitor the progress
+                             of the selection algorithm, such as `tqdm`_
+    :type progress_wrapper: function which wraps around an iterable
+
+    .._`tqdm` tqdm.github.io
     """
 
-    def __init__(self, iterative=True, tol=1e-12, k=1):
+    def __init__(self, iterative=True, tol=1e-12, k=1, progress_wrapper=None):
 
         self.k = k
         self.iter = iterative
         self.tol = tol
         self.idx = []
         self.pi = []
+
+        if(progress_wrapper is None):
+            self.pw = lambda x: x
+        else:
+            self.pw = progress_wrapper
 
     def select(self, n):
         """Method for CUR select based upon a product of the input matrices
@@ -69,7 +80,7 @@ class _BaseCUR:
         if len(self.idx) > n:
             return self.idx[:n]
 
-        for i in range(len(self.idx), n):
+        for i in self.pw(range(len(self.idx), n)):
             if self.iter:
                 v, U = speig(self.product, k=self.k, tol=self.tol)
                 U = U[:, np.flip(np.argsort(v))]
@@ -135,6 +146,10 @@ class SampleCUR(_BaseCUR):
                    as described in PCovR as :math:`{\\alpha}`, defaults to 1
     :type mixing: float
 
+    :param progress_wrapper: optional wrapper with which to monitor the progress
+                             of the selection algorithm, such as `tqdm`_
+    :type progress_wrapper: function which wraps around an iterable
+
     :param tol: threshold below which values will be considered 0,
                       defaults to 1E-12
     :type tol: float
@@ -142,12 +157,10 @@ class SampleCUR(_BaseCUR):
     :param Y: array to include in biased selection when mixing < 1; required
               when mixing < 1, throws AssertionError otherwise
     :type Y: array of shape (n x p), optional when :math:`{\\alpha = 1}`
-
-
     """
 
-    def __init__(self, X, mixing=1.0, iterative=True, tol=1e-12, Y=None):
-        super().__init__(iterative=iterative, tol=tol)
+    def __init__(self, X, mixing=1.0, Y=None, **kwargs):
+        super().__init__(**kwargs)
 
         self.mixing = mixing
 
@@ -239,6 +252,10 @@ class FeatureCUR(_BaseCUR):
                    :math:`{\\alpha}`, defaults to 1
     :type mixing: float
 
+    :param progress_wrapper: optional wrapper with which to monitor the progress
+                             of the selection algorithm, such as `tqdm`_
+    :type progress_wrapper: function which wraps around an iterable
+
     :param tol: threshold below which values will be considered 0,
                       defaults to 1E-12
     :type tol: float
@@ -246,10 +263,11 @@ class FeatureCUR(_BaseCUR):
     :param Y: array to include in biased selection when mixing < 1;
               required when mixing < 1, throws AssertionError otherwise
     :type Y: array of shape (n x p), optional when :math:`{\\alpha = 1}`
+
     """
 
-    def __init__(self, X, mixing=1.0, iterative=True, tol=1e-12, Y=None):
-        super().__init__(iterative=iterative, tol=tol)
+    def __init__(self, X, mixing=1.0, Y=None, **kwargs):
+        super().__init__(**kwargs)
 
         self.mixing = mixing
 

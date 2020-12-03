@@ -35,6 +35,7 @@ def _calc_distances_(K, ref_idx, idxs=None):
     : param idxs : indices of points to compute distance to ref_idx
                    defaults to all indices in K
     : type idxs : list of int, None
+
     """
     if idxs is None:
         idxs = range(K.shape[0])
@@ -51,6 +52,10 @@ class _BaseFPS:
                  is random
     :type idxs: list of int, None
 
+    :param progress_wrapper: optional wrapper with which to monitor the progress
+                             of the selection algorithm, such as `tqdm`_
+    :type progress_wrapper: function which wraps around an iterable
+
     """
 
     def __init__(self, tol=1e-12, idxs=None):
@@ -60,6 +65,11 @@ class _BaseFPS:
             self.idx = [np.random.randint(self.product.shape[0])]
         self.distances = np.min([self.calc_distance(i) for i in self.idx], axis=0)
         self.distance_selected = np.nan * np.zeros(self.product.shape[0])
+
+        if(progress_wrapper is None):
+            self.pw = lambda x: x
+        else:
+            self.pw = progress_wrapper
 
     def select(self, n):
         """Method for FPS select based upon a product of the input matrices
@@ -80,7 +90,7 @@ class _BaseFPS:
             return self.idx[:n]
 
         # Loop over the remaining points...
-        for i in range(len(self.idx) - 1, n - 1):
+        for i in self.pw(range(len(self.idx) - 1, n - 1)):
             for j in np.where(self.distances > 0)[0]:
                 self.distances[j] = min(
                     self.distances[j], self.calc_distance(self.idx[i], [j])
