@@ -17,6 +17,7 @@ import numpy as np
 from scipy.sparse.linalg import eigs as speig
 
 from sklearn.utils import check_X_y, check_array
+from skcosmo.utils import get_progress_bar
 from skcosmo.pcovr.pcovr_distances import pcovr_covariance, pcovr_kernel
 from .orthogonalizers import feature_orthogonalizer, sample_orthogonalizer
 
@@ -41,15 +42,25 @@ class _BaseCUR:
     :param tol: threshold below which values will be considered 0,
                       defaults to 1E-12
     :type tol: float
+
+    :param progress_bar: option to use `tqdm <https://tqdm.github.io/>`_
+                         progress bar to monitor selections
+    :type progress_bar: boolean
+
     """
 
-    def __init__(self, iterative=True, tol=1e-12, k=1):
+    def __init__(self, iterative=True, tol=1e-12, k=1, progress_bar=False):
 
         self.k = k
         self.iter = iterative
         self.tol = tol
         self.idx = []
         self.pi = []
+
+        if progress_bar:
+            self.report_progress = get_progress_bar()
+        else:
+            self.report_progress = lambda x: x
 
     def select(self, n):
         """Method for CUR select based upon a product of the input matrices
@@ -69,7 +80,7 @@ class _BaseCUR:
         if len(self.idx) > n:
             return self.idx[:n]
 
-        for i in range(len(self.idx), n):
+        for i in self.report_progress(range(len(self.idx), n)):
             if self.iter:
                 v, U = speig(self.product, k=self.k, tol=self.tol)
                 U = U[:, np.flip(np.argsort(v))]
@@ -135,6 +146,10 @@ class SampleCUR(_BaseCUR):
                    as described in PCovR as :math:`{\\alpha}`, defaults to 1
     :type mixing: float
 
+    :param progress_bar: option to use `tqdm <https://tqdm.github.io/>`_
+                         progress bar to monitor selections
+    :type progress_bar: boolean
+
     :param tol: threshold below which values will be considered 0,
                       defaults to 1E-12
     :type tol: float
@@ -143,11 +158,10 @@ class SampleCUR(_BaseCUR):
               when mixing < 1, throws AssertionError otherwise
     :type Y: array of shape (n x p), optional when :math:`{\\alpha = 1}`
 
-
     """
 
-    def __init__(self, X, mixing=1.0, iterative=True, tol=1e-12, Y=None):
-        super().__init__(iterative=iterative, tol=tol)
+    def __init__(self, X, mixing=1.0, Y=None, **kwargs):
+        super().__init__(**kwargs)
 
         self.mixing = mixing
 
@@ -237,6 +251,10 @@ class FeatureCUR(_BaseCUR):
                    :math:`{\\alpha}`, defaults to 1
     :type mixing: float
 
+    :param progress_bar: option to use `tqdm <https://tqdm.github.io/>`_
+                         progress bar to monitor selections
+    :type progress_bar: boolean
+
     :param tol: threshold below which values will be considered 0,
                       defaults to 1E-12
     :type tol: float
@@ -244,10 +262,11 @@ class FeatureCUR(_BaseCUR):
     :param Y: array to include in biased selection when mixing < 1;
               required when mixing < 1, throws AssertionError otherwise
     :type Y: array of shape (n x p), optional when :math:`{\\alpha = 1}`
+
     """
 
-    def __init__(self, X, mixing=1.0, iterative=True, tol=1e-12, Y=None):
-        super().__init__(iterative=iterative, tol=tol)
+    def __init__(self, X, mixing=1.0, Y=None, **kwargs):
+        super().__init__(**kwargs)
 
         self.mixing = mixing
 

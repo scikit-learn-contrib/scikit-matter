@@ -15,6 +15,7 @@ from abc import abstractmethod
 import numpy as np
 from skcosmo.pcovr.pcovr_distances import pcovr_covariance, pcovr_kernel
 from sklearn.utils import check_X_y, check_array
+from skcosmo.utils import get_progress_bar
 
 
 def _calc_distances_(K, ref_idx, idxs=None):
@@ -35,6 +36,7 @@ def _calc_distances_(K, ref_idx, idxs=None):
     : param idxs : indices of points to compute distance to ref_idx
                    defaults to all indices in K
     : type idxs : list of int, None
+
     """
     if idxs is None:
         idxs = range(K.shape[0])
@@ -51,15 +53,24 @@ class _BaseFPS:
                  is random
     :type idxs: list of int, None
 
+    :param progress_bar: option to use `tqdm <https://tqdm.github.io/>`_
+                         progress bar to monitor selections
+    :type progress_bar: boolean
+
     """
 
-    def __init__(self, tol=1e-12, idxs=None):
+    def __init__(self, tol=1e-12, idxs=None, progress_bar=False):
         if idxs is not None:
             self.idx = idxs
         else:
             self.idx = [np.random.randint(self.product.shape[0])]
         self.distances = np.min([self.calc_distance(i) for i in self.idx], axis=0)
         self.distance_selected = np.nan * np.zeros(self.product.shape[0])
+
+        if progress_bar:
+            self.report_progress = get_progress_bar()
+        else:
+            self.report_progress = lambda x: x
 
     def select(self, n):
         """Method for FPS select based upon a product of the input matrices
@@ -80,7 +91,7 @@ class _BaseFPS:
             return self.idx[:n]
 
         # Loop over the remaining points...
-        for i in range(len(self.idx) - 1, n - 1):
+        for i in self.report_progress(range(len(self.idx) - 1, n - 1)):
             for j in np.where(self.distances > 0)[0]:
                 self.distances[j] = min(
                     self.distances[j], self.calc_distance(self.idx[i], [j])
@@ -137,6 +148,10 @@ class SampleFPS(_BaseFPS):
     :param mixing: mixing parameter, as described in PCovR as
                   :math:`{\\alpha}`, defaults to 1
     :type mixing: float
+
+    :param progress_bar: option to use `tqdm <https://tqdm.github.io/>`_
+                         progress bar to monitor selections
+    :type progress_bar: boolean
 
     :param tol: threshold below which values will be considered 0,
                       defaults to 1E-12
@@ -198,6 +213,10 @@ class FeatureFPS(_BaseFPS):
                    :math:`{\\alpha}`, defaults to 1
     :type mixing: float
 
+    :param progress_bar: option to use `tqdm <https://tqdm.github.io/>`_
+                         progress bar to monitor selections
+    :type progress_bar: boolean
+
     :param tol: threshold below which values will be considered 0,
                       defaults to 1E-12
     :type tol: float
@@ -205,6 +224,7 @@ class FeatureFPS(_BaseFPS):
     :param Y: array to include in biased selection when mixing < 1;
               required when mixing < 1, throws AssertionError otherwise
     :type Y: array of shape (n x p), optional when :math:`{\\alpha = 1}`
+
 
     """
 
