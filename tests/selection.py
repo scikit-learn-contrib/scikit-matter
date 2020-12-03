@@ -70,6 +70,26 @@ class PCovSelectionTest:
             model = self.model(X=X, mixing=0.5, Y=Y)
             model.select(n=-1)
 
+    def test_no_tqdm(self):
+        """
+        This test checks that the model cannot use a progress bar when tqdm
+        is not installed
+        """
+        import sys
+
+        sys.modules["tqdm"] = None
+
+        X, Y = load_boston(return_X_y=True)
+
+        with self.assertRaises(ImportError) as cm:
+            _ = self.model(X=X, mixing=0.5, Y=Y, progress_bar=True)
+            self.assertEqual(
+                str(cm.exception),
+                "tqdm must be installed to use a progress bar."
+                "Either install tqdm or re-run with"
+                "progress_bar = False",
+            )
+
 
 class FeatureFPSTest(unittest.TestCase, PCovSelectionTest):
     def setUp(self):
