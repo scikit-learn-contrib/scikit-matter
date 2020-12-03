@@ -18,7 +18,7 @@ from scipy.sparse.linalg import eigs as speig
 
 from sklearn.utils import check_X_y, check_array
 from skcosmo.utils import get_progress_bar
-from skcosmo.pcovr.pcovr_distances import pcovr_covariance, pcovr_kernel_distance
+from skcosmo.pcovr.pcovr_distances import pcovr_covariance, pcovr_kernel
 from .orthogonalizers import feature_orthogonalizer, sample_orthogonalizer
 
 
@@ -191,9 +191,7 @@ class SampleCUR(_BaseCUR):
         :math:`{\\mathbf{\\tilde{K}} = \\alpha \\mathbf{XX}^T +
         (1 - \\alpha)\\mathbf{\\hat{Y}\\hat{Y}}^T}`
         """
-        return pcovr_kernel_distance(
-            self.mixing, self.A_current, self.Y_current, self.tol
-        )
+        return pcovr_kernel(self.mixing, self.A_current, self.Y_current)
 
     def orthogonalize(self):
         """
