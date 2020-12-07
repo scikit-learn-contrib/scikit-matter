@@ -288,7 +288,7 @@ class SparseKernelCenterer(TransformerMixin, BaseEstimator):
         check each of the parameters self.n_active_, self.scale_
         and self.K_fit_rows_, which must all be defined
         """
-        check_is_fitted(["scale_", "K_fit_rows_", "n_active_"])
+        check_is_fitted(self, attributes=["scale_", "K_fit_rows_", "n_active_"])
 
         if Knm.shape[1] != self.n_active_:
             raise ValueError(
