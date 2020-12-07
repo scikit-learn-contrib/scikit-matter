@@ -267,9 +267,8 @@ class SparseKernelCenterer(TransformerMixin, BaseEstimator):
         self.K_fit_rows_ = Knm.mean(axis=0)
 
         Knm_centered = Knm - np.broadcast_arrays(Knm, self.K_fit_rows_)[1]
-        Kmm_centered = Kmm - np.broadcast_arrays(Kmm, self.K_fit_rows_)[1]
 
-        Khat = Knm_centered @ np.linalg.pinv(Kmm_centered, self.rcond) @ Knm_centered.T
+        Khat = Knm_centered @ np.linalg.pinv(Kmm, self.rcond) @ Knm_centered.T
 
         self.scale_ = np.sqrt(np.trace(Khat) / Knm.shape[0])
 
@@ -288,7 +287,7 @@ class SparseKernelCenterer(TransformerMixin, BaseEstimator):
         check each of the parameters self.n_active_, self.scale_
         and self.K_fit_rows_, which must all be defined
         """
-        check_is_fitted(["scale_", "K_fit_rows_", "n_active_"])
+        check_is_fitted(self, attributes=["scale_", "K_fit_rows_", "n_active_"])
 
         if Knm.shape[1] != self.n_active_:
             raise ValueError(
