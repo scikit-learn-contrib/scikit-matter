@@ -1,6 +1,7 @@
 import numpy as np
 import sklearn as sk
 from sklearn.base import TransformerMixin, BaseEstimator
+from sklearn.utils.validation import check_is_fitted
 
 
 class StandardFlexibleScaler(TransformerMixin, BaseEstimator):
@@ -98,12 +99,9 @@ class StandardFlexibleScaler(TransformerMixin, BaseEstimator):
 
         :return: original matrix X
         """
-        if self.n_samples_seen_ == 0:
-            raise sk.exceptions.NotFittedError(
-                "This "
-                + type(self).__name__
-                + " instance is not fitted yet. Call 'fit' with appropriate arguments before using this estimator."
-            )
+
+        check_is_fitted(self, attributes=["n_samples_seen_", "n_features_"])
+
         if self.n_features_ != X_tr.shape[1]:
             raise ValueError("X shape does not match training shape")
         return X_tr * self.scale_ + self.mean_
@@ -114,28 +112,22 @@ class KernelFlexibleCenterer(TransformerMixin, BaseEstimator):
     but with additional parameters, relative to which centering
     is carried out:
 
-
-    :param ref_cmean: an array with means for each column.
-    :type ref_cmean: array of shape (1, n_features)
-
-    :param ref_mean: an average for the whole kernel matrix
-    :type ref_mean: array
     """
 
-    def __init__(self, ref_cmean=None, ref_mean=None):
+    def __init__(self):
         """Initialize KernelFlexibleCenterer."""
         pass
 
-    def fit(self, K=None, y=None, ref_cmean=None, ref_mean=None):
+    def fit(self, K=None, y=None, K_fit_rows=None, K_fit_all=None):
         """Fit KernelFlexibleCenterer
 
         :param K: Kernel matrix
         :type K: ndarray of shape (n_samples, n_samples)
         :param y: ignored
-        :param ref_cmean: an array with means for each column.
-        :type ref_cmean: array of shape (1, n_features)
-        :param ref_mean: an average for the whole kernel matrix
-        :type ref_mean: array
+        :param K_fit_rows: an array with means for each column.
+        :type K_fit_rows: array of shape (1, n_features)
+        :param K_fit_all: an average for the whole kernel matrix
+        :type K_fit_all: array
 
         :return: itself
         """
@@ -145,25 +137,34 @@ class KernelFlexibleCenterer(TransformerMixin, BaseEstimator):
                     "The reference kernel is not square, and does not define a RKHS"
                 )
 
-            self.reference_shape = K.shape
+            self.reference_shape_ = K.shape
 
-            if ref_cmean is not None:
-                if K.shape[0] != len(ref_cmean):
+            if K_fit_rows is not None:
+                if K.shape[0] != len(K_fit_rows):
                     raise ValueError(
                         "The supplied column mean does not match the supplied kernel."
                     )
             else:
-                ref_cmean = K.mean(axis=0)
+                K_fit_rows = K.mean(axis=0)
 
-            if ref_mean is None:
-                ref_mean = K.mean()
+            if K_fit_all is None:
+                K_fit_all = K.mean()
 
         else:
-            assert ref_cmean is not None and ref_mean is not None
-            self.reference_shape = [None, len(ref_cmean)]
+            assert K_fit_rows is not None and K_fit_all is not None
+            self.reference_shape_ = [None, len(K_fit_rows)]
 
-        self.ref_cmean = ref_cmean
-        self.ref_mean = ref_mean
+        self.K_fit_rows_ = K_fit_rows
+        self.K_fit_all_ = K_fit_all
+
+        Kc = (
+            K
+            - np.broadcast_arrays(K, self.K_fit_rows_)[1]
+            - np.mean(K, axis=1).reshape((K.shape[0], 1))
+            + np.broadcast_arrays(K, self.K_fit_all_)[1]
+        )
+
+        self.scale_ = np.trace(Kc) / K.shape[0]
 
         return self
 
@@ -175,19 +176,16 @@ class KernelFlexibleCenterer(TransformerMixin, BaseEstimator):
         :param y: ignored
 
         :return: tranformed matrix Kc
+
+        check each of the parameters self.reference_shape_, self.scale_, self.K_fit_all_,
+        and self.K_fit_rows_, which must all be defined
         """
-        parameters = self.get_params()
-        """check each of the parameters self.reference_shape, self.ref_mean, 
-        and self.ref_cmean, which must all be defined
-        """
-        for key in parameters.keys():
-            if parameters[key] is None:
-                raise sk.exceptions.NotFittedError(
-                    "This "
-                    + type(self).__name__
-                    + " instance is not fitted yet. Call 'fit' with appropriate arguments before using this estimator."
-                )
-        if K.shape[1] != self.reference_shape[1]:
+
+        check_is_fitted(
+            self, attributes=["K_fit_rows_", "K_fit_all_", "scale_", "reference_shape_"]
+        )
+
+        if K.shape[1] != self.reference_shape_[1]:
             raise ValueError(
                 "The reference kernel and received kernel have different shape"
             )
@@ -195,26 +193,26 @@ class KernelFlexibleCenterer(TransformerMixin, BaseEstimator):
 
         Kc = (
             K
-            - np.broadcast_arrays(K, self.ref_cmean)[1]
+            - np.broadcast_arrays(K, self.K_fit_rows_)[1]
             - rmean.reshape((K.shape[0], 1))
-            + np.broadcast_arrays(K, self.ref_mean)[1]
-        )
+            + np.broadcast_arrays(K, self.K_fit_all_)[1]
+        ) / self.scale_
 
         return Kc
 
-    def fit_transform(self, K, y=None, ref_cmean=None, ref_mean=None, **fit_params):
+    def fit_transform(self, K, y=None, K_fit_rows=None, K_fit_all=None, **fit_params):
         r"""Fit to data, then transform it.
 
         :param K: Kernel matrix
         :type K: ndarray of shape (n_samples, n_samples)
         :param y: ignored
-        :param ref_cmean: an array with means for each column.
-        :type ref_cmean: array of shape (1, n_features)
-        :param ref_mean: an average for the whole kernel matrix
-        :type ref_mean: array
+        :param K_fit_rows: an array with means for each column.
+        :type K_fit_rows: array of shape (1, n_features)
+        :param K_fit_all: an average for the whole kernel matrix
+        :type K_fit_all: array
         :param \**fit_params: necessary for compatibility with the functions of the TransformerMixin class
 
         :return: tranformed matrix Kc
         """
-        self.fit(K, y, ref_cmean=ref_cmean, ref_mean=ref_mean)
+        self.fit(K, y, K_fit_rows=K_fit_rows, K_fit_all=K_fit_all)
         return self.transform(K, y)
