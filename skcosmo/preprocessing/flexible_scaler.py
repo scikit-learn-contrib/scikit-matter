@@ -114,15 +114,9 @@ class KernelFlexibleCenterer(TransformerMixin, BaseEstimator):
     but with additional parameters, relative to which centering
     is carried out:
 
-
-    :param ref_cmean: an array with means for each column.
-    :type ref_cmean: array of shape (1, n_features)
-
-    :param ref_mean: an average for the whole kernel matrix
-    :type ref_mean: array
     """
 
-    def __init__(self, ref_cmean=None, ref_mean=None):
+    def __init__(self):
         """Initialize KernelFlexibleCenterer."""
         pass
 
@@ -165,6 +159,15 @@ class KernelFlexibleCenterer(TransformerMixin, BaseEstimator):
         self.ref_cmean = ref_cmean
         self.ref_mean = ref_mean
 
+        Kc = (
+            K
+            - np.broadcast_arrays(K, self.ref_cmean)[1]
+            - np.mean(K, axis=1).reshape((K.shape[0], 1))
+            + np.broadcast_arrays(K, self.ref_mean)[1]
+        )
+
+        self.scale = np.trace(Kc) / K.shape[0]
+
         return self
 
     def transform(self, K, y=None):
@@ -175,13 +178,12 @@ class KernelFlexibleCenterer(TransformerMixin, BaseEstimator):
         :param y: ignored
 
         :return: tranformed matrix Kc
-        """
-        parameters = self.get_params()
-        """check each of the parameters self.reference_shape, self.ref_mean, 
+
+        check each of the parameters self.reference_shape, self.scale, self.ref_mean,
         and self.ref_cmean, which must all be defined
         """
-        for key in parameters.keys():
-            if parameters[key] is None:
+        for key in ["ref_cmean", "ref_mean", "scale", "reference_shape"]:
+            if not hasattr(self, key) or getattr(self, key) is None:
                 raise sk.exceptions.NotFittedError(
                     "This "
                     + type(self).__name__
@@ -198,7 +200,7 @@ class KernelFlexibleCenterer(TransformerMixin, BaseEstimator):
             - np.broadcast_arrays(K, self.ref_cmean)[1]
             - rmean.reshape((K.shape[0], 1))
             + np.broadcast_arrays(K, self.ref_mean)[1]
-        )
+        ) / self.scale
 
         return Kc
 

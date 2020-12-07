@@ -45,6 +45,8 @@ class KernelTests(unittest.TestCase):
             - K.mean(axis=1).reshape((K.shape[0], 1))
             + np.broadcast_arrays(K, K.mean())[1]
         )
+        Kc /= np.trace(Kc) / Kc.shape[0]
+
         self.assertTrue((np.isclose(Ktr, Kc, atol=1e-12)).all())
 
     def test_fit_reference(self):
@@ -64,6 +66,8 @@ class KernelTests(unittest.TestCase):
             - K.mean(axis=1).reshape((K.shape[0], 1))
             + np.broadcast_arrays(K, ref_mean)[1]
         )
+        Kc /= np.trace(Kc) / Kc.shape[0]
+
         self.assertTrue((np.isclose(K_tr, Kc, atol=1e-12)).all())
 
 
