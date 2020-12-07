@@ -212,9 +212,114 @@ class KernelFlexibleCenterer(TransformerMixin, BaseEstimator):
         :type ref_cmean: array of shape (1, n_features)
         :param ref_mean: an average for the whole kernel matrix
         :type ref_mean: array
-        :param \**fit_params: necessary for compatibility with the functions of the TransformerMixin class
+        :param \**fit_params: necessary for compatibility with the functions of
+                              the TransformerMixin class
 
         :return: tranformed matrix Kc
         """
         self.fit(K, y, ref_cmean=ref_cmean, ref_mean=ref_mean)
         return self.transform(K, y)
+
+
+class SparseKernelCenterer(TransformerMixin, BaseEstimator):
+    """Kernel centering method for sparse kernels, similar to
+    KernelFlexibleCenterer
+    """
+
+    def __init__(self, rcond=1e-12):
+        """
+        Initialize SparseKernelCenterer.
+
+        :param rcond: conditioning parameter to use when computing the
+                      Nystrom-approximated kernel for scaling
+        :type rcond: float, default 1E-12
+        """
+
+        self.rcond = rcond
+
+    def fit(self, Knm, Kmm, y=None):
+        """Fit KernelFlexibleCenterer
+
+        :param Knm: Kernel matrix between the reference data set and the active
+                    set
+        :type Knm: ndarray of shape (n_samples, n_active)
+
+        :param Kmm: Kernel matrix between the active set and itself
+        :type Kmm: ndarray of shape (n_active, n_active)
+
+        :param y: ignored
+
+        :return: itself
+        """
+
+        if Knm.shape[1] != Kmm.shape[0]:
+            raise ValueError(
+                "The reference kernel is not commensurate shape with the"
+                "active kernel."
+            )
+
+        if Kmm.shape[0] != Kmm.shape[1]:
+            raise ValueError("The active kernel is not square.")
+
+        self.n_active_ = Kmm.shape[0]
+
+        self.K_fit_rows_ = Knm.mean(axis=0)
+
+        Knm_centered = Knm - np.broadcast_arrays(Knm, self.K_fit_rows_)[1]
+        Kmm_centered = Kmm - np.broadcast_arrays(Kmm, self.K_fit_rows_)[1]
+
+        Khat = Knm_centered @ np.linalg.pinv(Kmm_centered, self.rcond) @ Knm_centered.T
+
+        self.scale_ = np.sqrt(np.trace(Khat) / Knm.shape[0])
+
+        return self
+
+    def transform(self, Knm, y=None):
+        """Centering our Kernel. Previously you should fit data.
+
+        :param Knm: Kernel matrix between the reference data set and the active
+                    set
+        :type Knm: ndarray of shape (n_samples, n_active)
+        :param y: ignored
+
+        :return: tranformed matrix Kc
+
+        check each of the parameters self.n_active_, self.scale_
+        and self.K_fit_rows_, which must all be defined
+        """
+        for key in ["scale_", "K_fit_rows_", "n_active_"]:
+            if not hasattr(self, key) or getattr(self, key) is None:
+                raise sk.exceptions.NotFittedError(
+                    "This "
+                    + type(self).__name__
+                    + " instance is not fitted yet. Call 'fit' with appropriate"
+                    "arguments before using this estimator."
+                )
+        if Knm.shape[1] != self.n_active_:
+            raise ValueError(
+                "The reference kernel and received kernel have different shape"
+            )
+
+        Kc = (Knm - np.broadcast_arrays(Knm, self.K_fit_rows_)[1]) / self.scale_
+
+        return Kc
+
+    def fit_transform(self, Knm, Kmm, y=None, **fit_params):
+        r"""Fit to data, then transform it.
+
+        :param Knm: Kernel matrix between the reference data set and the active
+                    set
+        :type Knm: ndarray of shape (n_samples, n_active)
+
+        :param Kmm: Kernel matrix between the active set and itself
+        :type Kmm: ndarray of shape (n_active, n_active)
+
+        :param y: ignored
+
+        :param \**fit_params: necessary for compatibility with the functions of
+                              the TransformerMixin class
+
+        :return: tranformed matrix Kc
+        """
+        self.fit(Knm=Knm, Kmm=Kmm)
+        return self.transform(Knm)
