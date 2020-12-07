@@ -9,7 +9,7 @@ build-backend = "setuptools.build_meta"
 legacy_tox_ini = """
 [tox]
 
-[testenv]
+[testenv:tests]
 changedir = tests
 deps =
     coverage[toml]
@@ -17,6 +17,15 @@ deps =
 commands =
     coverage run -m unittest discover -p "*.py"
     coverage xml
+
+[testenv:examples]
+changedir = examples
+allowlist_externals = /bin/bash
+
+deps = -rexamples/requirements.txt
+
+commands =
+    bash -c "for file in *.ipynb; do jupyter nbconvert --to notebook --output "../.tox/examples/$file" --execute "$file"; done"
 """
 
 [tool.coverage.run]
