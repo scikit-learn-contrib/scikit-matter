@@ -1,7 +1,6 @@
 from .Sparsified import _Sparsified
 import numpy as np
 
-from ..preprocessing import KernelFlexibleCenterer
 from sklearn.exceptions import NotFittedError
 
 

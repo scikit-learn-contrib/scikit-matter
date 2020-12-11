@@ -157,7 +157,7 @@ class _Sparsified(TransformerMixin, RegressorMixin, BaseEstimator, metaclass=ABC
             tol = self.tol
         if k is None:
             k = self.n_components
-        if full_matrix == False:
+        if full_matrix is False:
             v, U = eigs(matrix, k=k, tol=tol)
         else:
             v, U = np.linalg.eig(matrix)
