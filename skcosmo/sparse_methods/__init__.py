@@ -1,5 +1,5 @@
 """
-The :mod:`skcosmo.SparseMethods` module includes SparseKPCA, SparseKRR
+The :mod:`skcosmo.sparse_methods` module includes SparseKPCA, SparseKRR
 and SparseKPCovR methods
 """
 

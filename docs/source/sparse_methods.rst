@@ -1,7 +1,7 @@
 Sparse Methods
 ---------------------------------------
 
-.. automodule:: skcosmo.SparseMethods
+.. automodule:: skcosmo.sparse_methods
    :members:
    :undoc-members:
    :show-inheritance:
