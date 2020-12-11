@@ -2,6 +2,7 @@ import numpy as np
 from sklearn import exceptions
 import unittest
 from sklearn.datasets import load_boston
+from sklearn import exceptions
 from skcosmo.SparseMethods import SparseKPCA
 
 
@@ -47,7 +48,7 @@ class SparseKPCA_tests(unittest.TestCase):
         for i, kernel in enumerate(self.kernels):
             try:
                 self.run_sparse(kernel=kernel)
-            except:
+            except sklearn.exceptions.FitFailedWarning:
                 raise Exception(f"Kernel '{kernel}' doesn't work")
 
     # Checks that the model will not transform before fitting
