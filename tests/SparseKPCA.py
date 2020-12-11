@@ -47,7 +47,7 @@ class SparseKPCA_tests(unittest.TestCase):
         for i, kernel in enumerate(self.kernels):
             try:
                 self.run_sparse(kernel=kernel)
-            except sklearn.exceptions.FitFailedWarning:
+            except exceptions.FitFailedWarning:
                 raise Exception(f"Kernel '{kernel}' doesn't work")
 
     # Checks that the model will not transform before fitting
