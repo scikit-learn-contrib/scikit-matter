@@ -34,7 +34,7 @@ class SparseKPCA_tests(unittest.TestCase):
         self.error_tol = 1e-3
         self.rounding = -int(round(np.log10(self.error_tol)))
 
-        self.kernels = ["linear", "poly", "rbf",  "cosine"]
+        self.kernels = ["linear", "poly", "rbf", "cosine"]
         n_mixing = 11
         n_active = 10
         self.lr_errors = np.nan * np.zeros(n_mixing)

@@ -4,7 +4,8 @@ and SparseKPCovR methods
 """
 
 from .SparseKPCA import SparseKPCA
-#from .SparseKPCovR import SparseKPCovR
-#from .SparseKRR import SparseKRR
+
+# from .SparseKPCovR import SparseKPCovR
+# from .SparseKRR import SparseKRR
 
 __all__ = ["SparseKPCA"]
