@@ -83,9 +83,8 @@ class SparseKernelTests(unittest.TestCase):
         Knm_mean = Knm.mean(axis=0)
 
         Kc = Knm - np.broadcast_arrays(Knm, Knm_mean)[1]
-        Kmmc = Kmm - np.broadcast_arrays(Kmm, Knm_mean)[1]
 
-        Khat = Kc @ np.linalg.pinv(Kmmc, rcond=1e-12) @ Kc.T
+        Khat = Kc @ np.linalg.pinv(Kmm, rcond=1e-12) @ Kc.T
 
         Kc /= np.sqrt(np.trace(Khat) / Khat.shape[0])
 
