@@ -2,7 +2,6 @@ import numpy as np
 from sklearn import exceptions
 import unittest
 from sklearn.datasets import load_boston
-from sklearn import exceptions
 from skcosmo.SparseMethods import SparseKPCA
 
 
