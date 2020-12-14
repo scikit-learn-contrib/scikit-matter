@@ -5,6 +5,12 @@ import numpy as np
 
 
 class KernelTests(unittest.TestCase):
+    def test_NoInputs(self):
+        """Checks that fit cannot be called with zero inputs."""
+        model = KernelFlexibleCenterer()
+        with self.assertRaises(AssertionError):
+            model.fit()
+
     def test_ValueError(self):
         """Checks that a non-square matrix cannot be normalized."""
         K = np.random.uniform(0, 100, size=(3, 4))
@@ -45,6 +51,8 @@ class KernelTests(unittest.TestCase):
             - K.mean(axis=1).reshape((K.shape[0], 1))
             + np.broadcast_arrays(K, K.mean())[1]
         )
+        Kc /= np.trace(Kc) / Kc.shape[0]
+
         self.assertTrue((np.isclose(Ktr, Kc, atol=1e-12)).all())
 
     def test_fit_reference(self):
@@ -54,16 +62,18 @@ class KernelTests(unittest.TestCase):
         directly from the equation.
         """
         K = np.random.uniform(0, 100, size=(3, 3))
-        ref_cmean = np.random.uniform(0, 100, size=(3))
-        ref_mean = np.random.uniform(0, 100, size=(1))[0]
+        K_fit_rows = np.random.uniform(0, 100, size=(3))
+        K_fit_all = np.random.uniform(0, 100, size=(1))[0]
         model = KernelFlexibleCenterer()
-        K_tr = model.fit_transform(K, ref_cmean=ref_cmean, ref_mean=ref_mean)
+        K_tr = model.fit_transform(K, K_fit_rows=K_fit_rows, K_fit_all=K_fit_all)
         Kc = (
             K
-            - np.broadcast_arrays(K, ref_cmean)[1]
+            - np.broadcast_arrays(K, K_fit_rows)[1]
             - K.mean(axis=1).reshape((K.shape[0], 1))
-            + np.broadcast_arrays(K, ref_mean)[1]
+            + np.broadcast_arrays(K, K_fit_all)[1]
         )
+        Kc /= np.trace(Kc) / Kc.shape[0]
+
         self.assertTrue((np.isclose(K_tr, Kc, atol=1e-12)).all())
 
 
