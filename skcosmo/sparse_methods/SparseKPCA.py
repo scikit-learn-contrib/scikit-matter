@@ -82,6 +82,7 @@ class SparseKPCA(TransformerMixin, BaseEstimator):
         coef0=1,
         kernel_params=None,
         selector=SampleFPS,
+        center=True,
         alpha=1.0,
         fit_inverse_transform=False,
         tol=1e-12,
@@ -107,7 +108,7 @@ class SparseKPCA(TransformerMixin, BaseEstimator):
         self.tol = tol
         self.n_jobs = n_jobs
         self.copy_X = copy_X
-        self.center = False
+        self.center = center
 
         self.pkt_ = None
         self.K_sparse_ = None
@@ -184,7 +185,7 @@ class SparseKPCA(TransformerMixin, BaseEstimator):
         v_invsqrt = np.linalg.pinv(np.diagflat(np.sqrt(self.lambdas_)))
 
         phi_active = self.K_fit_ @ self.alphas_ @ v_invsqrt
-        U_active = self.alphas_[:, : self.n_active]
+        U_active = self.alphas_[:, : self.n_active] @ v_invsqrt
 
         C = phi_active.T @ phi_active
 

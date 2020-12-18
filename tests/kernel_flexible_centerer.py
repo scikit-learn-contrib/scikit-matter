@@ -68,9 +68,9 @@ class KernelTests(unittest.TestCase):
         K_tr = model.fit_transform(K, K_fit_rows=K_fit_rows, K_fit_all=K_fit_all)
         Kc = (
             K
-            - np.broadcast_arrays(K, K_fit_rows)[1]
+            - K_fit_rows
             - K.mean(axis=1).reshape((K.shape[0], 1))
-            + np.broadcast_arrays(K, K_fit_all)[1]
+            + K_fit_all
         )
         Kc /= np.trace(Kc) / Kc.shape[0]
 

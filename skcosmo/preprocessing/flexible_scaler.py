@@ -154,9 +154,9 @@ class KernelFlexibleCenterer(TransformerMixin, BaseEstimator):
 
         Kc = (
             K
-            - np.broadcast_arrays(K, self.K_fit_rows_)[1]
+            - self.K_fit_rows_
             - np.mean(K, axis=1).reshape((K.shape[0], 1))
-            + np.broadcast_arrays(K, self.K_fit_all_)[1]
+            + self.K_fit_all_
         )
 
         self.scale_ = np.trace(Kc) / K.shape[0]
@@ -188,9 +188,9 @@ class KernelFlexibleCenterer(TransformerMixin, BaseEstimator):
 
         Kc = (
             K
-            - np.broadcast_arrays(K, self.K_fit_rows_)[1]
+            - self.K_fit_rows_
             - rmean.reshape((K.shape[0], 1))
-            + np.broadcast_arrays(K, self.K_fit_all_)[1]
+            + self.K_fit_all_
         ) / self.scale_
 
         return Kc
@@ -257,7 +257,7 @@ class SparseKernelCenterer(TransformerMixin, BaseEstimator):
 
         self.K_fit_rows_ = Knm.mean(axis=0)
 
-        Knm_centered = Knm - np.broadcast_arrays(Knm, self.K_fit_rows_)[1]
+        Knm_centered = Knm - self.K_fit_rows_
 
         Khat = Knm_centered @ np.linalg.pinv(Kmm, self.rcond) @ Knm_centered.T
 
@@ -285,7 +285,7 @@ class SparseKernelCenterer(TransformerMixin, BaseEstimator):
                 "The reference kernel and received kernel have different shape"
             )
 
-        Kc = (Knm - np.broadcast_arrays(Knm, self.K_fit_rows_)[1]) / self.scale_
+        Kc = (Knm - self.K_fit_rows_) / self.scale_
 
         return Kc
 
