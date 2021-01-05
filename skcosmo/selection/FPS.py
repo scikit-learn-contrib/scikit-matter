@@ -60,6 +60,10 @@ class _BaseFPS:
     """
 
     def __init__(self, tol=1e-12, idxs=None, progress_bar=False):
+
+        if not hasattr(self, "tol"):
+            self.tol = tol
+
         if idxs is not None:
             self.idx = idxs
         else:
@@ -108,7 +112,8 @@ class _BaseFPS:
     def calc_distance(self, idx_1, idx_2=None):
         """
             Abstract method to be used for calculating the distances
-            between two indexed points
+            between two indexed points. Should be overwritten if default
+            functionality is not desired
 
         : param idx_1 : index of first point to use
         : type idx_1 : int
@@ -117,7 +122,7 @@ class _BaseFPS:
                         distance between idx_1 and all points
         : type idx_2 : list of int or None
         """
-        pass
+        return _calc_distances_(self.product, idx_1, idx_2)
 
 
 class SampleFPS(_BaseFPS):
@@ -178,9 +183,6 @@ class SampleFPS(_BaseFPS):
 
         self.product = pcovr_kernel(self.mixing, self.A, self.Y)
         super().__init__(tol=tol, **kwargs)
-
-    def calc_distance(self, idx_1, idx_2=None):
-        return _calc_distances_(self.product, idx_1, idx_2)
 
 
 class FeatureFPS(_BaseFPS):
@@ -243,6 +245,3 @@ class FeatureFPS(_BaseFPS):
 
         self.product = pcovr_covariance(self.mixing, self.A, self.Y, rcond=self.tol)
         super().__init__(tol=tol, **kwargs)
-
-    def calc_distance(self, idx_1, idx_2=None):
-        return _calc_distances_(self.product, idx_1, idx_2)
