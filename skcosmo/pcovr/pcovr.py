@@ -1,4 +1,6 @@
 import numpy as np
+from numpy.linalg import LinAlgError
+from scipy.linalg import sqrtm as MatrixSqrt
 from functools import partial
 from sklearn.linear_model import Ridge as LR
 from sklearn.utils.validation import check_X_y, check_is_fitted
@@ -128,6 +130,7 @@ class PCovR(_BasePCA, LinearModel):
             )
 
         self.components_ = self.pxt_.T  # for sklearn compatibility
+        return self
 
     def _compute_Yhat(self, X, Y, Yhat=None, W=None):
         """
@@ -192,7 +195,10 @@ class PCovR(_BasePCA, LinearModel):
             rcond=self.tol,
             return_isqrt=True,
         )
-        Csqrt = np.linalg.inv(iCsqrt)
+        try:
+            Csqrt = np.linalg.inv(iCsqrt)
+        except LinAlgError:
+            Csqrt = np.real(MatrixSqrt(X.T @ X))
 
         v, U = self._eig_solver(Ct)
         S = v ** 0.5
