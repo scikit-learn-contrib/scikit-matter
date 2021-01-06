@@ -1,5 +1,6 @@
 import numpy as np
 from scipy.sparse.linalg import eigs as speig
+import warnings
 
 
 def eig_solver(matrix, n_components=None, tol=1e-12, add_null=False):
@@ -41,7 +42,7 @@ def eig_solver(matrix, n_components=None, tol=1e-12, add_null=False):
     if n_components is not None and n_components > len(v):
         if not add_null:
 
-            raise Warning(
+            warnings.warn(
                 f"There are fewer than {n_components} "
                 "significant eigenpair(s). Resulting decomposition"
                 f"will be truncated to {len(v)} eigenpairs."

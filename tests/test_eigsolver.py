@@ -1,6 +1,7 @@
 import unittest
 import numpy as np
 from skcosmo.utils import eig_solver
+import warnings
 
 
 class EigSolverTest(unittest.TestCase):
@@ -63,13 +64,13 @@ class EigSolverTest(unittest.TestCase):
         n_eig = len(v[v >= tol])
         n_components = self.X.shape[0]
 
-        with self.assertRaises(Warning) as cm:
+        with warnings.catch_warnings(record=True) as w:
             v, U = eig_solver(
                 self.X, n_components=n_components, tol=tol, add_null=False
             )
 
             self.assertEqual(
-                str(cm.Exception),
+                str(w[-1].message),
                 f"There are fewer than {n_components} "
                 "significant eigenpair(s). Resulting decomposition"
                 f"will be truncated to {n_eig} eigenpairs.",
