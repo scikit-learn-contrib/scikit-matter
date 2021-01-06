@@ -1,14 +1,14 @@
 import unittest
 import numpy as np
-from skcosmo.utils import eig_solver
 import warnings
+
+from skcosmo.utils import eig_solver
+from skcosmo.preprocessing import StandardFlexibleScaler as SFS
 
 
 class EigSolverTest(unittest.TestCase):
     def setUp(self):
-        self.X = np.random.uniform(-5, 5, size=(100, 100))
-        self.X -= self.X.mean(axis=0)
-        self.X /= np.linalg.norm(self.X) / 10
+        self.X = SFS().fit_transform(np.random.uniform(-5, 5, size=(100, 100)))
 
     def test_reverse_sorted(self):
         """
