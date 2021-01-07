@@ -137,7 +137,7 @@ class PCovRSpaceTest(PCovRBaseTest):
         pcovr = self.model(n_components=2, tol=1e-12)
         pcovr.fit(self.X, self.Y)
 
-        self.assertTrue(pcovr.space == "feature")
+        self.assertTrue(pcovr.space_ == "feature")
 
     def test_select_sample_space(self):
         """
