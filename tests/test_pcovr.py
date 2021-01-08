@@ -137,7 +137,7 @@ class PCovRSpaceTest(PCovRBaseTest):
         pcovr = self.model(n_components=2, tol=1e-12)
         pcovr.fit(self.X, self.Y)
 
-        self.assertTrue(pcovr.space_ == "feature")
+        self.assertTrue(pcovr.space == "feature")
 
     def test_select_sample_space(self):
         """
@@ -271,51 +271,6 @@ class PCovRTestSVDSolvers(PCovRBaseTest):
         """
 
         with self.assertRaises(ValueError) as cm:
-            pcovr = self.model(n_components=-1, svd_solver="auto")
-            pcovr.fit(self.X, self.Y)
-
-            self.assertTrue(
-                str(cm.message),
-                "self.n_components=%r must be between 0 and "
-                "min(n_samples, n_features)=%r with "
-                "svd_solver='%s'"
-                % (
-                    pcovr.n_components,
-                    min(self.X.shape),
-                    pcovr.svd_solver,
-                ),
-            )
-        with self.assertRaises(ValueError) as cm:
-            pcovr = self.model(n_components=0, svd_solver="randomized")
-            pcovr.fit(self.X, self.Y)
-
-            self.assertTrue(
-                str(cm.message),
-                "self.n_components=%r must be between 1 and "
-                "min(n_samples, n_features)=%r with "
-                "svd_solver='%s'"
-                % (
-                    pcovr.n_components,
-                    min(self.X.shape),
-                    pcovr.svd_solver,
-                ),
-            )
-        with self.assertRaises(ValueError) as cm:
-            pcovr = self.model(n_components=min(self.X.shape), svd_solver="arpack")
-            pcovr.fit(self.X, self.Y)
-            self.assertTrue(
-                str(cm.message),
-                "self.n_components=%r must be strictly less than "
-                "min(n_samples, n_features)=%r with "
-                "svd_solver='%s'"
-                % (
-                    pcovr.n_components,
-                    min(self.X.shape),
-                    pcovr.svd_solver,
-                ),
-            )
-
-        with self.assertRaises(ValueError) as cm:
             pcovr = self.model(n_components="mle", svd_solver="full")
             pcovr.fit(self.X[:2], self.Y[:2])
             self.assertEqual(
@@ -324,17 +279,65 @@ class PCovRTestSVDSolvers(PCovRBaseTest):
                 "if n_samples >= n_features",
             )
 
-        for svd_solver in ["auto", "full"]:
-
+        with self.subTest(type="negative_ncomponents"):
             with self.assertRaises(ValueError) as cm:
-                pcovr = self.model(n_components=np.pi, svd_solver=svd_solver)
+                pcovr = self.model(n_components=-1, svd_solver="auto")
+                pcovr.fit(self.X, self.Y)
+
+                self.assertTrue(
+                    str(cm.message),
+                    "self.n_components=%r must be between 0 and "
+                    "min(n_samples, n_features)=%r with "
+                    "svd_solver='%s'"
+                    % (
+                        pcovr.n_components,
+                        min(self.X.shape),
+                        pcovr.svd_solver,
+                    ),
+                )
+        with self.subTest(type="0_ncomponents"):
+            with self.assertRaises(ValueError) as cm:
+                pcovr = self.model(n_components=0, svd_solver="randomized")
+                pcovr.fit(self.X, self.Y)
+
+                self.assertTrue(
+                    str(cm.message),
+                    "self.n_components=%r must be between 1 and "
+                    "min(n_samples, n_features)=%r with "
+                    "svd_solver='%s'"
+                    % (
+                        pcovr.n_components,
+                        min(self.X.shape),
+                        pcovr.svd_solver,
+                    ),
+                )
+        with self.subTest(type="arpack_X_ncomponents"):
+            with self.assertRaises(ValueError) as cm:
+                pcovr = self.model(n_components=min(self.X.shape), svd_solver="arpack")
                 pcovr.fit(self.X, self.Y)
                 self.assertTrue(
                     str(cm.message),
-                    "self.n_components=%r must be of type int "
-                    "when greater than or equal to 1, was of type=%r"
-                    % (pcovr.n_components, type(pcovr.n_components)),
+                    "self.n_components=%r must be strictly less than "
+                    "min(n_samples, n_features)=%r with "
+                    "svd_solver='%s'"
+                    % (
+                        pcovr.n_components,
+                        min(self.X.shape),
+                        pcovr.svd_solver,
+                    ),
                 )
+
+        for svd_solver in ["auto", "full"]:
+            with self.subTest(type="pi_ncomponents"):
+                with self.assertRaises(ValueError) as cm:
+                    pcovr = self.model(n_components=np.pi, svd_solver=svd_solver)
+                    pcovr.fit(self.X, self.Y)
+                    self.assertTrue(
+                        str(cm.message),
+                        "self.n_components=%r must be of type int "
+                        "when greater than or equal to 1, was of type=%r"
+                        % (pcovr.n_components, type(pcovr.n_components)),
+                    )
 
 
 class PCovRInfrastructureTest(PCovRBaseTest):
