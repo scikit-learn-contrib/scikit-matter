@@ -232,11 +232,7 @@ class PCovR(_BasePCA, LinearModel):
         The amount of variance explained by each of the selected components.
 
         Equal to n_components largest eigenvalues
-<<<<<<< HEAD
         of the PCovR-modified covariance matrix of :math:`\mathbf{X}`.
-=======
-        of the PCovR-modified covariance matrix of :math:`\\mathbf{X}`.
->>>>>>> First pass at making pcovr ready to go into sklearn
 
     singular_values_ : ndarray of shape (n_components,)
         The singular values corresponding to each of the selected components.
