@@ -69,7 +69,6 @@ class SparseKPCA_tests(unittest.TestCase):
 
         precomputed_model.fit(K, K_sparse)
         model.fit(self.X, X_sparse)
-
         precomputed_T = precomputed_model.transform(K)
         model_T = model.transform(self.X)
 

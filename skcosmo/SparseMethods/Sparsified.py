@@ -3,7 +3,6 @@ from abc import ABCMeta
 from sklearn.utils import check_array
 from sklearn.utils.validation import check_is_fitted
 from sklearn.base import BaseEstimator, TransformerMixin, RegressorMixin
-from scipy.sparse.linalg import eigs
 from sklearn.metrics.pairwise import pairwise_kernels
 from ..preprocessing.flexible_scaler import KernelFlexibleCenterer
 from ..selection.FPS import SampleFPS
@@ -109,6 +108,10 @@ class _Sparsified(TransformerMixin, RegressorMixin, BaseEstimator, metaclass=ABC
             i_active = selector.select(self.n_active)
 
             X_sparse = X[i_active, :]
+
+            if self.kernel == "precomputed":
+                X_sparse = X_sparse[:, i_active]
+
         self.X_sparse_ = X_sparse
         K_sparse_ = self._get_kernel(self.X_sparse_, self.X_sparse_)
 

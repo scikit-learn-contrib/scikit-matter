@@ -75,7 +75,6 @@ class SparseKPCA(_Sparsified):
         vmm, Umm = eig_solver(self.K_sparse_, n_components=self.n_active, tol=self.tol)
         v_invsqrt = np.sqrt(np.linalg.pinv(np.diagflat(vmm)))
         U_active = Umm[:, : self.n_active] @ v_invsqrt
-
         phi_active = self.K_cross_ @ U_active
 
         C = phi_active.T @ phi_active
@@ -88,19 +87,15 @@ class SparseKPCA(_Sparsified):
             self.ptx_ = v_C_inv @ T.T @ X
         return self
 
-    def transform(self, X=None, K_cross=None):
+    def transform(self, X):
         """
         Projecting  feature matrix into the latent space
-        :param X: feature matrix
-        :param K_cross: kernel matrix between X and X_sparse
+        :param X: feature matrix or kernel matrix between X and X_sparse
         :return: T, projection into the latent space
         """
         check_is_fitted(self, ["pkt_", "X_sparse_"])
-        if X is None and K_cross is None:
-            raise Exception("Error: required feature or kernel matrices")
 
-        if K_cross is None:
-            K_cross = self._get_kernel(X, self.X_sparse_)
+        K_cross = self._get_kernel(X, self.X_sparse_)
         if self.center:
             K_cross = self.kfc.transform(K_cross)
 
@@ -123,7 +118,7 @@ class SparseKPCA(_Sparsified):
         :return: T, projection into the latent space
         """
         self.fit(X, X_sparse, y)
-        self.transform(X, self.K_cross_)
+        self.transform(X)
 
     def inverse_transform(self, X):
         """Transform X back to original space.
