@@ -1,5 +1,4 @@
 import numpy as np
-from scipy.sparse.linalg import eigs as speig
 import warnings
 
 
