@@ -1,5 +1,6 @@
 import numpy as np
 from scipy.sparse.linalg import eigs as speig
+import warnings
 
 
 def eig_solver(matrix, n_components=None, tol=1e-12, add_null=False):
@@ -23,7 +24,7 @@ def eig_solver(matrix, n_components=None, tol=1e-12, add_null=False):
     :type add_null: boolean
     """
 
-    if n_components is None:
+    if n_components is not None and n_components < matrix.shape[0]:
         v, U = speig(matrix, k=n_components, tol=tol)
     else:
         v, U = np.linalg.eig(matrix)
@@ -31,20 +32,26 @@ def eig_solver(matrix, n_components=None, tol=1e-12, add_null=False):
     U = np.real(U[:, np.argsort(-v)])
     v = np.real(v[np.argsort(-v)])
 
-    U = U[:, v > tol]
-    v = v[v > tol]
+    if tol is not None:
+        U = U[:, v > tol]
+        v = v[v > tol]
 
     if len(v) == 1:
         U = U.reshape(-1, 1)
 
-    if n_components > len(v) and add_null:
-        print(
-            f"There are fewer than {n_components} "
-            f"significant eigenpair(s). Adding "
-            f"{n_components - len(v)} null eigenpair(s)."
-        )
-        for i in range(len(v), n_components):
-            v = np.array([*v, 0])
-            U = np.array([*U.T, np.zeros(U.shape[0])]).T
+    if n_components is not None and n_components > len(v):
+        if not add_null:
+
+            warnings.warn(
+                f"There are fewer than {n_components} "
+                "significant eigenpair(s). Resulting decomposition"
+                f"will be truncated to {len(v)} eigenpairs."
+            )
+
+        else:
+
+            for i in range(len(v), n_components):
+                v = np.array([*v, 0])
+                U = np.array([*U.T, np.zeros(U.shape[0])]).T
 
     return v[:n_components], U[:, :n_components]

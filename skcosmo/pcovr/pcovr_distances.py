@@ -39,7 +39,7 @@ def pcovr_covariance(mixing, X_proxy, Y_proxy, rcond=1e-12, return_isqrt=False):
     if mixing < 1 or return_isqrt:
         # Do not try to approximate C_inv, it will affect results
         C_inv = np.linalg.pinv(cov, rcond=rcond)
-        C_isqrt = scipy.linalg.sqrtm(C_inv)
+        C_isqrt = np.real(scipy.linalg.sqrtm(C_inv))
 
         # parentheses speed up calculation greatly
         Y_hat = C_isqrt @ (X_proxy.T @ Y_proxy)

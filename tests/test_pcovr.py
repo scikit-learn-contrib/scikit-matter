@@ -10,7 +10,7 @@ def rel_error(A, B):
     return np.linalg.norm(A - B) ** 2.0 / np.linalg.norm(A) ** 2.0
 
 
-class PCovRTest(unittest.TestCase):
+class PCovRBaseTest(unittest.TestCase):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -24,6 +24,8 @@ class PCovRTest(unittest.TestCase):
     def setUp(self):
         pass
 
+
+class PCovRErrorTest(PCovRBaseTest):
     def test_lr_with_x_errors(self):
         """
         This test checks that PCovR returns a non-null property prediction
@@ -90,48 +92,8 @@ class PCovRTest(unittest.TestCase):
 
             prev_error = error
 
-    def test_nonfitted_failure(self):
-        """
-        This test checks that PCovR will raise a `NonFittedError` if
-        `transform` is called before the model is fitted
-        """
-        model = self.model(mixing=0.5, n_components=2, tol=1e-12)
-        with self.assertRaises(exceptions.NotFittedError):
-            _ = model.transform(self.X)
 
-    def test_no_arg_predict(self):
-        """
-        This test checks that PCovR will raise a `ValueError` if
-        `predict` is called without arguments
-        """
-        model = self.model(mixing=0.5, n_components=2, tol=1e-12)
-        model.fit(self.X, self.Y)
-        with self.assertRaises(ValueError):
-            _ = model.predict()
-
-    def test_T_shape(self):
-        """
-        This test checks that PCovR returns a latent space projection
-        consistent with the shape of the input matrix
-        """
-        pcovr = self.model(mixing=0.5, n_components=2, tol=1e-12)
-        pcovr.fit(self.X, self.Y)
-        T = pcovr.transform(self.X)
-        self.assertTrue(check_X_y(self.X, T, multi_output=True))
-
-
-class PCovRSpaceTest(unittest.TestCase):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-        self.model = lambda mixing, **kwargs: PCovR(
-            mixing, regularization=1e-8, **kwargs
-        )
-        error_tol = 1e-3
-        self.rounding = -int(round(np.log10(error_tol)))
-
-        self.X, self.Y = load_boston(return_X_y=True)
-
+class PCovRSpaceTest(PCovRBaseTest):
     def test_select_feature_space(self):
         """
         This test checks that PCovR implements the feature space version
@@ -172,6 +134,39 @@ class PCovRSpaceTest(unittest.TestCase):
         pcovr.fit(self.X, self.Y)
 
         self.assertTrue(pcovr.space == "structure")
+
+
+class PCovRInfrastructureTest(PCovRBaseTest):
+    def test_nonfitted_failure(self):
+        """
+        This test checks that PCovR will raise a `NonFittedError` if
+        `transform` is called before the model is fitted
+        """
+        model = self.model(mixing=0.5, n_components=2, tol=1e-12)
+        with self.assertRaises(exceptions.NotFittedError):
+            _ = model.transform(self.X)
+
+    def test_no_arg_predict(self):
+        """
+        This test checks that PCovR will raise a `ValueError` if
+        `predict` is called without arguments
+        """
+        model = self.model(mixing=0.5, n_components=2, tol=1e-12)
+        model.fit(self.X, self.Y)
+        with self.assertRaises(ValueError):
+            _ = model.predict()
+
+    def test_T_shape(self):
+        """
+        This test checks that PCovR returns a latent space projection
+        consistent with the shape of the input matrix
+        """
+        n_components = 5
+        pcovr = self.model(mixing=0.5, n_components=n_components, tol=1e-12)
+        pcovr.fit(self.X, self.Y)
+        T = pcovr.transform(self.X)
+        self.assertTrue(check_X_y(self.X, T, multi_output=True))
+        self.assertTrue(T.shape[-1] == n_components)
 
 
 if __name__ == "__main__":

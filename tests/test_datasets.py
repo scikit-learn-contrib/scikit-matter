@@ -4,8 +4,9 @@ from skcosmo.datasets import load_degenerate_CH4_manifold
 
 
 class BaseTests(unittest.TestCase):
-    def setUp(self):
-        self.degenerate_CH4_manifold = load_degenerate_CH4_manifold()
+    @classmethod
+    def setUpClass(cls):
+        cls.degenerate_CH4_manifold = load_degenerate_CH4_manifold()
 
     def test_load_degenerate_CH4_manifold_power_spectrum_shape(self):
         # test if representations have correct shape
