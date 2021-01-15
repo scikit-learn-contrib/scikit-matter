@@ -1,4 +1,5 @@
 import numpy as np
+from scipy.sparse.linalg import eigs as speig
 import warnings
 
 
@@ -22,8 +23,10 @@ def eig_solver(matrix, n_components=None, tol=1e-12, add_null=False):
                      False
     :type add_null: boolean
     """
-
-    v, U = np.linalg.eig(matrix)
+    if n_components is not None and n_components < matrix.shape[0]:
+        v, U = speig(matrix, k=n_components, tol=tol)
+    else:
+        v, U = np.linalg.eig(matrix)
 
     U = np.real(U[:, np.argsort(-v)])
     v = np.real(v[np.argsort(-v)])

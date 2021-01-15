@@ -20,6 +20,7 @@ class SparseKPCA_tests(unittest.TestCase):
         self.kernels = ["linear", "poly", "rbf", "cosine"]
         self.n_active = 10
 
+        
     def check_kernel_types(self, kernel):
         skpca = SparseKPCA(
             n_components=2, tol=1e-12, n_active=self.n_active, kernel=kernel
@@ -57,24 +58,20 @@ class SparseKPCA_tests(unittest.TestCase):
     # Checks that the model will result in the same projection with a precomputed
     # and not precomputed linear kernel
     def test_precomputed_kernel(self):
-        args = dict(n_components=2, tol=1e-12, n_active=20)
+        args = dict(n_components=2, tol=0, n_active=20)
 
         precomputed_model = SparseKPCA(**args, kernel="precomputed")
         model = SparseKPCA(**args, kernel="linear")
-
         X_sparse = self.X[np.random.randint(self.X.shape[0], size=args["n_active"])]
-
         K_sparse = X_sparse @ X_sparse.T
         K = self.X @ X_sparse.T
-
         precomputed_model.fit(K, K_sparse)
         model.fit(self.X, X_sparse)
         precomputed_T = precomputed_model.transform(K)
         model_T = model.transform(self.X)
 
-        self.assertLessEqual(np.linalg.norm(precomputed_T - model_T), self.error_tol)
+        self.assertLessEqual(self.rel_error(precomputed_T.T @ precomputed_T,model_T.T@model_T ), self.error_tol)
 
 
 if __name__ == "__main__":
-    suite = unittest.defaultTestLoader.loadTestsFromTestCase(SparseKPCA_tests)
-    unittest.TextTestRunner().run(suite)
+    unittest.main()

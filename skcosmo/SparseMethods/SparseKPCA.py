@@ -7,9 +7,11 @@ from sklearn.exceptions import NotFittedError
 from ..selection.FPS import SampleFPS
 
 
+from scipy.sparse.linalg import eigs as speig
 class SparseKPCA(_Sparsified):
     """
-    ----Inherited Attributes----
+
+    :param n_components: number of components for which selection is carried out in SparseKPCA and SparseKRCovR
     :param kernel: the kernel used for this learning
     :param gamma: exponential factor of the rbf and sigmoid kernel
     :param degree: polynomial kernel degree
@@ -19,7 +21,10 @@ class SparseKPCA(_Sparsified):
     :param tol: Relative accuracy for eigenvalues (stopping criterion) The default value of 0 implies machine precision.
     :param center: if True, centering is carried out
     :param n_jobs: The number of jobs to use for the computation the kernel. This works by breaking down the pairwise matrix into n_jobs even slices and computing them in parallel.
-    :param n_components: number of components for which selection is carried out in SparseKPCA and SparseKRCovR
+    :param selector: defines the sampling method for the active subsets
+    :param selector_args: define the parameters for selector function
+    :param fit_inverse_transform: determine whether the inverse transformation matrix will need to be calculated
+    :param copy_X: whether a forced copy will be triggered during the validation on an array, list, sparse matrix or similar. If copy=False, a copy might be triggered by a conversion.
     """
 
     def __init__(
@@ -35,6 +40,7 @@ class SparseKPCA(_Sparsified):
         center=True,
         n_jobs=1,
         selector=SampleFPS,
+        selector_args={},
         fit_inverse_transform=False,
         copy_X=True,
     ):
@@ -48,6 +54,7 @@ class SparseKPCA(_Sparsified):
             n_active=n_active,
             n_jobs=n_jobs,
             selector=selector,
+            selector_args=selector_args,
         )
         self.n_components = n_components
         self.tol = tol
@@ -70,16 +77,15 @@ class SparseKPCA(_Sparsified):
         :return: Returns the instance itself.
         """
         X = check_array(X, copy=self.copy_X)
-        self._define_kernel_matrix(X, X_sparse)
+        K_sparse_, K_cross_ = self._get_kernel_matrix(X, X_sparse)
 
-        vmm, Umm = eig_solver(self.K_sparse_, n_components=self.n_active, tol=self.tol)
+        vmm, Umm = eig_solver(K_sparse_, n_components=self.n_active, tol=self.tol)
         v_invsqrt = np.sqrt(np.linalg.pinv(np.diagflat(vmm)))
         U_active = Umm[:, : self.n_active] @ v_invsqrt
-        phi_active = self.K_cross_ @ U_active
 
+        phi_active = K_cross_ @ U_active
         C = phi_active.T @ phi_active
         v_C, U_C = eig_solver(C, n_components=self.n_components, tol=self.tol)
-
         self.pkt_ = U_active @ U_C[:, : self.n_components]
         if X is not None and self._fit_inverse_transform:
             T = self.Knm @ self.pkt_
@@ -93,13 +99,14 @@ class SparseKPCA(_Sparsified):
         :param X: feature matrix or kernel matrix between X and X_sparse
         :return: T, projection into the latent space
         """
+        X = check_array(X)
         check_is_fitted(self, ["pkt_", "X_sparse_"])
 
         K_cross = self._get_kernel(X, self.X_sparse_)
         if self.center:
             K_cross = self.kfc.transform(K_cross)
 
-        return self._project(K_cross, "pkt_")
+        return np.dot(K_cross, self.pkt_)
 
     def fit_transform(self, X, X_sparse=None, y=None):
         """
@@ -120,21 +127,23 @@ class SparseKPCA(_Sparsified):
         self.fit(X, X_sparse, y)
         self.transform(X)
 
-    def inverse_transform(self, X):
-        """Transform X back to original space.
+    def inverse_transform(self, T):
+        """Transform T back to original space.
 
-        Parameters
-        ----------
-        X : {array-like} of shape (n_samples, n_components)
 
-        Returns
-        -------
-        X_new : ndarray of shape (n_samples, n_features)
+        :param T : matrix for inverse transform
+        :type T: ndarray of shape (n_samples, n_features)
+
+        :return X_new: result of inverse transformation
+        :type X_new: ndarray of shape (n_samples, n_features)
 
         References
         ----------
         "Learning to Find Pre-Images", G BakIr et al, 2004.
         """
+
+        check_is_fitted(self, ["ptx_"])
+
         if not self.fit_inverse_transform:
             raise NotFittedError(
                 "The fit_inverse_transform parameter was not"
@@ -142,4 +151,4 @@ class SparseKPCA(_Sparsified):
                 "the inverse transform is not available."
             )
 
-        return self.transform(X) @ self.ptx_
+        return T @ self.ptx_

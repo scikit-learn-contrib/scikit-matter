@@ -18,11 +18,10 @@ class _Sparsified(TransformerMixin, RegressorMixin, BaseEstimator, metaclass=ABC
         :param coef0: free term of the polynomial and sigmoid kernel
         :param kernel_params: kernel parameter set
         :param n_active: the size of the small dataset used in learning
-        :param regularization: regularization parameter for SparseKRR and SparseKRCovR
-        :param tol: Relative accuracy for eigenvalues (stopping criterion) The default value of 0 implies machine precision.
         :param center: if True, centering of kernel during the learning is carried out
         :param n_jobs: The number of jobs to use for the computation the kernel. This works by breaking down the pairwise matrix into n_jobs even slices and computing them in parallel.
-        :param n_components: number of components for which selection is carried out in SparseKPCA and SparseKRCovR
+        :param selector: defines the sampling method for the active subsets
+        :param selector_args: define the parameters for selector function
     """
 
     def __init__(
@@ -36,6 +35,7 @@ class _Sparsified(TransformerMixin, RegressorMixin, BaseEstimator, metaclass=ABC
         center=True,
         n_jobs=1,
         selector=SampleFPS,
+        selector_args={},
     ):
         """
         Initializes superclass for sparse methods
@@ -45,9 +45,11 @@ class _Sparsified(TransformerMixin, RegressorMixin, BaseEstimator, metaclass=ABC
         :param degree: polynomial kernel degree
         :param coef0: free term of the polynomial and sigmoid kernel
         :param kernel_params: kernel parameter set
-        :param n_active: the size of the small dataset used in learning
+        :param n_active: the size of the active dataset used in learning
         :param center: if True, centering of kernel during the learning is carried out
         :param n_jobs: The number of jobs to use for the computation the kernel. This works by breaking down the pairwise matrix into n_jobs even slices and computing them in parallel.
+        :param selector: defines the sampling method for the active subsets
+        :param selector_args: define the parameters for selector function
         """
         self.kernel = kernel
         self.gamma = gamma
@@ -58,21 +60,7 @@ class _Sparsified(TransformerMixin, RegressorMixin, BaseEstimator, metaclass=ABC
         self.center = center
         self.n_jobs = n_jobs
         self._selector = selector
-
-    def _project(self, A, projector):
-        """Apply a projector to matrix A
-
-        :param A: projector: string corresponding to the named projection matrix of shape (a, p)
-        :type array-like, shape (n, a)
-
-        :return: A'
-        :type array-like, shape (n, p)
-        """
-        check_is_fitted(self, projector)
-
-        A = check_array(A)
-        A_transformed = np.dot(A, self.__dict__[projector])
-        return A_transformed
+        self._selector_args = selector_args
 
     def _get_kernel(self, X, Y=None):
         """
@@ -94,26 +82,25 @@ class _Sparsified(TransformerMixin, RegressorMixin, BaseEstimator, metaclass=ABC
             X, Y, metric=self.kernel, filter_params=True, n_jobs=self.n_jobs, **params
         )
 
-    def _define_kernel_matrix(self, X, X_sparse=None):
+    def _get_kernel_matrix(self, X, X_sparse=None):
         """
-        Calculate the Kmm and Knm matrices, which correspons to   kernel evaluated between the active set samples
-        and kernel matrix between X and X_sparse respectively
+        Calculate the Kmm and Knm matrices, which corresponds to the kernel evaluated between the active set samples
         :param X: input matrices, for which we calculate Kmm and Knm
         :param Kmm: kernel evaluated between the active set samples
         :param Knm: kernel matrix between X and X_sparse
         """
         if X_sparse is None:
-            selector = self._selector(X)
+            selector = self._selector(X, **self._selector_args)
 
             i_active = selector.select(self.n_active)
 
-            X_sparse = X[i_active, :]
+            X_sparse = X[i_active]
 
             if self.kernel == "precomputed":
                 X_sparse = X_sparse[:, i_active]
 
         self.X_sparse_ = X_sparse
-        K_sparse_ = self._get_kernel(self.X_sparse_, self.X_sparse_)
+        K_sparse_ = self._get_kernel(self.X_sparse_)
 
         K_cross_ = self._get_kernel(X, self.X_sparse_)
         if self.center:
@@ -121,5 +108,4 @@ class _Sparsified(TransformerMixin, RegressorMixin, BaseEstimator, metaclass=ABC
             self.kfc.fit(K_sparse_)
             K_sparse_ = self.kfc.transform(K_sparse_)
             K_cross_ = self.kfc.transform(K_cross_)
-        self.K_sparse_ = K_sparse_
-        self.K_cross_ = K_cross_
+        return K_sparse_, K_cross_
