@@ -20,7 +20,6 @@ class SparseKPCA_tests(unittest.TestCase):
         self.kernels = ["linear", "poly", "rbf", "cosine"]
         self.n_active = 10
 
-        
     def check_kernel_types(self, kernel):
         skpca = SparseKPCA(
             n_components=2, tol=1e-12, n_active=self.n_active, kernel=kernel
@@ -70,7 +69,10 @@ class SparseKPCA_tests(unittest.TestCase):
         precomputed_T = precomputed_model.transform(K)
         model_T = model.transform(self.X)
 
-        self.assertLessEqual(self.rel_error(precomputed_T.T @ precomputed_T,model_T.T@model_T ), self.error_tol)
+        self.assertLessEqual(
+            self.rel_error(precomputed_T.T @ precomputed_T, model_T.T @ model_T),
+            self.error_tol,
+        )
 
 
 if __name__ == "__main__":

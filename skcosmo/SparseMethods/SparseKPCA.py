@@ -8,6 +8,8 @@ from ..selection.FPS import SampleFPS
 
 
 from scipy.sparse.linalg import eigs as speig
+
+
 class SparseKPCA(_Sparsified):
     """
 
