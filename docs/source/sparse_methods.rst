@@ -1,7 +1,16 @@
 Sparse Methods
----------------------------------------
+--------------
 
-.. automodule:: skcosmo.SparseMethods
+.. currentmodule:: skcosmo.sparsified
+
+Sparse Kernel PCA
+#################
+.. autoclass:: SparseKPCA
    :members:
-   :undoc-members:
-   :show-inheritance:
+
+.. currentmodule:: skcosmo.sparsified._base
+
+Sparse Base Class
+#################
+.. autoclass:: Sparsified
+   :members:
