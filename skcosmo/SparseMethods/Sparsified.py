@@ -1,7 +1,4 @@
-import numpy as np
 from abc import ABCMeta
-from sklearn.utils import check_array
-from sklearn.utils.validation import check_is_fitted
 from sklearn.base import BaseEstimator, TransformerMixin, RegressorMixin
 from sklearn.metrics.pairwise import pairwise_kernels
 from ..preprocessing.flexible_scaler import KernelFlexibleCenterer
