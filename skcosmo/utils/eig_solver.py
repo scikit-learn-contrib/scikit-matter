@@ -23,6 +23,7 @@ def eig_solver(matrix, n_components=None, tol=1e-12, add_null=False):
                      False
     :type add_null: boolean
     """
+
     if n_components is not None and n_components < matrix.shape[0]:
         v, U = speig(matrix, k=n_components, tol=tol)
     else:

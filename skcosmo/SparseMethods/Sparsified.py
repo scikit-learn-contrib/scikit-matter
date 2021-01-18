@@ -105,4 +105,4 @@ class _Sparsified(TransformerMixin, RegressorMixin, BaseEstimator, metaclass=ABC
             self.kfc.fit(K_sparse_)
             K_sparse_ = self.kfc.transform(K_sparse_)
             K_cross_ = self.kfc.transform(K_cross_)
-        return K_sparse_, K_cross_
+        return K_cross_, K_sparse_

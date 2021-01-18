@@ -76,7 +76,7 @@ class SparseKPCA(_Sparsified):
         :return: Returns the instance itself.
         """
         X = check_array(X, copy=self.copy_X)
-        K_sparse_, K_cross_ = self._get_kernel_matrix(X, X_sparse)
+        K_cross_, K_sparse_ = self._get_kernel_matrix(X, X_sparse)
 
         vmm, Umm = eig_solver(K_sparse_, n_components=self.n_active, tol=self.tol)
         v_invsqrt = np.sqrt(np.linalg.pinv(np.diagflat(vmm)))
@@ -87,7 +87,7 @@ class SparseKPCA(_Sparsified):
         v_C, U_C = eig_solver(C, n_components=self.n_components, tol=self.tol)
         self.pkt_ = U_active @ U_C[:, : self.n_components]
         if X is not None and self._fit_inverse_transform:
-            T = self.Knm @ self.pkt_
+            T = K_cross_ @ self.pkt_
             v_C_inv = np.linalg.pinv(np.diagflat(v_C[: self.n_components]))
             self.ptx_ = v_C_inv @ T.T @ X
         return self
@@ -105,7 +105,7 @@ class SparseKPCA(_Sparsified):
         if self.center:
             K_cross = self.kfc.transform(K_cross)
 
-        return np.dot(K_cross, self.pkt_)
+        return K_cross @ self.pkt_
 
     def fit_transform(self, X, X_sparse=None, y=None):
         """
@@ -141,13 +141,13 @@ class SparseKPCA(_Sparsified):
         "Learning to Find Pre-Images", G BakIr et al, 2004.
         """
 
-        check_is_fitted(self, ["ptx_"])
-
         if not self.fit_inverse_transform:
             raise NotFittedError(
                 "The fit_inverse_transform parameter was not"
                 " set to True when instantiating and hence "
                 "the inverse transform is not available."
             )
+
+        check_is_fitted(self, ["ptx_"])
 
         return T @ self.ptx_
