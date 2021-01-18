@@ -97,12 +97,12 @@ class _Sparsified(TransformerMixin, RegressorMixin, BaseEstimator, metaclass=ABC
                 X_sparse = X_sparse[:, i_active]
 
         self.X_sparse_ = X_sparse
-        K_sparse_ = self._get_kernel(self.X_sparse_)
+        K_MM_ = self._get_kernel(self.X_sparse_)
 
-        K_cross_ = self._get_kernel(X, self.X_sparse_)
+        K_NM_ = self._get_kernel(X, self.X_sparse_)
         if self.center:
             self.kfc = KernelFlexibleCenterer()
-            self.kfc.fit(K_sparse_)
-            K_sparse_ = self.kfc.transform(K_sparse_)
-            K_cross_ = self.kfc.transform(K_cross_)
-        return K_cross_, K_sparse_
+            self.kfc.fit(K_MM_)
+            K_MM_ = self.kfc.transform(K_MM_)
+            K_NM_ = self.kfc.transform(K_NM_)
+        return K_NM_, K_MM_

@@ -76,18 +76,18 @@ class SparseKPCA(_Sparsified):
         :return: Returns the instance itself.
         """
         X = check_array(X, copy=self.copy_X)
-        K_cross_, K_sparse_ = self._get_kernel_matrix(X, X_sparse)
+        K_NM_, K_MM_ = self._get_kernel_matrix(X, X_sparse)
 
-        vmm, Umm = eig_solver(K_sparse_, n_components=self.n_active, tol=self.tol)
+        vmm, Umm = eig_solver(K_MM_, n_components=self.n_active, tol=self.tol)
         v_invsqrt = np.sqrt(np.linalg.pinv(np.diagflat(vmm)))
         U_active = Umm[:, : self.n_active] @ v_invsqrt
 
-        phi_active = K_cross_ @ U_active
+        phi_active = K_NM_ @ U_active
         C = phi_active.T @ phi_active
         v_C, U_C = eig_solver(C, n_components=self.n_components, tol=self.tol)
         self.pkt_ = U_active @ U_C[:, : self.n_components]
         if X is not None and self._fit_inverse_transform:
-            T = K_cross_ @ self.pkt_
+            T = K_NM_ @ self.pkt_
             v_C_inv = np.linalg.pinv(np.diagflat(v_C[: self.n_components]))
             self.ptx_ = v_C_inv @ T.T @ X
         return self
@@ -101,11 +101,11 @@ class SparseKPCA(_Sparsified):
         X = check_array(X)
         check_is_fitted(self, ["pkt_", "X_sparse_"])
 
-        K_cross = self._get_kernel(X, self.X_sparse_)
+        K_NM_ = self._get_kernel(X, self.X_sparse_)
         if self.center:
-            K_cross = self.kfc.transform(K_cross)
+            K_NM_ = self.kfc.transform(K_NM_)
 
-        return K_cross @ self.pkt_
+        return K_NM_ @ self.pkt_
 
     def fit_transform(self, X, X_sparse=None, y=None):
         """
