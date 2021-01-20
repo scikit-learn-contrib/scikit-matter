@@ -105,7 +105,6 @@ class SparseKPCA(_Sparsified):
         )
         self.n_components = n_components
         self.tol = tol
-        self.pkt_ = None
         self._fit_inverse_transform = fit_inverse_transform
         self.copy_X = copy_X
 
