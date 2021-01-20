@@ -70,7 +70,7 @@ class SparseKPCA_tests(unittest.TestCase):
         model_T = model.transform(self.X)
 
         self.assertLessEqual(
-            self.rel_error(precomputed_T.T @ precomputed_T, model_T.T @ model_T),
+            self.rel_error(precomputed_T @ precomputed_T.T, model_T @ model_T.T),
             self.error_tol,
         )
 
