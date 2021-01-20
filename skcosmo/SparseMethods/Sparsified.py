@@ -107,6 +107,8 @@ class _Sparsified(TransformerMixin, RegressorMixin, BaseEstimator, metaclass=ABC
 
             X_sparse = X[i_active]
 
+            # in the case that the full kernel has been passed but the active set not designated,
+            # then K_MM = K[i_active][:, i_active]
             if self.kernel == "precomputed":
                 X_sparse = X_sparse[:, i_active]
 
