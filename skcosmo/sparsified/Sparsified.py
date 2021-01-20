@@ -119,6 +119,6 @@ class Sparsified(TransformerMixin, RegressorMixin, BaseEstimator, metaclass=ABCM
         if self.center:
             self.kfc = KernelFlexibleCenterer()
             self.kfc.fit(K_MM)
-            K_MM_ = self.kfc.transform(K_MM)
-            K_NM_ = self.kfc.transform(K_NM)
+            K_MM = self.kfc.transform(K_MM)
+            K_NM = self.kfc.transform(K_NM)
         return K_NM, K_MM
