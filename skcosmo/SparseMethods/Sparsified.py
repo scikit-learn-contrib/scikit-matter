@@ -10,30 +10,57 @@ class _Sparsified(TransformerMixin, RegressorMixin, BaseEstimator, metaclass=ABC
     """
     Super-class defined sparcified methods
 
-        :param kernel: the kernel used for this learning
-        :param gamma: exponential factor of the rbf and sigmoid kernel
-        :param degree: polynomial kernel degree
-        :param coef0: free term of the polynomial and sigmoid kernel
-        :param kernel_params: kernel parameter set
-        :param n_active: the size of the small dataset used in learning
-        :param center: if True, centering of kernel during the learning is carried out
-        :param n_jobs: The number of jobs to use for the computation the kernel. This works by breaking down the pairwise matrix into n_jobs even slices and computing them in parallel.
-        :param selector: defines the sampling method for the active subsets
-        :param selector_args: define the parameters for selector function
+
+      n_active : int, default=None
+          Number of samples in the active set.
+          
+      center: boolean, default=True
+          Whether to center the sparse kernel matrices
+          
+      selector: class of type consistent to those in `skcosmo.selection`, default=`skcosmo.selection.SampleFPS`
+          Object class to use to select the active set. 
+          
+     selector_args: dictionary, default={}
+          constructor arguments for selector
+  
+      kernel : {'linear', 'poly', \
+              'rbf', 'sigmoid', 'cosine', 'precomputed'}, default='linear'
+          Kernel used for PCA.
+  
+      gamma : float, default=None
+          Kernel coefficient for rbf, poly and sigmoid kernels. Ignored by other
+          kernels. If ``gamma`` is ``None``, then it is set to ``1/n_features``.
+  
+      degree : int, default=3
+          Degree for poly kernels. Ignored by other kernels.
+  
+      coef0 : float, default=1
+          Independent term in poly and sigmoid kernels.
+          Ignored by other kernels.
+  
+      kernel_params : dict, default={}
+          Parameters (keyword arguments) and
+          values for kernel passed as callable object.
+          Ignored by other kernels.
+ 
+      n_jobs : int, default=None
+          The number of parallel jobs to run.
+          ``None`` means 1 unless in a :obj:`joblib.parallel_backend` context.
+          ``-1`` means using all processors. 
     """
 
     def __init__(
         self,
+        n_active=None,
+        center=True,
+        selector=SampleFPS,
+        selector_args={},
         kernel="linear",
         gamma=None,
         degree=3,
         coef0=1,
-        kernel_params=None,
-        n_active=None,
-        center=True,
+        kernel_params={},
         n_jobs=1,
-        selector=SampleFPS,
-        selector_args={},
     ):
         """
         Initializes superclass for sparse methods
