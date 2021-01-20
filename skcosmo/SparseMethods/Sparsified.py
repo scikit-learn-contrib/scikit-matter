@@ -77,7 +77,7 @@ class _Sparsified(TransformerMixin, RegressorMixin, BaseEstimator, metaclass=ABC
         """
         Calculate kernel for the matrix X or (optionally) for matrix X and Y
         :param X: matrix, for which we calculate kernel
-        :param Y: A second feature array only if X has shape [n_samples_a, n_features].
+        :param Y: A second feature array with the same number of features to as`X`
 
         :return: sklearn.metrics.pairwise.pairwise_kernels(X, Y)
         """
