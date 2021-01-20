@@ -6,9 +6,9 @@ from ..preprocessing.flexible_scaler import KernelFlexibleCenterer
 from ..selection.FPS import SampleFPS
 
 
-class _Sparsified(TransformerMixin, RegressorMixin, BaseEstimator, metaclass=ABCMeta):
+class Sparsified(TransformerMixin, RegressorMixin, BaseEstimator, metaclass=ABCMeta):
     """
-    Super-class defined sparcified methods
+    Super-class defined sparsified methods
 
 
       n_active : int, default=None
@@ -113,12 +113,12 @@ class _Sparsified(TransformerMixin, RegressorMixin, BaseEstimator, metaclass=ABC
                 X_sparse = X_sparse[:, i_active]
 
         self.X_sparse_ = X_sparse
-        K_MM_ = self._get_kernel(self.X_sparse_)
+        K_MM = self._get_kernel(self.X_sparse_)
 
-        K_NM_ = self._get_kernel(X, self.X_sparse_)
+        K_NM = self._get_kernel(X, self.X_sparse_)
         if self.center:
             self.kfc = KernelFlexibleCenterer()
-            self.kfc.fit(K_MM_)
-            K_MM_ = self.kfc.transform(K_MM_)
-            K_NM_ = self.kfc.transform(K_NM_)
-        return K_NM_, K_MM_
+            self.kfc.fit(K_MM)
+            K_MM_ = self.kfc.transform(K_MM)
+            K_NM_ = self.kfc.transform(K_NM)
+        return K_NM, K_MM

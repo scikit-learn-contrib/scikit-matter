@@ -3,12 +3,12 @@ from sklearn.exceptions import NotFittedError
 from sklearn.utils import check_array
 from sklearn.utils.validation import check_is_fitted
 
-from .sparsified import _Sparsified
+from ..sparsified.Sparsified import Sparsified
 from ..selection.FPS import SampleFPS
 from ..utils.eig_solver import eig_solver
 
 
-class SparseKPCA(_Sparsified):
+class SparseKPCA(Sparsified):
     """
 
     :param n_components: number of components for which selection is carried out in SparseKPCA and SparseKRCovR
@@ -133,7 +133,7 @@ class SparseKPCA(_Sparsified):
         C = phi_active.T @ phi_active
         v_C, U_C = eig_solver(C, n_components=self.n_components, tol=self.tol)
         self.pkt_ = U_active @ U_C[:, : self.n_components]
-        
+
         if X is not None and self._fit_inverse_transform:
             T = K_NM @ self.pkt_
             v_C_inv = np.diagflat(1.0 / v_C[: self.n_components])

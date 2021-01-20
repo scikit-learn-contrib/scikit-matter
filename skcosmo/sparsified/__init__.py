@@ -1,5 +1,5 @@
 """
-The :mod:`skcosmo.SparseMethods` module includes SparseKPCA
+The :mod:`skcosmo.sparsified` module includes SparseKPCA
 """
 
 from .SparseKPCA import SparseKPCA
