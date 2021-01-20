@@ -149,11 +149,11 @@ class SparseKPCA(_Sparsified):
         X = check_array(X)
         check_is_fitted(self, ["pkt_", "X_sparse_"])
 
-        K_NM_ = self._get_kernel(X, self.X_sparse_)
+        K_NM = self._get_kernel(X, self.X_sparse_)
         if self.center:
-            K_NM_ = self.kfc.transform(K_NM_)
+            K_NM = self.kfc.transform(K_NM)
 
-        return K_NM_ @ self.pkt_
+        return K_NM @ self.pkt_
 
     def fit_transform(self, X, X_sparse=None, y=None):
         """
