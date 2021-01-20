@@ -1,6 +1,7 @@
 from abc import ABCMeta
 from sklearn.base import BaseEstimator, TransformerMixin, RegressorMixin
 from sklearn.metrics.pairwise import pairwise_kernels
+
 from ..preprocessing.flexible_scaler import KernelFlexibleCenterer
 from ..selection.FPS import SampleFPS
 
