@@ -123,19 +123,20 @@ class SparseKPCA(_Sparsified):
         :return: Returns the instance itself.
         """
         X = check_array(X, copy=self.copy_X)
-        K_NM_, K_MM_ = self._get_kernel_matrix(X, X_sparse)
+        K_NM, K_MM = self._get_kernel_matrix(X, X_sparse)
 
-        vmm, Umm = eig_solver(K_MM_, n_components=self.n_active, tol=self.tol)
-        v_invsqrt = np.sqrt(np.linalg.pinv(np.diagflat(vmm)))
-        U_active = Umm[:, : self.n_active] @ v_invsqrt
+        v_MM, U_MM = eig_solver(K_MM, n_components=self.n_active, tol=self.tol)
+        v_invsqrt = np.diagflat(1.0 / np.sqrt(v_MM))
+        U_active = U_MM[:, : self.n_active] @ v_invsqrt
 
-        phi_active = K_NM_ @ U_active
+        phi_active = K_NM @ U_active
         C = phi_active.T @ phi_active
         v_C, U_C = eig_solver(C, n_components=self.n_components, tol=self.tol)
         self.pkt_ = U_active @ U_C[:, : self.n_components]
+        
         if X is not None and self._fit_inverse_transform:
-            T = K_NM_ @ self.pkt_
-            v_C_inv = np.linalg.pinv(np.diagflat(v_C[: self.n_components]))
+            T = K_NM @ self.pkt_
+            v_C_inv = np.diagflat(1.0 / v_C[: self.n_components])
             self.ptx_ = v_C_inv @ T.T @ X
         return self
 
