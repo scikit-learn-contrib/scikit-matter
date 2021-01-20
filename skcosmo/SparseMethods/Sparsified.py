@@ -86,7 +86,7 @@ class _Sparsified(TransformerMixin, RegressorMixin, BaseEstimator, metaclass=ABC
                 raise ValueError("The supplied kernel does not match n_active.")
             return X
         if callable(self.kernel):
-            params = self.kernel_params or {}
+            params = self.kernel_params
         else:
             params = {"gamma": self.gamma, "degree": self.degree, "coef0": self.coef0}
         return pairwise_kernels(
