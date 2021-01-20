@@ -62,20 +62,6 @@ class _Sparsified(TransformerMixin, RegressorMixin, BaseEstimator, metaclass=ABC
         kernel_params={},
         n_jobs=1,
     ):
-        """
-        Initializes superclass for sparse methods
-
-        :param kernel: the kernel used for this learning
-        :param gamma: exponential factor of the rbf and sigmoid kernel
-        :param degree: polynomial kernel degree
-        :param coef0: free term of the polynomial and sigmoid kernel
-        :param kernel_params: kernel parameter set
-        :param n_active: the size of the active dataset used in learning
-        :param center: if True, centering of kernel during the learning is carried out
-        :param n_jobs: The number of jobs to use for the computation the kernel. This works by breaking down the pairwise matrix into n_jobs even slices and computing them in parallel.
-        :param selector: defines the sampling method for the active subsets
-        :param selector_args: define the parameters for selector function
-        """
         self.kernel = kernel
         self.gamma = gamma
         self.degree = degree
