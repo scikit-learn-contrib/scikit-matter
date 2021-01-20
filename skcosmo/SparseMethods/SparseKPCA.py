@@ -1,10 +1,11 @@
 import numpy as np
-from .Sparsified import _Sparsified
-from sklearn.utils.validation import check_is_fitted
-from sklearn.utils import check_array
-from ..utils.eig_solver import eig_solver
 from sklearn.exceptions import NotFittedError
+from sklearn.utils import check_array
+from sklearn.utils.validation import check_is_fitted
+
+from .sparsified import _Sparsified
 from ..selection.FPS import SampleFPS
+from ..utils.eig_solver import eig_solver
 
 
 class SparseKPCA(_Sparsified):
