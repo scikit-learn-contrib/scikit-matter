@@ -274,6 +274,135 @@ def _calc_distances_(K, ref_idx, idxs=None):
     )
 
 
+"""
+   select_fps(const Eigen::Ref<const RowMatrixXd> & feature_matrix,
+               int n_sparse, int i_first_point,
+               const FPSReturnTupleConst & restart) {
+      // number of inputs
+      int n_inputs = feature_matrix.rows();
+
+      // n. of sparse points. defaults to full sorting of the inputs
+      if (n_sparse == 0) {
+        n_sparse = n_inputs;
+      }
+
+      // TODO(ceriottm) <- use the exception mechanism
+      // for librascal whatever it is
+      if (n_sparse > n_inputs) {
+        throw std::runtime_error("Cannot FPS more inputs than those provided");
+      }
+
+      /* return arrays */
+      // FPS indices
+      auto sparse_indices = Eigen::ArrayXi(n_sparse);
+      // minmax distances (squared)
+      auto sparse_minmax_d2 = Eigen::ArrayXd(n_sparse);
+
+      // square moduli of inputs
+      auto feature_x2 = Eigen::ArrayXd(n_inputs);
+      // list of square distances to latest FPS point
+      auto list_new_d2 = Eigen::ArrayXd(n_inputs);
+      // list of minimum square distances to each input
+      auto list_min_d2 = Eigen::ArrayXd(n_inputs);
+      int i_new{};
+      double d2max_new{};
+
+      // computes the squared modulus of input points
+      feature_x2 = feature_matrix.cwiseAbs2().rowwise().sum();
+
+      // extracts (possibly empty) restart arrays
+      auto i_restart = std::get<0>(restart);
+      auto d_restart = std::get<1>(restart);
+      auto ld_restart = std::get<2>(restart);
+      ssize_t i_start_index = 1;
+      if (i_restart.size() > 0) {
+        if (i_restart.size() >= n_sparse) {
+          throw std::runtime_error("Restart arrays larger than target ");
+        }
+
+        sparse_indices.head(i_restart.size()) = i_restart;
+        i_start_index = i_restart.size();
+
+        if (d_restart.size() > 0) {
+          // restart the FPS calculation from previous run.
+          // all information is available
+          if (d_restart.size() != i_restart.size()) {
+            throw std::runtime_error("Restart indices and distances mismatch");
+          }
+
+          // sets the part of the data we know already
+          sparse_minmax_d2.head(i_restart.size()) = d_restart;
+          list_min_d2 = ld_restart;
+        } else {
+          // distances are not available, so we recompute them.
+          // note that this is as expensive as re-running a full
+          // FPS, but it allows us to extend an existing FPS set
+          list_new_d2 = feature_x2 + feature_x2(i_restart[0]) -
+                        2 * (feature_matrix *
+                             feature_matrix.row(i_restart[0]).transpose())
+                                .array();
+          list_min_d2 = list_new_d2;
+          // this is basically the standard algorithm below, only that
+          // it is run on the first i_start_index points. see below
+          // for comments
+          for (ssize_t i = 1; i < i_start_index; ++i) {
+            // if the feature matrix has been expanded, the data will
+            // not be selected in the same order, so we have to
+            // override the selection
+            i_new = i_restart[i];
+            d2max_new = list_min_d2[i_new];
+            /*d2max_new = list_min_d2.maxCoeff(&i_new);
+             if (i_new != i_restart[i])
+             throw std::runtime_error("Reconstructed distances \
+              are inconsistent with restart array");*/
+            sparse_indices(i) = i_new;
+            sparse_minmax_d2(i - 1) = d2max_new;
+            list_new_d2 =
+                feature_x2 + feature_x2(i_new) -
+                2 * (feature_matrix * feature_matrix.row(i_new).transpose())
+                        .array();
+            list_min_d2 = list_min_d2.min(list_new_d2);
+          }
+        }
+      } else {
+        // standard initialization
+        // initializes arrays taking the first point provided in input
+        sparse_indices(0) = i_first_point;
+        //  distance square to the selected point
+        list_new_d2 =
+            feature_x2 + feature_x2(i_first_point) -
+            2 * (feature_matrix * feature_matrix.row(i_first_point).transpose())
+                    .array();
+        list_min_d2 = list_new_d2;  // we only have this point....
+      }
+
+      for (ssize_t i = i_start_index; i < n_sparse; ++i) {
+        // picks max dist and its index
+        d2max_new = list_min_d2.maxCoeff(&i_new);
+        sparse_indices(i) = i_new;
+        sparse_minmax_d2(i - 1) = d2max_new;
+
+        // compute distances^2 to the new point
+        // TODO(ceriottm): encapsulate the distance calculation
+        // into an interface function
+        // dispatching to the proper distance/kernel needed
+        list_new_d2 =
+            feature_x2 + feature_x2(i_new) -
+            2 * (feature_matrix * feature_matrix.row(i_new).transpose())
+                    .array();
+
+        // this actually returns a list with the element-wise minimum between
+        // list_min_d2(i) and list_new_d2(i)
+        list_min_d2 = list_min_d2.min(list_new_d2);
+      }
+      sparse_minmax_d2(n_sparse - 1) = 0;
+
+      return std::make_tuple(sparse_indices, sparse_minmax_d2, list_min_d2);
+    }
+
+
+"""
+
 class _BaseFPS:
     """
     Base Class defined for FPS selection methods
