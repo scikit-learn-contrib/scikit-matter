@@ -49,10 +49,11 @@ using the eigendecomposition of a modified covariance matrix
     .. automethod:: transform
     .. automethod:: predict
     .. automethod:: inverse_transform
+    .. automethod:: score
 
 .. _PCovR_dist-api:
 
-.. currentmodule:: skcosmo.pcovr.pcovr_distances
+.. currentmodule:: skcosmo.pcovr
 
 Modified Gram Matrix :math:`\mathbf{\tilde{K}}`
 ###############################################
