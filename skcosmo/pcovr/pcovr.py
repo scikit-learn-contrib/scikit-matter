@@ -1,17 +1,28 @@
 import numpy as np
 from numpy.linalg import LinAlgError
-import scipy
+import numbers
+
+from scipy import linalg
+from scipy.sparse.linalg import svds
 from scipy.linalg import sqrtm as MatrixSqrt
+
 from sklearn.linear_model import Ridge as LR
-from sklearn.utils.validation import check_X_y, check_is_fitted
+from sklearn.utils.validation import check_X_y
+from sklearn.utils.validation import check_is_fitted
 from sklearn.utils import check_array
-from sklearn.decomposition._base import _BasePCA
+from sklearn.utils import check_random_state
+from sklearn.utils.extmath import randomized_svd, svd_flip
+from sklearn.utils.extmath import stable_cumsum
+
+from sklearn.decomposition._pca import _infer_dimension
+from sklearn.utils._arpack import _init_arpack_v0
 from sklearn.linear_model._base import LinearModel
+from sklearn.decomposition._base import _BasePCA
 
-from skcosmo.utils import eig_solver
 
-
-def pcovr_covariance(mixing, X, Y, rcond=1e-12, return_isqrt=False):
+def pcovr_covariance(
+    mixing, X, Y, rcond=1e-12, return_isqrt=False, rank=None, random_state=0
+):
     r"""
     Creates the PCovR modified covariance
 
@@ -39,16 +50,38 @@ def pcovr_covariance(mixing, X, Y, rcond=1e-12, return_isqrt=False):
                       defaults to 1E-12
     :type rcond: float
 
+    :param return_isqrt: Whether to return the calculated inverse square root of
+                         the covariance. Used when inverse square root is needed
+                         and the pcovr_covariance has already been calculated
+    :type return_isqrt: boolean
+
+    :param rank: number of eigenpairs to estimate the inverse square root
+                 with. Defaults to min(X.shape)
+    :type rank: int
+
+    :param random_state: random seed to use for randomized svd
+    :type random_state: int
+
     """
 
     C = np.zeros((X.shape[1], X.shape[1]), dtype=np.float64)
 
-    cov = X.T @ X
-
     if mixing < 1 or return_isqrt:
-        # Do not try to approximate C_inv, it will affect results
-        C_inv = np.linalg.pinv(cov, rcond=rcond)
-        C_isqrt = np.real(scipy.linalg.sqrtm(C_inv))
+
+        if rank is None:
+            rank = min(X.shape)
+
+        if rank >= min(X.shape):
+            _, vC, UC = linalg.svd(X, full_matrices=False)
+        else:
+            _, vC, UC = randomized_svd(
+                X, n_components=rank, flip_sign=True, random_state=random_state
+            )
+
+        UC = UC.T[:, vC > rcond]
+        vC = vC[vC > rcond]
+
+        C_isqrt = UC @ np.diagflat(1.0 / vC) @ UC.T
 
         # parentheses speed up calculation greatly
         C_Y = C_isqrt @ (X.T @ Y)
@@ -58,7 +91,7 @@ def pcovr_covariance(mixing, X, Y, rcond=1e-12, return_isqrt=False):
         C += (1 - mixing) * C_Y @ C_Y.T
 
     if mixing > 0:
-        C += (mixing) * cov
+        C += (mixing) * (X.T @ X)
 
     if return_isqrt:
         return C, C_isqrt
@@ -107,7 +140,8 @@ class PCovR(_BasePCA, LinearModel):
     Parameters
     ----------
     mixing: float, defaults to 1
-        mixing parameter, as described in PCovR as :math:`{\alpha}`
+        mixing parameter, as described in PCovR as :math:`{\alpha}`, here named
+        to avoid confusion with regularization parameter `alpha`
 
     n_components : int, float or str, default=None
         Number of components to keep.
@@ -115,22 +149,49 @@ class PCovR(_BasePCA, LinearModel):
 
             n_components == min(n_samples, n_features)
 
+    svd_solver : {'auto', 'full', 'arpack', 'randomized'}, default='auto'
+        If auto :
+            The solver is selected by a default policy based on `X.shape` and
+            `n_components`: if the input data is larger than 500x500 and the
+            number of components to extract is lower than 80% of the smallest
+            dimension of the data, then the more efficient 'randomized'
+            method is enabled. Otherwise the exact full SVD is computed and
+            optionally truncated afterwards.
+        If full :
+            run exact full SVD calling the standard LAPACK solver via
+            `scipy.linalg.svd` and select the components by postprocessing
+        If arpack :
+            run SVD truncated to n_components calling ARPACK solver via
+            `scipy.sparse.linalg.svds`. It requires strictly
+            0 < n_components < min(X.shape)
+        If randomized :
+            run randomized SVD by the method of Halko et al.
+
     tol : float, default=0.0
         Tolerance for singular values computed by svd_solver == 'arpack'.
         Must be of range [0.0, infinity).
 
-    space: {'feature', 'structure', 'auto'}, default='auto'
-            whether to compute the PCovR in `structure` or `feature` space
-            defaults to `structure` when :math:`{n_{samples} < n_{features}}` and
+    space: {'feature', 'sample', 'auto'}, default='auto'
+            whether to compute the PCovR in `sample` or `feature` space
+            defaults to `sample` when :math:`{n_{samples} < n_{features}}` and
             `feature` when :math:`{n_{features} < n_{samples}}`
 
-    regularization: float, default=1E-6
+    alpha: float, default=1E-6
             Regularization parameter to use in all regression operations.
-            Defaults to regularization included in `lr_args`, or if none is specified, 1E-6.
+            Defaults to alpha included in `lr_args`, or if none is specified, 1E-6.
 
     estimator:
              estimator for computing approximated :math:`{\mathbf{\hat{Y}}}`,
              default = `sklearn.linear_model.Ridge('alpha':1e-6, 'fit_intercept':False, 'tol':1e-12`)
+
+    iterated_power : int or 'auto', default='auto'
+         Number of iterations for the power method computed by
+         svd_solver == 'randomized'.
+         Must be of range [0, infinity).
+
+    random_state : int, RandomState instance or None, default=None
+         Used when the 'arpack' or 'randomized' solvers are used. Pass an int
+         for reproducible results across multiple function calls.
 
     Attributes
     ----------
@@ -138,16 +199,16 @@ class PCovR(_BasePCA, LinearModel):
     mixing: float, defaults to 1
         mixing parameter, as described in PCovR as :math:`{\alpha}`
 
-    regularization: float, default=1E-6
+    alpha: float, default=1E-6
             Regularization parameter to use in all regression operations.
 
     tol: float, default=0.0
         Tolerance for singular values computed by svd_solver == 'arpack'.
         Must be of range [0.0, infinity).
 
-    space: {'feature', 'structure', 'auto'}, default='auto'
-            whether to compute the PCovR in `structure` or `feature` space
-            defaults to `structure` when :math:`{n_{samples} < n_{features}}` and
+    space: {'feature', 'sample', 'auto'}, default='auto'
+            whether to compute the PCovR in `sample` or `feature` space
+            defaults to `sample` when :math:`{n_{samples} < n_{features}}` and
             `feature` when :math:`{n_{features} < n_{samples}}`
 
     n_components : int
@@ -195,48 +256,54 @@ class PCovR(_BasePCA, LinearModel):
     >>> X = np.array([[-1, 1, -3, 1], [1, -2, 1, 2], [-2, 0, -2, -2], [1, 0, 2, -1]])
     >>> Y = np.array([[ 0, -5], [-1, 1], [1, -5], [-3, 2]])
     >>> pcovr = PCovR(mixing=0.1, n_components=2)
-    >>> pcovr.fit(X)
-    PCovR(lr_args=None, mixing=0.1, n_components=2, space=None, tol=None)
+    >>> pcovr.fit(X, Y)
+    PCovR(alpha=1e-06, mixing=0.1, n_components=2, space='sample')
     >>> T = pcovr.transform(X)
-        [[-2.48017109 -1.54378072]
-         [ 2.74724894 -1.67904456]
-         [-2.56778727  1.44091806]
-         [ 2.30070942  1.78190722]]
+        [[ 3.2630561 ,  0.06663787],
+         [-2.69395511, -0.41582771],
+         [ 3.48683147, -0.83164387],
+         [-4.05593245,  1.18083371]]
     >>> Yp = pcovr.predict(X)
-        [[ 0.03200724, -5.01754987],
-         [-1.05781286,  1.14547488],
-         [ 0.95713937, -4.96456897],
-         [-2.99288563,  1.95975794]]
+        [[ 0.01374656, -5.00943466],
+         [-1.02804032,  1.06737777],
+         [ 0.98167556, -4.9830631 ],
+         [-2.99627428,  1.98241962]]
     """
 
     def __init__(
         self,
         mixing=0.0,
         n_components=None,
-        *,
-        regularization=None,
+        svd_solver="auto",
+        alpha=None,
         tol=1e-12,
         space="auto",
         estimator=LR(alpha=1e-6, fit_intercept=False, tol=1e-12),
+        iterated_power="auto",
+        random_state=None,
     ):
 
         self.mixing = mixing
         self.n_components = n_components
-        self.regularization = regularization
-        self.tol = tol
+        self.alpha = alpha
         self.space = space
 
         self.whiten = False
+        self.svd_solver = svd_solver
+        self.tol = tol
+        self.iterated_power = iterated_power
+        self.random_state = random_state
+
         self.estimator = estimator
 
-        if regularization is None:
-            self.regularization = getattr(self.estimator, "alpha", 1e-6)
+        if alpha is None:
+            self.alpha = getattr(self.estimator, "alpha", 1e-6)
 
     def fit(self, X, Y, Yhat=None, W=None):
         r"""
 
         Fit the model with X and Y. Depending on the dimensions of X,
-        calls either `_fit_feature_space` or `_fit_structure_space`
+        calls either `_fit_feature_space` or `_fit_sample_space`
 
         Parameters
         ----------
@@ -276,13 +343,17 @@ class PCovR(_BasePCA, LinearModel):
 
         if self.space is not None and self.space not in [
             "feature",
-            "structure",
+            "sample",
             "auto",
         ]:
-            raise ValueError("Only feature and structure space are supported.")
+            raise ValueError("Only feature and sample space are supported.")
 
+        # Handle self.n_components==None
         if self.n_components is None:
-            self.n_components = min(X.shape)
+            if self.svd_solver != "arpack":
+                self.n_components = min(X.shape)
+            else:
+                self.n_components = min(X.shape) - 1
 
         if W is None:
             self.estimator.fit(X, Y)
@@ -291,16 +362,29 @@ class PCovR(_BasePCA, LinearModel):
         if Yhat is None:
             Yhat = self.estimator.predict(X).reshape(X.shape[0], -1)
 
+        # Handle svd_solver
+        self._fit_svd_solver = self.svd_solver
+        if self._fit_svd_solver == "auto":
+            # Small problem or self.n_components == 'mle', just call full PCA
+            if max(X.shape) <= 500 or self.n_components == "mle":
+                self._fit_svd_solver = "full"
+            elif self.n_components >= 1 and self.n_components < 0.8 * min(X.shape):
+                self._fit_svd_solver = "randomized"
+            # This is also the case of self.n_components in (0,1)
+            else:
+                self._fit_svd_solver = "full"
+
+        self.n_samples, self.n_features = X.shape
         if self.space is None or self.space == "auto":
-            if X.shape[0] > X.shape[1]:
+            if self.n_samples > self.n_features:
                 self.space = "feature"
             else:
-                self.space = "structure"
+                self.space = "sample"
 
         if self.space == "feature":
             self._fit_feature_space(X, Yhat, W)
         else:
-            self._fit_structure_space(X, Yhat, W)
+            self._fit_sample_space(X, Yhat, W)
 
         self.pxy_ = self.pxt_ @ self.pty_
         if len(Y.shape) == 1:
@@ -358,14 +442,20 @@ class PCovR(_BasePCA, LinearModel):
         )
         try:
             Csqrt = np.linalg.inv(iCsqrt)
+
+        # if we can avoid recomputing Csqrt, we should, but sometimes we
+        # run into a singular matrix, which is what we do here
         except LinAlgError:
             Csqrt = np.real(MatrixSqrt(X.T @ X))
 
-        v, U = eig_solver(
-            Ct, n_components=self.n_components, tol=self.tol, add_null=True
-        )
-        S = v ** 0.5
-        S_inv = np.linalg.pinv(np.diagflat(S))
+        if self._fit_svd_solver == "full":
+            U, S, Vt = self._decompose_full(Ct)
+        elif self._fit_svd_solver in ["arpack", "randomized"]:
+            U, S, Vt = self._decompose_truncated(Ct)
+        else:
+            raise ValueError(
+                "Unrecognized svd_solver='{0}'" "".format(self._fit_svd_solver)
+            )
 
         self.singular_values_ = S.copy()
         self.explained_variance_ = (S ** 2) / (X.shape[0] - 1)
@@ -373,11 +463,12 @@ class PCovR(_BasePCA, LinearModel):
             self.explained_variance_ / self.explained_variance_.sum()
         )
 
-        self.pxt_ = np.linalg.multi_dot([iCsqrt, U, np.diagflat(S)])
-        self.ptx_ = np.linalg.multi_dot([S_inv, U.T, Csqrt])
-        self.pty_ = np.linalg.multi_dot([S_inv, U.T, iCsqrt, X.T, Yhat])
+        S_inv = np.linalg.pinv(np.diagflat(S[: self.n_components]))
+        self.pxt_ = np.linalg.multi_dot([iCsqrt, Vt.T, np.diagflat(S)])
+        self.ptx_ = np.linalg.multi_dot([S_inv, Vt, Csqrt])
+        self.pty_ = np.linalg.multi_dot([S_inv, Vt, iCsqrt, X.T, Yhat])
 
-    def _fit_structure_space(self, X, Yhat, W):
+    def _fit_sample_space(self, X, Yhat, W):
         r"""
         In sample-space PCovR, the projectors are determined by:
 
@@ -409,12 +500,14 @@ class PCovR(_BasePCA, LinearModel):
 
         Kt = pcovr_kernel(mixing=self.mixing, X=X, Y=Yhat)
 
-        v, U = eig_solver(
-            Kt, n_components=self.n_components, tol=self.tol, add_null=True
-        )
-        S = v ** 0.5
-
-        P = (self.mixing * X.T) + (1.0 - self.mixing) * np.dot(W, Yhat.T)
+        if self._fit_svd_solver == "full":
+            U, S, Vt = self._decompose_full(Kt)
+        elif self._fit_svd_solver in ["arpack", "randomized"]:
+            U, S, Vt = self._decompose_truncated(Kt)
+        else:
+            raise ValueError(
+                "Unrecognized svd_solver='{0}'" "".format(self._fit_svd_solver)
+            )
 
         self.singular_values_ = S.copy()
         self.explained_variance_ = (S ** 2) / (X.shape[0] - 1)
@@ -422,11 +515,124 @@ class PCovR(_BasePCA, LinearModel):
             self.explained_variance_ / self.explained_variance_.sum()
         )
 
-        T = U @ np.diagflat(1 / S)
+        P = (self.mixing * X.T) + (1.0 - self.mixing) * np.dot(W, Yhat.T)
+        T = Vt.T @ np.diagflat(1 / np.sqrt(S))
 
         self.pxt_ = P @ T
         self.pty_ = T.T @ Yhat
         self.ptx_ = T.T @ X
+
+    def _decompose_truncated(self, mat):
+
+        if not 1 <= self.n_components <= min(self.n_samples, self.n_features):
+            raise ValueError(
+                "n_components=%r must be between 1 and "
+                "min(n_samples, n_features)=%r with "
+                "svd_solver='%s'"
+                % (
+                    self.n_components,
+                    min(self.n_samples, self.n_features),
+                    self.svd_solver,
+                )
+            )
+        elif not isinstance(self.n_components, numbers.Integral):
+            raise ValueError(
+                "n_components=%r must be of type int "
+                "when greater than or equal to 1, was of type=%r"
+                % (self.n_components, type(self.n_components))
+            )
+        elif self.svd_solver == "arpack" and self.n_components == min(
+            self.n_samples, self.n_features
+        ):
+            raise ValueError(
+                "n_components=%r must be strictly less than "
+                "min(n_samples, n_features)=%r with "
+                "svd_solver='%s'"
+                % (
+                    self.n_components,
+                    min(self.n_samples, self.n_features),
+                    self.svd_solver,
+                )
+            )
+
+        random_state = check_random_state(self.random_state)
+
+        if self._fit_svd_solver == "arpack":
+            v0 = _init_arpack_v0(min(mat.shape), random_state)
+            U, S, Vt = svds(mat, k=self.n_components, tol=self.tol, v0=v0)
+            # svds doesn't abide by scipy.linalg.svd/randomized_svd
+            # conventions, so reverse its outputs.
+            S = S[::-1]
+            # flip eigenvectors' sign to enforce deterministic output
+            U, Vt = svd_flip(U[:, ::-1], Vt[::-1])
+
+        # We have already eliminated all other solvers, so this must be "randomized"
+        else:
+            # sign flipping is done inside
+            U, S, Vt = randomized_svd(
+                mat,
+                n_components=self.n_components,
+                n_iter=self.iterated_power,
+                flip_sign=True,
+                random_state=random_state,
+            )
+
+        return U, S, Vt
+
+    def _decompose_full(self, mat):
+        if self.n_components == "mle":
+            if self.n_samples < self.n_features:
+                raise ValueError(
+                    "n_components='mle' is only supported " "if n_samples >= n_features"
+                )
+        elif not 0 <= self.n_components <= min(self.n_samples, self.n_features):
+            raise ValueError(
+                "n_components=%r must be between 1 and "
+                "min(n_samples, n_features)=%r with "
+                "svd_solver='%s'"
+                % (
+                    self.n_components,
+                    min(self.n_samples, self.n_features),
+                    self.svd_solver,
+                )
+            )
+        elif self.n_components >= 1:
+            if not isinstance(self.n_components, numbers.Integral):
+                raise ValueError(
+                    "n_components=%r must be of type int "
+                    "when greater than or equal to 1, "
+                    "was of type=%r" % (self.n_components, type(self.n_components))
+                )
+
+        U, S, Vt = linalg.svd(mat, full_matrices=False)
+
+        # flip eigenvectors' sign to enforce deterministic output
+        U, Vt = svd_flip(U, Vt)
+
+        # Get variance explained by singular values
+        explained_variance_ = (S ** 2) / (self.n_samples - 1)
+        total_var = explained_variance_.sum()
+        explained_variance_ratio_ = explained_variance_ / total_var
+
+        # Postprocess the number of components required
+        if self.n_components == "mle":
+            self.n_components = _infer_dimension(explained_variance_, self.n_samples)
+        elif 0 < self.n_components < 1.0:
+            # number of components for which the cumulated explained
+            # variance percentage is superior to the desired threshold
+            # side='right' ensures that number of features selected
+            # their variance is always greater than self.n_components float
+            # passed. More discussion in issue: #15669
+            ratio_cumsum = stable_cumsum(explained_variance_ratio_)
+            self.n_components = (
+                np.searchsorted(ratio_cumsum, self.n_components, side="right") + 1
+            )
+        self.n_components = self.n_components
+        return (
+            U[:, : self.n_components],
+            S[: self.n_components],
+            Vt[: self.n_components],
+        )
 
     def inverse_transform(self, T):
         r"""Transform data back to its original space.
@@ -485,7 +691,7 @@ class PCovR(_BasePCA, LinearModel):
         return super().transform(X)
 
     def score(self, X, Y, T=None):
-        r"""Return the normalized, squared reconstruction error for X and Y,
+        r"""Return the total reconstruction error for X and Y,
         defined as:
 
         .. math::
@@ -522,6 +728,6 @@ class PCovR(_BasePCA, LinearModel):
         y = self.predict(T=T)
 
         return (
-            np.linalg.norm(X - x) ** 2.0 / np.linalg.norm(X) ** 2.0,
-            np.linalg.norm(Y - y) ** 2.0 / np.linalg.norm(Y) ** 2.0,
+            np.linalg.norm(X - x) ** 2.0 / np.linalg.norm(X) ** 2.0
+            + np.linalg.norm(Y - y) ** 2.0 / np.linalg.norm(Y) ** 2.0
         )

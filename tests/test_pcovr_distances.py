@@ -24,7 +24,7 @@ class CovarianceTest(unittest.TestCase):
 
         for alpha in [0.0, 0.5, 1.0]:
             with self.subTest(alpha=alpha):
-                C = pcovr_covariance(alpha, self.X, self.Y, rcond=1e-12)
+                C = pcovr_covariance(alpha, X=self.X, Y=self.Y, rcond=1e-6)
                 self.assertTrue(np.allclose(C, alpha * C_X + (1 - alpha) * C_Y))
 
     def test_no_return_isqrt(self):
