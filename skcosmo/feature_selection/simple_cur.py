@@ -1,7 +1,7 @@
 import numpy as np
 import scipy
 
-from ..utils.orthogonalizers import (
+from ..utils import (
     X_orthogonalizer,
     Y_feature_orthogonalizer,
 )
@@ -148,10 +148,8 @@ class CUR(GreedySelector):
         where :math:`{\\mathbf{C} = \\mathbf{X}^T\\mathbf{X}.
         """
 
-        _, _, Vt = scipy.sparse.linalg.svds(
-            X,
-            k=self.k,
-        )
+        _, _, Vt = scipy.sparse.linalg.svds(X, k=self.k, return_singular_vectors="vh")
+
         new_pi = (np.real(Vt) ** 2.0).sum(axis=0)
         return new_pi
 

@@ -3,7 +3,7 @@ The :mod:`skcosmo.utils` module includes functions which are
 used by multiple packages
 """
 
-from .orthogonalizers import (
+from ._orthogonalizers import (
     X_orthogonalizer,
     Y_feature_orthogonalizer,
     Y_sample_orthogonalizer,
