@@ -243,9 +243,49 @@ Authors: Rose K. Cersonsky
 from abc import abstractmethod
 import numpy as np
 from skcosmo.pcovr.pcovr_distances import pcovr_covariance, pcovr_kernel
+from sklearn import TransformerMixin
 from sklearn.utils import check_X_y, check_array
 from skcosmo.utils import get_progress_bar
 
+class GreedySelector(TransformerMixin):
+    """ Selects features or samples in an iterative way """
+    
+    
+    def __init__(self, n_select = None, support = None, kernel = None):
+        self.support_ = None # TODO implement some kind of restart mechanism.
+        self.n_select_ = n_select
+        self.n_selected_ = 0 
+        
+        if kernel is None:
+            kernel = lambda x: x
+        self.kernel_ = kernel # TODO implement support of providing a kernel function, sklearn style
+    
+    def get_support(self):
+        
+        return self.support_[:self.n_selected_]
+        
+    def transform(X):
+        return X[self.support_]
+
+class SimpleFPS(GreedySelector):        
+    
+    def fit(X, initial = 0):
+        
+        self.norms_ := (X**2).sum(axis=1)
+        
+        # first point
+        self.support_[0] = initial
+        self.n_select_ = 1 
+        
+        self.haussdorf_ 
+        
+        
+        
+        
+        
+        
+        
+        
 
 def _calc_distances_(K, ref_idx, idxs=None):
     """
@@ -403,7 +443,7 @@ def _calc_distances_(K, ref_idx, idxs=None):
 
 """
 
-class _BaseFPS:
+class SimpleFPS:
     """
     Base Class defined for FPS selection methods
 
