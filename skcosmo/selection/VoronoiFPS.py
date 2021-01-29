@@ -236,42 +236,58 @@ Authors: Rose K. Cersonsky
 from abc import abstractmethod
 import numpy as np
 from skcosmo.pcovr.pcovr_distances import pcovr_covariance, pcovr_kernel
-from sklearn import TransformerMixin
+from sklearn.base import TransformerMixin
 from sklearn.utils import check_X_y, check_array
 from skcosmo.utils import get_progress_bar
 
+
 class GreedySelector(TransformerMixin):
     """ Selects features or samples in an iterative way """
-    
-    
-    def __init__(self, n_select = None, support = None, kernel = None):
-        self.support_ = None # TODO implement some kind of restart mechanism.
+
+    def __init__(self, n_select=None, support=None, kernel=None):
+        self.support_ = None  # TODO implement some kind of restart mechanism.
         self.n_select_ = n_select
-        self.n_selected_ = 0 
-        
+        self.n_selected_ = 0
+
         if kernel is None:
             kernel = lambda x: x
-        self.kernel_ = kernel # TODO implement support of providing a kernel function, sklearn style
-    
+        self.kernel_ = kernel  # TODO implement support of providing a kernel function, sklearn style
+
     def get_support(self):
-        
-        return self.support_[:self.n_selected_]
-        
+
+        return self.support_[: self.n_selected_]
+
     def transform(X):
         return X[self.support_]
 
-class SimpleFPS(GreedySelector):        
-    
-    def fit(X, initial = 0):
-        
-        self.norms_ := (X**2).sum(axis=1)
-        
+
+class SimpleFPS(GreedySelector):
+    def fit(self, X, initial=0):
+
+        self.support_ = np.zeros(X.shape[0], int)
+        self.select_distance_ = np.zeros(X.shape[0], float)
+        self.norms_ = (X ** 2).sum(axis=1)
+
         # first point
         self.support_[0] = initial
-        self.n_select_ = 1 
-        
-        self.haussdorf_ 
-       
+
+        # distance of all points to the selected point
+        self.haussdorf_ = self.norms_ + self.norms_[initial] - 2 * X[initial] @ X.T
+
+        for i in range(1, self.n_select_):
+            # finds the point with maximum haussdorf distance
+            isel = self.haussdorf_.argmax()
+
+            # updates support and tracks maximum minimum distance to selection
+            self.support_[i] = isel
+            self.select_distance_[i-1] = self.haussdorf_[isel]
+
+            # distances of all points to the new point
+            idistance = self.norms_ + self.norms_[isel] - 2 * X[isel] @ X.T
+            # updates haussdorf distances
+            self.haussdorf_ = np.minimum(self.haussdorf_, idistance)
+        self.n_selected_ = self.n_select_
+
 
 def _calc_distances_(K, ref_idx, idxs=None):
     """

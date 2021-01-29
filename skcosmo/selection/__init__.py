@@ -5,7 +5,7 @@ with the optional PCov-flavor
 
 from .FPS import FeatureFPS, SampleFPS
 from .CUR import FeatureCUR, SampleCUR
-from .VoronoiFPS import SampleVoronoiFPS, FeatureVoronoiFPS
+from .VoronoiFPS import SimpleFPS, SampleVoronoiFPS, FeatureVoronoiFPS
 
 
 __all__ = [
@@ -13,6 +13,7 @@ __all__ = [
     "SampleFPS",
     "FeatureCUR",
     "SampleCUR",
+    "SimpleFPS",
     "VoronoiFPS",
     "SampleVoronoiFPS",
     "FeatureVoronoiFPS",
