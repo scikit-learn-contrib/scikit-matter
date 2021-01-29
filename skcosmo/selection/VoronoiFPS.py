@@ -42,7 +42,6 @@ Authors: Rose K. Cersonsky
       auto voronoi_r2 = Eigen::ArrayXd(n_sparse);
       // assignment of points to Voronoi cells
       auto voronoi_indices = Eigen::ArrayXi(n_inputs);
-
       // work arrays
       // index of the maximum-d2 point in each cell
       auto voronoi_i_far = Eigen::ArrayXd(n_sparse);
@@ -60,12 +59,10 @@ Authors: Rose K. Cersonsky
       auto feature_new = Eigen::VectorXd(n_features);
       // matrix of the features for the active point selection
       auto feature_sel = RowMatrixXd(n_sparse, n_features);
-
       int i_new{};
       double d2max_new{};
-
       // computes the squared modulus of input points
-      feature_x2 = feature_matrix.cwiseAbs2().rowwise().sum();
+      feature_x2 = feature_matrix.=.rowwise().sum(); - diagonal elements of kernel/covariance matrix
 
       // initializes arrays taking the first point provided in input
       sparse_indices(0) = i_first_point;
@@ -75,13 +72,13 @@ Authors: Rose K. Cersonsky
           2 * (feature_matrix * feature_matrix.row(i_first_point).transpose())
                   .array();
       list_min_d2 = list_new_d2;  // we only have this point....
-
       voronoi_r2 = 0.0;
       voronoi_indices = 0;
       // picks the initial Voronoi radius and the farthest point index
       voronoi_r2(0) = list_min_d2.maxCoeff(&voronoi_i_far(0));
 
       feature_sel.row(0) = feature_matrix.row(i_first_point);
+                
 
 #ifdef DO_TIMING
       // timing code
@@ -92,14 +89,14 @@ Authors: Rose K. Cersonsky
       for (int i = 1; i < n_sparse; ++i) {
 #ifdef DO_TIMING
         auto tstart = hrclock::now();
-#endif
+#endif   
         /*
          * find the maximum minimum distance and the corresponding point.  this
          * is our next FPS. The maxmin point must be one of the voronoi
          * radii. So we pick it from this smaller array. Note we only act on the
          * first i items as the array is filled incrementally picks max dist and
          * index of the cell
-         */
+         */ 
         d2max_new = voronoi_r2.head(i).maxCoeff(&i_new);
         // the actual index of the fartest point
         i_new = voronoi_i_far(i_new);
@@ -108,11 +105,11 @@ Authors: Rose K. Cersonsky
         tmax +=
             std::chrono::duration_cast<std::chrono::nanoseconds>(tend - tstart)
                 .count();
-#endif
+#endif  
         // store properties of the new FPS selection
-        sparse_indices(i) = i_new;
+        sparse_indices(i) = i_new; 
         sparse_minmax_d2(i - 1) = d2max_new;
-        feature_new = feature_matrix.row(i_new);
+        feature_new = feature_matrix.row(i_new); 
         /*
          * we store indices of the selected features because we can then compute
          * some of the distances with contiguous array operations
@@ -133,7 +130,7 @@ Authors: Rose K. Cersonsky
          * must compute distance of the new point to all the previous FPS.  some
          * of these might have been computed already, but bookkeeping could be
          * worse that recomputing (TODO: verify!)
-         */
+         *
         list_sel_d2q.head(i) =
             feature_x2(i_new) -
             2 * (feature_sel.topRows(i) * feature_new).array();
@@ -141,7 +138,6 @@ Authors: Rose K. Cersonsky
           list_sel_d2q(j) += feature_x2(sparse_indices(j));
         }
         list_sel_d2q.head(i) *= 0.25;  // triangle inequality: voronoi_r < d/2
-
         for (ssize_t j = 0; j < i; ++j) {
           /*
            * computes distances to previously selected points and uses triangle
@@ -176,13 +172,10 @@ Authors: Rose K. Cersonsky
             /*
              * check if we can skip this check for point j. this is a tighter
              * bound on the distance, since |x_j-x_sel|<rvoronoi_sel
-             */
+             *
             if (list_sel_d2q(voronoi_idx_j) < list_min_d2(j)) {
               double d2_j = feature_x2(i_new) + feature_x2(j) -
                             2 * feature_new.dot(feature_matrix.row(j));
-#ifdef DO_TIMING
-              ndist_eval++;
-#endif
               /*
                * we have to reassign point j to the new selection. also, the
                * voronoi center is actually that of the new selection
@@ -278,14 +271,7 @@ class SimpleFPS(GreedySelector):
         self.n_select_ = 1 
         
         self.haussdorf_ 
-        
-        
-        
-        
-        
-        
-        
-        
+       
 
 def _calc_distances_(K, ref_idx, idxs=None):
     """
@@ -314,136 +300,7 @@ def _calc_distances_(K, ref_idx, idxs=None):
     )
 
 
-"""
-   select_fps(const Eigen::Ref<const RowMatrixXd> & feature_matrix,
-               int n_sparse, int i_first_point,
-               const FPSReturnTupleConst & restart) {
-      // number of inputs
-      int n_inputs = feature_matrix.rows();
-
-      // n. of sparse points. defaults to full sorting of the inputs
-      if (n_sparse == 0) {
-        n_sparse = n_inputs;
-      }
-
-      // TODO(ceriottm) <- use the exception mechanism
-      // for librascal whatever it is
-      if (n_sparse > n_inputs) {
-        throw std::runtime_error("Cannot FPS more inputs than those provided");
-      }
-
-      /* return arrays */
-      // FPS indices
-      auto sparse_indices = Eigen::ArrayXi(n_sparse);
-      // minmax distances (squared)
-      auto sparse_minmax_d2 = Eigen::ArrayXd(n_sparse);
-
-      // square moduli of inputs
-      auto feature_x2 = Eigen::ArrayXd(n_inputs);
-      // list of square distances to latest FPS point
-      auto list_new_d2 = Eigen::ArrayXd(n_inputs);
-      // list of minimum square distances to each input
-      auto list_min_d2 = Eigen::ArrayXd(n_inputs);
-      int i_new{};
-      double d2max_new{};
-
-      // computes the squared modulus of input points
-      feature_x2 = feature_matrix.cwiseAbs2().rowwise().sum();
-
-      // extracts (possibly empty) restart arrays
-      auto i_restart = std::get<0>(restart);
-      auto d_restart = std::get<1>(restart);
-      auto ld_restart = std::get<2>(restart);
-      ssize_t i_start_index = 1;
-      if (i_restart.size() > 0) {
-        if (i_restart.size() >= n_sparse) {
-          throw std::runtime_error("Restart arrays larger than target ");
-        }
-
-        sparse_indices.head(i_restart.size()) = i_restart;
-        i_start_index = i_restart.size();
-
-        if (d_restart.size() > 0) {
-          // restart the FPS calculation from previous run.
-          // all information is available
-          if (d_restart.size() != i_restart.size()) {
-            throw std::runtime_error("Restart indices and distances mismatch");
-          }
-
-          // sets the part of the data we know already
-          sparse_minmax_d2.head(i_restart.size()) = d_restart;
-          list_min_d2 = ld_restart;
-        } else {
-          // distances are not available, so we recompute them.
-          // note that this is as expensive as re-running a full
-          // FPS, but it allows us to extend an existing FPS set
-          list_new_d2 = feature_x2 + feature_x2(i_restart[0]) -
-                        2 * (feature_matrix *
-                             feature_matrix.row(i_restart[0]).transpose())
-                                .array();
-          list_min_d2 = list_new_d2;
-          // this is basically the standard algorithm below, only that
-          // it is run on the first i_start_index points. see below
-          // for comments
-          for (ssize_t i = 1; i < i_start_index; ++i) {
-            // if the feature matrix has been expanded, the data will
-            // not be selected in the same order, so we have to
-            // override the selection
-            i_new = i_restart[i];
-            d2max_new = list_min_d2[i_new];
-            /*d2max_new = list_min_d2.maxCoeff(&i_new);
-             if (i_new != i_restart[i])
-             throw std::runtime_error("Reconstructed distances \
-              are inconsistent with restart array");*/
-            sparse_indices(i) = i_new;
-            sparse_minmax_d2(i - 1) = d2max_new;
-            list_new_d2 =
-                feature_x2 + feature_x2(i_new) -
-                2 * (feature_matrix * feature_matrix.row(i_new).transpose())
-                        .array();
-            list_min_d2 = list_min_d2.min(list_new_d2);
-          }
-        }
-      } else {
-        // standard initialization
-        // initializes arrays taking the first point provided in input
-        sparse_indices(0) = i_first_point;
-        //  distance square to the selected point
-        list_new_d2 =
-            feature_x2 + feature_x2(i_first_point) -
-            2 * (feature_matrix * feature_matrix.row(i_first_point).transpose())
-                    .array();
-        list_min_d2 = list_new_d2;  // we only have this point....
-      }
-
-      for (ssize_t i = i_start_index; i < n_sparse; ++i) {
-        // picks max dist and its index
-        d2max_new = list_min_d2.maxCoeff(&i_new);
-        sparse_indices(i) = i_new;
-        sparse_minmax_d2(i - 1) = d2max_new;
-
-        // compute distances^2 to the new point
-        // TODO(ceriottm): encapsulate the distance calculation
-        // into an interface function
-        // dispatching to the proper distance/kernel needed
-        list_new_d2 =
-            feature_x2 + feature_x2(i_new) -
-            2 * (feature_matrix * feature_matrix.row(i_new).transpose())
-                    .array();
-
-        // this actually returns a list with the element-wise minimum between
-        // list_min_d2(i) and list_new_d2(i)
-        list_min_d2 = list_min_d2.min(list_new_d2);
-      }
-      sparse_minmax_d2(n_sparse - 1) = 0;
-
-      return std::make_tuple(sparse_indices, sparse_minmax_d2, list_min_d2);
-    }
-
-
-"""
-
-class SimpleFPS:
+class _BaseVoronoiFPS:
     """
     Base Class defined for FPS selection methods
 
@@ -466,8 +323,25 @@ class SimpleFPS:
             self.idx = idxs
         else:
             self.idx = [np.random.randint(self.product.shape[0])]
+
+        # the min distance from  each point to idx points, which were chosen already
         self.distances = np.min([self.calc_distance(i) for i in self.idx], axis=0)
-        self.distance_selected = np.nan * np.zeros(self.product.shape[0])
+        # assignment of points to Voronoi cells
+        self.voronoi_number = np.argmin(
+            [self.calc_distance(i) for i in self.idx], axis=0
+        )
+        for i in range(
+            self.voronoi_number.shape[0]
+        ):  # TODO rewrite it in more pretty form
+            self.voronoi_number[i] = self.idx[self.voronoi_number[i]]
+        # define the voronoi_r2 for the idx points
+        self.voronoi_r2 = {i: 0 for i in self.idx}
+        # index of the maximum - d2 point in each voronoi cell
+        self.voronoi_i_far = {i: 0 for i in self.idx}
+        for i in range(self.distances.shape[0]):
+            if self.distances[i] > self.voronoi_r2[self.voronoi_number[i]]:
+                self.voronoi_r2[self.voronoi_number[i]] = self.distances[i]
+                self.voronoi_i_far[self.voronoi_number[i]] = i
 
         if progress_bar:
             self.report_progress = get_progress_bar()
@@ -494,16 +368,55 @@ class SimpleFPS:
 
         # Loop over the remaining points...
         for i in self.report_progress(range(len(self.idx) - 1, n - 1)):
-            for j in np.where(self.distances > 0)[0]:
-                self.distances[j] = min(
-                    self.distances[j], self.calc_distance(self.idx[i], [j])
-                )
+            """Find the maximum minimum (maxmin) distance and the corresponding point. This
+            is our next FPS. The maxmin point must be one of the Voronoi
+            radii. So we pick it from this smaller array. Note we only act on the
+            first i items as the array is filled incrementally picks max dist and
+            index of the cell
+            """
+            i_new = self.voronoi_i_far[max(self.voronoi_r2, key=self.voronoi_r2.get)]
+            # dict of flags. Signal, need we recalculate this cell or not
+            f_active = {}
+            # (dist/2)^2 between new point and idx points
+            dict_sel_d2q = {}
+            self.voronoi_r2[i_new] = 0
 
-            self.idx.append(np.argmax(self.distances))
-            self.distance_selected[i + 1] = self.distances[i + 1]
+            """must compute distance of the new point to all the previous FPS. Some
+               of these might have been computed already, but bookkeeping could be
+               worse that recomputing (TODO: verify!)
+            """
+
+            for center in self.idx:
+                dict_sel_d2q[center] = self.calc_distance(center, [i_new])[0] * 0.25
+
+            # check for each polyhedron, need we recalculate this cell or not
+            for center in self.idx:
+                if dict_sel_d2q[center] < self.voronoi_r2[center]:
+                    f_active[center] = 1
+                    self.voronoi_r2[center] = 0
+                else:
+                    f_active[center] = 0
+
+            for j in range(self.distances.shape[0]):
+                # check only "active" cells
+                if f_active[self.voronoi_number[j]] > 0:
+                    # check, can this point be in a new polyhedron or not
+                    if dict_sel_d2q[self.voronoi_number[j]] < self.distances[j]:
+                        d2_j = self.calc_distance(j, [i_new])
+                        # assign a point to the new polyhedron
+                        if self.distances[j] > d2_j:
+                            self.distances[j] = d2_j
+                            self.voronoi_number[j] = i_new
+                    # if this point assigned to the new cell, we need update data for this polyhedra.
+                    # Vice versa, we need to update the data for the cell, because we set voronoi_r2 as zero
+                    if self.distances[j] > self.voronoi_r2[self.voronoi_number[j]]:
+                        self.voronoi_r2[self.voronoi_number[j]] = self.distances[j]
+                        self.voronoi_i_far[self.voronoi_number[j]] = j
 
             if np.abs(self.distances).max() < self.tol:
                 return self.idx
+
+            self.idx.append(i_new)
         return self.idx
 
     @abstractmethod
@@ -523,7 +436,7 @@ class SimpleFPS:
         return _calc_distances_(self.product, idx_1, idx_2)
 
 
-class SampleFPS(_BaseFPS):
+class SampleVoronoiFPS(_BaseVoronoiFPS):
     """
 
     For sample selection, traditional FPS employs a row-wise Euclidean
@@ -583,7 +496,7 @@ class SampleFPS(_BaseFPS):
         super().__init__(tol=tol, **kwargs)
 
 
-class FeatureFPS(_BaseFPS):
+class FeatureVoronoiFPS(_BaseVoronoiFPS):
     """
 
     For feature selection, traditional FPS employs a column-wise Euclidean
@@ -640,6 +553,5 @@ class FeatureFPS(_BaseFPS):
                 raise Exception(r"For $\alpha < 1$, $Y$ must be supplied.")
         else:
             self.A, self.Y = check_array(X, copy=True), None
-
         self.product = pcovr_covariance(self.mixing, self.A, self.Y, rcond=self.tol)
         super().__init__(tol=tol, **kwargs)
