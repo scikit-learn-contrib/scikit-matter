@@ -236,12 +236,13 @@ Authors: Rose K. Cersonsky
 from abc import abstractmethod
 import numpy as np
 from skcosmo.pcovr.pcovr_distances import pcovr_covariance, pcovr_kernel
-from sklearn.base import TransformerMixin
+from sklearn.base import BaseEstimator, MetaEstimatorMixin
+from sklearn.feature_selection.base import SelectorMixin
 from sklearn.utils.validation import check_is_fitted, check_array, check_X_y
 from skcosmo.utils import get_progress_bar
 
 
-class GreedySelector(TransformerMixin):
+class GreedySelector(SelectorMixin, MetaEstimatorMixin, BaseEstimator):
     """ Selects features or samples in an iterative way """
 
     def __init__(self, n_select=None, support=None, kernel=None):
@@ -255,10 +256,7 @@ class GreedySelector(TransformerMixin):
 
     def _get_support_mask(self):
         check_is_fitted(self)
-        return self.support_self.support_[: self.n_selected_]
-
-    def transform(X):
-        return X[self.support_]
+        return self.support_
 
 
 class SimpleFPS(GreedySelector):
@@ -280,7 +278,7 @@ class SimpleFPS(GreedySelector):
 
             # updates support and tracks maximum minimum distance to selection
             self.support_[i] = isel
-            self.select_distance_[i-1] = self.haussdorf_[isel]
+            self.select_distance_[i - 1] = self.haussdorf_[isel]
 
             # distances of all points to the new point
             idistance = self.norms_ + self.norms_[isel] - 2 * X[isel] @ X.T
@@ -316,7 +314,7 @@ def _calc_distances_(K, ref_idx, idxs=None):
     )
 
 
-class _BaseVoronoiFPS:
+class _BaseVoronoiFPS(GreedySelector):
     """
     Base Class defined for FPS selection methods
 
@@ -330,8 +328,17 @@ class _BaseVoronoiFPS:
 
     """
 
-    def __init__(self, tol=1e-12, idxs=None, progress_bar=False):
+    def __init__(
+        self,
+        tol=1e-12,
+        idxs=None,
+        progress_bar=False,
+        n_select=None,
+        support=None,
+        kernel=None,
+    ):
 
+        super(_BaseVoronoiFPS, self).__init__(n_select, support, kernel)
         if not hasattr(self, "tol"):
             self.tol = tol
 
@@ -364,7 +371,7 @@ class _BaseVoronoiFPS:
         else:
             self.report_progress = lambda x: x
 
-    def select(self, n):
+    def fit(self, n):
         """Method for FPS select based upon a product of the input matrices
 
         Parameters
@@ -433,9 +440,11 @@ class _BaseVoronoiFPS:
                 return self.idx
 
             self.idx.append(i_new)
-        return self.idx
+        self.support_ = np.array(
+            [True if i in self.idx else False for i in range(self.distances.shape[0])]
+        )
+        return self
 
-    @abstractmethod
     def calc_distance(self, idx_1, idx_2=None):
         """
             Abstract method to be used for calculating the distances
