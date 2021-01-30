@@ -246,7 +246,7 @@ class GreedySelector(SelectorMixin, MetaEstimatorMixin, BaseEstimator):
     """ Selects features or samples in an iterative way """
 
     def __init__(self, n_select=None, support=None, kernel=None):
-        self.support_ = None  # TODO implement some kind of restart mechanism.
+        self.support_ = support  # we can pass on a np.array[bool] as support parameter (which we will choose)
         self.n_select_ = n_select
         self.n_selected_ = 0
 
