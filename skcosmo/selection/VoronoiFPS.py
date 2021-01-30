@@ -237,7 +237,7 @@ from abc import abstractmethod
 import numpy as np
 from skcosmo.pcovr.pcovr_distances import pcovr_covariance, pcovr_kernel
 from sklearn.base import TransformerMixin
-from sklearn.utils import check_X_y, check_array
+from sklearn.utils.validation import check_is_fitted, check_array, check_X_y
 from skcosmo.utils import get_progress_bar
 
 
@@ -253,9 +253,9 @@ class GreedySelector(TransformerMixin):
             kernel = lambda x: x
         self.kernel_ = kernel  # TODO implement support of providing a kernel function, sklearn style
 
-    def get_support(self):
-
-        return self.support_[: self.n_selected_]
+    def _get_support_mask(self):
+        check_is_fitted(self)
+        return self.support_self.support_[: self.n_selected_]
 
     def transform(X):
         return X[self.support_]
