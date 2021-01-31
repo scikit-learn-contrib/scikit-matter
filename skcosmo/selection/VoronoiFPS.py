@@ -78,7 +78,7 @@ Authors: Rose K. Cersonsky
       voronoi_r2(0) = list_min_d2.maxCoeff(&voronoi_i_far(0));
 
       feature_sel.row(0) = feature_matrix.row(i_first_point);
-                
+
 
 #ifdef DO_TIMING
       // timing code
@@ -89,14 +89,14 @@ Authors: Rose K. Cersonsky
       for (int i = 1; i < n_sparse; ++i) {
 #ifdef DO_TIMING
         auto tstart = hrclock::now();
-#endif   
+#endif
         /*
          * find the maximum minimum distance and the corresponding point.  this
          * is our next FPS. The maxmin point must be one of the voronoi
          * radii. So we pick it from this smaller array. Note we only act on the
          * first i items as the array is filled incrementally picks max dist and
          * index of the cell
-         */ 
+         */
         d2max_new = voronoi_r2.head(i).maxCoeff(&i_new);
         // the actual index of the fartest point
         i_new = voronoi_i_far(i_new);
@@ -105,11 +105,11 @@ Authors: Rose K. Cersonsky
         tmax +=
             std::chrono::duration_cast<std::chrono::nanoseconds>(tend - tstart)
                 .count();
-#endif  
+#endif
         // store properties of the new FPS selection
-        sparse_indices(i) = i_new; 
+        sparse_indices(i) = i_new;
         sparse_minmax_d2(i - 1) = d2max_new;
-        feature_new = feature_matrix.row(i_new); 
+        feature_new = feature_matrix.row(i_new);
         /*
          * we store indices of the selected features because we can then compute
          * some of the distances with contiguous array operations
@@ -233,11 +233,10 @@ Authors: Rose K. Cersonsky
 
 """
 
-from abc import abstractmethod
 import numpy as np
 from skcosmo.pcovr.pcovr_distances import pcovr_covariance, pcovr_kernel
 from sklearn.base import BaseEstimator, MetaEstimatorMixin
-from sklearn.feature_selection.base import SelectorMixin
+from sklearn.feature_selection import SelectorMixin
 from sklearn.utils.validation import check_is_fitted, check_array, check_X_y
 from skcosmo.utils import get_progress_bar
 
