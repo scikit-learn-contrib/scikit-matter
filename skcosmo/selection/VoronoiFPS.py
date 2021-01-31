@@ -283,6 +283,7 @@ class SimpleFPS(GreedySelector):
             idistance = self.norms_ + self.norms_[isel] - 2 * X[isel] @ X.T
             # updates haussdorf distances
             self.haussdorf_ = np.minimum(self.haussdorf_, idistance)
+
         self.n_selected_ = self.n_select_
 
 
@@ -344,10 +345,10 @@ class _BaseVoronoiFPS(GreedySelector):
         if idxs is not None:
             self.idx = idxs
         else:
-            self.idx = [np.random.randint(self.product.shape[0])]
+            self.idx = [0]  # starts from the first point
 
         # the min distance from  each point to idx points, which were chosen already
-        self.distances = np.min([self.calc_distance(i) for i in self.idx], axis=0)
+        self.haussdorf_ = np.min([self.calc_distance(i) for i in self.idx], axis=0)
         # assignment of points to Voronoi cells
         self.voronoi_number = np.argmin(
             [self.calc_distance(i) for i in self.idx], axis=0
@@ -360,9 +361,9 @@ class _BaseVoronoiFPS(GreedySelector):
         self.voronoi_r2 = {i: 0 for i in self.idx}
         # index of the maximum - d2 point in each voronoi cell
         self.voronoi_i_far = {i: 0 for i in self.idx}
-        for i in range(self.distances.shape[0]):
-            if self.distances[i] > self.voronoi_r2[self.voronoi_number[i]]:
-                self.voronoi_r2[self.voronoi_number[i]] = self.distances[i]
+        for i in range(self.haussdorf_.shape[0]):
+            if self.haussdorf_[i] > self.voronoi_r2[self.voronoi_number[i]]:
+                self.voronoi_r2[self.voronoi_number[i]] = self.haussdorf_[i]
                 self.voronoi_i_far[self.voronoi_number[i]] = i
 
         if progress_bar:
@@ -419,28 +420,28 @@ class _BaseVoronoiFPS(GreedySelector):
                 else:
                     f_active[center] = 0
 
-            for j in range(self.distances.shape[0]):
+            for j in range(self.haussdorf_.shape[0]):
                 # check only "active" cells
                 if f_active[self.voronoi_number[j]] > 0:
                     # check, can this point be in a new polyhedron or not
-                    if dict_sel_d2q[self.voronoi_number[j]] < self.distances[j]:
+                    if dict_sel_d2q[self.voronoi_number[j]] < self.haussdorf_[j]:
                         d2_j = self.calc_distance(j, [i_new])
                         # assign a point to the new polyhedron
-                        if self.distances[j] > d2_j:
-                            self.distances[j] = d2_j
+                        if self.haussdorf_[j] > d2_j:
+                            self.haussdorf_[j] = d2_j
                             self.voronoi_number[j] = i_new
                     # if this point assigned to the new cell, we need update data for this polyhedra.
                     # Vice versa, we need to update the data for the cell, because we set voronoi_r2 as zero
-                    if self.distances[j] > self.voronoi_r2[self.voronoi_number[j]]:
-                        self.voronoi_r2[self.voronoi_number[j]] = self.distances[j]
+                    if self.haussdorf_[j] > self.voronoi_r2[self.voronoi_number[j]]:
+                        self.voronoi_r2[self.voronoi_number[j]] = self.haussdorf_[j]
                         self.voronoi_i_far[self.voronoi_number[j]] = j
 
-            if np.abs(self.distances).max() < self.tol:
+            if np.abs(self.haussdorf_).max() < self.tol:
                 return self.idx
 
             self.idx.append(i_new)
         self.support_ = np.array(
-            [True if i in self.idx else False for i in range(self.distances.shape[0])]
+            [True if i in self.idx else False for i in range(self.haussdorf_.shape[0])]
         )
         return self
 
