@@ -63,8 +63,6 @@ These selection methods can be modified to be semi-supervised by using the PCovR
 
     .. automethod:: select
 
-.. _ortho-api:
-
 Orthogonalizers for CUR
 #######################
 

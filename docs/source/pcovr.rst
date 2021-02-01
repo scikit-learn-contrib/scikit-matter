@@ -89,7 +89,6 @@ where :math:`\alpha` is a mixing parameter,
 and :math:`\mathbf{\hat{Y}}` is the target matrix of shape
 :math:`(n_{samples}, n_{properties})`.
 
-
 .. currentmodule:: skcosmo.pcovr.kpcovr
 
 .. autoclass:: KPCovR
