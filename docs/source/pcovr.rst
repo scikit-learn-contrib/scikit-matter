@@ -44,7 +44,7 @@ using the eigendecomposition of a modified covariance matrix
     .. automethod:: fit
 
         .. automethod:: _fit_feature_space
-        .. automethod:: _fit_structure_space
+        .. automethod:: _fit_sample_space
 
     .. automethod:: transform
     .. automethod:: predict
