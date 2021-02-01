@@ -13,11 +13,12 @@ from sklearn.utils import check_array
 from sklearn.utils import check_random_state
 from sklearn.utils.extmath import randomized_svd, svd_flip
 from sklearn.utils.extmath import stable_cumsum
+from sklearn.decomposition._base import _BasePCA
+from sklearn.linear_model._base import LinearModel
+from sklearn.metrics.pairwise import pairwise_kernels
 
 from sklearn.decomposition._pca import _infer_dimension
 from sklearn.utils._arpack import _init_arpack_v0
-from sklearn.linear_model._base import LinearModel
-from sklearn.decomposition._base import _BasePCA
 
 
 def pcovr_covariance(
@@ -99,14 +100,21 @@ def pcovr_covariance(
         return C
 
 
-def pcovr_kernel(mixing, X, Y):
+def pcovr_kernel(mixing, X, Y, **kernel_params):
     r"""
     Creates the PCovR modified kernel distances
 
     .. math::
 
+        \mathbf{\tilde{K}} = \alpha \mathbf{K} +
+        (1 - \alpha) \mathbf{Y}\mathbf{Y}^T
+
+    the default kernel is the linear kernel, such that:
+
+    .. math::
+
         \mathbf{\tilde{K}} = \alpha \mathbf{X} \mathbf{X}^T +
-        (1 - \alpha) \mathbf{\hat{Y}}\mathbf{\hat{Y}}^T
+        (1 - \alpha) \mathbf{Y}\mathbf{Y}^T
 
     :param mixing: mixing parameter,
                    as described in PCovR as :math:`{\alpha}`, defaults to 1
@@ -118,13 +126,22 @@ def pcovr_kernel(mixing, X, Y):
     :param Y: array to include in biased selection when mixing < 1
     :type Y: array of shape (n x p)
 
+    :param kernel_params: dictionary of arguments to pass to pairwise_kernels
+                         if none are specified, assumes that the kernel is linear
+    :type kernel_params: dictionary, optional
+
     """
 
     K = np.zeros((X.shape[0], X.shape[0]))
     if mixing < 1:
         K += (1 - mixing) * Y @ Y.T
     if mixing > 0:
-        K += (mixing) * X @ X.T
+        if "kernel" not in kernel_params:
+            K += (mixing) * X @ X.T
+        elif kernel_params.get("kernel") != "precomputed":
+            K += (mixing) * pairwise_kernels(X, **kernel_params)
+        else:
+            K += (mixing) * X
 
     return K
 
