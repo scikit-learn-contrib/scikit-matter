@@ -31,5 +31,6 @@ it you agree to distribute your changes under the same license.
   pcovr
   gfrm
   datasets
+  overlap
   reference
   contributing

@@ -1,6 +1,6 @@
 .. _gfrm:
 
-Global Feature Reconstruction Measures
+Reconstruction Measures
 ======================================
 
 .. currentmodule:: skcosmo.metrics

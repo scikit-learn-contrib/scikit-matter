@@ -63,14 +63,6 @@ These selection methods can be modified to be semi-supervised by using the PCovR
 
     .. automethod:: select
 
-Random Partitioning
-###################
-
-.. currentmodule:: skcosmo.model_selection
-
-.. autofunction:: train_test_split
-
-
 Orthogonalizers for CUR
 #######################
 
