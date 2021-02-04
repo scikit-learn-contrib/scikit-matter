@@ -1,5 +1,5 @@
 import unittest
-from skcosmo.pcovr import pcovr_covariance, pcovr_kernel
+from skcosmo.utils import pcovr_covariance, pcovr_kernel
 from sklearn.datasets import load_boston
 import numpy as np
 import scipy

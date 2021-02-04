@@ -1,5 +1,5 @@
 import unittest
-from skcosmo.pcovr import KPCovR, PCovR
+from skcosmo.decomposition import KPCovR, PCovR
 from sklearn.datasets import load_boston
 import numpy as np
 from sklearn import exceptions
