@@ -314,71 +314,48 @@ def _calc_distances_(K, ref_idx, idxs=None):
     )
 
 
-class _BaseVoronoiFPS(GreedySelector):
+class VoronoiFPS(GreedySelector):
     """
-    Base Class defined for FPS selection methods
+    Base Class defined for Voronoi FPS selection methods
 
     :param idx: predetermined index; if None provided, first index selected
                  is 0
     :type idx: int, None
-
-    :param progress_bar: option to use `tqdm <https://tqdm.github.io/>`_
-                         progress bar to monitor selections
-    :type progress_bar: boolean
-
     """
 
-    def __init__(
-        self,
-        tol=1e-12,
-        idx=None,
-        n_select=None,
-        support=None,
-        kernel=None,
-    ):
-
-        super(_BaseVoronoiFPS, self).__init__(n_select, support, kernel)
-        if not hasattr(self, "tol"):
-            self.tol = tol
-
-        if idx is not None:
-            self.idx = [idx]
-        else:
-            self.idx = [0]  # starts from the first point
-
-        # the min distance from  each point to idx point
-        self.haussdorf_ = self.calc_distance(self.idx[0])
-        # assignment points to Voronoi cell (initially we have 1 Voronoi cell)
-        self.voronoi_number = np.full(self.haussdorf_.shape[0], self.idx[0])
-        # define the voronoi_r2 for the idx point
-        self.voronoi_r2 = {self.idx[0]: 0}
-        # index of the maximum - d2 point in each voronoi cell
-        self.voronoi_i_far = {self.idx[0]: 0}
-        for i in range(self.haussdorf_.shape[0]):
-            if self.haussdorf_[i] > self.voronoi_r2[self.idx[0]]:
-                self.voronoi_r2[self.idx[0]] = self.haussdorf_[i]
-                self.voronoi_i_far[self.idx[0]] = i
-
-    def fit(self, n):
+    def fit(self, X, initial=0):
         """Method for FPS select based upon a product of the input matrices
 
         Parameters
         ----------
-        n : number of selections to make, must be > 0
+        :param X: working matrix
+        :type X: np.array(n_samples, n_features)
+
+        :param initial: initial choosed point for algorithm
+        :type initial: int
 
         Returns
         -------
         idx: list of n selections
         """
 
-        if n <= 0:
+        self.idx = [initial]
+        self.norms_ = (X ** 2).sum(axis=1)
+
+        # distance of all points to the selected point
+        self.haussdorf_ = self.norms_ + self.norms_[initial] - 2 * X[initial] @ X.T
+        # assignment points to Voronoi cell (initially we have 1 Voronoi cell)
+        self.voronoi_number = np.full(self.haussdorf_.shape[0], initial)
+        # define the voronoi_r2 for the idx point
+        self.voronoi_r2 = {initial: np.max(self.haussdorf_)}
+        # index of the maximum - d2 point in each voronoi cell
+        self.voronoi_i_far = {initial: np.argmax(self.haussdorf_)}
+
+        if self.n_select_ <= 0:
             raise ValueError("You must call select(n) with n > 0.")
 
-        if len(self.idx) > n:
-            return self.idx[:n]
-
         # Loop over the remaining points...
-        for i in range(len(self.idx) - 1, n - 1):
+        for i in range(len(self.idx) - 1, self.n_select_ - 1):
             """Find the maximum minimum (maxmin) distance and the corresponding point. This
             is our next FPS. The maxmin point must be one of the Voronoi
             radii. So we pick it from this smaller array. Note we only act on the
@@ -398,7 +375,11 @@ class _BaseVoronoiFPS(GreedySelector):
             """
 
             for center in self.idx:
-                dict_sel_d2q[center] = self.calc_distance(center, [i_new])[0] * 0.25
+                dict_sel_d2q[center] = (
+                    self.norms_[center]
+                    + self.norms_[i_new]
+                    - 2 * X[center] @ X[i_new].T
+                ) * 0.25
 
             # check for each polyhedron, need we recalculate this cell or not
             for center in self.idx:
@@ -413,7 +394,9 @@ class _BaseVoronoiFPS(GreedySelector):
                 if f_active[self.voronoi_number[j]] > 0:
                     # check, can this point be in a new polyhedron or not
                     if dict_sel_d2q[self.voronoi_number[j]] < self.haussdorf_[j]:
-                        d2_j = self.calc_distance(j, [i_new])
+                        d2_j = (
+                            self.norms_[j] + self.norms_[i_new] - 2 * X[j] @ X[i_new].T
+                        )
                         # assign a point to the new polyhedron
                         if self.haussdorf_[j] > d2_j:
                             self.haussdorf_[j] = d2_j
@@ -423,9 +406,6 @@ class _BaseVoronoiFPS(GreedySelector):
                     if self.haussdorf_[j] > self.voronoi_r2[self.voronoi_number[j]]:
                         self.voronoi_r2[self.voronoi_number[j]] = self.haussdorf_[j]
                         self.voronoi_i_far[self.voronoi_number[j]] = j
-
-            if np.abs(self.haussdorf_).max() < self.tol:
-                return self.idx
 
             self.idx.append(i_new)
         self.support_ = np.array(
@@ -449,7 +429,7 @@ class _BaseVoronoiFPS(GreedySelector):
         return _calc_distances_(self.product, idx_1, idx_2)
 
 
-class SampleVoronoiFPS(_BaseVoronoiFPS):
+class SampleVoronoiFPS(VoronoiFPS):
     """
 
     For sample selection, traditional FPS employs a row-wise Euclidean
@@ -509,7 +489,7 @@ class SampleVoronoiFPS(_BaseVoronoiFPS):
         super().__init__(tol=tol, **kwargs)
 
 
-class FeatureVoronoiFPS(_BaseVoronoiFPS):
+class FeatureVoronoiFPS(VoronoiFPS):
     """
 
     For feature selection, traditional FPS employs a column-wise Euclidean
