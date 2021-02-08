@@ -2,7 +2,8 @@ import unittest
 from sklearn.datasets import load_boston
 import numpy as np
 
-from skcosmo.selection import FeatureCUR, FeatureFPS, SampleCUR, SampleFPS
+from skcosmo.sample_selection import SampleCUR, SampleFPS
+from skcosmo.feature_selection import FeatureCUR, FeatureFPS
 
 EPSILON = 1e-8
 

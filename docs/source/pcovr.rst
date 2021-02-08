@@ -49,7 +49,7 @@ This can be done with the companion preprocessing classes, where
 >>> scaler.fit(A) # replace with your matrix
 >>> A = scaler.transform(A)
 
-.. currentmodule:: skcosmo.pcovr.pcovr
+.. currentmodule:: skcosmo.decomposition
 
 .. autoclass:: PCovR
     :show-inheritance:
@@ -89,7 +89,7 @@ where :math:`\alpha` is a mixing parameter,
 and :math:`\mathbf{\hat{Y}}` is the target matrix of shape
 :math:`(n_{samples}, n_{properties})`.
 
-.. currentmodule:: skcosmo.pcovr.kpcovr
+.. currentmodule:: skcosmo.decomposition
 
 .. autoclass:: KPCovR
     :show-inheritance:
@@ -100,18 +100,3 @@ and :math:`\mathbf{\hat{Y}}` is the target matrix of shape
     .. automethod:: predict
     .. automethod:: inverse_transform
     .. automethod:: score
-
-.. _PCovR_dist-api:
-
-.. currentmodule:: skcosmo.pcovr.pcovr
-
-Modified Gram Matrix :math:`\mathbf{\tilde{K}}`
-###############################################
-
-.. autofunction:: pcovr_kernel
-
-
-Modified Covariance Matrix :math:`\mathbf{\tilde{C}}`
-#####################################################
-
-.. autofunction:: pcovr_covariance

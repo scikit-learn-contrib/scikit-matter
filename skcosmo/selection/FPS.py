@@ -13,7 +13,7 @@ Authors: Rose K. Cersonsky
 
 from abc import abstractmethod
 import numpy as np
-from skcosmo.pcovr import pcovr_covariance, pcovr_kernel
+from skcosmo.utils import pcovr_covariance, pcovr_kernel
 from sklearn.utils import check_X_y, check_array
 from skcosmo.utils import get_progress_bar
 

@@ -15,7 +15,7 @@ from sklearn.utils._arpack import _init_arpack_v0
 from sklearn.linear_model._base import LinearModel
 from sklearn.metrics.pairwise import pairwise_kernels
 
-from skcosmo.pcovr import pcovr_kernel
+from skcosmo.utils import pcovr_kernel
 from skcosmo.preprocessing import KernelFlexibleCenterer
 
 
