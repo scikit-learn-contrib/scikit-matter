@@ -318,9 +318,9 @@ class _BaseVoronoiFPS(GreedySelector):
     """
     Base Class defined for FPS selection methods
 
-    :param idxs: predetermined indices; if None provided, first index selected
-                 is random
-    :type idxs: list of int, None
+    :param idx: predetermined index; if None provided, first index selected
+                 is 0
+    :type idx: int, None
 
     :param progress_bar: option to use `tqdm <https://tqdm.github.io/>`_
                          progress bar to monitor selections
@@ -331,8 +331,7 @@ class _BaseVoronoiFPS(GreedySelector):
     def __init__(
         self,
         tol=1e-12,
-        idxs=None,
-        progress_bar=False,
+        idx=None,
         n_select=None,
         support=None,
         kernel=None,
@@ -342,34 +341,23 @@ class _BaseVoronoiFPS(GreedySelector):
         if not hasattr(self, "tol"):
             self.tol = tol
 
-        if idxs is not None:
-            self.idx = idxs
+        if idx is not None:
+            self.idx = [idx]
         else:
             self.idx = [0]  # starts from the first point
 
-        # the min distance from  each point to idx points, which were chosen already
-        self.haussdorf_ = np.min([self.calc_distance(i) for i in self.idx], axis=0)
-        # assignment of points to Voronoi cells
-        self.voronoi_number = np.argmin(
-            [self.calc_distance(i) for i in self.idx], axis=0
-        )
-        for i in range(
-            self.voronoi_number.shape[0]
-        ):  # TODO rewrite it in more pretty form
-            self.voronoi_number[i] = self.idx[self.voronoi_number[i]]
-        # define the voronoi_r2 for the idx points
-        self.voronoi_r2 = {i: 0 for i in self.idx}
+        # the min distance from  each point to idx point
+        self.haussdorf_ = self.calc_distance(self.idx[0])
+        # assignment points to Voronoi cell (initially we have 1 Voronoi cell)
+        self.voronoi_number = np.full(self.haussdorf_.shape[0], self.idx[0])
+        # define the voronoi_r2 for the idx point
+        self.voronoi_r2 = {self.idx[0]: 0}
         # index of the maximum - d2 point in each voronoi cell
-        self.voronoi_i_far = {i: 0 for i in self.idx}
+        self.voronoi_i_far = {self.idx[0]: 0}
         for i in range(self.haussdorf_.shape[0]):
-            if self.haussdorf_[i] > self.voronoi_r2[self.voronoi_number[i]]:
-                self.voronoi_r2[self.voronoi_number[i]] = self.haussdorf_[i]
-                self.voronoi_i_far[self.voronoi_number[i]] = i
-
-        if progress_bar:
-            self.report_progress = get_progress_bar()
-        else:
-            self.report_progress = lambda x: x
+            if self.haussdorf_[i] > self.voronoi_r2[self.idx[0]]:
+                self.voronoi_r2[self.idx[0]] = self.haussdorf_[i]
+                self.voronoi_i_far[self.idx[0]] = i
 
     def fit(self, n):
         """Method for FPS select based upon a product of the input matrices
@@ -390,7 +378,7 @@ class _BaseVoronoiFPS(GreedySelector):
             return self.idx[:n]
 
         # Loop over the remaining points...
-        for i in self.report_progress(range(len(self.idx) - 1, n - 1)):
+        for i in range(len(self.idx) - 1, n - 1):
             """Find the maximum minimum (maxmin) distance and the corresponding point. This
             is our next FPS. The maxmin point must be one of the Voronoi
             radii. So we pick it from this smaller array. Note we only act on the
