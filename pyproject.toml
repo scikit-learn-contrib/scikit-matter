@@ -2,12 +2,15 @@
 requires = [
     "setuptools",
     "wheel",
+    "numpy",
+    "Cython",
 ]
 build-backend = "setuptools.build_meta"
 
 [tool.tox]
 legacy_tox_ini = """
 [tox]
+isolated_build = true
 
 [testenv:tests]
 changedir = tests
@@ -23,7 +26,8 @@ commands =
 changedir = examples
 allowlist_externals = /bin/bash
 
-deps = -rexamples/requirements.txt
+deps =
+    -rexamples/requirements.txt
 
 commands =
     bash -c "export SKCOSMO_EXAMPLES=$PWD; for file in $(find . -name '*.ipynb' -not -path '*/\\.*'); do export filename=$(basename $file); jupyter nbconvert --to notebook --output "$SKCOSMO_EXAMPLES/../.tox/examples/$filename" --execute "$file"; done"
