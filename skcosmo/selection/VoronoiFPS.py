@@ -314,7 +314,9 @@ def _calc_distances_(K, ref_idx, idxs=None):
     )
 
 
-class VoronoiFPS(GreedySelector):
+from time import time
+
+class SimpleVoronoiFPS(GreedySelector):
     """
     Base Class defined for Voronoi FPS selection methods
 
@@ -344,74 +346,150 @@ class VoronoiFPS(GreedySelector):
 
         # distance of all points to the selected point
         self.haussdorf_ = self.norms_ + self.norms_[initial] - 2 * X[initial] @ X.T
+    
         # assignment points to Voronoi cell (initially we have 1 Voronoi cell)
-        self.voronoi_number = np.full(self.haussdorf_.shape[0], initial)
-        # define the voronoi_r2 for the idx point
-        self.voronoi_r2 = {initial: np.max(self.haussdorf_)}
-        # index of the maximum - d2 point in each voronoi cell
-        self.voronoi_i_far = {initial: np.argmax(self.haussdorf_)}
+        # this is the list of the index of the selected point that is the center of the
+        # Voronoi cell to which each point in X belongs to
+        self.voronoi_number = np.full(self.haussdorf_.shape[0], 0)                
 
         if self.n_select_ <= 0:
             raise ValueError("You must call select(n) with n > 0.")
 
-        # Loop over the remaining points...
-        for i in range(len(self.idx) - 1, self.n_select_ - 1):
+        # tracks selected points
+        self.Xsel_ = np.zeros((self.n_select_,X.shape[1]),float)
+        self.Xsel_[0] = X[initial]
+        self.nsel_= np.zeros(self.n_select_,float)
+        self.nsel_[0] = self.norms_[initial]
+
+        # index of the maximum - d2 point in each voronoi cell
+        # this is the index of the point which is farthest from the center in eac
+        # voronoi cell.         
+        self.voronoi_i_far = np.zeros(self.n_select_, int)
+        self.voronoi_i_far[0] = np.argmax(self.haussdorf_)
+        self.voronoi_np = np.zeros(self.n_select_, int)
+        self.voronoi_np[0] = X.shape[0]
+
+        # define the voronoi_r2 for the idx point
+        # this is the maximum distance from the center for each of the cells
+        self.voronoi_r2 = np.zeros(self.n_select_, float)
+        self.voronoi_r2[0] = self.haussdorf_[self.voronoi_i_far[0]]
+        
+        f_active = np.zeros(self.n_select_, bool)        
+        sel_d2q = np.zeros(self.n_select_, float)
+        f_mask = np.zeros(X.shape[0], bool)
+        
+        time1 = 0
+        time2 = 0
+        time3 = 0
+        time4 = 0
+        time5 = 0
+        time6 = 0
+        tnsel = np.zeros(self.n_select_, int)
+        # Loop over the remaining points...        
+        for i in range(len(self.idx), self.n_select_ - 1):
             """Find the maximum minimum (maxmin) distance and the corresponding point. This
             is our next FPS. The maxmin point must be one of the Voronoi
             radii. So we pick it from this smaller array. Note we only act on the
             first i items as the array is filled incrementally picks max dist and
             index of the cell
             """
-            i_new = self.voronoi_i_far[max(self.voronoi_r2, key=self.voronoi_r2.get)]
-            # dict of flags. Signal, need we recalculate this cell or not
-            f_active = {}
-            # (dist/2)^2 between new point and idx points
-            dict_sel_d2q = {}
-            self.voronoi_r2[i_new] = 0
-
+            
+            # the new farthest point must be one of the "farthest from its cell" points
+            # so we don't need to loop over all points to find it
+            # print("Voronoi size ", self.voronoi_np[:i])
+            c_new = self.voronoi_r2[:i].argmax()            
+            i_new = self.voronoi_i_far[c_new]
+            
+            time1 -= time()
+            f_active[:i] = False
+            nsel = 0
             """must compute distance of the new point to all the previous FPS. Some
                of these might have been computed already, but bookkeeping could be
                worse that recomputing (TODO: verify!)
             """
+            # calculation in a single block
+            sel_d2q[:i] = (self.nsel_[:i] + self.norms_[i_new] - 2 * X[i_new] @ self.Xsel_[:i].T) * 0.25
+            
+            for ic in range(i):                
+                # empty voronoi, no need to consider it
+                if self.voronoi_np[ic] > 1 and sel_d2q[ic] < self.voronoi_r2[ic]:
+                    # these voronoi cells need to be updated
+                    f_active[ic] = True
+                    self.voronoi_r2[ic] = 0
+                    nsel += self.voronoi_np[ic]
+            f_active[i] = True
+            tnsel[i] = nsel
+            time1 += time()
+         
+            if nsel > len(X)//8:
+                # it's better to do a standard update.... 
+                time4 -= time()                
+                all_dist =  (self.norms_+ self.norms_[i_new] - 2 * X[i_new] @ X.T )                 
+                time4 += time()
+                time2 -= time()
+                
+                #print(f_active[:i])            
+                l_update = np.where(all_dist < self.haussdorf_)[0]
+                self.haussdorf_[l_update] = all_dist[l_update]
+                for j in l_update:
+                    self.voronoi_np[self.voronoi_number[j]] -= 1
+                self.voronoi_number[l_update] = i
+                self.voronoi_np[i] = len(l_update)
+                time2 += time()                
+                time6 -= time()                
+                                
+                for ic in np.where(f_active)[0]:
+                    jc = np.where(self.voronoi_number == ic)[0]
+                    if len(jc) == 0:
+                        continue
+                    self.voronoi_i_far[ic] = jc[np.argmax(self.haussdorf_[jc])]
+                    self.voronoi_r2[ic] = self.haussdorf_[self.voronoi_i_far[ic]]
 
-            for center in self.idx:
-                dict_sel_d2q[center] = (
-                    self.norms_[center]
-                    + self.norms_[i_new]
-                    - 2 * X[center] @ X[i_new].T
-                ) * 0.25
-
-            # check for each polyhedron, need we recalculate this cell or not
-            for center in self.idx:
-                if dict_sel_d2q[center] < self.voronoi_r2[center]:
-                    f_active[center] = 1
-                    self.voronoi_r2[center] = 0
-                else:
-                    f_active[center] = 0
-
-            for j in range(self.haussdorf_.shape[0]):
-                # check only "active" cells
-                if f_active[self.voronoi_number[j]] > 0:
-                    # check, can this point be in a new polyhedron or not
-                    if dict_sel_d2q[self.voronoi_number[j]] < self.haussdorf_[j]:
-                        d2_j = (
-                            self.norms_[j] + self.norms_[i_new] - 2 * X[j] @ X[i_new].T
-                        )
-                        # assign a point to the new polyhedron
-                        if self.haussdorf_[j] > d2_j:
-                            self.haussdorf_[j] = d2_j
-                            self.voronoi_number[j] = i_new
-                    # if this point assigned to the new cell, we need update data for this polyhedra.
-                    # Vice versa, we need to update the data for the cell, because we set voronoi_r2 as zero
-                    if self.haussdorf_[j] > self.voronoi_r2[self.voronoi_number[j]]:
-                        self.voronoi_r2[self.voronoi_number[j]] = self.haussdorf_[j]
-                        self.voronoi_i_far[self.voronoi_number[j]] = j
-
+                #print(nsel, len(X),self.voronoi_np[:(i+1)])                
+                # ~ for j in range(self.haussdorf_.shape[0]):
+                    # ~ # check only "active" cells
+                    # ~ jcell = self.voronoi_number[j]
+                    # ~ if f_active[jcell]:
+                        # ~ # if this point was assigned to the new cell, we need update data for this polyhedra.
+                        # ~ # Vice versa, we need to update the data for the cell, because we set voronoi_r2 as zero
+                        # ~ if self.haussdorf_[j] > self.voronoi_r2[jcell]:
+                            # ~ #print(j, i_new, i, self.voronoi_number[j])
+                            # ~ self.voronoi_r2[jcell] = self.haussdorf_[j]
+                            # ~ self.voronoi_i_far[jcell] = j
+                #print("r2", jcell, self.voronoi_r2[:i]) 
+                time6 += time()                
+            else:
+                time3-=time()
+                for j in range(self.haussdorf_.shape[0]):
+                    # check only "active" cells
+                    if f_active[self.voronoi_number[j]]:
+                        # check, can this point be in a new polyhedron or not
+                        if sel_d2q[self.voronoi_number[j]] < self.haussdorf_[j]:
+                            time5 -= time()
+                            d2_j = (self.norms_[j] + self.norms_[i_new] 
+                                     - 2 * X[j] @ X[i_new].T )                        
+                            time5 += time()
+                            # assign a point to the new polyhedron
+                            if self.haussdorf_[j] > d2_j:
+                                self.haussdorf_[j] = d2_j
+                                self.voronoi_np[self.voronoi_number[j]] -= 1
+                                self.voronoi_number[j] = i
+                                self.voronoi_np[i] += 1
+                        # if this point was assigned to the new cell, we need update data for this polyhedron.
+                        # vice versa, we need to update the data for the cell, because we set voronoi_r2 as zero
+                        if self.haussdorf_[j] > self.voronoi_r2[self.voronoi_number[j]]:
+                            self.voronoi_r2[self.voronoi_number[j]] = self.haussdorf_[j]
+                            self.voronoi_i_far[self.voronoi_number[j]] = j
+                time3+=time()
             self.idx.append(i_new)
+            self.Xsel_[i] = X[i_new]
+            self.nsel_[i] = self.norms_[i_new]
         self.support_ = np.array(
             [True if i in self.idx else False for i in range(self.haussdorf_.shape[0])]
         )
-        return self
+        print("Timing: ", time1, " s " , time2, " s " , time6, " s ", time4, " s ", time3-time5, " s ", time5, " s ")
+        #print("NSel: ", tnsel)
+        return self, tnsel
 
     def calc_distance(self, idx_1, idx_2=None):
         """
@@ -429,7 +507,7 @@ class VoronoiFPS(GreedySelector):
         return _calc_distances_(self.product, idx_1, idx_2)
 
 
-class SampleVoronoiFPS(VoronoiFPS):
+class SampleVoronoiFPS(SimpleVoronoiFPS):
     """
 
     For sample selection, traditional FPS employs a row-wise Euclidean
@@ -489,7 +567,7 @@ class SampleVoronoiFPS(VoronoiFPS):
         super().__init__(tol=tol, **kwargs)
 
 
-class FeatureVoronoiFPS(VoronoiFPS):
+class FeatureVoronoiFPS(SimpleVoronoiFPS):
     """
 
     For feature selection, traditional FPS employs a column-wise Euclidean
