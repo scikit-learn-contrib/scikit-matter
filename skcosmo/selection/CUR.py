@@ -18,8 +18,8 @@ from scipy.sparse.linalg import eigs as speig
 
 from sklearn.utils import check_X_y, check_array
 from skcosmo.utils import get_progress_bar
-from skcosmo.pcovr.pcovr_distances import pcovr_covariance, pcovr_kernel
-from .orthogonalizers import feature_orthogonalizer, sample_orthogonalizer
+from skcosmo.utils import pcovr_covariance, pcovr_kernel
+from skcosmo.utils import feature_orthogonalizer, sample_orthogonalizer
 
 
 class _BaseCUR:

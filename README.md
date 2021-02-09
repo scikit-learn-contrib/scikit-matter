@@ -6,10 +6,6 @@
 A collection of scikit-learn compatible utilities that implement methods
 developed in the COSMO laboratory
 
-:construction: **WARNING**: this package is a work in progress, you can
-currently find the prototype code in the
-[kernel-tutorials](https://github.com/cosmo-epfl/kernel-tutorials) repository.
-
 ## Installation
 
 ```bash

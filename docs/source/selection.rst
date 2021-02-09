@@ -8,7 +8,6 @@ This module contains two feature and sample selection modules corresponding to C
 CUR
 ###
 
-.. currentmodule:: skcosmo.selection.CUR
 
 CUR decomposition begins by approximating a matrix :math:`{\mathbf{X}}` using a subset of columns and rows
 
@@ -22,6 +21,7 @@ This iterative approach, albeit comparatively time consuming, is the most determ
 
 These selection methods can be modified to be semi-supervised by using augmented right or left singular vectors, as shown in [Cersonsky 2021].
 
+.. currentmodule:: skcosmo.feature_selection
 .. autoclass:: FeatureCUR
     :show-inheritance:
     :special-members:
@@ -30,6 +30,7 @@ These selection methods can be modified to be semi-supervised by using augmented
     .. automethod:: orthogonalize
     .. automethod:: select
 
+.. currentmodule:: skcosmo.sample_selection
 .. autoclass:: SampleCUR
     :show-inheritance:
     :special-members:
@@ -43,8 +44,6 @@ These selection methods can be modified to be semi-supervised by using augmented
 Farthest Point-Sampling
 #######################
 
-.. currentmodule:: skcosmo.selection.FPS
-
 Farthest Point Sampling is a common selection technique intended to exploit the  diversity of the input space.
 
 In FPS, the selection of the first point is made at random or by a separate metric.
@@ -53,24 +52,14 @@ It is common to use the Euclidean distance, however other distance metrics may b
 
 These selection methods can be modified to be semi-supervised by using the PCovR covariance and Gram matrices to compute the distances, as shown in [Cersonsky 2021].
 
+.. currentmodule:: skcosmo.feature_selection
 .. autoclass:: FeatureFPS
     :show-inheritance:
 
     .. automethod:: select
 
+.. currentmodule:: skcosmo.sample_selection
 .. autoclass:: SampleFPS
     :show-inheritance:
 
     .. automethod:: select
-
-.. _ortho-api:
-
-Orthogonalizers for CUR
-#######################
-
-.. currentmodule:: skcosmo.selection.orthogonalizers
-
-When computing non-iterative CUR, it is necessary to orthogonalize the input matrices after each selection. For this, we have supplied a feature and a sample orthogonalizer for feature and sample selection.
-
-.. autofunction:: feature_orthogonalizer
-.. autofunction:: sample_orthogonalizer

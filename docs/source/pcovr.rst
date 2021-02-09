@@ -1,5 +1,5 @@
-Principal Covariates Regression
-===============================
+Principal Covariates Regression (PCovR)
+=======================================
 
 .. _PCovR-api:
 
@@ -35,7 +35,21 @@ using the eigendecomposition of a modified covariance matrix
         \mathbf{\hat{Y}}\mathbf{\hat{Y}}^T \mathbf{X} \left(\mathbf{X}^T
         \mathbf{X}\right)^{-\frac{1}{2}}\right)
 
-.. currentmodule:: skcosmo.pcovr.pcovr
+For all PCovR methods, it is strongly suggested that :math:`\mathbf{X}` and
+:math:`\mathbf{Y}` are centered and scaled to unit variance, otherwise the
+results will change drastically near :math:`alpha \to 0` and :math:`alpha \to 0`.
+This can be done with the companion preprocessing classes, where
+
+>>> from skcosmo.preprocessing import StandardFlexibleScaler as SFS
+>>>
+>>> # Set column_wise to True when the columns are relative to one another,
+>>> # False otherwise.
+>>> scaler = SFS(column_wise=True)
+>>>
+>>> scaler.fit(A) # replace with your matrix
+>>> A = scaler.transform(A)
+
+.. currentmodule:: skcosmo.decomposition
 
 .. autoclass:: PCovR
     :show-inheritance:
@@ -44,23 +58,45 @@ using the eigendecomposition of a modified covariance matrix
     .. automethod:: fit
 
         .. automethod:: _fit_feature_space
-        .. automethod:: _fit_structure_space
+        .. automethod:: _fit_sample_space
 
     .. automethod:: transform
     .. automethod:: predict
     .. automethod:: inverse_transform
+    .. automethod:: score
 
-.. _PCovR_dist-api:
+.. _KPCovR-api:
 
-.. currentmodule:: skcosmo.pcovr.pcovr_distances
+Kernel PCovR
+############
 
-Modified Gram Matrix :math:`\mathbf{\tilde{K}}`
-###############################################
+Kernel Principal Covariates Regression, as described in `[Helfrecht, et al., 2020]
+<https://iopscience.iop.org/article/10.1088/2632-2153/aba9ef>`_
+determines a latent-space projection :math:`\mathbf{T}` which
+minimizes a combined loss in supervised and unsupervised tasks in the
+reproducing kernel Hilbert space (RKHS).
 
-.. autofunction:: pcovr_kernel
+This projection is determined by the eigendecomposition of a modified gram
+matrix :math:`\mathbf{\tilde{K}}`
 
+.. math::
 
-Modified Covariance Matrix :math:`\mathbf{\tilde{C}}`
-#####################################################
+  \mathbf{\tilde{K}} = \alpha \mathbf{K} +
+        (1 - \alpha) \mathbf{\hat{Y}}\mathbf{\hat{Y}}^T
 
-.. autofunction:: pcovr_covariance
+where :math:`\alpha` is a mixing parameter,
+:math:`\mathbf{K}` is the input kernel of shape :math:`(n_{samples}, n_{samples})`
+and :math:`\mathbf{\hat{Y}}` is the target matrix of shape
+:math:`(n_{samples}, n_{properties})`.
+
+.. currentmodule:: skcosmo.decomposition
+
+.. autoclass:: KPCovR
+    :show-inheritance:
+    :special-members:
+
+    .. automethod:: fit
+    .. automethod:: transform
+    .. automethod:: predict
+    .. automethod:: inverse_transform
+    .. automethod:: score
