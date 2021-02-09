@@ -421,7 +421,7 @@ class SimpleVoronoiFPS(GreedySelector):
             tnsel[i] = nsel
             time1 += time()
          
-            if nsel > len(X)//8:
+            if nsel > len(X)//6:
                 # it's better to do a standard update.... 
                 time4 -= time()                
                 all_dist =  (self.norms_+ self.norms_[i_new] - 2 * X[i_new] @ X.T )                 
