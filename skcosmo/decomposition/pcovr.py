@@ -144,7 +144,7 @@ class PCovR(_BasePCA, LinearModel):
     Examples
     --------
     >>> import numpy as np
-    >>> from skcosmo.pcovr import PCovR
+    >>> from skcosmo.decomposition import PCovR
     >>> X = np.array([[-1, 1, -3, 1], [1, -2, 1, 2], [-2, 0, -2, -2], [1, 0, 2, -1]])
     >>> Y = np.array([[ 0, -5], [-1, 1], [1, -5], [-3, 2]])
     >>> pcovr = PCovR(mixing=0.1, n_components=2)
