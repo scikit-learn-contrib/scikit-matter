@@ -126,6 +126,7 @@ class GreedySelector(SelectorMixin, MetaEstimatorMixin, BaseEstimator):
 
             self.selected_ = np.array([*self.selected_, new_feature_idx])
             self.support_ = current_mask
+            self._postprocess()
 
         return self
 
@@ -146,7 +147,10 @@ class GreedySelector(SelectorMixin, MetaEstimatorMixin, BaseEstimator):
         return self.support_
 
     def _get_candidate_features(self, current_mask):
-        return np.where(current_mask is False)[0]
+        return np.where(np.invert(current_mask))[0]
+
+    def _postprocess(self):
+        pass
 
     def _more_tags(self):
         return {

@@ -36,7 +36,7 @@ def X_orthogonalizer(X_proxy, c, tol=1e-12):
     return X_proxy
 
 
-def feature_orthogonalizer(idx, X_proxy, Y_proxy, tol=1e-12):
+def feature_orthogonalizer(idx, X_proxy, Y_proxy=None, tol=1e-12):
     """
     Orthogonalizes two matrices, meant to represent a feature matrix
     :math:`{\\mathbf{X}}` and a property matrix :math:`{\\mathbf{Y}}`, given
