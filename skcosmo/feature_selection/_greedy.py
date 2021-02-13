@@ -26,6 +26,11 @@ class GreedySelector(SelectorMixin, MetaEstimatorMixin, BaseEstimator):
         to select. If float between 0 and 1, it is the fraction of features to
         select.
 
+    score_thresh_to_select : float, default=None
+        Threshold for the score. If `None` selection will continue until the
+        number or fraction given by n_features_to_select is chosen. Otherwise
+        will stop when the score falls below the threshold.
+
     scoring : str, callable, list/tuple or dict, default=None
         A single str (see :ref:`scoring_parameter`) or a callable
         (see :ref:`scoring`) to evaluate the features. It is assumed that the
@@ -49,12 +54,14 @@ class GreedySelector(SelectorMixin, MetaEstimatorMixin, BaseEstimator):
         self,
         scoring,
         n_features_to_select=None,
+        score_thresh_to_select=None,
     ):
 
         self.n_features_to_select = n_features_to_select
+        self.n_selected_ = 0
         self.scoring = scoring
 
-    def fit(self, X, y=None, current_mask=None):
+    def fit(self, X, y=None, warm_start=False):
         """Learn the features to select.
 
         Parameters
@@ -63,8 +70,10 @@ class GreedySelector(SelectorMixin, MetaEstimatorMixin, BaseEstimator):
             Training vectors.
         y : array-like of shape (n_samples,)
             Target values.
-        current_mask : array-like of shape (n_features)
-                       an initial mask to start with, if restarting
+        warm_start : bool
+            Whether the fit should continue after having already
+            run, after increasing n_features_to_select.
+            Assumes it is called with the same X and y
 
         Returns
         -------
@@ -99,55 +108,74 @@ class GreedySelector(SelectorMixin, MetaEstimatorMixin, BaseEstimator):
             "representing a percentage of features to "
             f"select. Got {self.n_features_to_select}"
         )
+
         if self.n_features_to_select is None:
-            self.n_features_to_select_ = n_features // 2
+            n_iterations = n_features // 2
         elif isinstance(self.n_features_to_select, numbers.Integral):
             if not 0 < self.n_features_to_select < n_features:
                 raise ValueError(error_msg)
-            self.n_features_to_select_ = self.n_features_to_select
+            n_iterations = self.n_features_to_select
         elif isinstance(self.n_features_to_select, numbers.Real):
             if not 0 < self.n_features_to_select <= 1:
                 raise ValueError(error_msg)
-            self.n_features_to_select_ = int(n_features * self.n_features_to_select)
+            n_iterations = int(n_features * self.n_features_to_select)
         else:
             raise ValueError(error_msg)
 
-        # the current mask corresponds to the set of features:
-        if current_mask is None:
-            current_mask = np.zeros(shape=n_features, dtype=bool)
+        if warm_start:
+            if self.n_selected_ == 0:
+                raise ValueError(
+                    "Cannot fit with warm_start=True without having been previously initialized"
+                )
+            self._continue_greedy_search(X, y, n_iterations)
+        else:
+            self.n_selected_ = 0
+            self._init_greedy_search(X, y, n_iterations)
 
-        n_iterations = self.n_features_to_select_ - np.count_nonzero(current_mask)
+        n_iterations -= self.n_selected_
 
         for _ in range(n_iterations):
-            new_feature_idx = self._get_best_new_feature(
-                self.scoring, X, y, current_mask
-            )
-            current_mask[new_feature_idx] = True
 
-            self.selected_ = np.array([*self.selected_, new_feature_idx])
-            self.support_ = current_mask
+            new_feature_idx = self._get_best_new_feature(self.scoring, X, y)
+            self._update_post_selection(X, y, new_feature_idx)
             self._postprocess()
 
+        self.support_ = np.zeros(X.shape[1], dtype=bool)
+        self.support_[self.selected_idx_] = True
         return self
 
-    def _get_best_new_feature(self, scorer, X, y, current_mask):
-        # Return the best new feature to add to the current_mask, i.e. return
-        # the best new feature to add (resp. remove) when doing forward
-        # selection (resp. backward selection)
-        candidate_feature_indices = self._get_candidate_features(current_mask)
-        scores = np.zeros(X.shape[1])
+    def _init_greedy_search(self, X, y, n_to_select):
+        """ Initializes the search. Prepares an array to store the selected features. """
 
-        for feature_idx in candidate_feature_indices:
-            scores[feature_idx] = scorer(X, y, feature_idx)
+        self.X_selected_ = np.zeros((X.shape[0], n_to_select), float)
+        self.selected_idx_ = np.zeros((n_to_select), int)
+
+    def _continue_greedy_search(self, X, y, n_to_select):
+        """ Continues the search. Prepares an array to store the selected features. """
+
+        self.X_selected_ = np.pad(
+            self.X_selected_,
+            [(0, 0), (0, n_to_select - self.n_selected_)],
+            "constant",
+            constant_values=0.0,
+        )
+        self.selected_idx_.resize(n_to_select)
+
+    def _get_best_new_feature(self, scorer, X, y):
+
+        scores = scorer(X, y)
 
         return np.argmax(scores)
+
+    def _update_post_selection(self, X, y, last_selected):
+
+        self.X_selected_[:, self.n_selected_] = X[:, last_selected]
+        self.selected_idx_[self.n_selected_] = last_selected
+        self.n_selected_ += 1
 
     def _get_support_mask(self):
         check_is_fitted(self, ["support_"])
         return self.support_
-
-    def _get_candidate_features(self, current_mask):
-        return np.where(np.invert(current_mask))[0]
 
     def _postprocess(self):
         pass
