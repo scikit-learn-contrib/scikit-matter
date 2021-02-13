@@ -1,4 +1,5 @@
 import numpy as np
+import numbers
 from sklearn.utils.validation import check_is_fitted, check_array
 
 from ._greedy import GreedySelector
@@ -16,6 +17,10 @@ class SimpleFPS(GreedySelector):
         selected. If integer, the parameter is the absolute number of features
         to select. If float between 0 and 1, it is the fraction of features to
         select.
+
+    initialize: int or 'random', default=0
+        Index of the first feature to be selected. If 'random', picks a random
+        value when fit starts.
 
     Attributes
     ----------
@@ -37,90 +42,65 @@ class SimpleFPS(GreedySelector):
 
     """
 
-    def __init__(self, n_features_to_select=None):
+    def __init__(self, n_features_to_select=None, initialize=0):
 
         scoring = self.score
+        self.initialize = initialize
         self.selected_ = []
 
         super().__init__(scoring=scoring, n_features_to_select=n_features_to_select)
 
-    def fit(self, X, y=None, initial=[0], haussdorfs=None):
-        """Learn the features to select.
+    def _get_best_new_feature(self, scorer, X, y):
+        scores = scorer(X, y)
 
-        Parameters
-        ----------
-        X : array-like of shape (n_samples, n_features)
-            Training vectors.
-        y : array-like of shape (n_samples,)
-            Target values.
-        initial : array-like, int
-                  initial features to use in the selection
-        haussdorfs : array-like of shape (n_features)
-                     pre-computed haussdorf distances for each of the features
+        return np.argmax(scores)
 
-        Returns
-        -------
-        self : object
-        """
+    def _init_greedy_search(self, X, y, n_to_select):
 
-        # while the super class checks this, because we are doing some pre-processing
-        # before calling super().fit(), we should check as well
-        tags = self._get_tags()
-
-        if y is not None:
-            X, y = self._validate_data(
-                X,
-                y,
-                accept_sparse="csc",
-                ensure_min_features=2,
-                force_all_finite=not tags.get("allow_nan", True),
-                multi_output=True,
-            )
-        else:
-            X = check_array(
-                X,
-                accept_sparse="csc",
-                ensure_min_features=2,
-                force_all_finite=not tags.get("allow_nan", True),
-            )
-
-        n_features = X.shape[1]
-        self.support_ = np.zeros(shape=n_features, dtype=bool)
-        self.support_[initial] = True
-        self.selected_ = np.array(initial).flatten()
-
+        super()._init_greedy_search(X, y, n_to_select)
         self.norms_ = (X ** 2).sum(axis=0)
 
-        if haussdorfs is None:
-            self.haussdorf_ = (
-                self.norms_
-                + self.norms_[self.selected_[0]]
-                - 2 * (X.T @ X[:, self.selected_[0]])
-            )
-            for i in self.selected_[1:]:
-                new_haussdorf = self.norms_ + self.norms_[i] - 2 * (X.T @ X[:, i])
-                self.haussdorf_ = np.minimum(self.haussdorf_, new_haussdorf)
+        if self.initialize == "random":
+            initialize = np.random.randint(X.shape[1])
+        elif isinstance(self.initialize, numbers.Integral):
+            initialize = self.initialize
         else:
-            if len(haussdorfs) != n_features:
-                raise ValueError(
-                    "The number of pre-computed haussdorf distances"
-                    "does not match the number of features."
-                )
-            self.haussdorf_ = haussdorfs
+            raise ValueError("Invalid value of the initialize parameter")
 
-        super().fit(X, y, current_mask=self.support_)
+        self.selected_ = [initialize]
+        self.haussdorf_ = np.full(X.shape[1], np.inf)
+        self._update_post_selection(X, y, self.selected_[0])
 
-    def score(self, X, y, candidate_feature_idx):
+    def score(self, X, y):
+        return self.haussdorf_
 
-        self.haussdorf_[candidate_feature_idx] = min(
-            self.get_distance(X, candidate_feature_idx, self.selected_[-1]),
-            self.haussdorf_[candidate_feature_idx],
+    def _update_post_selection(self, X, y, last_selected):
+
+        # distances of all points to the new point
+        new_dist = (
+            self.norms_ + self.norms_[last_selected] - 2 * X[:, last_selected] @ X
         )
-        return self.haussdorf_[candidate_feature_idx]
 
-    def get_distance(self, X, i, j):
+        # update in-place the Haussdorf distance list
+        np.minimum(self.haussdorf_, new_dist, self.haussdorf_)
+
+        super()._update_post_selection(X, y, last_selected)
+
+    def _get_distance(self, X, i, j):
         return self.norms_[i] + self.norms_[j] - 2 * np.dot(X[:, i], X[:, j])
 
     def get_select_distance(self, X):
         check_is_fitted(self)
         return np.array([self.haussdorf_[i] for i in self.selected_])
+<<<<<<< HEAD
+=======
+
+
+from .fps import _c_fps_update
+
+
+class CSimpleFPS(SimpleFPS):
+    def _update_post_selection(self, X, y, last_selected):
+        _c_fps_update(X, last_selected, self.haussdorf_, self.norms_)
+        GreedySelector._update_post_selection(self, X, y, last_selected)
+>>>>>>> fa1e522... black
