@@ -2,12 +2,14 @@
 Sequential feature selection
 """
 import numbers
+import warnings
 
 import numpy as np
 
 from sklearn.feature_selection._base import SelectorMixin
 from sklearn.base import BaseEstimator, MetaEstimatorMixin
 from sklearn.utils.validation import check_is_fitted, check_array
+from skcosmo.utils import get_progress_bar
 
 
 class GreedySelector(SelectorMixin, MetaEstimatorMixin, BaseEstimator):
@@ -40,10 +42,22 @@ class GreedySelector(SelectorMixin, MetaEstimatorMixin, BaseEstimator):
         value. Metric functions returning a list/array of values can be wrapped
         into multiple scorers that return one value each.
 
+    progress_bar: boolean, default=False
+                  option to use `tqdm <https://tqdm.github.io/>`_
+                  progress bar to monitor selections
+
     Attributes
     ----------
-    n_features_to_select_ : int
+
+    n_features_to_select : int
         The number of features that were selected.
+
+    X_selected_ : ndarray (n_samples, n_features_to_select)
+                  The features selected
+
+    selected_idx_ : ndarray of integers
+                    indices of the selected features, with respect to the
+                    original fitted matrix
 
     support_ : ndarray of shape (n_features,), dtype=bool
         The mask of selected features.
@@ -55,11 +69,18 @@ class GreedySelector(SelectorMixin, MetaEstimatorMixin, BaseEstimator):
         scoring,
         n_features_to_select=None,
         score_thresh_to_select=None,
+        progress_bar=False,
     ):
 
         self.n_features_to_select = n_features_to_select
         self.n_selected_ = 0
         self.scoring = scoring
+        self.score_threshold = score_thresh_to_select
+
+        if progress_bar:
+            self.report_progress = get_progress_bar()
+        else:
+            self.report_progress = lambda x: x
 
     def fit(self, X, y=None, warm_start=False):
         """Learn the features to select.
@@ -106,7 +127,8 @@ class GreedySelector(SelectorMixin, MetaEstimatorMixin, BaseEstimator):
             "representing the absolute "
             "number of features, or a float in (0, 1] "
             "representing a percentage of features to "
-            f"select. Got {self.n_features_to_select}"
+            f"select. Got {self.n_features_to_select} features and "
+            f"an input with {n_features} features."
         )
 
         if self.n_features_to_select is None:
@@ -134,11 +156,20 @@ class GreedySelector(SelectorMixin, MetaEstimatorMixin, BaseEstimator):
 
         n_iterations -= self.n_selected_
 
-        for _ in range(n_iterations):
+        for n in self.report_progress(range(n_iterations)):
 
             new_feature_idx = self._get_best_new_feature(self.scoring, X, y)
-            self._update_post_selection(X, y, new_feature_idx)
-            self._postprocess()
+            if new_feature_idx is not None:
+                self._update_post_selection(X, y, new_feature_idx)
+                self._postprocess()
+            else:
+                warnings.warn(
+                    f"Score threshold of {self.score_threshold} reached."
+                    f"Terminating search at {self.n_selected_} / {self.n_features_to_select}."
+                )
+                self.X_selected_ = self.X_selected_[:, :n]
+                self.selected_idx_ = self.selected_idx_[:n]
+                break
 
         self.support_ = np.zeros(X.shape[1], dtype=bool)
         self.support_[self.selected_idx_] = True
@@ -159,15 +190,23 @@ class GreedySelector(SelectorMixin, MetaEstimatorMixin, BaseEstimator):
             "constant",
             constant_values=0.0,
         )
-        self.selected_idx_.resize(n_to_select)
+        old_idx = self.selected_idx_.copy()
+        self.selected_idx_ = np.zeros((n_to_select), int)
+        self.selected_idx_[: self.n_selected_] = old_idx
 
     def _get_best_new_feature(self, scorer, X, y):
 
         scores = scorer(X, y)
 
-        return np.argmax(scores)
+        if self.score_threshold is not None and max(scores) < self.score_threshold:
+            return None
+        else:
+            return np.argmax(scores)
 
     def _update_post_selection(self, X, y, last_selected):
+        """
+        Saves the most recently selected feature and increments the feature counter
+        """
 
         self.X_selected_[:, self.n_selected_] = X[:, last_selected]
         self.selected_idx_[self.n_selected_] = last_selected

@@ -12,28 +12,38 @@ Authors: Rose K. Cersonsky
 import numpy as np
 
 
-def X_orthogonalizer(X_proxy, c, tol=1e-12):
+def X_orthogonalizer(x1, c=None, x2=None, tol=1e-12):
     """
-    Orthogonalizes a feature matrix by the given column. Can be used to
+    Orthogonalizes a feature matrix by the given columns. Can be used to
     orthogonalize by samples by calling `X = X_orthogonalizer(X.T, row_index).T`.
 
-    :param X_proxy: feature matrix to orthogonalize
-    :type X_proxy: matrix of shape (n x m)
+    :param x1: feature matrix to orthogonalize
+    :type x1: matrix of shape (n x m)
 
     :param c: index of the column to orthogonalize by
     :type c: int, less than m
 
+    :param x2: a separate set of columns to orthogonalize by
+    :type x2: matrix of shape (n x a)
     """
 
-    if np.sqrt(np.matmul(X_proxy[:, c], X_proxy[:, c])) < tol:
-        raise ValueError("Cannot orthogonalize by a null vector.")
+    if x2 is None and c is not None:
+        x2 = x1[:, [c]]
 
-    v = X_proxy[:, c] / np.sqrt(np.matmul(X_proxy[:, c], X_proxy[:, c]))
+    orthogonalizer = np.eye(x1.shape[0])
 
-    for i in range(X_proxy.shape[1]):
-        X_proxy[:, i] -= v * np.dot(v, X_proxy[:, i])
+    for i in range(x2.shape[-1]):
+        col = orthogonalizer @ x2[:, [i]]
 
-    return X_proxy
+        if np.linalg.norm(col) < tol:
+            print(np.linalg.norm(col), x2)
+            raise ValueError("Cannot orthogonalize by a null vector.")
+
+        col /= np.linalg.norm(col)
+
+        orthogonalizer = (np.eye(x1.shape[0]) - col @ col.T) @ orthogonalizer
+
+    return orthogonalizer @ x1
 
 
 def feature_orthogonalizer(idx, X_proxy, Y_proxy=None, tol=1e-12):
