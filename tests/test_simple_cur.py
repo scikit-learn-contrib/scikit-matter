@@ -29,12 +29,13 @@ class TestSimpleCUR(unittest.TestCase):
         """
 
         X_current = self.X.copy()
+        selector = SimpleCUR(n_features_to_select=1)
+        selector.fit(X_current)
 
-        for i in range(len(self.idx) - 1):
-            selector = SimpleCUR(n_features_to_select=i + 1)
-            selector.fit(X_current, initial=self.idx[:i])
-            X_current = selector.X_current.copy()
-            self.assertEqual(selector.selected_[-1], self.idx[i])
+        for i in range(len(self.idx) - 2):
+            selector.n_features_to_select += 1
+            selector.fit(X_current, warm_start=True)
+            self.assertEqual(selector.selected_idx_[i], self.idx[i])
 
     def test_non_it(self):
         """
@@ -44,46 +45,7 @@ class TestSimpleCUR(unittest.TestCase):
         selector = SimpleCUR(n_features_to_select=12, iterative=False)
         selector.fit(self.X)
 
-        self.assertTrue(np.allclose(selector.selected_, self.idx[:-1]))
-
-    def test_supplied_indices(self):
-        """
-        This test checks FPS will match pre-defined indices.
-        """
-
-        selector = SimpleCUR(n_features_to_select=len(self.idx) - 1)
-        selector.fit(self.X, initial=self.idx)
-        for i in range(len(self.idx) - 1):
-            with self.subTest(i=i, idx=self.idx[i]):
-                self.assertEqual(selector.selected_[i], self.idx[i])
-
-    def test_no_nfeatures(self):
-        selector = SimpleCUR()
-        selector.fit(self.X, initial=self.idx[0])
-        self.assertEqual(len(selector.selected_), self.X.shape[1] // 2)
-
-    def test_decimal_nfeatures(self):
-        selector = SimpleCUR(n_features_to_select=0.2)
-        selector.fit(self.X, initial=self.idx[0])
-        self.assertEqual(len(selector.selected_), int(self.X.shape[1] * 0.2))
-
-    def test_bad_nfeatures(self):
-        for nf in [1.2, "1", 20]:
-            with self.subTest(n_features=nf):
-                selector = SimpleCUR(n_features_to_select=nf)
-                with self.assertRaises(ValueError) as cm:
-                    selector.fit(self.X, initial=self.idx[0])
-                    self.assertEqual(
-                        str(cm.message),
-                        (
-                            "n_features_to_select must be either None, an "
-                            "integer in [1, n_features - 1] "
-                            "representing the absolute "
-                            "number of features, or a float in (0, 1] "
-                            "representing a percentage of features to "
-                            f"select. Got {nf}"
-                        ),
-                    )
+        self.assertTrue(np.allclose(selector.selected_idx_, self.idx[:-1]))
 
 
 if __name__ == "__main__":

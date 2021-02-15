@@ -1,11 +1,10 @@
 import numpy as np
 
-from sklearn.utils import check_array
 from sklearn.utils import check_random_state
 from sklearn.utils.extmath import randomized_svd
 
 from ._greedy import GreedySelector
-from ..utils.orthogonalizers import feature_orthogonalizer
+from ..utils.orthogonalizers import X_orthogonalizer
 
 
 class SimpleCUR(GreedySelector):
@@ -17,11 +16,17 @@ class SimpleCUR(GreedySelector):
     Parameters
     ----------
 
+
     n_features_to_select : int or float, default=None
         The number of features to select. If `None`, half of the features are
         selected. If integer, the parameter is the absolute number of features
         to select. If float between 0 and 1, it is the fraction of features to
         select.
+
+    score_thresh_to_select : float, default=None
+        Threshold for the score. If `None` selection will continue until the
+        number or fraction given by n_features_to_select is chosen. Otherwise
+        will stop when the score falls below the threshold.
 
     iterative : boolean
                 whether to orthogonalize after each selection, defaults to `true`
@@ -40,14 +45,22 @@ class SimpleCUR(GreedySelector):
     random_state : int, RandomState instance or None, default=None
          Pass an int for reproducible results across multiple function calls.
 
+    progress_bar: boolean, default=False
+                  option to use `tqdm <https://tqdm.github.io/>`_
+                  progress bar to monitor selections
+
     Attributes
     ----------
 
-    n_features_to_select_ : int
+    n_features_to_select : int
         The number of features that were selected.
 
-    selected_: ndarray of shape (n_features_to_select), dtype=int
-               indices of the selected features
+    X_selected_ : ndarray (n_samples, n_features_to_select)
+                  The features selected
+
+    selected_idx_ : ndarray of integers
+                    indices of the selected features, with respect to the
+                    original fitted matrix
 
     support_ : ndarray of shape (n_features,), dtype=bool
         The mask of selected features.
@@ -57,73 +70,61 @@ class SimpleCUR(GreedySelector):
     def __init__(
         self,
         n_features_to_select=None,
+        score_thresh_to_select=None,
         iterative=True,
         k=1,
         tol=1e-12,
         iterated_power="auto",
         random_state=None,
+        progress_bar=False,
     ):
 
         scoring = self.score
-        self.selected_ = []
         self.k = k
         self.tol = tol
         self.iterative = iterative
         self.iterated_power = iterated_power
         self.random_state = random_state
 
-        super().__init__(scoring=scoring, n_features_to_select=n_features_to_select)
+        super().__init__(
+            scoring=scoring,
+            n_features_to_select=n_features_to_select,
+            progress_bar=progress_bar,
+        )
 
-    def fit(self, X, y=None, initial=[]):
-        """Learn the features to select.
-
-        Parameters
-        ----------
-        X : array-like of shape (n_samples, n_features)
-            Training vectors.
-        y : array-like of shape (n_samples,)
-            Target values.
-
-        Returns
-        -------
-        self : object
+    def _init_greedy_search(self, X, y, n_to_select):
+        """
+        Initializes the search. Prepares an array to store the selected
+        features and computes their initial importance score.
         """
 
-        # while the super class checks this, because we are doing some pre-processing
-        # before calling super().fit(), we should check as well
-        tags = self._get_tags()
-
-        if y is not None:
-            X, y = self._validate_data(
-                X,
-                y,
-                accept_sparse="csc",
-                ensure_min_features=2,
-                force_all_finite=not tags.get("allow_nan", True),
-                multi_output=True,
-            )
-        else:
-            X = check_array(
-                X,
-                accept_sparse="csc",
-                ensure_min_features=2,
-                force_all_finite=not tags.get("allow_nan", True),
-            )
-
-        n_features = X.shape[1]
         self.X_current = X.copy()
-        self.selected_ = np.array(initial).flatten()
-        self.support_ = np.zeros(shape=n_features, dtype=bool)
-        self.support_[initial] = True
-        if not all(self.support_):
-            self.pi_ = self._recompute_pi()
+        self.i_current = np.arange(X.shape[-1])
+        self.pi_ = self._compute_pi(self.X_current)
 
-        super().fit(X, y, current_mask=self.support_)
+        super()._init_greedy_search(X, y, n_to_select)
 
-    def score(self, X, y, candidate_feature_idx):
-        return self.pi_[candidate_feature_idx]
+    def _continue_greedy_search(self, X, y, n_to_select):
+        """
+        Continues the search. Prepares an array to store the selected
+        features, orthogonalizes the features by those already selected,
+        and computes their initial importance.
+        """
 
-    def _recompute_pi(self):
+        self.X_current = X_orthogonalizer(X, x2=self.X_selected_)
+        self.i_current = np.arange(X.shape[-1])
+        self.pi_ = self._compute_pi(self.X_current)
+
+        super()._continue_greedy_search(X, y, n_to_select)
+
+    def score(self, X, y):
+        """
+        Returns the current importance of all features
+        """
+
+        return self.pi_
+
+    def _compute_pi(self, X):
         """
         For feature selection, the importance score :math:`\\pi` is the sum over
         the squares of the first :math:`k` components of the right singular vectors
@@ -136,25 +137,33 @@ class SimpleCUR(GreedySelector):
         where :math:`{\\mathbf{C} = \\mathbf{X}^T\\mathbf{X}.
         """
 
-        new_pi = np.zeros(self.support_.shape[0])
-        X_for_SVD = self.X_current[:, ~self.support_]
-
         random_state = check_random_state(self.random_state)
 
         # sign flipping is done inside
         _, _, Vt = randomized_svd(
-            X_for_SVD,
+            X,
             n_components=self.k,
             n_iter=self.iterated_power,
             flip_sign=True,
             random_state=random_state,
         )
-        new_pi[~self.support_] = (np.real(Vt) ** 2.0).sum(axis=0)
+        new_pi = (np.real(Vt) ** 2.0).sum(axis=0)
         return new_pi
 
-    def _postprocess(self):
+    def _update_post_selection(self, X, y, last_selected):
+        """
+        Saves the most recently selected feature, increments the feature counter,
+        and, if the CUR is iterative, orthogonalizes the remaining features by
+        the most recently selected.
+        """
+        super()._update_post_selection(X, y, last_selected)
+
         if self.iterative:
-            self.X_current, _ = feature_orthogonalizer(
-                self.selected_[-1:], self.X_current
+            self.X_current = X_orthogonalizer(x1=self.X_current, c=last_selected)
+            self.i_current = self.i_current[self.i_current != last_selected]
+
+            self.pi_[self.i_current] = self._compute_pi(
+                self.X_current[:, self.i_current]
             )
-            self.pi_ = self._recompute_pi()
+
+        self.pi_[last_selected] = 0.0
