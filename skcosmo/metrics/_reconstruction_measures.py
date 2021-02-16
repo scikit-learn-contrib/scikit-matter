@@ -606,7 +606,7 @@ def check_global_reconstruction_measures_input(
 
     if estimator is None:
         estimator = RidgeRegression2FoldCV(
-            alphas=[10 ** (i) for i in range(-5, 0)] + [0.5, 0.9],
+            alphas=np.geomspace(1e-9, 0.9, 20),
             alpha_type="relative",
             regularization_method="cutoff",
             random_state=0x5F3759DF,
@@ -642,7 +642,7 @@ def check_local_reconstruction_measures_input(
 
     if estimator is None:
         estimator = RidgeRegression2FoldCV(
-            alphas=[10 ** (i) for i in range(-5, 0)] + [0.5, 0.9],
+            alphas=np.geomspace(1e-9, 0.9, 20),
             alpha_type="relative",
             regularization_method="cutoff",
             random_state=0x5F3759DF,
