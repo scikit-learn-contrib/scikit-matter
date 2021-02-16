@@ -202,7 +202,7 @@ class RidgeTests(unittest.TestCase):
         # larger errors
         error_grad = twofold_rmse[1:] - twofold_rmse[:-1]
         self.assertTrue(
-            np.all(error_grad > 0),
+            np.all(error_grad > self.eps),
             "error does not strictly increase with larger regularization\n"
             f"\ttwofold RMSE: {twofold_rmse}\n"
             f"\tregularization parameters: {ridge.alphas}",
