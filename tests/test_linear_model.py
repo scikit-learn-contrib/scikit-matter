@@ -172,7 +172,6 @@ class RidgeTests(unittest.TestCase):
             f"error {err} surpasses threshold for zero {self.eps}",
         )
 
-
     @parameterized.expand(ridge_parameters)
     def test_ridge_regression_2fold_regularization(
         self, name, alpha_type, regularization_method
@@ -187,15 +186,15 @@ class RidgeTests(unittest.TestCase):
         if alpha_type == "absolute":
             alphas = singular_values[1:][::-1]
         if alpha_type == "relative":
-            alphas = (singular_values[1:][::-1]/singular_values[0])
+            alphas = singular_values[1:][::-1] / singular_values[0]
 
         # tests if RidgeRegression2FoldCV does do regularization correct
         ridge = RidgeRegression2FoldCV(
-                alphas=alphas,
-                alpha_type=alpha_type,
-                regularization_method=regularization_method,
-                scoring="neg_root_mean_squared_error"
-            ).fit(self.features_all, self.features_all)
+            alphas=alphas,
+            alpha_type=alpha_type,
+            regularization_method=regularization_method,
+            scoring="neg_root_mean_squared_error",
+        ).fit(self.features_all, self.features_all)
         twofold_rmse = -np.array(ridge.cv_values_)
 
         # since the data can be perfectly reconstructed,
@@ -203,12 +202,11 @@ class RidgeTests(unittest.TestCase):
         # larger errors
         error_grad = twofold_rmse[1:] - twofold_rmse[:-1]
         self.assertTrue(
-           np.all(error_grad > 0),
+            np.all(error_grad > 0),
             "error does not strictly increase with larger regularization\n"
             f"\ttwofold RMSE: {twofold_rmse}\n"
             f"\tregularization parameters: {ridge.alphas}",
         )
-
 
 
 if __name__ == "__main__":
