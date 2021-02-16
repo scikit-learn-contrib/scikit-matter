@@ -169,7 +169,7 @@ class GreedySelector(SelectorMixin, MetaEstimatorMixin, BaseEstimator):
                 )
                 self.X_selected_ = self.X_selected_[:, :n]
                 self.selected_idx_ = self.selected_idx_[:n]
-                break
+                return self
 
         self.support_ = np.zeros(X.shape[1], dtype=bool)
         self.support_[self.selected_idx_] = True
