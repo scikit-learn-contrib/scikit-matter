@@ -10,6 +10,7 @@ Authors: Rose K. Cersonsky
 """
 
 import numpy as np
+import warnings
 
 
 def X_orthogonalizer(x1, c=None, x2=None, tol=1e-12):
@@ -36,10 +37,9 @@ def X_orthogonalizer(x1, c=None, x2=None, tol=1e-12):
         col = orthogonalizer @ x2[:, [i]]
 
         if np.linalg.norm(col) < tol:
-            print(np.linalg.norm(col), x2)
-            raise ValueError("Cannot orthogonalize by a null vector.")
-
-        col /= np.linalg.norm(col)
+            warnings.warn("Column vector contains only zeros.")
+        else:
+            col /= np.linalg.norm(col)
 
         orthogonalizer = (np.eye(x1.shape[0]) - col @ col.T) @ orthogonalizer
 
