@@ -42,6 +42,10 @@ class GreedySelector(SelectorMixin, MetaEstimatorMixin, BaseEstimator):
         value. Metric functions returning a list/array of values can be wrapped
         into multiple scorers that return one value each.
 
+    full : boolean
+        In the case that all non-redundant features are exhausted, choose
+        randomly from the remaining features.
+
     progress_bar: boolean, default=False
                   option to use `tqdm <https://tqdm.github.io/>`_
                   progress bar to monitor selections
@@ -70,12 +74,20 @@ class GreedySelector(SelectorMixin, MetaEstimatorMixin, BaseEstimator):
         n_features_to_select=None,
         score_thresh_to_select=None,
         progress_bar=False,
+        full=False,
     ):
 
         self.n_features_to_select = n_features_to_select
         self.n_selected_ = 0
         self.scoring = scoring
+
+        if full and score_thresh_to_select is not None:
+            raise ValueError(
+                "You cannot specify both `score_thresh_to_select` and `full=True`."
+            )
+
         self.score_threshold = score_thresh_to_select
+        self.full = full
 
         if progress_bar:
             self.report_progress = get_progress_bar()

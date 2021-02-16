@@ -1,6 +1,7 @@
 import unittest
 
 from sklearn.datasets import load_boston
+from sklearn.utils.validation import NotFittedError
 
 from skcosmo.feature_selection import SimpleFPS
 
@@ -41,6 +42,18 @@ class TestSimpleFPS(unittest.TestCase):
             self.assertEquals(
                 str(cm.message), "Invalid value of the initialize parameter"
             )
+
+    def test_get_distances(self):
+        """
+        This test checks that the haussdorf distances are returnable after fitting
+        """
+        selector = SimpleFPS(n_features_to_select=1)
+        selector.fit(self.X)
+        _ = selector.get_select_distance()
+
+        with self.assertRaises(NotFittedError):
+            selector = SimpleFPS(n_features_to_select=1)
+            _ = selector.get_select_distance()
 
 
 if __name__ == "__main__":

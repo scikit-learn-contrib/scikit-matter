@@ -34,8 +34,8 @@ class SimpleCUR(GreedySelector):
     k : int
         number of eigenvectors to compute the importance score with, defaults to 1
 
-    tol: float
-         threshold below which values will be considered 0, defaults to 1E-12
+    tolerance: float
+         threshold below which scores will be considered 0, defaults to 1E-12
 
     iterated_power : int or 'auto', default='auto'
          Number of iterations for the power method computed by
@@ -73,7 +73,7 @@ class SimpleCUR(GreedySelector):
         score_thresh_to_select=None,
         iterative=True,
         k=1,
-        tol=1e-12,
+        tolerance=1e-12,
         iterated_power="auto",
         random_state=None,
         progress_bar=False,
@@ -81,7 +81,6 @@ class SimpleCUR(GreedySelector):
 
         scoring = self.score
         self.k = k
-        self.tol = tol
         self.iterative = iterative
         self.iterated_power = iterated_power
         self.random_state = random_state
@@ -90,6 +89,7 @@ class SimpleCUR(GreedySelector):
             scoring=scoring,
             n_features_to_select=n_features_to_select,
             progress_bar=progress_bar,
+            score_thresh_to_select=tolerance,
         )
 
     def _init_greedy_search(self, X, y, n_to_select):
@@ -159,7 +159,9 @@ class SimpleCUR(GreedySelector):
         super()._update_post_selection(X, y, last_selected)
 
         if self.iterative:
-            self.X_current = X_orthogonalizer(x1=self.X_current, c=last_selected)
+            self.X_current = X_orthogonalizer(
+                x1=self.X_current, c=last_selected, tol=1e-12
+            )
             self.i_current = self.i_current[self.i_current != last_selected]
 
             self.pi_[self.i_current] = self._compute_pi(

@@ -1,7 +1,7 @@
 import numpy as np
 import numbers
 
-from sklearn.utils.validation import check_is_fitted
+from sklearn.utils.validation import NotFittedError
 from ._greedy import GreedySelector
 
 
@@ -25,6 +25,9 @@ class SimpleFPS(GreedySelector):
     progress_bar: boolean, default=False
                   option to use `tqdm <https://tqdm.github.io/>`_
                   progress bar to monitor selections
+
+    tolerance: float, defaults to 1E-12
+                threshold below which distances will be considered 0
 
     Attributes
     ----------
@@ -50,7 +53,13 @@ class SimpleFPS(GreedySelector):
 
     """
 
-    def __init__(self, n_features_to_select=None, initialize=0, progress_bar=False):
+    def __init__(
+        self,
+        n_features_to_select=None,
+        initialize=0,
+        tolerance=1e-12,
+        progress_bar=False,
+    ):
 
         scoring = self.score
         self.initialize = initialize
@@ -59,6 +68,7 @@ class SimpleFPS(GreedySelector):
             scoring=scoring,
             n_features_to_select=n_features_to_select,
             progress_bar=progress_bar,
+            score_thresh_to_select=tolerance,
         )
 
     def _init_greedy_search(self, X, y, n_to_select):
@@ -101,6 +111,8 @@ class SimpleFPS(GreedySelector):
 
         super()._update_post_selection(X, y, last_selected)
 
-    def get_select_distance(self, X):
-        check_is_fitted(self)
-        return np.array([self.haussdorf_[i] for i in self.selected_])
+    def get_select_distance(self):
+        if hasattr(self, "haussdorf_"):
+            return self.haussdorf_[self._get_support_mask()]
+        else:
+            raise NotFittedError()
