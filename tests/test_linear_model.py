@@ -11,9 +11,9 @@ from skcosmo.linear_model import OrthogonalRegression, RidgeRegression2FoldCV
 class BaseTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        features = load_iris().data
-        cls.features_small = features[:, [0, 1]]
-        cls.features_large = features[:, [0, 1, 0, 1]]
+        cls.features_all = load_iris().data
+        cls.features_small = cls.features_all[:, [0, 1]]
+        cls.features_large = cls.features_all[:, [0, 1, 0, 1]]
         cls.eps = 1e-9
         np.random.seed(0x5F3759DF)
         cls.features_rotated_small = cls.features_small.dot(
@@ -89,9 +89,9 @@ class BaseTests(unittest.TestCase):
 class RidgeTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        features = load_iris().data
-        cls.features_small = features[:, [0, 1]]
-        cls.features_large = features[:, [0, 1, 0, 1]]
+        cls.features_all = load_iris().data
+        cls.features_small = cls.features_all[:, [0, 1]]
+        cls.features_large = cls.features_all[:, [0, 1, 0, 1]]
         cls.eps = 5e-8
         np.random.seed(0x5F3759DF)
         cls.alphas = [1e-9, 1e-3, 1e-1, 0.5]
@@ -171,6 +171,44 @@ class RidgeTests(unittest.TestCase):
             abs(err) < self.eps,
             f"error {err} surpasses threshold for zero {self.eps}",
         )
+
+
+    @parameterized.expand(ridge_parameters)
+    def test_ridge_regression_2fold_regularization(
+        self, name, alpha_type, regularization_method
+    ):
+        # tests if the regularization in the CV split of
+        # RidgeRegression2FoldCV does effect the results
+
+        # regularization parameters are chosen to match the singular values o
+        # the features, thus each regularization parameter affects the minimized
+        # weight matrix and thus the error
+        _, singular_values, _ = np.linalg.svd(self.features_all)
+        if alpha_type == "absolute":
+            alphas = singular_values[1:][::-1]
+        if alpha_type == "relative":
+            alphas = (singular_values[1:][::-1]/singular_values[0])
+
+        # tests if RidgeRegression2FoldCV does do regularization correct
+        ridge = RidgeRegression2FoldCV(
+                alphas=alphas,
+                alpha_type=alpha_type,
+                regularization_method=regularization_method,
+                scoring="neg_root_mean_squared_error"
+            ).fit(self.features_all, self.features_all)
+        twofold_rmse = -np.array(ridge.cv_values_)
+
+        # since the data can be perfectly reconstructed,
+        # larger regularization parameters (alphas) should result in
+        # larger errors
+        error_grad = twofold_rmse[1:] - twofold_rmse[:-1]
+        self.assertTrue(
+           np.all(error_grad > 0),
+            "error does not strictly increase with larger regularization\n"
+            f"\ttwofold RMSE: {twofold_rmse}\n"
+            f"\tregularization parameters: {ridge.alphas}",
+        )
+
 
 
 if __name__ == "__main__":

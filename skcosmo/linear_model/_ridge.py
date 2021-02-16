@@ -194,14 +194,14 @@ class RidgeRegression2FoldCV(MultiOutputMixin, RegressorMixin):
 
         def _2fold_loss_cutoff(alpha):
             # error approximating X2 a-fitted model and vice versa
-            n_alpha_fold1 = min(n_fold1, len(s_fold1 > alpha))
+            n_alpha_fold1 = min(n_fold1, sum(s_fold1 > alpha))
             loss_1_to_2 = scorer(
                 identity_estimator,
                 y_fold2,
                 (X_fold2_V_fold1[:, :n_alpha_fold1] / s_fold1[:n_alpha_fold1])
                 @ Ut_fold1_y_fold1[:n_alpha_fold1],
             )
-            n_alpha_fold2 = min(n_fold2, len(s_fold2 > alpha))
+            n_alpha_fold2 = min(n_fold2, sum(s_fold2 > alpha))
             loss_2_to_1 = scorer(
                 identity_estimator,
                 y_fold1,
