@@ -10,4 +10,4 @@ from .simple_cur import SimpleCUR
 from .voronoi_fps import VoronoiFPS
 
 
-__all__ = ["FeatureFPS", "FeatureCUR", "SimpleFPS" "SimpleCUR", "VoronoiFPS"]
+__all__ = ["FeatureFPS", "FeatureCUR", "SimpleFPS",  "SimpleCUR", "VoronoiFPS"]
