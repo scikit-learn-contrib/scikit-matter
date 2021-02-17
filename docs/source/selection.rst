@@ -62,22 +62,16 @@ Sample Selection using CUR
 Feature Selection using CUR + PCovR
 -----------------------------------
 
-**WARNING: the following method is currently under development, and will soon
-be replaced by a sklearn-style method named** `skcosmo.feature_selection.PCovCUR`
-
 .. currentmodule:: skcosmo.feature_selection
-.. autoclass:: FeatureCUR
+.. autoclass:: PCovCUR
     :show-inheritance:
     :members:
 
 Sample Selection using CUR + PCovR
 ----------------------------------
 
-**WARNING: the following method is currently under development, and will soon
-be replaced by a sklearn-style method named** `skcosmo.sample_selection.PCovCUR`
-
 .. currentmodule:: skcosmo.sample_selection
-.. autoclass:: SampleCUR
+.. autoclass:: PCovCUR
     :show-inheritance:
     :members:
 
@@ -118,24 +112,17 @@ Sample Selection using FPS
 Feature Selection using FPS + PCovR
 -----------------------------------
 
-**WARNING: the following method is currently under development, and will soon
-be replaced by a sklearn-style method named** `skcosmo.feature_selection.PCovFPS`
-
 .. currentmodule:: skcosmo.feature_selection
-.. autoclass:: FeatureFPS
+.. autoclass:: PCovFPS
     :show-inheritance:
+    :no-undoc-members:
 
-    .. automethod:: select
+    .. automethod:: fit
 
 
 Sample Selection using FPS + PCovR
 -----------------------------------
 
-**WARNING: the following method is currently under development, and will soon
-be replaced by a sklearn-style method named** `skcosmo.sample_selection.PCovFPS`
-
 .. currentmodule:: skcosmo.sample_selection
-.. autoclass:: SampleFPS
+.. autoclass:: PCovFPS
     :show-inheritance:
-
-    .. automethod:: select
