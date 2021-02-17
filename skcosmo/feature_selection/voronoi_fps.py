@@ -14,6 +14,7 @@ class VoronoiFPS(GreedySelector):
                  is 0
     :type selected_: int, None
     """
+
     def __init__(
         self,
         n_features_to_select=None,
@@ -74,7 +75,7 @@ class VoronoiFPS(GreedySelector):
         # voronoi cell.
         self.voronoi_i_far = np.zeros(self.n_features_to_select, int)
         self.voronoi_i_far[0] = np.argmax(self.haussdorf_)
-        #number of points in each voronoi_cell
+        # number of points in each voronoi_cell
         self.voronoi_np = np.zeros(self.n_features_to_select, int)
         self.voronoi_np[0] = X.shape[1]
 
@@ -83,12 +84,12 @@ class VoronoiFPS(GreedySelector):
         self.voronoi_r2 = np.zeros(self.n_features_to_select, float)
         self.voronoi_r2[0] = self.haussdorf_[self.voronoi_i_far[0]]
 
-        #flag array: should we update this polyhedron or not
+        # flag array: should we update this polyhedron or not
         self.f_active_ = np.zeros(self.n_features_to_select, bool)
-        #quater of the square distance between new selected point and previously
-        #selected points
+        # quater of the square distance between new selected point and previously
+        # selected points
         self.sel_d2q_ = np.zeros(self.n_features_to_select, float)
-        #norms for the selected points
+        # norms for the selected points
         self.nsel_ = np.zeros(self.n_features_to_select, float)
         self.nsel_[0] = self.norms_[initialize]
         self._update_post_selection(X, y, self.selected_idx_[0])
@@ -115,9 +116,8 @@ class VoronoiFPS(GreedySelector):
         super().fit(X, y, warm_start)
 
     def _get_best_new_feature(self, scorer, X, y):
-        c_new = super()._get_best_new_feature(scorer,X,y)
+        c_new = super()._get_best_new_feature(scorer, X, y)
         return self.voronoi_i_far[c_new]
-
 
     def _postprocess(self, X, y, new_feature_idx):
         """Find the maximum minimum (maxmin) distance and the corresponding point. This
@@ -128,7 +128,7 @@ class VoronoiFPS(GreedySelector):
         """
         # the new farthest point must be one of the "farthest from its cell" points
         # so we don't need to loop over all points to find it
-        i = self.n_selected_-1
+        i = self.n_selected_ - 1
         self.f_active_[:i] = False
         nsel = 0
         """must compute distance of the new point to all the previous FPS. Some
@@ -137,7 +137,9 @@ class VoronoiFPS(GreedySelector):
             """
         # calculation in a single block
         self.sel_d2q_[:i] = (
-            self.nsel_[:i] + self.norms_[new_feature_idx] - 2 * (self.X_selected_[:,:i].T @ X[:, new_feature_idx])
+            self.nsel_[:i]
+            + self.norms_[new_feature_idx]
+            - 2 * (self.X_selected_[:, :i].T @ X[:, new_feature_idx])
         ) * 0.25
         for ic in range(i):
             # empty voronoi, no need to consider it
@@ -149,7 +151,11 @@ class VoronoiFPS(GreedySelector):
         self.f_active_[i] = True
         if nsel > X.shape[1] // 6:
             # it's better to do a standard update....
-            all_dist = self.norms_ + self.norms_[new_feature_idx] - 2*(X.T @ X[:, new_feature_idx])
+            all_dist = (
+                self.norms_
+                + self.norms_[new_feature_idx]
+                - 2 * (X.T @ X[:, new_feature_idx])
+            )
             l_update = np.where(all_dist < self.haussdorf_)[0]
             self.haussdorf_[l_update] = all_dist[l_update]
             for j in l_update:
@@ -170,7 +176,9 @@ class VoronoiFPS(GreedySelector):
                     # check, can this point be in a new polyhedron or not
                     if self.sel_d2q_[self.voronoi_number[j]] < self.haussdorf_[j]:
                         d2_j = (
-                            self.norms_[j] + self.norms_[new_feature_idx] - 2 * X[:, j].T @ X[:, new_feature_idx]
+                            self.norms_[j]
+                            + self.norms_[new_feature_idx]
+                            - 2 * X[:, j].T @ X[:, new_feature_idx]
                         )
                         # assign a point to the new polyhedron
                         if self.haussdorf_[j] > d2_j:
@@ -196,7 +204,7 @@ class VoronoiFPS(GreedySelector):
         Saves the most recently selected feature and increments the feature counter
         """
         super()._update_post_selection(X, y, last_selected)
-        self.nsel_[self.n_selected_-1] = self.norms_[last_selected]
+        self.nsel_[self.n_selected_ - 1] = self.norms_[last_selected]
 
     def get_select_distance(self):
         if hasattr(self, "haussdorf_"):
@@ -205,7 +213,7 @@ class VoronoiFPS(GreedySelector):
             raise NotFittedError()
 
     def set_n_features_to_select(self, new_n):
-        if (isinstance(new_n, numbers.Integral) and (new_n>self.n_features_to_select)):
+        if isinstance(new_n, numbers.Integral) and (new_n > self.n_features_to_select):
             diff = new_n - self.n_features_to_select
             self.voronoi_i_far = np.hstack((self.voronoi_i_far, np.zeros(diff, int)))
             self.voronoi_np = np.hstack((self.voronoi_np, np.zeros(diff, int)))
