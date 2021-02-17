@@ -71,6 +71,12 @@ class SimpleFPS(GreedySelector):
             score_thresh_to_select=tolerance,
         )
 
+    def _get_norms(self, X, y):
+        return (X ** 2).sum(axis=0)
+
+    def _get_dist(self, X, last_selected):
+        return self.norms_ + self.norms_[last_selected] - 2 * X[:, last_selected] @ X
+
     def _init_greedy_search(self, X, y, n_to_select):
         """
         Initializes the search. Prepares an array to store the selected
@@ -79,7 +85,7 @@ class SimpleFPS(GreedySelector):
         """
 
         super()._init_greedy_search(X, y, n_to_select)
-        self.norms_ = (X ** 2).sum(axis=0)
+        self.norms_ = self._get_norms(X, y)
 
         if self.initialize == "random":
             initialize = np.random.randint(X.shape[1])
@@ -102,9 +108,7 @@ class SimpleFPS(GreedySelector):
         """
 
         # distances of all points to the new point
-        new_dist = (
-            self.norms_ + self.norms_[last_selected] - 2 * X[:, last_selected] @ X
-        )
+        new_dist = self._get_dist(X, last_selected)
 
         # update in-place the Haussdorf distance list
         np.minimum(self.haussdorf_, new_dist, self.haussdorf_)
