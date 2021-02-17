@@ -10,7 +10,7 @@ class VoronoiFPS(GreedySelector):
     """
     Base Class defined for Voronoi FPS methods
 
-    :param selected_: predetermined index; if None provided, first index selected
+    :param initialize: predetermined index; if None provided, first index selected
                  is 0
     :type selected_: int, None
     """
@@ -34,11 +34,6 @@ class VoronoiFPS(GreedySelector):
         )
 
     def _init_greedy_search(self, X, y, n_to_select):
-        """
-        Initializes the search. Prepares an array to store the selected
-        features, selects the initial feature (unless provided), and
-        computes the starting haussdorf distances.
-        """
 
         super()._init_greedy_search(X, y, n_to_select)
         self.norms_ = (X ** 2).sum(axis=0)
@@ -99,12 +94,6 @@ class VoronoiFPS(GreedySelector):
 
         Parameters
         ----------
-        X : array-like of shape (n_samples, n_features)
-            Training vectors.
-        y : array-like of shape (n_samples,)
-            Target values.
-        initial : array-like, int
-                  initial features to use in the selection
         haussdorfs : array-like of shape (n_features)
                      pre-computed haussdorf distances for each of the features
 
@@ -120,12 +109,6 @@ class VoronoiFPS(GreedySelector):
         return self.voronoi_i_far[c_new]
 
     def _postprocess(self, X, y, new_feature_idx):
-        """Find the maximum minimum (maxmin) distance and the corresponding point. This
-        is our next FPS. The maxmin point must be one of the Voronoi
-        radii. So we pick it from this smaller array. Note we only act on the
-        first i items as the array is filled incrementally picks max dist and
-        index of the cell
-        """
         # the new farthest point must be one of the "farthest from its cell" points
         # so we don't need to loop over all points to find it
         i = self.n_selected_ - 1
@@ -193,9 +176,7 @@ class VoronoiFPS(GreedySelector):
                         self.voronoi_i_far[self.voronoi_number[j]] = j
 
     def score(self, X, y):
-        # the new farthest point must be one of the "farthest from its cell" points
-        # so we don't need to loop over all points to find it
-        # print("Voronoi size ", self.voronoi_np[:i])
+        # choose the point on the voronoi surface
         i = self.n_selected_
         return self.voronoi_r2[:i]
 
@@ -213,6 +194,8 @@ class VoronoiFPS(GreedySelector):
             raise NotFittedError()
 
     def set_n_features_to_select(self, new_n):
+        #function changes the size of the auxiliary arrays
+        #if we want to increase the number of features.
         if isinstance(new_n, numbers.Integral) and (new_n > self.n_features_to_select):
             diff = new_n - self.n_features_to_select
             self.voronoi_i_far = np.hstack((self.voronoi_i_far, np.zeros(diff, int)))
