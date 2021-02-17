@@ -13,7 +13,7 @@ Authors: Rose K. Cersonsky
 
 from abc import abstractmethod
 import numpy as np
-from skcosmo.utils import pcovr_covariance, pcovr_kernel
+from skcosmo.utils import pcovr_kernel
 from sklearn.utils import check_X_y, check_array
 from skcosmo.utils import get_progress_bar
 
@@ -182,66 +182,4 @@ class SampleFPS(_BaseFPS):
             self.A, self.Y = check_array(X, copy=True), None
 
         self.product = pcovr_kernel(self.mixing, self.A, self.Y)
-        super().__init__(tol=tol, **kwargs)
-
-
-class FeatureFPS(_BaseFPS):
-    """
-
-    For feature selection, traditional FPS employs a column-wise Euclidean
-    distance, which can be expressed using the covariance matrix
-    :math:`\\mathbf{C} = \\mathbf{X} ^ T \\mathbf{X}`
-
-    .. math::
-        \\operatorname{d}_c(i, j) = C_{ii} - 2 C_{ij} + C_{jj}.
-
-    When mixing < 1, this will use PCov-FPS, where a modified covariance matrix
-    is used to express the distances
-
-    .. math::
-        \\mathbf{\\tilde{C}} = \\alpha \\mathbf{X}^T\\mathbf{X} +
-        (1 - \\alpha)(\\mathbf{X}^T\\mathbf{X})^{-1/2}\\mathbf{X}^T
-        \\mathbf{\\hat{Y}\\hat{Y}}^T\\mathbf{X}(\\mathbf{X}^T\\mathbf{X})^{-1/2}
-
-    :param idxs: predetermined indices; if None provided, first index selected
-                 is random
-    :type idxs: list of int, None
-
-    :param X: Data matrix :math:`\\mathbf{X}` from which to select a
-                   subset of the `n` columns
-    :type X: array of shape (n x m)
-
-    :param mixing: mixing parameter, as described in PCovR as
-                   :math:`{\\alpha}`, defaults to 1
-    :type mixing: float
-
-    :param progress_bar: option to use `tqdm <https://tqdm.github.io/>`_
-                         progress bar to monitor selections
-    :type progress_bar: boolean
-
-    :param tol: threshold below which values will be considered 0,
-                      defaults to 1E-12
-    :type tol: float
-
-    :param Y: array to include in biased selection when mixing < 1;
-              required when mixing < 1, throws AssertionError otherwise
-    :type Y: array of shape (n x p), optional when :math:`{\\alpha = 1}`
-
-
-    """
-
-    def __init__(self, X, mixing=1.0, tol=1e-12, Y=None, **kwargs):
-
-        self.mixing = mixing
-        self.tol = tol
-
-        if mixing < 1:
-            try:
-                self.A, self.Y = check_X_y(X, Y, copy=True, multi_output=True)
-            except AssertionError:
-                raise Exception(r"For $\alpha < 1$, $Y$ must be supplied.")
-        else:
-            self.A, self.Y = check_array(X, copy=True), None
-
-        self.product = pcovr_covariance(self.mixing, self.A, self.Y, rcond=self.tol)
         super().__init__(tol=tol, **kwargs)

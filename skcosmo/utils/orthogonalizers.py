@@ -78,58 +78,6 @@ def Y_feature_orthogonalizer(y, X, tol=1e-12, copy=True):
         return y
 
 
-def feature_orthogonalizer(idx, X_proxy, Y_proxy, tol=1e-12):
-    """
-    Orthogonalizes two matrices, meant to represent a feature matrix
-    :math:`{\\mathbf{X}}` and a property matrix :math:`{\\mathbf{Y}}`, given
-    the selected features :math:`{c}`
-
-    Update to :math:`{\\mathbf{X}}`, where :math:`{\\mathbf{X}_{c}}` is a column
-    vector containing the most recently-chosen feature:
-
-    .. math::
-
-        \\mathbf{X} \\leftarrow \\mathbf{X} -
-        \\left(\\frac{\\mathbf{X}_{c}\\mathbf{X}{c}^T}
-        {\\lVert\\mathbf{X}_{c}\\rVert^2}\\right)\\mathbf{X}
-
-    Update to :math:`{\\mathbf{Y}}`, where :math:`{\\mathbf{X}_{\\mathbf{c}}}`
-    is a matrix containing all previously-chosen features:
-
-    .. math::
-        \\mathbf{Y} \\leftarrow \\mathbf{Y} -
-        \\mathbf{X}_{\\mathbf{c}} \\left(\\mathbf{X}_{\\mathbf{c}}^T
-        \\mathbf{X}_{\\mathbf{c}}\\right)^{-1}
-        \\mathbf{X}_{\\mathbf{c}}^T \\mathbf{Y}
-
-    :param idx: indices of selected features
-    :type idx: list of int
-
-    :param X_proxy: feature matrix
-    :type X_proxy: array of shape (n_samples x n_features)
-
-    :param Y_proxy: property matrix
-    :type Y_proxy: array of shape (n_samples x n_properties)
-
-    :param tol: cutoff for small eigenvalues to send to np.linalg.pinv
-    :type tol: float
-
-    """
-    if X_proxy is not None:
-        Aci = X_proxy[:, idx]
-
-        if Y_proxy is not None:
-            v = np.linalg.pinv(np.matmul(Aci.T, Aci), rcond=tol)
-            v = np.matmul(Aci, v)
-            v = np.matmul(v, Aci.T)
-
-            Y_proxy -= np.matmul(v, Y_proxy)
-
-        X_proxy = X_orthogonalizer(X_proxy, idx[-1])
-
-    return X_proxy, Y_proxy
-
-
 def sample_orthogonalizer(idx, X_proxy, Y_proxy, tol=1e-12):
     """
     Orthogonalizes two matrices, meant to represent a feature matrix

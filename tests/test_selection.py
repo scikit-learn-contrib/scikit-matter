@@ -3,7 +3,6 @@ from sklearn.datasets import load_boston
 import numpy as np
 
 from skcosmo.sample_selection import SampleCUR, SampleFPS
-from skcosmo.feature_selection import FeatureCUR, FeatureFPS
 
 EPSILON = 1e-6
 
@@ -90,83 +89,6 @@ class PCovSelectionTest:
                 "Either install tqdm or re-run with"
                 "progress_bar = False",
             )
-
-
-class FeatureFPSTest(unittest.TestCase, PCovSelectionTest):
-    def setUp(self):
-        self.model = FeatureFPS
-        self.idx = [9, 3, 11, 6, 1, 10, 8, 12, 0, 5, 2, 7, 4]
-
-    def test_supplied_indices(self):
-        """
-        This test checks FPS will accept pre-defined indices.
-        """
-        X, Y = load_boston(return_X_y=True)
-        model = self.model(X=X, mixing=0.5, Y=Y, idxs=[self.idx[0]])
-        model.select(4)
-
-    def test_features(self):
-        """
-        This test checks FPS returns the standard set of features
-        """
-        X, Y = load_boston(return_X_y=True)
-        model = self.model(X=X, mixing=0.5, Y=Y, idxs=[self.idx[0]])
-        for i in range(2, len(self.idx) + 1):
-            with self.subTest(i=i):
-                model.select(n=i)
-                self.assertEqual(model.idx[-1], self.idx[i - 1])
-
-
-class FeatureCURTest(unittest.TestCase, PCovSelectionTest):
-    def setUp(self):
-        self.model = FeatureCUR
-        self.idx = [9, 11, 6, 1, 12, 0, 5, 2, 8, 10, 7, 3, 4]
-
-    def test_orthogonalize(self):
-        """
-        This test checks that the orthogonalization that occurs after each
-        selection leads to a null feature column
-        """
-
-        X, Y = load_boston(return_X_y=True)
-
-        cur = self.model(mixing=0.5, X=X, Y=Y, iterative=True)
-
-        for i in range(X.shape[1]):
-            with self.subTest(i=i):
-                cur.select(1)
-                self.assertLessEqual(
-                    np.linalg.norm(cur.A_current[:, cur.idx[-1]]), EPSILON
-                )
-
-    def test_others_orthogonal(self):
-        """
-        This test checks that the orthogonalization that occurs after each
-        selection leads to orthogonal feature columns
-        """
-        X, Y = load_boston(return_X_y=True)
-
-        cur = self.model(mixing=0.5, X=X, Y=Y, iterative=True)
-
-        for i in range(X.shape[1]):
-            with self.subTest(i=i):
-                cur.select(1)
-                for j in range(X.shape[1]):
-                    self.assertLessEqual(
-                        np.dot(cur.A_current[:, cur.idx[-1]], cur.A_current[:, j]),
-                        EPSILON,
-                    )
-
-    def test_features(self):
-        """
-        This test checks CUR returns the standard set of features
-        """
-        X, Y = load_boston(return_X_y=True)
-        model = self.model(X=X, mixing=0.5, Y=Y)
-        for i in range(1, len(self.idx) + 1):
-            with self.subTest(i=i):
-                model.select(n=i)
-                self.assertEqual(model.idx[-1], self.idx[i - 1])
 
 
 class SampleFPSTest(unittest.TestCase, PCovSelectionTest):

@@ -47,13 +47,12 @@ right or left singular vectors, as shown in [Cersonsky2021]_.
 
 WARNING
 -------
-The following two CUR methods are undergoing re-structuring, and will soon be
-replaced with classes similar in structure to `CUR`.
 
 .. currentmodule:: skcosmo.feature_selection
-.. autoclass:: FeatureCUR
+.. autoclass:: PCovCUR
     :show-inheritance:
     :members:
+
 
 .. currentmodule:: skcosmo.sample_selection
 .. autoclass:: SampleCUR
@@ -82,17 +81,22 @@ PCovR covariance and Gram matrices to compute the distances, as shown in [Cerson
 
     .. automethod:: fit
 
+<<<<<<< HEAD
 
 WARNING
 -------
 The following two FPS methods are undergoing re-structuring, and will soon be
 replaced with classes similar in structure to `FPS`.
+=======
+WARNING
+-------
+>>>>>>> 216b8e1... Removing old remnants
 
 .. currentmodule:: skcosmo.feature_selection
-.. autoclass:: FeatureFPS
+.. autoclass:: PCovFPS
     :show-inheritance:
 
-    .. automethod:: select
+    .. automethod:: fit
 
 .. currentmodule:: skcosmo.sample_selection
 .. autoclass:: SampleFPS
