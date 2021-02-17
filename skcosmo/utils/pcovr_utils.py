@@ -6,7 +6,14 @@ from sklearn.metrics.pairwise import pairwise_kernels
 
 
 def pcovr_covariance(
-    mixing, X, Y, rcond=1e-12, return_isqrt=False, rank=None, random_state=0
+    mixing,
+    X,
+    Y,
+    rcond=1e-12,
+    return_isqrt=False,
+    rank=None,
+    random_state=0,
+    iterated_power=None,
 ):
     r"""
     Creates the PCovR modified covariance
@@ -60,7 +67,11 @@ def pcovr_covariance(
             _, vC, UC = linalg.svd(X, full_matrices=False)
         else:
             _, vC, UC = randomized_svd(
-                X, n_components=rank, flip_sign=True, random_state=random_state
+                X,
+                n_components=rank,
+                n_iter=iterated_power,
+                flip_sign=True,
+                random_state=random_state,
             )
 
         UC = UC.T[:, vC > rcond]

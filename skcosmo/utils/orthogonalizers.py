@@ -46,7 +46,39 @@ def X_orthogonalizer(x1, c=None, x2=None, tol=1e-12):
     return orthogonalizer @ x1
 
 
-def feature_orthogonalizer(idx, X_proxy, Y_proxy=None, tol=1e-12):
+def Y_feature_orthogonalizer(y, X, tol=1e-12, copy=True):
+    r"""
+    Orthogonalizes a property matrix given the selected features in :math:`\mathbf{X}`
+
+    .. math::
+        \mathbf{Y} \leftarrow \mathbf{Y} -
+        \mathbf{X} \left(\mathbf{X}^T\mathbf{X}\right)^{-1}\mathbf{X}^T \mathbf{Y}
+
+    :param y: property matrix
+    :type y: array of shape (n_samples x n_properties)
+
+    :param X: feature matrix
+    :type X: array of shape (n_samples x n_features)
+
+    :param tol: cutoff for small eigenvalues to send to np.linalg.pinv
+    :type tol: float
+
+    :param copy: whether to return a copy of y or edit in-place, default=True
+    :type copy: boolean
+    """
+
+    v = np.linalg.pinv(np.matmul(X.T, X), rcond=tol)
+    v = np.matmul(X, v)
+    v = np.matmul(v, X.T)
+
+    if copy:
+        return y.copy() - np.matmul(v, y)
+    else:
+        y -= np.matmul(v, y)
+        return y
+
+
+def feature_orthogonalizer(idx, X_proxy, Y_proxy, tol=1e-12):
     """
     Orthogonalizes two matrices, meant to represent a feature matrix
     :math:`{\\mathbf{X}}` and a property matrix :math:`{\\mathbf{Y}}`, given

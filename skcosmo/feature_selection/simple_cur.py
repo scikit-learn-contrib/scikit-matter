@@ -4,7 +4,7 @@ from sklearn.utils import check_random_state
 from sklearn.utils.extmath import randomized_svd
 
 from ._greedy import GreedySelector
-from ..utils.orthogonalizers import X_orthogonalizer
+from ..utils.orthogonalizers import X_orthogonalizer, Y_feature_orthogonalizer
 
 
 class SimpleCUR(GreedySelector):
@@ -15,7 +15,6 @@ class SimpleCUR(GreedySelector):
 
     Parameters
     ----------
-
 
     n_features_to_select : int or float, default=None
         The number of features to select. If `None`, half of the features are
@@ -99,8 +98,12 @@ class SimpleCUR(GreedySelector):
         """
 
         self.X_current = X.copy()
+        if y is not None:
+            self.y_current = y.copy()
+        else:
+            self.y_current = None
         self.i_current = np.arange(X.shape[-1])
-        self.pi_ = self._compute_pi(self.X_current)
+        self.pi_ = self._compute_pi(self.X_current, self.y_current)
 
         super()._init_greedy_search(X, y, n_to_select)
 
@@ -112,8 +115,12 @@ class SimpleCUR(GreedySelector):
         """
 
         self.X_current = X_orthogonalizer(X, x2=self.X_selected_)
+        if self.y_current is not None:
+            self.y_current = Y_feature_orthogonalizer(
+                self.y_current, X=self.X_selected_, tol=1e-12
+            )
         self.i_current = np.arange(X.shape[-1])
-        self.pi_ = self._compute_pi(self.X_current)
+        self.pi_ = self._compute_pi(self.X_current, self.y_current)
 
         super()._continue_greedy_search(X, y, n_to_select)
 
@@ -124,7 +131,7 @@ class SimpleCUR(GreedySelector):
 
         return self.pi_
 
-    def _compute_pi(self, X):
+    def _compute_pi(self, X, y=None):
         """
         For feature selection, the importance score :math:`\\pi` is the sum over
         the squares of the first :math:`k` components of the right singular vectors
@@ -162,10 +169,15 @@ class SimpleCUR(GreedySelector):
             self.X_current = X_orthogonalizer(
                 x1=self.X_current, c=last_selected, tol=1e-12
             )
+            if self.y_current is not None:
+                self.y_current = Y_feature_orthogonalizer(
+                    self.y_current, X=self.X_selected_, tol=1e-12
+                )
+
             self.i_current = self.i_current[self.i_current != last_selected]
 
             self.pi_[self.i_current] = self._compute_pi(
-                self.X_current[:, self.i_current]
+                self.X_current[:, self.i_current], self.y_current
             )
 
         self.pi_[last_selected] = 0.0

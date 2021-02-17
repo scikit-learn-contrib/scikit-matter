@@ -28,13 +28,12 @@ class TestSimpleCUR(unittest.TestCase):
         This test checks that the model can be restarted with a new instance
         """
 
-        X_current = self.X.copy()
         selector = SimpleCUR(n_features_to_select=1)
-        selector.fit(X_current)
+        selector.fit(self.X)
 
         for i in range(len(self.idx) - 2):
             selector.n_features_to_select += 1
-            selector.fit(X_current, warm_start=True)
+            selector.fit(self.X, warm_start=True)
             self.assertEqual(selector.selected_idx_[i], self.idx[i])
 
     def test_non_it(self):
