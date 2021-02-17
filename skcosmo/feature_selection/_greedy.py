@@ -173,7 +173,6 @@ class GreedySelector(SelectorMixin, MetaEstimatorMixin, BaseEstimator):
             new_feature_idx = self._get_best_new_feature(self.scoring, X, y)
             if new_feature_idx is not None:
                 self._update_post_selection(X, y, new_feature_idx)
-                self._postprocess()
             else:
                 warnings.warn(
                     f"Score threshold of {self.score_threshold} reached."
@@ -181,10 +180,10 @@ class GreedySelector(SelectorMixin, MetaEstimatorMixin, BaseEstimator):
                 )
                 self.X_selected_ = self.X_selected_[:, :n]
                 self.selected_idx_ = self.selected_idx_[:n]
+                self._postprocess(X, y)
                 return self
 
-        self.support_ = np.zeros(X.shape[1], dtype=bool)
-        self.support_[self.selected_idx_] = True
+        self._postprocess(X, y)
         return self
 
     def _init_greedy_search(self, X, y, n_to_select):
@@ -228,8 +227,10 @@ class GreedySelector(SelectorMixin, MetaEstimatorMixin, BaseEstimator):
         check_is_fitted(self, ["support_"])
         return self.support_
 
-    def _postprocess(self):
-        pass
+    def _postprocess(self, X, y):
+        """ Post-process X and / or y when selection is finished """
+        self.support_ = np.zeros(X.shape[1], dtype=bool)
+        self.support_[self.selected_idx_] = True
 
     def _more_tags(self):
         return {
