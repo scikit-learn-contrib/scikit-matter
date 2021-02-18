@@ -1,11 +1,14 @@
 import unittest
+
 import numpy as np
 
 from sklearn.datasets import load_boston
-from sklearn import exceptions
+
+# from sklearn import exceptions
 from sklearn.utils.validation import NotFittedError
 
 from skcosmo.feature_selection.voronoi_fps import VoronoiFPS
+from skcosmo.feature_selection import FPS
 
 
 class TestVoronoiFPS(unittest.TestCase):
@@ -23,7 +26,7 @@ class TestVoronoiFPS(unittest.TestCase):
         selector.fit(self.X)
 
         for i in range(2, len(self.idx)):
-            selector.set_n_features_to_select(i)
+            selector.n_features_to_select = i
             selector.fit(self.X, warm_start=True)
             self.assertEqual(selector.selected_idx_[i - 1], self.idx[i - 1])
 
@@ -57,6 +60,19 @@ class TestVoronoiFPS(unittest.TestCase):
             selector = VoronoiFPS(n_features_to_select=1)
             _ = selector.get_select_distance()
 
+
+    def test_comparison(self):
+        """
+        This test checks that the voronoi FPS strictly computes less distances
+        than its normal FPS counterpart.
+        """
+        vselector = VoronoiFPS(n_features_to_select=self.X.shape[-1]-1)
+        vselector.fit(self.X)
+
+        selector = FPS(n_features_to_select=self.X.shape[-1]-1)
+        selector.fit(self.X)
+
+        self.assertTrue(np.allclose(vselector.selected_idx_, selector.selected_idx_))
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)
