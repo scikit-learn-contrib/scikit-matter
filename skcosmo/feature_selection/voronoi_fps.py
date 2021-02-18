@@ -19,8 +19,7 @@ class VoronoiFPS(FPS):
 
     def _init_greedy_search(self, X, y, n_to_select):
 
-
-        self.n_dist_calc1 = [0,0,0]
+        self.n_dist_calc1 = [0, 0, 0]
         n_features = X.shape[1]
 
         # self.voronoi_number should coincide with self.selected_idx_
@@ -77,14 +76,14 @@ class VoronoiFPS(FPS):
         self.voronoi_location[point] = new_voronoi_idx
 
         self.number_in_voronoi[old_voronoi_loc] -= 1
-        self.idx_in_voronoi[old_voronoi_loc] = np.array(np.setdiff1d(
-            self.idx_in_voronoi[old_voronoi_loc], [point]
-        ), dtype=int)
+        self.idx_in_voronoi[old_voronoi_loc] = np.array(
+            np.setdiff1d(self.idx_in_voronoi[old_voronoi_loc], [point]), dtype=int
+        )
         self.number_in_voronoi[new_voronoi_idx] += 1
 
-        self.idx_in_voronoi[new_voronoi_idx] = np.array(np.concatenate(
-            (self.idx_in_voronoi[new_voronoi_idx], [point])
-        ), dtype=int)
+        self.idx_in_voronoi[new_voronoi_idx] = np.array(
+            np.concatenate((self.idx_in_voronoi[new_voronoi_idx], [point])), dtype=int
+        )
 
     def _repartition(self, X, old_voronoi_idx, new_voronoi_idx):
 
@@ -100,9 +99,8 @@ class VoronoiFPS(FPS):
         self.n_dist_calc += len(points_in_voronoi)
 
         updated_points = np.where(new_dist < self.haussdorf_[points_in_voronoi])[0]
-        same_points = np.where(new_dist >= self.haussdorf_[points_in_voronoi])[0]
         l_update = points_in_voronoi[updated_points]
-        if len(l_update)==0:
+        if len(l_update) == 0:
             self.n_poorly_chosen += 1
 
         self.haussdorf_[l_update] = new_dist[updated_points]

@@ -1,11 +1,8 @@
 import unittest
-
 import numpy as np
 
-from sklearn.datasets import load_boston
-
-# from sklearn import exceptions
-from sklearn.utils.validation import NotFittedError
+from sklearn.exceptions import NotFittedError
+from skcosmo.datasets import load_csd_1000r
 
 from skcosmo.feature_selection.voronoi_fps import VoronoiFPS
 from skcosmo.feature_selection import FPS
@@ -13,8 +10,111 @@ from skcosmo.feature_selection import FPS
 
 class TestVoronoiFPS(unittest.TestCase):
     def setUp(self):
-        self.X, _ = load_boston(return_X_y=True)
-        self.idx = [9, 3, 11, 6, 1, 10, 8, 0, 12, 2, 5, 7, 4]
+        self.X, self.y = load_csd_1000r(return_X_y=True)
+        # re-order features, as they were already FPS-ed
+        norms = np.linalg.norm(self.X, axis=0)
+        self.X = self.X[:, np.argsort(norms)]
+        self.idx = [
+            0,
+            99,
+            98,
+            97,
+            96,
+            95,
+            93,
+            94,
+            92,
+            91,
+            90,
+            88,
+            86,
+            85,
+            79,
+            78,
+            87,
+            83,
+            81,
+            77,
+            82,
+            71,
+            84,
+            67,
+            74,
+            64,
+            65,
+            62,
+            76,
+            70,
+            68,
+            69,
+            56,
+            63,
+            46,
+            55,
+            58,
+            53,
+            72,
+            73,
+            50,
+            60,
+            49,
+            66,
+            47,
+            44,
+            45,
+            57,
+            48,
+            43,
+            31,
+            39,
+            61,
+            38,
+            26,
+            89,
+            25,
+            27,
+            36,
+            41,
+            12,
+            33,
+            11,
+            10,
+            51,
+            22,
+            14,
+            40,
+            75,
+            42,
+            18,
+            17,
+            35,
+            54,
+            21,
+            59,
+            80,
+            15,
+            20,
+            28,
+            9,
+            32,
+            37,
+            5,
+            3,
+            13,
+            23,
+            34,
+            30,
+            16,
+            24,
+            8,
+            4,
+            52,
+            29,
+            7,
+            6,
+            2,
+            19,
+        ]
 
     def test_restart(self):
         """
@@ -60,19 +160,19 @@ class TestVoronoiFPS(unittest.TestCase):
             selector = VoronoiFPS(n_features_to_select=1)
             _ = selector.get_select_distance()
 
-
     def test_comparison(self):
         """
         This test checks that the voronoi FPS strictly computes less distances
         than its normal FPS counterpart.
         """
-        vselector = VoronoiFPS(n_features_to_select=self.X.shape[-1]-1)
+        vselector = VoronoiFPS(n_features_to_select=self.X.shape[-1] - 1)
         vselector.fit(self.X)
 
-        selector = FPS(n_features_to_select=self.X.shape[-1]-1)
+        selector = FPS(n_features_to_select=self.X.shape[-1] - 1)
         selector.fit(self.X)
 
         self.assertTrue(np.allclose(vselector.selected_idx_, selector.selected_idx_))
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)
