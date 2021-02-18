@@ -30,3 +30,35 @@ def load_degenerate_CH4_manifold():
         fdescr = rst_file.read()
 
     return Bunch(data=data, DESCR=fdescr)
+
+
+def load_csd_1000r(return_X_y=False):
+    """Load and return the minimal CSD dataset.
+
+    Returns
+    -------
+    csd1000r : sklearn.utils.Bunch
+        Dictionary-like object, with the following attributes:
+
+        data : `sklearn.utils.Bunch` --
+        contains the keys ``X`` and ``Y``, corresponding to the
+        FPS-reduced SOAP vectors and local NMR chemical shielding, respectively,
+        for 100 selected environments of the CSD-1000r dataset.
+
+        DESCR: `str` --
+        The full description of the dataset.
+    """
+    module_path = dirname(__file__)
+    target_filename = join(module_path, "data", "csd-1000r.npz")
+    raw_data = np.load(target_filename)
+    if not return_X_y:
+        data = Bunch(
+            X=raw_data["X"],
+            y=raw_data["Y"],
+        )
+        with open(join(module_path, "descr", "csd-1000r.rst")) as rst_file:
+            fdescr = rst_file.read()
+
+        return Bunch(data=data, DESCR=fdescr)
+    else:
+        return raw_data["X"], raw_data["Y"]
