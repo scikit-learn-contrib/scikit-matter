@@ -1,3 +1,6 @@
+# This example shows how to use an FPS selector
+# to subselect features before training a RidgeCV
+
 import numpy as np
 from matplotlib import pyplot as plt
 
