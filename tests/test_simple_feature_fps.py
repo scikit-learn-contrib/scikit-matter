@@ -47,12 +47,15 @@ class TestSimpleFPS(unittest.TestCase):
         """
         This test checks that the haussdorf distances are returnable after fitting
         """
-        selector = SimpleFPS(n_features_to_select=1)
+        selector = SimpleFPS(n_features_to_select=10)
         selector.fit(self.X)
-        _ = selector.get_select_distance()
+        d = selector.get_select_distance()
+
+        dist_grad = d[1:-1] - d[2:]
+        self.assertTrue(all(dist_grad > 0))
 
         with self.assertRaises(NotFittedError):
-            selector = SimpleFPS(n_features_to_select=1)
+            selector = SimpleFPS(n_features_to_select=10)
             _ = selector.get_select_distance()
 
 

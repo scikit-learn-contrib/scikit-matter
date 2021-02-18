@@ -102,7 +102,6 @@ class SimpleCUR(GreedySelector):
             self.y_current = y.copy()
         else:
             self.y_current = None
-        self.i_current = np.arange(X.shape[-1])
         self.pi_ = self._compute_pi(self.X_current, self.y_current)
 
         super()._init_greedy_search(X, y, n_to_select)
@@ -119,7 +118,6 @@ class SimpleCUR(GreedySelector):
             self.y_current = Y_feature_orthogonalizer(
                 self.y_current, X=self.X_selected_, tol=1e-12
             )
-        self.i_current = np.arange(X.shape[-1])
         self.pi_ = self._compute_pi(self.X_current, self.y_current)
 
         super()._continue_greedy_search(X, y, n_to_select)
@@ -174,10 +172,6 @@ class SimpleCUR(GreedySelector):
                     self.y_current, X=self.X_selected_, tol=1e-12
                 )
 
-            self.i_current = self.i_current[self.i_current != last_selected]
-
-            self.pi_[self.i_current] = self._compute_pi(
-                self.X_current[:, self.i_current], self.y_current
+            self.pi_[self.eligible_] = self._compute_pi(
+                self.X_current[:, self.eligible_], self.y_current
             )
-
-        self.pi_[last_selected] = 0.0

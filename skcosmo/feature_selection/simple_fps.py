@@ -74,8 +74,14 @@ class SimpleFPS(GreedySelector):
     def _get_norms(self, X, y):
         return (X ** 2).sum(axis=0)
 
-    def _get_dist(self, X, last_selected):
-        return self.norms_ + self.norms_[last_selected] - 2 * X[:, last_selected] @ X
+    def _get_dist(self, X, last_selected, which=None):
+        if which is None:
+            which = self.eligible_
+        return (
+            self.norms_[which]
+            + self.norms_[last_selected]
+            - 2 * X[:, last_selected] @ X[:, which]
+        )
 
     def _init_greedy_search(self, X, y, n_to_select):
         """
@@ -107,16 +113,17 @@ class SimpleFPS(GreedySelector):
         and, recomputes haussdorf distances.
         """
 
+        super()._update_post_selection(X, y, last_selected)
+
         # distances of all points to the new point
-        new_dist = self._get_dist(X, last_selected)
+        new_dist = np.full(X.shape[-1], np.inf)
+        new_dist[self.eligible_] = self._get_dist(X, last_selected)
 
         # update in-place the Haussdorf distance list
         np.minimum(self.haussdorf_, new_dist, self.haussdorf_)
 
-        super()._update_post_selection(X, y, last_selected)
-
     def get_select_distance(self):
         if hasattr(self, "haussdorf_"):
-            return self.haussdorf_[self._get_support_mask()]
+            return self.haussdorf_[self.selected_idx_]
         else:
             raise NotFittedError()
