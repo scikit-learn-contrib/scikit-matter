@@ -14,12 +14,10 @@ class VoronoiFPS(FPS):
 
     def __init__(self, voronoi_cutoff_fraction=1.0 / 6.0, **kwargs):
         self.voronoi_cutoff_fraction = voronoi_cutoff_fraction
-        self.n_poorly_chosen = 0
         super().__init__(**kwargs)
 
     def _init_greedy_search(self, X, y, n_to_select):
 
-        self.n_dist_calc1 = [0, 0, 0]
         n_features = X.shape[1]
 
         # self.voronoi_number should coincide with self.selected_idx_
@@ -59,8 +57,7 @@ class VoronoiFPS(FPS):
             + self.norms_[last_selected]
             - 2 * (self.X_selected_[:, : self.n_selected_].T @ X[:, last_selected])
         ) * 0.25
-        self.n_dist_calc1[1] += self.n_selected_
-        self.n_dist_calc += self.n_selected_
+
         for ic in range(self.n_selected_):
             # empty voronoi, no need to consider it
             if self.number_in_voronoi[ic] > 1:
@@ -95,13 +92,9 @@ class VoronoiFPS(FPS):
             + self.norms_[true_idx]
             - 2 * X[:, points_in_voronoi].T @ X[:, true_idx]
         )
-        self.n_dist_calc1[0] += len(points_in_voronoi)
-        self.n_dist_calc += len(points_in_voronoi)
 
         updated_points = np.where(new_dist < self.haussdorf_[points_in_voronoi])[0]
         l_update = points_in_voronoi[updated_points]
-        if len(l_update) == 0:
-            self.n_poorly_chosen += 1
 
         self.haussdorf_[l_update] = new_dist[updated_points]
 
@@ -117,7 +110,6 @@ class VoronoiFPS(FPS):
             > self.voronoi_cutoff_fraction
         ):
             all_dist = super()._get_dist(X, last_selected)
-            self.n_dist_calc1[2] += X.shape[-1]
 
             updated_points = np.where(all_dist < self.haussdorf_)[0]
             for p in updated_points:
