@@ -5,7 +5,7 @@ from sklearn.utils.validation import NotFittedError
 from ._greedy import GreedySelector
 
 
-class SimpleFPS(GreedySelector):
+class FPS(GreedySelector):
     """Transformer that performs Greedy Feature Selection using Farthest Point Sampling.
 
 
@@ -35,14 +35,28 @@ class SimpleFPS(GreedySelector):
                  the minimum distance from each feature to the set of selected
                  features. once a feature is selected, the distance is not updated;
                  the final list will reflect the distances when selected.
-    n_features_to_select : int
-        The number of features that were selected.
 
     norms_ : ndarray of shape (n_features,)
         The self-covariances of each of the features
 
+    n_features_to_select : int
+        The number of features that were selected.
+
     X_selected_ : ndarray (n_samples, n_features_to_select)
                   The features selected
+
+    eligible_ : ndarray of shape (n_features,), dtype=bool
+        A mask of features eligible for selection
+
+    n_selected_ : int
+        The number of features that have been selected thus far
+
+    report_progress : callable
+        A wrapper to report the progress of the selector using a `tqdm` style
+        progress bar
+
+    score_threshold : float (optional)
+        A score below which to stop selecting points
 
     selected_idx_ : ndarray of integers
                     indices of the selected features, with respect to the
@@ -71,17 +85,8 @@ class SimpleFPS(GreedySelector):
             score_thresh_to_select=tolerance,
         )
 
-    def _get_norms(self, X, y):
-        return (X ** 2).sum(axis=0)
-
-    def _get_dist(self, X, last_selected, which=None):
-        if which is None:
-            which = self.eligible_
-        return (
-            self.norms_[which]
-            + self.norms_[last_selected]
-            - 2 * X[:, last_selected] @ X[:, which]
-        )
+    def _calculate_distances(self, X, last_selected):
+        return self.norms_ + self.norms_[last_selected] - 2 * X[:, last_selected] @ X
 
     def _init_greedy_search(self, X, y, n_to_select):
         """
@@ -91,7 +96,7 @@ class SimpleFPS(GreedySelector):
         """
 
         super()._init_greedy_search(X, y, n_to_select)
-        self.norms_ = self._get_norms(X, y)
+        self.norms_ = (X ** 2).sum(axis=0)
 
         if self.initialize == "random":
             initialize = np.random.randint(X.shape[1])
@@ -102,6 +107,7 @@ class SimpleFPS(GreedySelector):
 
         self.selected_idx_[0] = initialize
         self.haussdorf_ = np.full(X.shape[1], np.inf)
+        self.haussdorf_at_select_ = np.full(X.shape[1], np.inf)
         self._update_post_selection(X, y, self.selected_idx_[0])
 
     def score(self, X, y):
@@ -113,17 +119,18 @@ class SimpleFPS(GreedySelector):
         and, recomputes haussdorf distances.
         """
 
-        super()._update_post_selection(X, y, last_selected)
+        self.haussdorf_at_select_[last_selected] = self.haussdorf_[last_selected]
+        self.haussdorf_[last_selected] = 0
 
         # distances of all points to the new point
-        new_dist = np.full(X.shape[-1], np.inf)
-        new_dist[self.eligible_] = self._get_dist(X, last_selected)
+        new_dist = self._calculate_distances(X, last_selected)
 
         # update in-place the Haussdorf distance list
         np.minimum(self.haussdorf_, new_dist, self.haussdorf_)
+        super()._update_post_selection(X, y, last_selected)
 
     def get_select_distance(self):
-        if hasattr(self, "haussdorf_"):
-            return self.haussdorf_[self.selected_idx_]
+        if hasattr(self, "haussdorf_at_select_"):
+            return self.haussdorf_at_select_[self.selected_idx_]
         else:
             raise NotFittedError()

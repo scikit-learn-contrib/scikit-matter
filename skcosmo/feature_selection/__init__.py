@@ -5,8 +5,8 @@ with the optional PCov-flavor
 
 from ..selection.FPS import FeatureFPS
 from ..selection.CUR import FeatureCUR
-from .simple_fps import SimpleFPS
-from .simple_cur import SimpleCUR
+from .simple_fps import FPS
+from .simple_cur import CUR
 
 
-__all__ = ["FeatureFPS", "FeatureCUR", "SimpleFPS", "SimpleCUR"]
+__all__ = ["FeatureFPS", "FeatureCUR", "FPS", "CUR"]

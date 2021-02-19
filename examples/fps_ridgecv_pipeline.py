@@ -10,10 +10,10 @@ from sklearn.datasets import load_boston
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 
-from skcosmo.feature_selection import SimpleFPS
+from skcosmo.feature_selection import FPS
 
 scaler = StandardScaler()
-selector = SimpleFPS(n_features_to_select=6)
+selector = FPS(n_features_to_select=6)
 ridge = RidgeCV(cv=2, alphas=np.logspace(-8, 2, 10))
 
 X, y = load_boston(return_X_y=True)

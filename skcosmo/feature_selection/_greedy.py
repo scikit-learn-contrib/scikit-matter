@@ -59,6 +59,19 @@ class GreedySelector(SelectorMixin, MetaEstimatorMixin, BaseEstimator):
     X_selected_ : ndarray (n_samples, n_features_to_select)
                   The features selected
 
+    eligible_ : ndarray of shape (n_features,), dtype=bool
+        A mask of features eligible for selection
+
+    n_selected_ : int
+        The number of features that have been selected thus far
+
+    report_progress : callable
+        A wrapper to report the progress of the selector using a `tqdm` style
+        progress bar
+
+    score_threshold : float (optional)
+        A score below which to stop selecting points
+
     selected_idx_ : ndarray of integers
                     indices of the selected features, with respect to the
                     original fitted matrix

@@ -4,22 +4,22 @@ import numpy as np
 from sklearn.datasets import load_boston
 from sklearn import exceptions
 
-from skcosmo.feature_selection import SimpleCUR
+from skcosmo.feature_selection import CUR
 
 
-class TestSimpleCUR(unittest.TestCase):
+class TestCUR(unittest.TestCase):
     def setUp(self):
         self.X, _ = load_boston(return_X_y=True)
         self.idx = [9, 11, 6, 1, 0, 12, 2, 8, 10, 7, 5, 3, 4]
 
     def test_bad_y(self):
         self.X, self.Y = load_boston(return_X_y=True)
-        selector = SimpleCUR(n_features_to_select=2)
+        selector = CUR(n_features_to_select=2)
         with self.assertRaises(ValueError):
             selector.fit(X=self.X, y=self.Y[:2])
 
     def test_bad_transform(self):
-        selector = SimpleCUR(n_features_to_select=2)
+        selector = CUR(n_features_to_select=2)
         with self.assertRaises(exceptions.NotFittedError):
             _ = selector.transform(self.X)
 
@@ -28,7 +28,7 @@ class TestSimpleCUR(unittest.TestCase):
         This test checks that the model can be restarted with a new instance
         """
 
-        selector = SimpleCUR(n_features_to_select=1)
+        selector = CUR(n_features_to_select=1)
         selector.fit(self.X)
 
         for i in range(len(self.idx) - 2):
@@ -41,7 +41,7 @@ class TestSimpleCUR(unittest.TestCase):
         This test checks that the model can be run non-iteratively
         """
         self.idx = [9, 11, 6, 10, 12, 2, 8, 1, 5, 0, 7, 4, 3]
-        selector = SimpleCUR(n_features_to_select=12, iterative=False)
+        selector = CUR(n_features_to_select=12, iterative=False)
         selector.fit(self.X)
 
         self.assertTrue(np.allclose(selector.selected_idx_, self.idx[:-1]))

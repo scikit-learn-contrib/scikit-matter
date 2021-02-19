@@ -7,7 +7,7 @@ from ._greedy import GreedySelector
 from ..utils.orthogonalizers import X_orthogonalizer, Y_feature_orthogonalizer
 
 
-class SimpleCUR(GreedySelector):
+class CUR(GreedySelector):
     """Transformer that performs Greedy Feature Selection using by choosing features
     which maximize the magnitude of the right singular vectors, consistent with
     classic CUR matrix decomposition.
@@ -57,6 +57,26 @@ class SimpleCUR(GreedySelector):
     X_selected_ : ndarray (n_samples, n_features_to_select)
                   The features selected
 
+    X_current_ : ndarray (n_samples, n_features)
+                  The features, orthogonalized by previously selected features
+
+    y_current_ : ndarray (n_samples, n_properties)
+                The properties, if supplied, orthogonalized by a regression on
+                the previously selected features
+
+    eligible_ : ndarray of shape (n_features,), dtype=bool
+        A mask of features eligible for selection
+
+    n_selected_ : int
+        The number of features that have been selected thus far
+
+    report_progress : callable
+        A wrapper to report the progress of the selector using a `tqdm` style
+        progress bar
+
+    score_threshold : float (optional)
+        A score below which to stop selecting points
+
     selected_idx_ : ndarray of integers
                     indices of the selected features, with respect to the
                     original fitted matrix
@@ -97,12 +117,12 @@ class SimpleCUR(GreedySelector):
         features and computes their initial importance score.
         """
 
-        self.X_current = X.copy()
+        self.X_current_ = X.copy()
         if y is not None:
-            self.y_current = y.copy()
+            self.y_current_ = y.copy()
         else:
-            self.y_current = None
-        self.pi_ = self._compute_pi(self.X_current, self.y_current)
+            self.y_current_ = None
+        self.pi_ = self._compute_pi(self.X_current_, self.y_current_)
 
         super()._init_greedy_search(X, y, n_to_select)
 
@@ -113,12 +133,12 @@ class SimpleCUR(GreedySelector):
         and computes their initial importance.
         """
 
-        self.X_current = X_orthogonalizer(X, x2=self.X_selected_)
-        if self.y_current is not None:
-            self.y_current = Y_feature_orthogonalizer(
-                self.y_current, X=self.X_selected_, tol=1e-12
+        self.X_current_ = X_orthogonalizer(X, x2=self.X_selected_)
+        if self.y_current_ is not None:
+            self.y_current_ = Y_feature_orthogonalizer(
+                self.y_current_, X=self.X_selected_, tol=1e-12
             )
-        self.pi_ = self._compute_pi(self.X_current, self.y_current)
+        self.pi_ = self._compute_pi(self.X_current_, self.y_current_)
 
         super()._continue_greedy_search(X, y, n_to_select)
 
@@ -164,14 +184,14 @@ class SimpleCUR(GreedySelector):
         super()._update_post_selection(X, y, last_selected)
 
         if self.iterative:
-            self.X_current = X_orthogonalizer(
-                x1=self.X_current, c=last_selected, tol=1e-12
+            self.X_current_ = X_orthogonalizer(
+                x1=self.X_current_, c=last_selected, tol=1e-12
             )
-            if self.y_current is not None:
-                self.y_current = Y_feature_orthogonalizer(
-                    self.y_current, X=self.X_selected_, tol=1e-12
+            if self.y_current_ is not None:
+                self.y_current_ = Y_feature_orthogonalizer(
+                    self.y_current_, X=self.X_selected_, tol=1e-12
                 )
 
             self.pi_[self.eligible_] = self._compute_pi(
-                self.X_current[:, self.eligible_], self.y_current
+                self.X_current_[:, self.eligible_], self.y_current_
             )

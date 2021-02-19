@@ -3,10 +3,10 @@ import unittest
 from sklearn.datasets import load_boston
 from sklearn.utils.validation import NotFittedError
 
-from skcosmo.feature_selection import SimpleFPS
+from skcosmo.feature_selection import FPS
 
 
-class TestSimpleFPS(unittest.TestCase):
+class TestFPS(unittest.TestCase):
     def setUp(self):
         self.X, _ = load_boston(return_X_y=True)
         self.idx = [9, 3, 11, 6, 1, 10, 8, 0, 12, 2, 5, 7, 4]
@@ -17,7 +17,7 @@ class TestSimpleFPS(unittest.TestCase):
         features and `warm_start`
         """
 
-        selector = SimpleFPS(n_features_to_select=1, initialize=self.idx[0])
+        selector = FPS(n_features_to_select=1, initialize=self.idx[0])
         selector.fit(self.X)
 
         for i in range(2, len(self.idx)):
@@ -33,11 +33,11 @@ class TestSimpleFPS(unittest.TestCase):
 
         for initialize in [self.idx[0], "random"]:
             with self.subTest(initialize=initialize):
-                selector = SimpleFPS(n_features_to_select=1, initialize=initialize)
+                selector = FPS(n_features_to_select=1, initialize=initialize)
                 selector.fit(self.X)
 
         with self.assertRaises(ValueError) as cm:
-            selector = SimpleFPS(n_features_to_select=1, initialize="bad")
+            selector = FPS(n_features_to_select=1, initialize="bad")
             selector.fit(self.X)
             self.assertEquals(
                 str(cm.message), "Invalid value of the initialize parameter"
@@ -47,7 +47,7 @@ class TestSimpleFPS(unittest.TestCase):
         """
         This test checks that the haussdorf distances are returnable after fitting
         """
-        selector = SimpleFPS(n_features_to_select=10)
+        selector = FPS(n_features_to_select=10)
         selector.fit(self.X)
         d = selector.get_select_distance()
 
@@ -55,7 +55,7 @@ class TestSimpleFPS(unittest.TestCase):
         self.assertTrue(all(dist_grad > 0))
 
         with self.assertRaises(NotFittedError):
-            selector = SimpleFPS(n_features_to_select=10)
+            selector = FPS(n_features_to_select=10)
             _ = selector.get_select_distance()
 
 
