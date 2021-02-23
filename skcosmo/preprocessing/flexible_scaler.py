@@ -1,6 +1,6 @@
 import numpy as np
 from sklearn.base import TransformerMixin, BaseEstimator
-from sklearn.utils.validation import check_is_fitted
+from sklearn.utils.validation import check_is_fitted, _check_sample_weight
 from sklearn.preprocessing._data import KernelCenterer
 from sklearn.utils.validation import FLOAT_DTYPES
 
@@ -28,25 +28,33 @@ class StandardFlexibleScaler(TransformerMixin, BaseEstimator):
         self.n_samples_seen_ = 0
         self.tol = tol
 
-    def fit(self, X, y=None):
+    def fit(self, X, y=None, sample_weight=None):
         """Compute mean and scaling to be applied for subsequent normalization.
 
         :param X: Matrix
         :type X: ndarray
         :param y: ignored
+        :param sample_weight: weights for each sample. Sample weighting can be used to center (and scale) data using a weighted mean. Weights are internally normalized before preprocessing.
+        :type sample_weight: array of shape (n_samples,)
 
         :return: itself
         """
 
         self.n_samples_seen_, self.n_features_ = X.shape
+
+        if sample_weight is not None:
+            sample_weight = _check_sample_weight(sample_weight, X, dtype=X.dtype)
+            sample_weight = sample_weight / np.sum(sample_weight)
+
         if self.with_mean:
-            self.mean_ = X.mean(axis=0)
+            self.mean_ = np.average(X, weights=sample_weight, axis=0)
         else:
             self.mean_ = np.zeros(self.n_features_)
 
         self.scale_ = 1.0
         if self.with_std:
-            var = ((X - X.mean(axis=0)) ** 2).mean(axis=0)
+            X_mean = np.average(X, weights=sample_weight, axis=0)
+            var = np.average((X - X_mean) ** 2, weights=sample_weight, axis=0)
 
             if self.column_wise:
                 if np.any(var < self.tol):
@@ -76,17 +84,20 @@ class StandardFlexibleScaler(TransformerMixin, BaseEstimator):
             raise ValueError("X shape does not match training shape")
         return (X - self.mean_) / self.scale_
 
-    def fit_transform(self, X, y=None, **fit_params):
+    def fit_transform(self, X, y=None, sample_weight=None, **fit_params):
         r"""Fit to data, then transform it.
 
         :param X: Matrix
         :type X: ndarray
         :param y: ignored
+        :param sample_weight: weights for each sample. Sample weighting can be used to center (and scale) data using a weighted mean. Weights are internally normalized before preprocessing.
+
+        :type sample_weight: array of shape (n_samples,)
         :param \**fit_params: necessary for compatibility with the functions of the TransformerMixin class
 
         :return: itself
         """
-        self.fit(X, y)
+        self.fit(X, y, sample_weight=sample_weight)
         return self.transform(X, y)
 
     def inverse_transform(self, X_tr):
@@ -109,6 +120,10 @@ class KernelNormalizer(KernelCenterer):
     """Kernel centering method, similar to KernelCenterer,
     but with additional scaling and passing of precomputed kernel means.
 
+    :param with_center: If True, center the kernel matrix before scaling. If False, do not center the kernel
+    :type with_center: bool
+    :param with_trace: If True, scale the kernel so that the trace is equal to the number of samples. If False, do not scale the kernel
+    :type with_trace: bool
 
     Attributes
     ----------
@@ -117,6 +132,9 @@ class KernelNormalizer(KernelCenterer):
 
     K_fit_all_ : float
         Average of kernel matrix.
+
+    sample_weight_ : float
+        Sample weights (if provided during the fit)
 
     Examples
     --------
@@ -144,38 +162,57 @@ class KernelNormalizer(KernelCenterer):
     >>>
     """
 
-    def __init__(self):
+    def __init__(self, with_center=True, with_trace=True):
+        self.with_center = with_center
+        self.with_trace = with_trace
         super().__init__()
 
-    def fit(self, K=None, y=None, K_fit_rows=None, K_fit_all=None):
+    def fit(self, K=None, y=None, sample_weight=None):
         """Fit KernelFlexibleCenterer
 
         :param K: Kernel matrix
         :type K: ndarray of shape (n_samples, n_samples)
         :param y: ignored
-        :param K_fit_rows: an array with means for each column.
-        :type K_fit_rows: array of shape (1, n_features)
-        :param K_fit_all: an average for the whole kernel matrix
-        :type K_fit_all: array
+        :param sample_weight: weights for each sample. Sample weighting can be used to center (and scale) data using a weighted mean. Weights are internally normalized before preprocessing.
 
+        :type sample_weight: array of shape (n_samples,)
         :return: fitted transformer
         """
 
-        if K_fit_rows is not None and K_fit_all is not None:
-            self.K_fit_rows_ = K_fit_rows
-            self.K_fit_all_ = K_fit_all
-        else:
-            super().fit(K, y)
-
         Kc = self._validate_data(K, copy=True, dtype=FLOAT_DTYPES, reset=False)
 
-        K_pred_cols = (np.sum(Kc, axis=1) / self.K_fit_rows_.shape[0])[:, np.newaxis]
+        if sample_weight is not None:
+            self.sample_weight_ = _check_sample_weight(sample_weight, K, dtype=K.dtype)
+            self.sample_weight_ = self.sample_weight_ / np.sum(self.sample_weight_)
+        else:
+            self.sample_weight_ = sample_weight
 
-        Kc -= self.K_fit_rows_
-        Kc -= K_pred_cols
-        Kc += self.K_fit_all_
+        if self.with_center:
+            if self.sample_weight_ is not None:
+                self.K_fit_rows_ = np.average(K, weights=self.sample_weight_, axis=0)
+                self.K_fit_all_ = np.average(
+                    self.K_fit_rows_, weights=self.sample_weight_
+                )
+            else:
+                super().fit(K, y)
 
-        self.scale_ = np.trace(Kc) / K.shape[0]
+            K_pred_cols = np.average(Kc, weights=self.sample_weight_, axis=1)[
+                :, np.newaxis
+            ]
+        else:
+            self.K_fit_rows_ = np.zeros(Kc.shape[1])
+            self.K_fit_all_ = 0.0
+            K_pred_cols = np.zeros((Kc.shape[0], 1))
+
+        if self.with_trace:
+
+            Kc -= self.K_fit_rows_
+            Kc -= K_pred_cols
+            Kc += self.K_fit_all_
+
+            self.scale_ = np.trace(Kc) / Kc.shape[0]
+        else:
+            self.scale_ = 1.0
 
         return self
 
@@ -195,25 +232,36 @@ class KernelNormalizer(KernelCenterer):
         K_new : ndarray of shape (n_samples1, n_samples2)
         """
 
-        return super().transform(K, copy) / self.scale_
+        check_is_fitted(self)
+        K = self._validate_data(K, copy=copy, dtype=FLOAT_DTYPES, reset=False)
 
-    def fit_transform(
-        self, K, y=None, copy=True, K_fit_rows=None, K_fit_all=None, **fit_params
-    ):
+        if self.with_center:
+            K_pred_cols = np.average(K, weights=self.sample_weight_, axis=1)[
+                :, np.newaxis
+            ]
+        else:
+            K_pred_cols = np.zeros((K.shape[0], 1))
+
+        K -= self.K_fit_rows_
+        K -= K_pred_cols
+        K += self.K_fit_all_
+
+        return K / self.scale_
+
+    def fit_transform(self, K, y=None, sample_weight=None, copy=True, **fit_params):
         r"""Fit to data, then transform it.
 
         :param K: Kernel matrix
         :type K: ndarray of shape (n_samples, n_samples)
         :param y: ignored
-        :param K_fit_rows: an array with means for each column.
-        :type K_fit_rows: array of shape (1, n_features)
-        :param K_fit_all: an average for the whole kernel matrix
-        :type K_fit_all: array
+        :param sample_weight: weights for each sample. Sample weighting can be used to center (and scale) data using a weighted mean. Weights are internally normalized before preprocessing.
+
+        :type sample_weight: array of shape (n_samples,)
         :param \**fit_params: necessary for compatibility with the functions of the TransformerMixin class
 
         :return: tranformed matrix Kc
         """
-        self.fit(K, y, K_fit_rows=K_fit_rows, K_fit_all=K_fit_all)
+        self.fit(K, y, sample_weight=sample_weight)
         return self.transform(K, copy)
 
 
@@ -224,18 +272,24 @@ class SparseKernelCenterer(TransformerMixin, BaseEstimator):
 
     """
 
-    def __init__(self, rcond=1e-12):
+    def __init__(self, with_center=True, with_trace=True, rcond=1e-12):
         """
         Initialize SparseKernelCenterer.
 
+        :param with_center: If True, center the kernel matrix before scaling. If False, do not center the kernel
+        :type with_center: bool
+        :param with_trace: If True, scale the kernel so that the trace is equal to the number of samples. If False, do not scale the kernel
+        :type with_trace: bool
         :param rcond: conditioning parameter to use when computing the
                       Nystrom-approximated kernel for scaling
         :type rcond: float, default 1E-12
         """
 
+        self.with_center = with_center
+        self.with_trace = with_trace
         self.rcond = rcond
 
-    def fit(self, Knm, Kmm, y=None):
+    def fit(self, Knm, Kmm, y=None, sample_weight=None):
         """Fit KernelFlexibleCenterer
 
         :param Knm: Kernel matrix between the reference data set and the active
@@ -246,6 +300,9 @@ class SparseKernelCenterer(TransformerMixin, BaseEstimator):
         :type Kmm: ndarray of shape (n_active, n_active)
 
         :param y: ignored
+        :param sample_weight: weights for each sample. Sample weighting can be used to center (and scale) data using a weighted mean. Weights are internally normalized before preprocessing.
+
+        :type sample_weight: array of shape (n_samples,)
 
         :return: itself
         """
@@ -259,15 +316,25 @@ class SparseKernelCenterer(TransformerMixin, BaseEstimator):
         if Kmm.shape[0] != Kmm.shape[1]:
             raise ValueError("The active kernel is not square.")
 
+        if sample_weight is not None:
+            sample_weight = _check_sample_weight(sample_weight, Knm, dtype=Knm.dtype)
+            sample_weight = sample_weight / np.sum(sample_weight)
+
         self.n_active_ = Kmm.shape[0]
 
-        self.K_fit_rows_ = Knm.mean(axis=0)
+        if self.with_center:
+            self.K_fit_rows_ = np.average(Knm, weights=sample_weight, axis=0)
+        else:
+            self.K_fit_rows_ = np.zeros(Knm.shape[1])
 
-        Knm_centered = Knm - self.K_fit_rows_
+        if self.with_trace:
+            Knm_centered = Knm - self.K_fit_rows_
 
-        Khat = Knm_centered @ np.linalg.pinv(Kmm, self.rcond) @ Knm_centered.T
+            Khat = Knm_centered @ np.linalg.pinv(Kmm, self.rcond) @ Knm_centered.T
 
-        self.scale_ = np.sqrt(np.trace(Khat) / Knm.shape[0])
+            self.scale_ = np.sqrt(np.trace(Khat) / Knm.shape[0])
+        else:
+            self.scale_ = 1.0
 
         return self
 
@@ -293,7 +360,7 @@ class SparseKernelCenterer(TransformerMixin, BaseEstimator):
 
         return Kc
 
-    def fit_transform(self, Knm, Kmm, y=None, **fit_params):
+    def fit_transform(self, Knm, Kmm, y=None, sample_weight=None, **fit_params):
         r"""Fit to data, then transform it.
 
         :param Knm: Kernel matrix between the reference data set and the active
@@ -304,11 +371,14 @@ class SparseKernelCenterer(TransformerMixin, BaseEstimator):
         :type Kmm: ndarray of shape (n_active, n_active)
 
         :param y: ignored
+        :param sample_weight: weights for each sample. Sample weighting can be used to center (and scale) data using a weighted mean. Weights are internally normalized before preprocessing.
+
+        :type sample_weight: array of shape (n_samples,)
 
         :param \**fit_params: necessary for compatibility with the functions of
                               the TransformerMixin class
 
         :return: tranformed matrix Kc
         """
-        self.fit(Knm=Knm, Kmm=Kmm)
+        self.fit(Knm=Knm, Kmm=Kmm, sample_weight=sample_weight)
         return self.transform(Knm)
