@@ -1,0 +1,26 @@
+Examples
+########
+
+For a thorough tutorial of the methods introduced in `scikit-cosmo`, we suggest you
+check out the pedagogic notebooks in our companion project `kernel-tutorials <https://github.com/cosmo-epfl/kernel-tutorials/>`_.
+
+.. toctree::
+  :glob:
+  :Caption: PCovR and KPCovR
+
+  read-only-examples/PCovR*
+
+.. toctree::
+  :glob:
+  :Caption: Feature and Sample Selection
+
+  read-only-examples/FeatureSelection*
+  read-only-examples/Selectors+Pipelines*
+
+
+.. toctree::
+  :glob:
+  :Caption: Feature Reconstruction Measures
+
+  read-only-examples/PlotGFRE
+  read-only-examples/PlotLFRE

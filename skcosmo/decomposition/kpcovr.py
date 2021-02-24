@@ -20,10 +20,24 @@ from skcosmo.preprocessing import KernelFlexibleCenterer
 
 
 class KPCovR(_BasePCA, LinearModel):
-    """
-    Performs Kernel Principal Covariates Regression, as described in
-    `[Helfrecht, et al., 2020]
-    <https://iopscience.iop.org/article/10.1088/2632-2153/aba9ef>`_.
+    r"""
+    Kernel Principal Covariates Regression, as described in [Helfrecht2020]_
+    determines a latent-space projection :math:`\mathbf{T}` which
+    minimizes a combined loss in supervised and unsupervised tasks in the
+    reproducing kernel Hilbert space (RKHS).
+
+    This projection is determined by the eigendecomposition of a modified gram
+    matrix :math:`\mathbf{\tilde{K}}`
+
+    .. math::
+
+      \mathbf{\tilde{K}} = \alpha \mathbf{K} +
+            (1 - \alpha) \mathbf{\hat{Y}}\mathbf{\hat{Y}}^T
+
+    where :math:`\alpha` is a mixing parameter,
+    :math:`\mathbf{K}` is the input kernel of shape :math:`(n_{samples}, n_{samples})`
+    and :math:`\mathbf{\hat{Y}}` is the target matrix of shape
+    :math:`(n_{samples}, n_{properties})`.
 
     Parameters
     ----------

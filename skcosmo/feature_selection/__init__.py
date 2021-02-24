@@ -1,5 +1,5 @@
 """
-The :mod:`sklearn.selection` module includes FPS and CUR selection, each
+The :mod:`sklearn.feature_selection` module includes FPS and CUR selection, each
 with the optional PCov-flavor
 """
 

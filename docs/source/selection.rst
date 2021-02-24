@@ -1,4 +1,4 @@
-Data Sub-Selection
+Feature and Sample Selection
 ============================
 
 `scikit-COSMO` contains multiple feature and sample selection modules,

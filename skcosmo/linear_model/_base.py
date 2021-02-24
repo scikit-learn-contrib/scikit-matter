@@ -25,7 +25,7 @@ class OrthogonalRegression(MultiOutputMixin, RegressorMixin):
 
         The projection can introduce nonanalytic behavior with respect to
         changes in dimensions of X for cases where X n_features > y n_targets.
-        See ``examples/linear_model/plot_orthogonal_regression_nonanalytic_behavior.py``
+        See ``examples/OrthogonalRegressionNonAnalytic_no-doc.ipynb``
 
     linear_estimator : object implementing fit/predict, default=None
         The linear estimator is used when `use_orthogonal_projector`
@@ -38,8 +38,8 @@ class OrthogonalRegression(MultiOutputMixin, RegressorMixin):
         dimension, when `use_orthogonal_projector` is set to False. This attribute
         is set to the maximum of the feature and target dimension.
 
-    coef_ : ndarray of shape (n_features,) or (n_targets, n_features) or (max_components_, max_components_)
-        Weight matrix. The shape (max_components_, max_components_) is used if
+    coef_ : ndarray of shape (n_features,) or (n_targets, n_features) or (max_components, max_components)
+        Weight matrix. The shape (max_components, max_components) is used if
         `use_orthogonal_projector` is set to False.
 
     References

@@ -1,14 +1,6 @@
 Datasets
 ================
 
-Degenerate CH4 Manifold
-#######################
+.. include:: ../../skcosmo/datasets/descr/degenerate_CH4_manifold.rst
 
-.. automodule:: skcosmo.datasets.load_degenerate_CH4_manifold
-    :members:
-
-CSD-1000r
-#######################
-
-.. automodule:: skcosmo.datasets.load_csd_1000r
-    :members:
+.. include:: ../../skcosmo/datasets/descr/csd-1000r.rst

@@ -1,3 +1,5 @@
+.. _contributing:
+
 Contributing
 ============
 
@@ -36,3 +38,9 @@ You may want to setup your editor to automatically apply the
 `black <https://black.readthedocs.io/en/stable/>`_ code formatter when saving your
 files, there are plugins to do this with `all major
 editors <https://black.readthedocs.io/en/stable/editor_integration.html>`_.
+
+License
+#######
+
+This project is distributed under the BSD-3-Clauses license. By contributing to
+it you agree to distribute your changes under the same license.
