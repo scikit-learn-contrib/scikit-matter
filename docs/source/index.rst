@@ -14,3 +14,4 @@ compatible utilities that implement methods developed in the `COSMO laboratory
   reference
   tutorials
   contributing
+  bibliography

@@ -9,7 +9,7 @@ In their classical form, these methods determine a data subset that maximizes th
 variance (CUR) or distribution (FPS) of the features or samples. These methods
 can be modified to include  aspects of supervised methods, in a formulation
 denoted `PCov-CUR` and `PCov-FPS`.
-For further reading, refer to `Imbalzano [2018] <https://aip.scitation.org/doi/10.1063/1.5024611>`_ and Cersonsky [2021] (forthcoming).
+For further reading, refer to [Imbalzano2018]_ and [Cersonsky2021]_.
 
 .. _CUR-api:
 
@@ -36,7 +36,7 @@ approximate :math:`\mathbf{X}` when compared to selecting all features in a
 single iteration based upon the relative :math:`\pi` importance.
 
 These selection methods can be modified to be semi-supervised by using augmented
-right or left singular vectors, as shown in [Cersonsky 2021].
+right or left singular vectors, as shown in [Cersonsky2021]_.
 
 .. currentmodule:: skcosmo.feature_selection
 .. autoclass:: CUR
@@ -73,7 +73,7 @@ Each subsequent selection is made to maximize the distance to the previous selec
 It is common to use the Euclidean distance, however other distance metrics may be employed.
 
 These selection methods can be modified to be semi-supervised by using the
-PCovR covariance and Gram matrices to compute the distances, as shown in [Cersonsky 2021].
+PCovR covariance and Gram matrices to compute the distances, as shown in [Cersonsky2021]_.
 
 .. currentmodule:: skcosmo.feature_selection
 .. autoclass:: FPS

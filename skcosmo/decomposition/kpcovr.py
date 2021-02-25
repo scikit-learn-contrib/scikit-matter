@@ -157,18 +157,6 @@ class KPCovR(_BasePCA, LinearModel):
         The data used to fit the model. This attribute is used to build kernels
         from new data.
 
-    References
-    ----------
-        1.  B. A. Helfrecht, R. K. Cersonsky, G. Fraux, and M. Ceriotti,
-            'Structure-property maps with Kernel principal covariates regression',
-            Machine Learning: Science and Technology 1(4):045021, 2020
-        2.  S. de Jong, H. A. L. Kiers, 'Principal Covariates
-            Regression: Part I. Theory', Chemometrics and Intelligent
-            Laboratory Systems 14(1): 155-164, 1992
-        3.  M. Vervolet, H. A. L. Kiers, W. Noortgate, E. Ceulemans,
-            'PCovR: An R Package for Principal Covariates Regression',
-            Journal of Statistical Software 65(1):1-14, 2015
-
     Examples
     --------
     >>> import numpy as np
@@ -429,10 +417,10 @@ class KPCovR(_BasePCA, LinearModel):
     def score(self, X, Y):
         r"""
         Computes the loss values for KPCovR on the given predictor and
-        response variables. The loss in :math:`\mathbf{K}`, as explained in `[Helfrecht, et al., 2020]
-        <https://iopscience.iop.org/article/10.1088/2632-2153/aba9ef>`_ does not
-        correspond to a traditional Gram loss :math:`\mathbf{K} - \mathbf{TT}^T`.
-        Indicating the kernel between set A and B as :math:`\mathbf{K}_{AB}`,
+        response variables. The loss in :math:`\mathbf{K}`, as explained in
+        [Helfrecht2020]_ does not correspond to a traditional Gram loss
+        :math:`\mathbf{K} - \mathbf{TT}^T`. Indicating the kernel between set
+        A and B as :math:`\mathbf{K}_{AB}`,
         the projection of set A as :math:`\mathbf{T}_A`, and with N and V as the
         train and validation/test set, one obtains
 

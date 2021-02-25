@@ -1,21 +1,28 @@
 .. _csd:
 
 CSD-1000R
--------------------
+#########
 
-**Data Set Characteristics:**
+This dataset, intended for model testing, contains the SOAP power spectrum
+features and local NMR chemical shieldings for 100 environments selected
+from CSD-1000r, originally published in [Ceriotti2019]_.
+
+Function Call
+-------------
+
+.. function:: skcosmo.datasets.load_csd_1000r
+
+Data Set Characteristics
+------------------------
 
     :Number of Instances: Each representation 100
 
     :Number of Features: Each representation 100
 
-    This dataset, intended for model testing, contains the SOAP power spectrum
-    features and local NMR chemical shieldings for 100 environments selected
-    from CSD-1000r, originally published in [1]_.
-
-    The representations were computed with [2]_ using the hyperparameters:
+    The representations were computed with [C1]_ using the hyperparameters:
 
     :rascal hyperparameters:
+
     +---------------------------+------------+
     | key                       |   value    |
     +---------------------------+------------+
@@ -34,14 +41,13 @@ CSD-1000R
     | normalize:                |    True    |
     +---------------------------+------------+
 
-    Of the 2'520 resulting features, 100 were selected via FPS using [3]_.
+    Of the 2'520 resulting features, 100 were selected via FPS using [C2]_.
 
 References
 ----------
 
-   .. [1] Michele Ceriotti, Lyndon Emsley, Federico Paruzzo, Albert Hofstetter, Félix Musil, Sandip De, Edgar A. Engel, Andrea Anelli, Chemical Shifts in Molecular Solids by Machine Learning Datasets, Materials Cloud Archive 2019.0023/v2 (2019), doi: 10.24435/materialscloud:2019.0023/v2.
-   .. [2] https://github.com/cosmo-epfl/librascal commit e78f1c69
-   .. [3] https://github.com/cosmo-epfl/scikit-cosmo commit 64e789f
+   .. [C1] https://github.com/cosmo-epfl/librascal commit e78f1c69
+   .. [C2] https://github.com/cosmo-epfl/scikit-cosmo commit 64e789f
 
 Reference Code
 --------------

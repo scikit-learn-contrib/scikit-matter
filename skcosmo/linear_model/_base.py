@@ -21,7 +21,7 @@ class OrthogonalRegression(MultiOutputMixin, RegressorMixin):
         If this parameter is set to False X and y are padded with zeros to the larger
         number of features of X and y. The projection method is similar
         to the procedure in the computation GFRD in the first version of
-        Ref. [frm]_. The method has been adapted obtain a full weight matrix.
+        Ref. [Goscinski2021]_. The method has been adapted obtain a full weight matrix.
 
         The projection can introduce nonanalytic behavior with respect to
         changes in dimensions of X for cases where X n_features > y n_targets.
@@ -42,10 +42,6 @@ class OrthogonalRegression(MultiOutputMixin, RegressorMixin):
         Weight matrix. The shape (max_components, max_components) is used if
         `use_orthogonal_projector` is set to False.
 
-    References
-    ----------
-    .. [frm]_ Goscinski, Fraux, Imbalzano and Ceriotti. "The role of feature space in
-             atomistic learning." arXiv preprint arXiv:2009.02741 (2020).
     """
 
     def __init__(self, use_orthogonal_projector=True, linear_estimator=None):

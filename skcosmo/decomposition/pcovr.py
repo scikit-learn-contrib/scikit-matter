@@ -23,11 +23,48 @@ from skcosmo.utils import pcovr_covariance, pcovr_kernel
 
 class PCovR(_BasePCA, LinearModel):
     r"""
-    Performs Principal Covariates Regression, as described in `[S. de Jong and
-    H. A. L. Kiers, 1992] <https://doi.org/10.1016/0169-7439(92)80100-I>`_,
-    implemented according to the notations and strategies covered in
-    `[Helfrecht, et al., 2020]
-    <https://iopscience.iop.org/article/10.1088/2632-2153/aba9ef>`_.
+
+    Principal Covariates Regression, as described in [deJong1992]_
+    determines a latent-space projection :math:`\mathbf{T}` which
+    minimizes a combined loss in supervised and unsupervised tasks.
+
+    This projection is determined by the eigendecomposition of a modified gram
+    matrix :math:`\mathbf{\tilde{K}}`
+
+    .. math::
+
+      \mathbf{\tilde{K}} = \alpha \mathbf{X} \mathbf{X}^T +
+            (1 - \alpha) \mathbf{\hat{Y}}\mathbf{\hat{Y}}^T
+
+    where :math:`\alpha` is a mixing parameter and
+    :math:`\mathbf{X}` and :math:`\mathbf{\hat{Y}}` are matrices of shapes
+    :math:`(n_{samples}, n_{features})` and :math:`(n_{samples}, n_{properties})`,
+    respectively, which contain the input and approximate targets. For
+    :math:`(n_{samples} < n_{features})`, this can be more efficiently computed
+    using the eigendecomposition of a modified covariance matrix
+    :math:`\mathbf{\tilde{C}}`
+
+    .. math::
+
+      \mathbf{\tilde{C}} = \alpha \mathbf{X}^T \mathbf{X} +
+            (1 - \alpha) \left(\left(\mathbf{X}^T
+            \mathbf{X}\right)^{-\frac{1}{2}} \mathbf{X}^T
+            \mathbf{\hat{Y}}\mathbf{\hat{Y}}^T \mathbf{X} \left(\mathbf{X}^T
+            \mathbf{X}\right)^{-\frac{1}{2}}\right)
+
+    For all PCovR methods, it is strongly suggested that :math:`\mathbf{X}` and
+    :math:`\mathbf{Y}` are centered and scaled to unit variance, otherwise the
+    results will change drastically near :math:`\alpha \to 0` and :math:`\alpha \to 0`.
+    This can be done with the companion preprocessing classes, where
+
+    >>> from skcosmo.preprocessing import StandardFlexibleScaler as SFS
+    >>>
+    >>> # Set column_wise to True when the columns are relative to one another,
+    >>> # False otherwise.
+    >>> scaler = SFS(column_wise=True)
+    >>>
+    >>> scaler.fit(A) # replace with your matrix
+    >>> A = scaler.transform(A)
 
     Parameters
     ----------
@@ -128,18 +165,6 @@ class PCovR(_BasePCA, LinearModel):
 
     singular_values_ : ndarray of shape (n_components,)
         The singular values corresponding to each of the selected components.
-
-    References
-    ----------
-        1.  S. de Jong, H. A. L. Kiers, 'Principal Covariates
-            Regression: Part I. Theory', Chemometrics and Intelligent
-            Laboratory Systems 14(1): 155-164, 1992
-        2.  M. Vervolet, H. A. L. Kiers, W. Noortgate, E. Ceulemans,
-            'PCovR: An R Package for Principal Covariates Regression',
-            Journal of Statistical Software 65(1):1-14, 2015
-        3.  B. A. Helfrecht, R. K. Cersonsky, G. Fraux, and M. Ceriotti,
-            'Structure-property maps with Kernel principal covariates regression',
-            Machine Learning: Science and Technology 1(4):045021, 2020
 
     Examples
     --------

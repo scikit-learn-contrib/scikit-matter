@@ -23,7 +23,7 @@ def pointwise_global_reconstruction_error(
     .. math:: GRE^{(i)}(X,Y) = \min_W ||y_i - x_iW|| % # noqa: W605
 
     If used with X and Y of shape (n_samples, n_features) it computes the pointwise
-    global reconstruction error of the features as defined in Ref. [frm]_.
+    global reconstruction error of the features as defined in Ref. [Goscinski2021]_.
     In this case the number of samples of X and Y should agree with each other,
     but the number of features can be different. The error is expressed per sample.
 
@@ -32,7 +32,7 @@ def pointwise_global_reconstruction_error(
     features of X and Y should agree with each other, but the number of
     samples can be different. The error is expressed per feature.
 
-    The default parameters mimics the ones of Ref. [frm]_.
+    The default parameters mimics the ones of Ref. [Goscinski2021]_.
 
     Parameters
     ----------
@@ -69,10 +69,6 @@ def pointwise_global_reconstruction_error(
     pointwise_global_reconstruction_error : array_like
         The global reconstruction error for each sample/point
 
-    References
-    ----------
-    .. [frm] Goscinski, Fraux, Imbalzano and Ceriotti. "The role of feature space in
-             atomistic learning." arXiv preprint arXiv:2009.02741 (2020).
     """
     (
         train_idx,
@@ -116,7 +112,7 @@ def global_reconstruction_error(
         .. math:: GRE(X,Y) = \min_W ||Y - XW|| % # noqa: W605
 
     If used with X and Y of shape (n_samples, n_features) it computes the
-    global reconstruction error of the features as defined in Ref. [frm]_.
+    global reconstruction error of the features as defined in Ref. [Goscinski2021]_.
     In this case the number of samples of X and Y should agree with each other,
     but the number of features can be different. The error is expressed per sample.
 
@@ -125,7 +121,7 @@ def global_reconstruction_error(
     features of X and Y should agree with each other, but the number of
     samples can be different. The error is expressed per feature.
 
-    The default parameters mimics the ones of Ref. [frm]_.
+    The default parameters mimics the ones of Ref. [Goscinski2021]_.
 
     Parameters
     ----------
@@ -162,10 +158,6 @@ def global_reconstruction_error(
     global_reconstruction_error : array_like
         The global reconstruction error
 
-    References
-    ----------
-    .. [frm]_ Goscinski, Fraux, Imbalzano and Ceriotti. "The role of feature space in
-             atomistic learning." arXiv preprint arXiv:2009.02741 (2020).
     """
     pointwise_global_reconstruction_error_values = (
         pointwise_global_reconstruction_error(
@@ -197,7 +189,7 @@ def pointwise_global_reconstruction_distortion(
     .. math:: GRD^{(i)}(X,Y) = \min_Q ||y_i - x_iQ\|| \quad\mathrm{subject\ to}\quad Q^TQ=I % # noqa: W605
 
     If used with X and Y of shape (n_samples, n_features) it computes the pointwise
-    global reconstruction distortion of the features as defined in Ref. [frm]_.
+    global reconstruction distortion of the features as defined in Ref. [Goscinski2021]_.
     In this case the number of samples of X and Y should agree with each other,
     but the number of features can be different. The distortion is expressed per sample.
 
@@ -206,7 +198,7 @@ def pointwise_global_reconstruction_distortion(
     features of X and Y should agree with each other, but the number of
     samples can be different. The distortion is expressed per feature.
 
-    The default parameters mimics the ones of Ref. [frm]_.
+    The default parameters mimics the ones of Ref. [Goscinski2021]_.
 
     Parameters
     ----------
@@ -243,10 +235,6 @@ def pointwise_global_reconstruction_distortion(
     pointwise_global_reconstruction_distortion : array_like
         The global reconstruction distortion for each sample/point
 
-    References
-    ----------
-    .. [frm]_ Goscinski, Fraux, Imbalzano and Ceriotti. "The role of feature space in
-             atomistic learning." arXiv preprint arXiv:2009.02741 (2020).
     """
     (
         train_idx,
@@ -295,7 +283,7 @@ def global_reconstruction_distortion(
         .. math:: GRD(X,Y) = \min_Q ||y - XQ\|| \quad\mathrm{subject\ to}\quad Q^TQ=I % # noqa: W605
 
     If used with X and Y of shape (n_samples, n_features) it computes the
-    global reconstruction distortion of the features as defined in Ref. [frm]_.
+    global reconstruction distortion of the features as defined in Ref. [Goscinski2021]_.
     In this case the number of samples of X and Y should agree with each other,
     but the number of features can be different. The distortion is expressed per sample.
 
@@ -304,7 +292,7 @@ def global_reconstruction_distortion(
     features of X and Y should agree with each other, but the number of
     samples can be different. The distortion is expressed per feature.
 
-    The default parameters mimics the ones of Ref. [frm]_.
+    The default parameters mimics the ones of Ref. [Goscinski2021]_.
 
     Parameters
     ----------
@@ -341,10 +329,6 @@ def global_reconstruction_distortion(
     global_reconstruction_distortion : array_like
         The global reconstruction distortion
 
-    References
-    ----------
-    .. [frm]_ Goscinski, Fraux, Imbalzano and Ceriotti. "The role of feature space in
-             atomistic learning." arXiv preprint arXiv:2009.02741 (2020).
     """
     pointwise_global_reconstruction_distortion_values = (
         pointwise_global_reconstruction_distortion(
@@ -379,7 +363,7 @@ def pointwise_local_reconstruction_error(
     .. math:: LRE^{(i)}(X,Y) = \|\mathbf{x}'_i - \tilde{\mathbf{x}}'_i\|^2 % # noqa: W605
 
     If used with X and Y of shape (n_samples, n_features) it computes the pointwise
-    local reconstruction error of the features as defined in Ref. [frm]_.
+    local reconstruction error of the features as defined in Ref. [Goscinski2021]_.
     In this case the number of samples of X and Y should agree with each other,
     but the number of features can be different. The error is expressed per sample.
 
@@ -388,7 +372,7 @@ def pointwise_local_reconstruction_error(
     features of X and Y should agree with each other, but the number of
     samples can be different. The error is expressed per feature.
 
-    The default parameters mimics the ones of Ref. [frm]_.
+    The default parameters mimics the ones of Ref. [Goscinski2021]_.
 
     Parameters
     ----------
@@ -429,10 +413,6 @@ def pointwise_local_reconstruction_error(
     pointwise_local_reconstruction_error : array_like
         The local reconstruction error for each sample/point
 
-    References
-    ----------
-    .. [frm]_ Goscinski, Fraux, Imbalzano and Ceriotti. "The role of feature space in
-             atomistic learning." arXiv preprint arXiv:2009.02741 (2020).
     """
     (
         train_idx,
@@ -512,7 +492,7 @@ def local_reconstruction_error(
     .. math:: LRE(X,Y) = \sqrt{\sum_i LRE^{(i)}(X,Y)}/\sqrt{n_\text{test}} % # noqa: W605
 
     If used with X and Y of shape (n_samples, n_features) it computes the
-    local reconstruction error of the features as defined in Ref. [frm]_.
+    local reconstruction error of the features as defined in Ref. [Goscinski2021]_.
     In this case the number of samples of X and Y should agree with each other,
     but the number of features can be different. The error is expressed per sample.
 
@@ -521,7 +501,7 @@ def local_reconstruction_error(
     features of X and Y should agree with each other, but the number of
     samples can be different. The error is expressed per feature.
 
-    The default parameters mimics the ones of Ref. [frm]_.
+    The default parameters mimics the ones of Ref. [Goscinski2021]_.
 
     Parameters
     ----------
@@ -562,10 +542,6 @@ def local_reconstruction_error(
     local_reconstruction_error : array_like
         The local reconstruction error
 
-    References
-    ----------
-    .. [frm]_ Goscinski, Fraux, Imbalzano and Ceriotti. "The role of feature space in
-             atomistic learning." arXiv preprint arXiv:2009.02741 (2020).
     """
     pointwise_local_reconstruction_error_values = pointwise_local_reconstruction_error(
         X,
