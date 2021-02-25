@@ -13,11 +13,10 @@
 import os
 import sys
 import sphinx_rtd_theme
+import shutil
 
 ROOT = os.path.abspath(os.path.join("..", ".."))
 sys.path.insert(0, ROOT)
-
-import shutil  # noqa
 
 shutil.rmtree(os.path.join(ROOT, "docs/source/read-only-examples"), ignore_errors=True)
 shutil.copytree(
@@ -51,6 +50,9 @@ extensions = [
     "sphinx.ext.napoleon",
     "nbsphinx",
 ]
+
+nbsphinx_execute = "always"
+nbsphinx_allow_errors = True
 
 source_suffix = [".rst", ".ipynb"]
 
