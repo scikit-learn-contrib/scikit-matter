@@ -1,7 +1,7 @@
 import numpy as np
 
 from skcosmo.feature_selection.voronoi_fps import VoronoiFPS
-from skcosmo.feature_selection.simple_fps import SimpleFPS
+from skcosmo.feature_selection.simple_fps import FPS
 
 import time
 
@@ -221,7 +221,7 @@ class VoronoiBenchmark(VoronoiFPS):
         return self.times_, self.n_dist_calc_each_
 
 
-class SimpleBenchmark(SimpleFPS):
+class SimpleBenchmark(FPS):
     def _init_greedy_search(self, X, y, n_to_select):
         self.start_ = time.time()
         self.times_ = np.zeros(n_to_select)

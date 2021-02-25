@@ -1,7 +1,7 @@
 import numpy as np
 from ase.io import read
 
-from skcosmo.feature_selection import SimpleFPS
+from skcosmo.feature_selection import FPS
 from rascal.representations import SphericalInvariants as SOAP
 
 
@@ -38,7 +38,7 @@ X_raw = soap.transform(frames).get_features(soap)
 
 
 # select 100 diverse samples
-i_selected = SimpleFPS(n_features_to_select=n_samples).fit(X_raw.T).selected_idx_
+i_selected = FPS(n_features_to_select=n_samples).fit(X_raw.T).selected_idx_
 
 # book-keep which frames these samples belong in
 frames_select = [np.where(n_env_accum > i)[0][0] for i in i_selected]
@@ -82,7 +82,7 @@ X_sample_select = X_raw_select[i_select_reduced]
 
 
 # select 100 / 2520 soap features
-X_select = SimpleFPS(n_features_to_select=n_features).fit_transform(X_sample_select)
+X_select = FPS(n_features_to_select=n_features).fit_transform(X_sample_select)
 Y_select = properties_select_reduced.reshape(-1, 1)
 
 data = dict(X=X_select, Y=Y_select)
