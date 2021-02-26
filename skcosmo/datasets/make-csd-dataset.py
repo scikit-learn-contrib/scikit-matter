@@ -7,7 +7,7 @@ from rascal.representations import SphericalInvariants as SOAP
 
 # read all of the frames and book-keep the centers and species
 # filename = "/path/to/CSD-1000r.xyz"
-filename = "/Users/rosecers/work_folders/cosmo/PCovCUR/datasets/CSD-1000r.xyz"
+filename = "/home/michele/lavoro/projects/KernelPCovR/datasets/CSD-1000R.xyz"
 n_features = 200
 n_samples = 1000
 frames = np.asarray(

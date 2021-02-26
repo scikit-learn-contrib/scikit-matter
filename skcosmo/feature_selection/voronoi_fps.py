@@ -94,17 +94,25 @@ class VoronoiFPS(FPS):
 
         else:
             f_active = self._get_active(X, last_selected)
-            if len(np.where(f_active)[0]) > 0:
+            
+            # we need to compute distances between the new point and all the points
+            # in the active Voronoi cells. 
+            if len(np.where(f_active)[0]) > 0:                
                 if (
                     np.sum(self.number_in_voronoi[f_active]) / X.shape[1]
                     > VORONOI_CUTOFF_FRACTION
-                ):
+                ):                    
+                    # if the number of distances we need to compute is large, it is 
+                    # better to switch to a full-matrix-algebra calculation. 
                     new_dist = super()._calculate_distances(X, last_selected)
                     updated_points = np.where(new_dist < self.haussdorf_)[0]
                     np.minimum(self.haussdorf_, new_dist, self.haussdorf_)
                     f_active = np.full(self.n_selected_, False)
                     f_active[self.vlocation_of_idx[updated_points]] = True
-                elif len(np.where(f_active)[0]) > 0:
+                else: 
+                    # ... else we only iterate over the active points, although 
+                    # this involves more memory jumps, and can be more costly than
+                    # computing all distances.
                     new_dist = self.haussdorf_.copy()
                     active_points = np.concatenate(
                         np.array(self.idx_in_voronoi, dtype=object)[f_active]
