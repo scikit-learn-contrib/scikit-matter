@@ -74,7 +74,8 @@ class VoronoiFPS(FPS):
         for ic in range(self.n_selected_):
             # empty voronoi, no need to consider it
             if self.number_in_voronoi[ic] > 1:
-                r2 = max(self.haussdorf_[self.idx_in_voronoi[ic]])
+                r2 = self.haussdorf_[self.furthest_point[ic]]
+                
                 if self.sel_d2q_[ic] < r2:
                     # these voronoi cells need to be updated
                     f_active[ic] = True
