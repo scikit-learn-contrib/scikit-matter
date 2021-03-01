@@ -380,8 +380,8 @@ class PCovR(_BasePCA, LinearModel):
             self.explained_variance_ / self.explained_variance_.sum()
         )
 
-        S_inv = np.array(
-            [1.0 / s if s > self.tol else 0.0 for s in S[: self.n_components]]
+        S_inv = np.diagflat(
+            [1.0 / s if s > self.tol else 0.0 for s in S]
         )
         self.pxt_ = np.linalg.multi_dot([iCsqrt, Vt.T, np.diagflat(S)])
         self.ptx_ = np.linalg.multi_dot([S_inv, Vt, Csqrt])
