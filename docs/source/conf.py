@@ -51,9 +51,6 @@ extensions = [
     "nbsphinx",
 ]
 
-nbsphinx_execute = "always"
-nbsphinx_allow_errors = True
-
 source_suffix = [".rst", ".ipynb"]
 
 # If set to False return type and description are put into one paragraph
