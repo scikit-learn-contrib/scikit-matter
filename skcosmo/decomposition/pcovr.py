@@ -299,7 +299,7 @@ class PCovR(_BasePCA, LinearModel):
                 self.space = "sample"
 
         if self.space == "feature":
-            self._fit_feature_space(X, Y.reshape(Yhat.shape), Yhat, W)
+            self._fit_feature_space(X, Y.reshape(Yhat.shape), Yhat)
         else:
             self._fit_sample_space(X, Y.reshape(Yhat.shape), Yhat, W)
 
@@ -315,7 +315,7 @@ class PCovR(_BasePCA, LinearModel):
         self.components_ = self.pxt_.T  # for sklearn compatibility
         return self
 
-    def _fit_feature_space(self, X, Y, Yhat, W=None):
+    def _fit_feature_space(self, X, Y, Yhat):
         r"""
         In feature-space PCovR, the projectors are determined by:
 
