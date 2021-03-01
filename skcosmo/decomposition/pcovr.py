@@ -299,9 +299,9 @@ class PCovR(_BasePCA, LinearModel):
                 self.space = "sample"
 
         if self.space == "feature":
-            self._fit_feature_space(X, Yhat, W)
+            self._fit_feature_space(X, Y, Yhat, W)
         else:
-            self._fit_sample_space(X, Yhat, W)
+            self._fit_sample_space(X, Y, Yhat, W)
 
         self.pxy_ = self.pxt_ @ self.pty_
         if len(Y.shape) == 1:
@@ -315,7 +315,7 @@ class PCovR(_BasePCA, LinearModel):
         self.components_ = self.pxt_.T  # for sklearn compatibility
         return self
 
-    def _fit_feature_space(self, X, Yhat, W=None):
+    def _fit_feature_space(self, X, Y, Yhat, W=None):
         r"""
         In feature-space PCovR, the projectors are determined by:
 
@@ -383,9 +383,9 @@ class PCovR(_BasePCA, LinearModel):
         S_inv = np.linalg.pinv(np.diagflat(S[: self.n_components]))
         self.pxt_ = np.linalg.multi_dot([iCsqrt, Vt.T, np.diagflat(S)])
         self.ptx_ = np.linalg.multi_dot([S_inv, Vt, Csqrt])
-        self.pty_ = np.linalg.multi_dot([S_inv, Vt, iCsqrt, X.T, Yhat])
+        self.pty_ = np.linalg.multi_dot([S_inv, Vt, iCsqrt, X.T, Y])
 
-    def _fit_sample_space(self, X, Yhat, W):
+    def _fit_sample_space(self, X, Y, Yhat, W):
         r"""
         In sample-space PCovR, the projectors are determined by:
 
@@ -436,7 +436,7 @@ class PCovR(_BasePCA, LinearModel):
         T = Vt.T @ np.diagflat(1 / np.sqrt(S))
 
         self.pxt_ = P @ T
-        self.pty_ = T.T @ Yhat
+        self.pty_ = T.T @ Y
         self.ptx_ = T.T @ X
 
     def _decompose_truncated(self, mat):
