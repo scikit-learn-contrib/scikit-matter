@@ -432,7 +432,7 @@ class PCovR(_BasePCA, LinearModel):
             self.explained_variance_ / self.explained_variance_.sum()
         )
 
-        P = (self.mixing * X.T) + (1.0 - self.mixing) * np.dot(W, Yhat.T)
+        P = (self.mixing * X.T) + (1.0 - self.mixing) * W @ Yhat.T
         T = Vt.T @ np.diagflat(1 / np.sqrt(S))
 
         self.pxt_ = P @ T
