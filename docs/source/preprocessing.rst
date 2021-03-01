@@ -1,4 +1,4 @@
-Flexible Preprocessing
+Preprocessing
 =============================
 
 .. automodule:: skcosmo.preprocessing.flexible_scaler
