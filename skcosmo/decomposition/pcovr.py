@@ -299,9 +299,9 @@ class PCovR(_BasePCA, LinearModel):
                 self.space = "sample"
 
         if self.space == "feature":
-            self._fit_feature_space(X, Y, Yhat, W)
+            self._fit_feature_space(X, Y.reshape(Yhat.shape), Yhat, W)
         else:
-            self._fit_sample_space(X, Y, Yhat, W)
+            self._fit_sample_space(X, Y.reshape(Yhat.shape), Yhat, W)
 
         self.pxy_ = self.pxt_ @ self.pty_
         if len(Y.shape) == 1:
