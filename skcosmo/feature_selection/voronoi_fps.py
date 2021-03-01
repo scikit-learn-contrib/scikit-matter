@@ -86,7 +86,6 @@ class VoronoiFPS(FPS):
         # n_selected has not been incremented, so index of new voronoi is
         # n_selected
         self.eligible_[last_selected] = False
-        self.haussdorf_[last_selected] = 0.0
 
         if self.n_selected_ == 0:
             self.haussdorf_ = super()._calculate_distances(X, last_selected)
@@ -132,7 +131,8 @@ class VoronoiFPS(FPS):
                     np.minimum(self.haussdorf_, new_dist, self.haussdorf_)
 
                 old_voronoi_loc = list(set(self.vlocation_of_idx[updated_points]))
-                old_voronoi_loc.append(self.vlocation_of_idx[last_selected])
+                if not(self.vlocation_of_idx[last_selected] in old_voronoi_loc):
+                    old_voronoi_loc.append(self.vlocation_of_idx[last_selected])
                 for v in old_voronoi_loc:
                     self.eligible_[self.furthest_point[v]] = False
 
@@ -169,7 +169,6 @@ class VoronoiFPS(FPS):
         self.eligible_[:] = False
         self.eligible_[self.furthest_point[: self.n_selected_ + 1]] = True
         self.eligible_[self.selected_idx_[: self.n_selected_ + 1]] = False
-        self.haussdorf_[self.selected_idx_] = 0.0
 
         assert self.vlocation_of_idx[last_selected] == self.n_selected_
         return self.haussdorf_

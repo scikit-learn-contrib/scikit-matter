@@ -120,7 +120,6 @@ class FPS(GreedySelector):
         """
 
         self.haussdorf_at_select_[last_selected] = self.haussdorf_[last_selected]
-        self.haussdorf_[last_selected] = 0
 
         # distances of all points to the new point
         new_dist = self._calculate_distances(X, last_selected)
