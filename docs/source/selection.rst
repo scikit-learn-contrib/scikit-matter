@@ -39,7 +39,7 @@ These selection methods can be modified to be semi-supervised by using augmented
 right or left singular vectors, as shown in [Cersonsky 2021].
 
 .. currentmodule:: skcosmo.feature_selection
-.. autoclass:: SimpleCUR
+.. autoclass:: CUR
     :show-inheritance:
     :no-undoc-members:
 
@@ -48,7 +48,7 @@ right or left singular vectors, as shown in [Cersonsky 2021].
 WARNING
 -------
 The following two CUR methods are undergoing re-structuring, and will soon be
-replaced with classes similar in structure to `SimpleCUR`.
+replaced with classes similar in structure to `CUR`.
 
 .. currentmodule:: skcosmo.feature_selection
 .. autoclass:: FeatureCUR
@@ -76,23 +76,17 @@ These selection methods can be modified to be semi-supervised by using the
 PCovR covariance and Gram matrices to compute the distances, as shown in [Cersonsky 2021].
 
 .. currentmodule:: skcosmo.feature_selection
-.. autoclass:: SimpleFPS
+.. autoclass:: FPS
     :show-inheritance:
     :no-undoc-members:
 
     .. automethod:: fit
 
-.. currentmodule:: skcosmo.feature_selection
-.. autoclass:: CSimpleFPS
-    :show-inheritance:
-    :no-undoc-members:
-
-    .. automethod:: fit
 
 WARNING
 -------
 The following two FPS methods are undergoing re-structuring, and will soon be
-replaced with classes similar in structure to `SimpleFPS`.
+replaced with classes similar in structure to `FPS`.
 
 .. currentmodule:: skcosmo.feature_selection
 .. autoclass:: FeatureFPS
