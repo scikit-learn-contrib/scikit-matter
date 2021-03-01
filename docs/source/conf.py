@@ -13,9 +13,18 @@
 import os
 import sys
 import sphinx_rtd_theme
+import shutil
 
 ROOT = os.path.abspath(os.path.join("..", ".."))
 sys.path.insert(0, ROOT)
+
+shutil.rmtree(os.path.join(ROOT, "docs/source/read-only-examples"), ignore_errors=True)
+shutil.copytree(
+    os.path.join(ROOT, "examples"),
+    os.path.join(ROOT, "docs/source/read-only-examples"),
+    ignore=shutil.ignore_patterns(".ipynb_checkpoints", "*.txt", "*no-doc*"),
+)
+
 import skcosmo  # noqa
 
 # -- Project information -----------------------------------------------------
@@ -39,7 +48,13 @@ release = skcosmo.__version__
 extensions = [
     "sphinx.ext.autodoc",
     "sphinx.ext.napoleon",
+    "nbsphinx",
 ]
+
+nbsphinx_execute = "always"
+nbsphinx_allow_errors = True
+
+source_suffix = [".rst", ".ipynb"]
 
 # If set to False return type and description are put into one paragraph
 napoleon_use_rtype = False
@@ -50,7 +65,7 @@ templates_path = ["_templates"]
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
-exclude_patterns = []
+exclude_patterns = ["**.ipynb_checkpoints"]
 
 # -- Options for HTML output ----------------------------------------------
 
@@ -85,7 +100,7 @@ html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = ["_static"]
+# html_static_path = ["_static"]
 
 # Add any extra paths that contain custom files (such as robots.txt or
 # .htaccess) here, relative to this directory. These files are copied

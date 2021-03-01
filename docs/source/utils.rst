@@ -1,5 +1,5 @@
-utils
-=====
+Utility Classes
+===============
 
 .. _PCovR_dist-api:
 

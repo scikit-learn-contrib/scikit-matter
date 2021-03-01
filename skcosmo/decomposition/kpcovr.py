@@ -20,10 +20,24 @@ from skcosmo.preprocessing import KernelFlexibleCenterer
 
 
 class KPCovR(_BasePCA, LinearModel):
-    """
-    Performs Kernel Principal Covariates Regression, as described in
-    `[Helfrecht, et al., 2020]
-    <https://iopscience.iop.org/article/10.1088/2632-2153/aba9ef>`_.
+    r"""
+    Kernel Principal Covariates Regression, as described in [Helfrecht2020]_
+    determines a latent-space projection :math:`\mathbf{T}` which
+    minimizes a combined loss in supervised and unsupervised tasks in the
+    reproducing kernel Hilbert space (RKHS).
+
+    This projection is determined by the eigendecomposition of a modified gram
+    matrix :math:`\mathbf{\tilde{K}}`
+
+    .. math::
+
+      \mathbf{\tilde{K}} = \alpha \mathbf{K} +
+            (1 - \alpha) \mathbf{\hat{Y}}\mathbf{\hat{Y}}^T
+
+    where :math:`\alpha` is a mixing parameter,
+    :math:`\mathbf{K}` is the input kernel of shape :math:`(n_{samples}, n_{samples})`
+    and :math:`\mathbf{\hat{Y}}` is the target matrix of shape
+    :math:`(n_{samples}, n_{properties})`.
 
     Parameters
     ----------
@@ -142,18 +156,6 @@ class KPCovR(_BasePCA, LinearModel):
     X_fit_: ndarray of shape (n_samples, n_features)
         The data used to fit the model. This attribute is used to build kernels
         from new data.
-
-    References
-    ----------
-        1.  B. A. Helfrecht, R. K. Cersonsky, G. Fraux, and M. Ceriotti,
-            'Structure-property maps with Kernel principal covariates regression',
-            Machine Learning: Science and Technology 1(4):045021, 2020
-        2.  S. de Jong, H. A. L. Kiers, 'Principal Covariates
-            Regression: Part I. Theory', Chemometrics and Intelligent
-            Laboratory Systems 14(1): 155-164, 1992
-        3.  M. Vervolet, H. A. L. Kiers, W. Noortgate, E. Ceulemans,
-            'PCovR: An R Package for Principal Covariates Regression',
-            Journal of Statistical Software 65(1):1-14, 2015
 
     Examples
     --------
@@ -415,10 +417,10 @@ class KPCovR(_BasePCA, LinearModel):
     def score(self, X, Y):
         r"""
         Computes the loss values for KPCovR on the given predictor and
-        response variables. The loss in :math:`\mathbf{K}`, as explained in `[Helfrecht, et al., 2020]
-        <https://iopscience.iop.org/article/10.1088/2632-2153/aba9ef>`_ does not
-        correspond to a traditional Gram loss :math:`\mathbf{K} - \mathbf{TT}^T`.
-        Indicating the kernel between set A and B as :math:`\mathbf{K}_{AB}`,
+        response variables. The loss in :math:`\mathbf{K}`, as explained in
+        [Helfrecht2020]_ does not correspond to a traditional Gram loss
+        :math:`\mathbf{K} - \mathbf{TT}^T`. Indicating the kernel between set
+        A and B as :math:`\mathbf{K}_{AB}`,
         the projection of set A as :math:`\mathbf{T}_A`, and with N and V as the
         train and validation/test set, one obtains
 

@@ -21,11 +21,11 @@ class OrthogonalRegression(MultiOutputMixin, RegressorMixin):
         If this parameter is set to False X and y are padded with zeros to the larger
         number of features of X and y. The projection method is similar
         to the procedure in the computation GFRD in the first version of
-        Ref. [frm]_. The method has been adapted obtain a full weight matrix.
+        Ref. [Goscinski2021]_. The method has been adapted obtain a full weight matrix.
 
         The projection can introduce nonanalytic behavior with respect to
         changes in dimensions of X for cases where X n_features > y n_targets.
-        See ``examples/linear_model/plot_orthogonal_regression_nonanalytic_behavior.py``
+        See ``examples/OrthogonalRegressionNonAnalytic_no-doc.ipynb``
 
     linear_estimator : object implementing fit/predict, default=None
         The linear estimator is used when `use_orthogonal_projector`
@@ -38,14 +38,10 @@ class OrthogonalRegression(MultiOutputMixin, RegressorMixin):
         dimension, when `use_orthogonal_projector` is set to False. This attribute
         is set to the maximum of the feature and target dimension.
 
-    coef_ : ndarray of shape (n_features,) or (n_targets, n_features) or (max_components_, max_components_)
-        Weight matrix. The shape (max_components_, max_components_) is used if
+    coef_ : ndarray of shape (n_features,) or (n_targets, n_features) or (max_components, max_components)
+        Weight matrix. The shape (max_components, max_components) is used if
         `use_orthogonal_projector` is set to False.
 
-    References
-    ----------
-    .. [frm]_ Goscinski, Fraux, Imbalzano and Ceriotti. "The role of feature space in
-             atomistic learning." arXiv preprint arXiv:2009.02741 (2020).
     """
 
     def __init__(self, use_orthogonal_projector=True, linear_estimator=None):
