@@ -34,7 +34,7 @@ class TestPCovFPS(unittest.TestCase):
             self.assertEquals(
                 str(cm.message),
                 "Mixing = 1.0 corresponds to traditional FPS."
-                "Please use the SimpleFPS class.",
+                "Please use the FPS class.",
             )
 
 

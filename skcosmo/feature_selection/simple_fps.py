@@ -86,6 +86,10 @@ class FPS(GreedySelector):
         )
 
     def _calculate_distances(self, X, last_selected):
+        """
+        Using the norms saved, calculate the distance between points
+        """
+
         return self.norms_ + self.norms_[last_selected] - 2 * X[:, last_selected] @ X
 
     def _init_greedy_search(self, X, y, n_to_select):
@@ -96,7 +100,8 @@ class FPS(GreedySelector):
         """
 
         super()._init_greedy_search(X, y, n_to_select)
-        self.norms_ = (X ** 2).sum(axis=0)
+
+        self._set_norms(X, y)
 
         if self.initialize == "random":
             initialize = np.random.randint(X.shape[1])
@@ -110,7 +115,17 @@ class FPS(GreedySelector):
         self.haussdorf_at_select_ = np.full(X.shape[1], np.inf)
         self._update_post_selection(X, y, self.selected_idx_[0])
 
+    def _set_norms(self, X, y):
+        """
+        Set the norms as the dot product between points
+        """
+
+        self.norms_ = (X ** 2).sum(axis=0)
+
     def score(self, X, y):
+        """
+        Return the haussdorf distance for all points
+        """
         return self.haussdorf_
 
     def _update_post_selection(self, X, y, last_selected):
@@ -130,6 +145,9 @@ class FPS(GreedySelector):
         super()._update_post_selection(X, y, last_selected)
 
     def get_select_distance(self):
+        """
+        Return the haussdorf distance for selected features at their selection
+        """
         if hasattr(self, "haussdorf_at_select_"):
             return self.haussdorf_at_select_[self.selected_idx_]
         else:

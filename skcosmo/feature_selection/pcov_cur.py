@@ -2,11 +2,11 @@ import numpy as np
 from scipy.sparse.linalg import eigs as speig
 from scipy.linalg import eig
 
-from .simple_cur import SimpleCUR
+from .simple_cur import CUR
 from ..utils import pcovr_covariance
 
 
-class PCovCUR(SimpleCUR):
+class PCovCUR(CUR):
     """Transformer that performs Greedy Feature Selection using by choosing features
     which maximize the importance score :math:`\\pi`, which is the sum over
     the squares of the first :math:`k` components of the right singular vectors
@@ -21,7 +21,7 @@ class PCovCUR(SimpleCUR):
     \\mathbf{\\hat{Y}\\hat{Y}}^T\\mathbf{X}(\\mathbf{X}^T\\mathbf{X})^{-1/2}}`
     for some mixing parameter :math:`{\\alpha}`. When :math:`{\\alpha = 1}`,
     this defaults to the covariance matrix
-    :math:`{\\mathbf{C} = \\mathbf{X}^T\\mathbf{X}}` used in SimpleCUR.
+    :math:`{\\mathbf{C} = \\mathbf{X}^T\\mathbf{X}}` used in CUR.
 
     Parameters
     ----------
@@ -70,6 +70,26 @@ class PCovCUR(SimpleCUR):
 
     X_selected_ : ndarray (n_samples, n_features_to_select)
                   The features selected
+
+    X_current_ : ndarray (n_samples, n_features)
+                  The features, orthogonalized by previously selected features
+
+    y_current_ : ndarray (n_samples, n_properties)
+                The properties, if supplied, orthogonalized by a regression on
+                the previously selected features
+
+    eligible_ : ndarray of shape (n_features,), dtype=bool
+        A mask of features eligible for selection
+
+    n_selected_ : int
+        The number of features that have been selected thus far
+
+    report_progress : callable
+        A wrapper to report the progress of the selector using a `tqdm` style
+        progress bar
+
+    score_threshold : float (optional)
+        A score below which to stop selecting points
 
     selected_idx_ : ndarray of integers
                     indices of the selected features, with respect to the
@@ -134,5 +154,5 @@ class PCovCUR(SimpleCUR):
             v, U = eig(Ct)
         U = U[:, np.flip(np.argsort(v))]
         pi = (np.real(U)[:, : self.k] ** 2.0).sum(axis=1)
-        # print(X.shape, np.argsort(-pi))
+
         return pi

@@ -1,10 +1,10 @@
 import numpy as np
 
 from ..utils import pcovr_covariance
-from .simple_fps import SimpleFPS
+from .simple_fps import FPS
 
 
-class PCovFPS(SimpleFPS):
+class PCovFPS(FPS):
     """Transformer that performs Greedy Feature Selection using PCovR-weighted
     Farthest Point Sampling. Traditional FPS employs a column-wise Euclidean
     distance, which can be expressed using the covariance matrix
@@ -55,14 +55,27 @@ class PCovFPS(SimpleFPS):
                  distance is not updated; the final list will reflect the
                  distances when selected.
 
-    n_features_to_select : int
-        The number of features that were selected.
-
     norms_ : ndarray of shape (n_features,)
         The self-covariances of each of the features
 
+    n_features_to_select : int
+        The number of features that were selected.
+
     X_selected_ : ndarray (n_samples, n_features_to_select)
                   The features selected
+
+    eligible_ : ndarray of shape (n_features,), dtype=bool
+        A mask of features eligible for selection
+
+    n_selected_ : int
+        The number of features that have been selected thus far
+
+    report_progress : callable
+        A wrapper to report the progress of the selector using a `tqdm` style
+        progress bar
+
+    score_threshold : float (optional)
+        A score below which to stop selecting points
 
     selected_idx_ : ndarray of integers
                     indices of the selected features, with respect to the
@@ -85,7 +98,7 @@ class PCovFPS(SimpleFPS):
         if mixing == 1.0:
             raise ValueError(
                 "Mixing = 1.0 corresponds to traditional FPS."
-                "Please use the SimpleFPS class."
+                "Please use the FPS class."
             )
 
         self.mixing = mixing
@@ -97,18 +110,27 @@ class PCovFPS(SimpleFPS):
             tolerance=tolerance,
         )
 
-    def _get_norms(self, X, y):
-        self.modified_covariance = pcovr_covariance(mixing=self.mixing, X=X, Y=y)
-        return np.diag(self.modified_covariance)
+    def _set_norms(self, X, y):
+        """
+        Set the norms as the augmented dot product of features
+        """
+        self.modified_covariance_ = pcovr_covariance(mixing=self.mixing, X=X, Y=y)
+        self.norms_ = np.diag(self.modified_covariance_)
 
-    def _get_dist(self, X, last_selected):
+    def _calculate_distances(self, X, last_selected):
+        """
+        Using the norms saved, calculate the distance between points
+        """
         return (
             self.norms_
             + self.norms_[last_selected]
-            - 2 * self.modified_covariance[:, last_selected]
+            - 2 * self.modified_covariance_[:, last_selected]
         )
 
     def _more_tags(self):
+        """
+        Pass that this method requires a target vector
+        """
         return {
             "requires_y": True,
         }

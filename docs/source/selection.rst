@@ -81,17 +81,6 @@ PCovR covariance and Gram matrices to compute the distances, as shown in [Cerson
 
     .. automethod:: fit
 
-<<<<<<< HEAD
-
-WARNING
--------
-The following two FPS methods are undergoing re-structuring, and will soon be
-replaced with classes similar in structure to `FPS`.
-=======
-WARNING
--------
->>>>>>> 216b8e1... Removing old remnants
-
 .. currentmodule:: skcosmo.feature_selection
 .. autoclass:: PCovFPS
     :show-inheritance:
