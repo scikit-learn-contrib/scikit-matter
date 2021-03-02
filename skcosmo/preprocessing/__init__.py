@@ -5,9 +5,9 @@ normalization methods.
 
 from .flexible_scaler import (
     StandardFlexibleScaler,
-    KernelFlexibleCenterer,
+    KernelNormalizer,
     SparseKernelCenterer,
 )
 
 
-__all__ = ["StandardFlexibleScaler", "KernelFlexibleCenterer", "SparseKernelCenterer"]
+__all__ = ["StandardFlexibleScaler", "KernelNormalizer", "SparseKernelCenterer"]

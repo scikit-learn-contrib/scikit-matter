@@ -16,7 +16,7 @@ from sklearn.linear_model._base import LinearModel
 from sklearn.metrics.pairwise import pairwise_kernels
 
 from skcosmo.utils import pcovr_kernel
-from skcosmo.preprocessing import KernelFlexibleCenterer
+from skcosmo.preprocessing import KernelNormalizer
 
 
 class KPCovR(_BasePCA, LinearModel):
@@ -311,7 +311,7 @@ class KPCovR(_BasePCA, LinearModel):
         K = self._get_kernel(X)
 
         if self.center:
-            self._centerer = KernelFlexibleCenterer()
+            self._centerer = KernelNormalizer()
             K = self._centerer.fit_transform(K)
 
         self.n_samples = X.shape[0]

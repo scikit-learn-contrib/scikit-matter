@@ -1,6 +1,8 @@
 import numpy as np
 from sklearn.base import TransformerMixin, BaseEstimator
 from sklearn.utils.validation import check_is_fitted
+from sklearn.preprocessing._data import KernelCenterer
+from sklearn.utils.validation import FLOAT_DTYPES
 
 
 class StandardFlexibleScaler(TransformerMixin, BaseEstimator):
@@ -15,6 +17,7 @@ class StandardFlexibleScaler(TransformerMixin, BaseEstimator):
     :param column_wise: If True, normalize each column separately. If False, normalize the whole matrix, divided it by variaton.
     :type column_wise: boolean
     :param tol: The tolerance for the optimization: if the variance are smaller than tol, it is considered zero.
+
     """
 
     def __init__(self, with_mean=True, with_std=True, column_wise=False, tol=1e-15):
@@ -102,16 +105,47 @@ class StandardFlexibleScaler(TransformerMixin, BaseEstimator):
         return X_tr * self.scale_ + self.mean_
 
 
-class KernelFlexibleCenterer(TransformerMixin, BaseEstimator):
+class KernelNormalizer(KernelCenterer):
     """Kernel centering method, similar to KernelCenterer,
-    but with additional parameters, relative to which centering
-    is carried out:
+    but with additional scaling and passing of precomputed kernel means.
 
+
+    Attributes
+    ----------
+    K_fit_rows_ : array of shape (n_samples,)
+        Average of each column of kernel matrix.
+
+    K_fit_all_ : float
+        Average of kernel matrix.
+
+    Examples
+    --------
+    >>> from skcosmo.preprocessing import KernelNormalizer
+    >>> from sklearn.metrics.pairwise import pairwise_kernels
+    >>> X = [[ 1., -2.,  2.],
+    ...      [ -2.,  1.,  3.],
+    ...      [ 4.,  1., -2.]]
+    >>> K = pairwise_kernels(X, metric='linear')
+    >>> K
+    array([[  9.,   2.,  -2.],
+           [  2.,  14., -13.],
+           [ -2., -13.,  21.]])
+    >>> transformer = KernelNormalizer().fit(K)
+    >>> transformer
+    KernelNormalizer()
+    >>> transformer.transform(K)
+    array([[ 0.39473684,  0.        , -0.39473684],
+           [ 0.        ,  1.10526316, -1.10526316],
+           [-0.39473684, -1.10526316,  1.5       ]])
+    >>> transformer.scale_ * transformer.transform(K)
+    array([[  5.,   0.,  -5.],
+           [  0.,  14., -14.],
+           [ -5., -14.,  19.]])
+    >>>
     """
 
     def __init__(self):
-        """Initialize KernelFlexibleCenterer."""
-        pass
+        super().__init__()
 
     def fit(self, K=None, y=None, K_fit_rows=None, K_fit_all=None):
         """Fit KernelFlexibleCenterer
@@ -124,78 +158,48 @@ class KernelFlexibleCenterer(TransformerMixin, BaseEstimator):
         :param K_fit_all: an average for the whole kernel matrix
         :type K_fit_all: array
 
-        :return: itself
+        :return: fitted transformer
         """
-        if K is not None:
-            if K.shape[0] != K.shape[1]:
-                raise ValueError(
-                    "The reference kernel is not square, and does not define a RKHS"
-                )
 
-            self.reference_shape_ = K.shape
-
-            if K_fit_rows is not None:
-                if K.shape[0] != len(K_fit_rows):
-                    raise ValueError(
-                        "The supplied column mean does not match the supplied kernel."
-                    )
-            else:
-                K_fit_rows = K.mean(axis=0)
-
-            if K_fit_all is None:
-                K_fit_all = K.mean()
-
+        if K_fit_rows is not None and K_fit_all is not None:
+            self.K_fit_rows_ = K_fit_rows
+            self.K_fit_all_ = K_fit_all
         else:
-            assert K_fit_rows is not None and K_fit_all is not None
-            self.reference_shape_ = [None, len(K_fit_rows)]
+            super().fit(K, y)
 
-        self.K_fit_rows_ = K_fit_rows
-        self.K_fit_all_ = K_fit_all
+        Kc = self._validate_data(K, copy=True, dtype=FLOAT_DTYPES, reset=False)
 
-        Kc = (
-            K
-            - np.broadcast_arrays(K, self.K_fit_rows_)[1]
-            - np.mean(K, axis=1).reshape((K.shape[0], 1))
-            + np.broadcast_arrays(K, self.K_fit_all_)[1]
-        )
+        K_pred_cols = (np.sum(Kc, axis=1) / self.K_fit_rows_.shape[0])[:, np.newaxis]
+
+        Kc -= self.K_fit_rows_
+        Kc -= K_pred_cols
+        Kc += self.K_fit_all_
 
         self.scale_ = np.trace(Kc) / K.shape[0]
 
         return self
 
-    def transform(self, K, y=None):
-        """Centering our Kernel. Previously you should fit data.
+    def transform(self, K, copy=True):
+        """Center kernel matrix.
 
-        :param K: Kernel matrix
-        :type K: ndarray of shape (n_samples, n_samples)
-        :param y: ignored
+        Parameters
+        ----------
+        K : ndarray of shape (n_samples1, n_samples2)
+            Kernel matrix.
 
-        :return: tranformed matrix Kc
+        copy : bool, default=True
+            Set to False to perform inplace computation.
 
-        check each of the parameters self.reference_shape_, self.scale_, self.K_fit_all_,
-        and self.K_fit_rows_, which must all be defined
+        Returns
+        -------
+        K_new : ndarray of shape (n_samples1, n_samples2)
         """
 
-        check_is_fitted(
-            self, attributes=["K_fit_rows_", "K_fit_all_", "scale_", "reference_shape_"]
-        )
+        return super().transform(K, copy) / self.scale_
 
-        if K.shape[1] != self.reference_shape_[1]:
-            raise ValueError(
-                "The reference kernel and received kernel have different shape"
-            )
-        rmean = K.mean(axis=1)
-
-        Kc = (
-            K
-            - np.broadcast_arrays(K, self.K_fit_rows_)[1]
-            - rmean.reshape((K.shape[0], 1))
-            + np.broadcast_arrays(K, self.K_fit_all_)[1]
-        ) / self.scale_
-
-        return Kc
-
-    def fit_transform(self, K, y=None, K_fit_rows=None, K_fit_all=None, **fit_params):
+    def fit_transform(
+        self, K, y=None, copy=True, K_fit_rows=None, K_fit_all=None, **fit_params
+    ):
         r"""Fit to data, then transform it.
 
         :param K: Kernel matrix
@@ -210,12 +214,14 @@ class KernelFlexibleCenterer(TransformerMixin, BaseEstimator):
         :return: tranformed matrix Kc
         """
         self.fit(K, y, K_fit_rows=K_fit_rows, K_fit_all=K_fit_all)
-        return self.transform(K, y)
+        return self.transform(K, copy)
 
 
 class SparseKernelCenterer(TransformerMixin, BaseEstimator):
     """Kernel centering method for sparse kernels, similar to
     KernelFlexibleCenterer
+
+
     """
 
     def __init__(self, rcond=1e-12):
@@ -275,8 +281,6 @@ class SparseKernelCenterer(TransformerMixin, BaseEstimator):
 
         :return: tranformed matrix Kc
 
-        check each of the parameters self.n_active_, self.scale_
-        and self.K_fit_rows_, which must all be defined
         """
         check_is_fitted(self, attributes=["scale_", "K_fit_rows_", "n_active_"])
 

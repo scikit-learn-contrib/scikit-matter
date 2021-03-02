@@ -1,5 +1,5 @@
 import unittest
-from skcosmo.preprocessing.flexible_scaler import KernelFlexibleCenterer
+from skcosmo.preprocessing.flexible_scaler import KernelNormalizer
 import sklearn
 import numpy as np
 
@@ -7,14 +7,14 @@ import numpy as np
 class KernelTests(unittest.TestCase):
     def test_NoInputs(self):
         """Checks that fit cannot be called with zero inputs."""
-        model = KernelFlexibleCenterer()
-        with self.assertRaises(AssertionError):
+        model = KernelNormalizer()
+        with self.assertRaises(ValueError):
             model.fit()
 
     def test_ValueError(self):
         """Checks that a non-square matrix cannot be normalized."""
         K = np.random.uniform(0, 100, size=(3, 4))
-        model = KernelFlexibleCenterer()
+        model = KernelNormalizer()
         with self.assertRaises(ValueError):
             model.fit(K)
 
@@ -23,7 +23,7 @@ class KernelTests(unittest.TestCase):
         a matrix with a non-coincident size with the reference."""
         K = np.random.uniform(0, 100, size=(3, 3))
         K_2 = np.random.uniform(0, 100, size=(2, 2))
-        model = KernelFlexibleCenterer()
+        model = KernelNormalizer()
         model = model.fit(K)
         with self.assertRaises(ValueError):
             model.transform(K_2)
@@ -33,7 +33,7 @@ class KernelTests(unittest.TestCase):
         trying to use the transform function
         before the fit function"""
         K = np.random.uniform(0, 100, size=(3, 3))
-        model = KernelFlexibleCenterer()
+        model = KernelNormalizer()
         with self.assertRaises(sklearn.exceptions.NotFittedError):
             model.transform(K)
 
@@ -43,7 +43,7 @@ class KernelTests(unittest.TestCase):
         directly from the equation.
         """
         K = np.random.uniform(0, 100, size=(3, 3))
-        model = KernelFlexibleCenterer()
+        model = KernelNormalizer()
         Ktr = model.fit_transform(K)
         Kc = (
             K
@@ -64,15 +64,19 @@ class KernelTests(unittest.TestCase):
         K = np.random.uniform(0, 100, size=(3, 3))
         K_fit_rows = np.random.uniform(0, 100, size=(3))
         K_fit_all = np.random.uniform(0, 100, size=(1))[0]
-        model = KernelFlexibleCenterer()
+        model = KernelNormalizer()
+
         K_tr = model.fit_transform(K, K_fit_rows=K_fit_rows, K_fit_all=K_fit_all)
-        Kc = (
-            K
-            - np.broadcast_arrays(K, K_fit_rows)[1]
-            - K.mean(axis=1).reshape((K.shape[0], 1))
-            + np.broadcast_arrays(K, K_fit_all)[1]
-        )
-        Kc /= np.trace(Kc) / Kc.shape[0]
+        Kc = K.copy()
+
+        K_pred_cols = (np.sum(Kc, axis=1) / K_fit_rows.shape[0])[:, np.newaxis]
+
+        Kc -= K_fit_rows
+        Kc -= K_pred_cols
+        Kc += K_fit_all
+
+        K_scale = np.trace(Kc) / K.shape[0]
+        Kc /= K_scale
 
         self.assertTrue((np.isclose(K_tr, Kc, atol=1e-12)).all())
 
