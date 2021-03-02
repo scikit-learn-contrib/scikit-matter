@@ -39,7 +39,7 @@ class KPCovRErrorTest(KPCovRBaseTest):
         """
         prev_error = -1.0
 
-        for i, mixing in enumerate(np.linspace(0, 1, 11)):
+        for i, mixing in enumerate(np.linspace(0, 1, 6)):
 
             pcovr = KPCovR(mixing=mixing, n_components=2, tol=1e-12)
             pcovr.fit(self.X, self.Y)
@@ -63,25 +63,36 @@ class KPCovRErrorTest(KPCovRBaseTest):
         """
 
         prev_error = 10.0
+        prev_x_error = 10.0
 
-        for i, mixing in enumerate(np.linspace(0, 1, 11)):
-            kpcovr = KPCovR(mixing=mixing, n_components=2, tol=1e-12)
+        for i, mixing in enumerate(np.linspace(0, 1, 6)):
+            kpcovr = KPCovR(
+                mixing=mixing, n_components=2, fit_inverse_transform=True, tol=1e-12
+            )
             kpcovr.fit(self.X, self.Y)
 
             t = kpcovr.transform(self.X)
             K = kpcovr._get_kernel(self.X)
+            x = kpcovr.inverse_transform(t)
 
             error = np.linalg.norm(K - t @ t.T) ** 2.0 / np.linalg.norm(K) ** 2.0
+            x_error = np.linalg.norm(self.X - x) ** 2.0 / np.linalg.norm(self.X) ** 2.0
 
             with self.subTest(error=error):
                 self.assertFalse(np.isnan(error))
             with self.subTest(error=error, alpha=round(mixing, 4)):
                 self.assertLessEqual(error, prev_error + self.error_tol)
 
+            with self.subTest(error=x_error):
+                self.assertFalse(np.isnan(x_error))
+            with self.subTest(error=x_error, alpha=round(mixing, 4)):
+                self.assertLessEqual(x_error, prev_x_error + self.error_tol)
+
             prev_error = error
+            prev_x_error = x_error
 
     def test_kpcovr_error(self):
-        for i, mixing in enumerate(np.linspace(0, 1, 11)):
+        for i, mixing in enumerate(np.linspace(0, 1, 6)):
             kpcovr = self.model(mixing=mixing, kernel="rbf", gamma=1.0, center=False)
 
             kpcovr.fit(self.X, self.Y)
@@ -95,6 +106,7 @@ class KPCovRErrorTest(KPCovRBaseTest):
             w = t @ np.linalg.pinv(t.T @ t, rcond=kpcovr.alpha) @ t.T
             Lkpca = np.trace(K - K @ w) / np.trace(K)
 
+            # this is only true for in-sample data
             self.assertTrue(
                 np.isclose(
                     kpcovr.score(self.X, self.Y), sum([Lkpca, Lkrr]), self.error_tol
@@ -135,11 +147,27 @@ class KPCovRInfrastructureTest(KPCovRBaseTest):
         self.assertTrue(T.shape[-1] == n_components)
 
     def test_no_centerer(self):
+        """
+        tests that when center=False, no centerer exists
+        """
         kpcovr = self.model(center=False)
         kpcovr.fit(self.X, self.Y)
 
         with self.assertRaises(AttributeError):
             _ = getattr(kpcovr, "centerer_")
+
+    def test_centerer(self):
+        """
+        tests that all functionalities that rely on the centerer work properly
+        """
+
+        kpcovr = self.model(center=True)
+        kpcovr.fit(self.X, self.Y)
+
+        self.assertTrue(hasattr(kpcovr, "centerer_"))
+        _ = kpcovr.predict(self.X)
+        _ = kpcovr.transform(self.X)
+        _ = kpcovr.score(self.X, self.Y)
 
 
 class KernelTests(KPCovRBaseTest):
