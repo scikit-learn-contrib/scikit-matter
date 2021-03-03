@@ -6,6 +6,34 @@ import numpy as np
 
 
 class ScalerTests(unittest.TestCase):
+    def test_sample_weights(self):
+        """Checks that sample weights of one are equal to the unweighted case and that the nonuniform weights are different from the unweighted case"""
+        X = np.random.uniform(0, 100, size=(3, 3))
+        equal_wts = np.ones(len(X))
+        nonequal_wts = np.random.uniform(0, 100, size=(len(X),))
+        model = StandardFlexibleScaler()
+        weighted_model = StandardFlexibleScaler()
+        X_unweighted = model.fit_transform(X)
+        X_equal_weighted = weighted_model.fit_transform(X, sample_weight=equal_wts)
+        self.assertTrue((np.isclose(X_unweighted, X_equal_weighted, atol=1e-12)).all())
+        X_nonequal_weighted = weighted_model.fit_transform(
+            X, sample_weight=nonequal_wts
+        )
+        self.assertFalse(
+            (np.isclose(X_unweighted, X_nonequal_weighted, atol=1e-12)).all()
+        )
+
+    def test_invalid_sample_weights(self):
+        """Checks that weights must be 1D array with the same length as the number of samples"""
+        X = np.random.uniform(0, 100, size=(3, 3))
+        wts_len = np.ones(len(X) + 1)
+        wts_dim = np.ones((len(X), 2))
+        model = StandardFlexibleScaler()
+        with self.assertRaises(ValueError):
+            model.fit_transform(X, sample_weight=wts_len)
+        with self.assertRaises(ValueError):
+            model.fit_transform(X, sample_weight=wts_dim)
+
     def test_fit_transform_pf(self):
         """Checks that in the case of normalization by columns,
         the result is the same as in the case of using the package from sklearn

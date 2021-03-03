@@ -5,6 +5,34 @@ import numpy as np
 
 
 class KernelTests(unittest.TestCase):
+    def test_sample_weights(self):
+        """Checks that sample weights of one are equal to the unweighted case and that nonuniform weights are different from the unweighted case"""
+        K = np.random.uniform(0, 100, size=(3, 3))
+        equal_wts = np.ones(len(K))
+        nonequal_wts = np.random.uniform(0, 100, size=(len(K),))
+        model = KernelNormalizer()
+        weighted_model = KernelNormalizer()
+        K_unweighted = model.fit_transform(K)
+        K_equal_weighted = weighted_model.fit_transform(K, sample_weight=equal_wts)
+        self.assertTrue((np.isclose(K_unweighted, K_equal_weighted, atol=1e-12)).all())
+        K_nonequal_weighted = weighted_model.fit_transform(
+            K, sample_weight=nonequal_wts
+        )
+        self.assertFalse(
+            (np.isclose(K_unweighted, K_nonequal_weighted, atol=1e-12)).all()
+        )
+
+    def test_invalid_sample_weights(self):
+        """Checks that weights must be 1D array with the same length as the number of samples"""
+        K = np.random.uniform(0, 100, size=(3, 3))
+        wts_len = np.ones(len(K) + 1)
+        wts_dim = np.ones((len(K), 2))
+        model = KernelNormalizer()
+        with self.assertRaises(ValueError):
+            model.fit_transform(K, sample_weight=wts_len)
+        with self.assertRaises(ValueError):
+            model.fit_transform(K, sample_weight=wts_dim)
+
     def test_NoInputs(self):
         """Checks that fit cannot be called with zero inputs."""
         model = KernelNormalizer()
@@ -45,40 +73,47 @@ class KernelTests(unittest.TestCase):
         K = np.random.uniform(0, 100, size=(3, 3))
         model = KernelNormalizer()
         Ktr = model.fit_transform(K)
-        Kc = (
-            K
-            - np.broadcast_arrays(K, K.mean(axis=0))[1]
-            - K.mean(axis=1).reshape((K.shape[0], 1))
-            + np.broadcast_arrays(K, K.mean())[1]
-        )
+        Kc = K - K.mean(axis=0) - K.mean(axis=1)[:, np.newaxis] + K.mean()
         Kc /= np.trace(Kc) / Kc.shape[0]
 
         self.assertTrue((np.isclose(Ktr, Kc, atol=1e-12)).all())
 
-    def test_fit_reference(self):
-        """Checks that the kernel is correctly normalized
-        with reference mean values.
+    def test_center_only(self):
+        """Checks that the kernel is correctly centered,
+        but not normalized.
         Compare with the value calculated
         directly from the equation.
         """
         K = np.random.uniform(0, 100, size=(3, 3))
-        K_fit_rows = np.random.uniform(0, 100, size=(3))
-        K_fit_all = np.random.uniform(0, 100, size=(1))[0]
-        model = KernelNormalizer()
+        model = KernelNormalizer(with_center=True, with_trace=False)
+        Ktr = model.fit_transform(K)
+        Kc = K - K.mean(axis=0) - K.mean(axis=1)[:, np.newaxis] + K.mean()
 
-        K_tr = model.fit_transform(K, K_fit_rows=K_fit_rows, K_fit_all=K_fit_all)
+        self.assertTrue((np.isclose(Ktr, Kc, atol=1e-12)).all())
+
+    def test_trace_only(self):
+        """Checks that the kernel is correctly normalized,
+        but not centered.
+        Compare with the value calculated
+        directly from the equation.
+        """
+        K = np.random.uniform(0, 100, size=(3, 3))
+        model = KernelNormalizer(with_center=False, with_trace=True)
+        Ktr = model.fit_transform(K)
         Kc = K.copy()
+        Kc /= np.trace(Kc) / Kc.shape[0]
 
-        K_pred_cols = (np.sum(Kc, axis=1) / K_fit_rows.shape[0])[:, np.newaxis]
+        self.assertTrue((np.isclose(Ktr, Kc, atol=1e-12)).all())
 
-        Kc -= K_fit_rows
-        Kc -= K_pred_cols
-        Kc += K_fit_all
-
-        K_scale = np.trace(Kc) / K.shape[0]
-        Kc /= K_scale
-
-        self.assertTrue((np.isclose(K_tr, Kc, atol=1e-12)).all())
+    def test_no_preprocessing(self):
+        """Checks that the kernel is unchanged
+        if no preprocessing is specified.
+        """
+        K = np.random.uniform(0, 100, size=(3, 3))
+        model = KernelNormalizer(with_center=False, with_trace=False)
+        Ktr = model.fit_transform(K)
+        Kc = K.copy()
+        self.assertTrue((np.isclose(Ktr, Kc, atol=1e-12)).all())
 
 
 if __name__ == "__main__":
