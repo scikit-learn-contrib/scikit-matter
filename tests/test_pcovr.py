@@ -45,9 +45,7 @@ class PCovRErrorTest(PCovRBaseTest):
         """
         for space in ["feature", "sample", "auto"]:
             with self.subTest(space=space):
-                pcovr = self.model(
-                    mixing=0.0, n_components=self.X.shape[-1], space=space
-                )
+                pcovr = self.model(mixing=0.0, n_components=1, space=space)
 
                 pcovr.estimator.fit(self.X, self.Y)
                 Yhat = pcovr.estimator.predict(self.X)
