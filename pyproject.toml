@@ -26,7 +26,15 @@ allowlist_externals = /bin/bash
 deps = -rexamples/requirements.txt
 
 commands =
-    bash -c "export SKCOSMO_EXAMPLES=$PWD; for file in $(find . -name '*.ipynb' -not -path '*/\\.*'); do export filename=$(basename $file); jupyter nbconvert --to notebook --output "$SKCOSMO_EXAMPLES/../.tox/examples/$filename" --execute "$file"; done"
+    bash -ec "\
+        SKCOSMO_EXAMPLES=$PWD; \
+        for file in $(find . -name '*.ipynb' -not -path '*/\\.*'); do \
+            filename=$(basename $file); \
+            jupyter nbconvert \
+                --to notebook \
+                --output "$SKCOSMO_EXAMPLES/../.tox/examples/$filename" \
+                --execute "$file"; \
+    done"
 """
 
 [tool.coverage.run]
