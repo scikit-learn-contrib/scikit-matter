@@ -202,15 +202,13 @@ class VoronoiBenchmark(VoronoiFPS):
         super()._continue_greedy_search(X, y, n_to_select)
 
     def _get_active(self, X, last_selected):
-        f_active = super()._get_active(X, last_selected)
+        active_points = super()._get_active(X, last_selected)
 
-        if np.sum(self.number_in_voronoi[f_active]) / X.shape[1] > (1.0 / 6.0):
+        if len(active_points) / X.shape[1] > (1.0 / 6.0):
             self.n_dist_calc_each_[0][self.n_selected_ - 1] = X.shape[-1]
         else:
-            self.n_dist_calc_each_[0][self.n_selected_ - 1] = np.sum(
-                self.number_in_voronoi[f_active]
-            )
-        return f_active
+            self.n_dist_calc_each_[0][self.n_selected_ - 1] = len(active_points)
+        return active_points
 
     def _update_post_selection(self, X, y, last_selected):
         self.times_[self.n_selected_] = time.time() - self.start_
