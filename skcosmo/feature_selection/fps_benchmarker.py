@@ -1,187 +1,12 @@
 import numpy as np
+import pandas as pd
+import matplotlib as mpl
+from matplotlib import pyplot as plt
 
 from skcosmo.feature_selection.voronoi_fps import VoronoiFPS
 from skcosmo.feature_selection.simple_fps import FPS
 
 import time
-
-idx = [
-    0,
-    113,
-    194,
-    177,
-    30,
-    18,
-    28,
-    51,
-    74,
-    140,
-    92,
-    131,
-    172,
-    160,
-    12,
-    40,
-    116,
-    4,
-    97,
-    55,
-    68,
-    27,
-    106,
-    162,
-    90,
-    70,
-    184,
-    80,
-    25,
-    100,
-    22,
-    47,
-    120,
-    150,
-    2,
-    61,
-    3,
-    82,
-    126,
-    29,
-    165,
-    65,
-    142,
-    57,
-    110,
-    132,
-    145,
-    85,
-    108,
-    38,
-    115,
-    84,
-    53,
-    8,
-    191,
-    91,
-    5,
-    180,
-    111,
-    42,
-    67,
-    36,
-    88,
-    24,
-    176,
-    93,
-    186,
-    46,
-    16,
-    63,
-    170,
-    155,
-    188,
-    34,
-    52,
-    107,
-    69,
-    139,
-    179,
-    169,
-    118,
-    168,
-    17,
-    157,
-    161,
-    6,
-    117,
-    60,
-    133,
-    196,
-    33,
-    125,
-    81,
-    56,
-    71,
-    175,
-    109,
-    41,
-    127,
-    114,
-    149,
-    11,
-    190,
-    99,
-    39,
-    159,
-    105,
-    163,
-    152,
-    102,
-    64,
-    128,
-    1,
-    124,
-    164,
-    185,
-    13,
-    148,
-    44,
-    76,
-    83,
-    173,
-    94,
-    141,
-    112,
-    89,
-    62,
-    7,
-    153,
-    43,
-    134,
-    26,
-    66,
-    14,
-    178,
-    73,
-    146,
-    167,
-    48,
-    144,
-    50,
-    130,
-    31,
-    78,
-    121,
-    21,
-    174,
-    104,
-    183,
-    187,
-    119,
-    49,
-    137,
-    151,
-    10,
-    198,
-    101,
-    45,
-    147,
-    195,
-    95,
-    136,
-    15,
-    19,
-    54,
-    182,
-    75,
-    98,
-    79,
-    72,
-    181,
-    123,
-    9,
-    197,
-]
-
 
 class VoronoiBenchmark(VoronoiFPS):
     def _init_greedy_search(self, X, y, n_to_select):
@@ -201,16 +26,10 @@ class VoronoiBenchmark(VoronoiFPS):
         self.n_dist_calc_each_[1] = np.arange(n_to_select)
         super()._continue_greedy_search(X, y, n_to_select)
 
-    def _get_active(self, X, last_selected):
-        f_active = super()._get_active(X, last_selected)
-
-        if np.sum(self.number_in_voronoi[f_active]) / X.shape[1] > (1.0 / 6.0):
-            self.n_dist_calc_each_[0][self.n_selected_ - 1] = X.shape[-1]
-        else:
-            self.n_dist_calc_each_[0][self.n_selected_ - 1] = np.sum(
-                self.number_in_voronoi[f_active]
-            )
-        return f_active
+    def _calculate_distances(self, X, last_selected, **kwargs):
+        super()._calculate_distances(X, last_selected, **kwargs)
+        self.n_dist_calc_each_[0][self.n_selected_ - 1] = self.number_calculated_dist
+        return self.haussdorf_
 
     def _update_post_selection(self, X, y, last_selected):
         self.times_[self.n_selected_] = time.time() - self.start_
@@ -248,58 +67,58 @@ class SimpleBenchmark(FPS):
 
 
 def run(benchmark, X, **benchmark_args):
-
-    b = benchmark(n_features_to_select=X.shape[-1] - 1, **benchmark_args)
+    number_of_samples  = np.shape(X)[1]
+    initialize = np.random.randint(0, number_of_samples)
+    b = benchmark(n_features_to_select=X.shape[-1] - 1, initialize=initialize, **benchmark_args)
     b.fit(X)
 
-    return (*b._get_benchmarks(), b.selected_idx_)
-
+    return (b._get_benchmarks())
 
 if __name__ == "__main__":
 
     X = np.load("./skcosmo/datasets/data/csd-1000r-large.npz")["X"]
+    simple_times = []
+    voronoi_times = []
+    for i in range(2):
+        simple_times_i, _ = run(SimpleBenchmark, X)
+        voronoi_times_i, _ = run(VoronoiBenchmark, X)
+        simple_times.append(simple_times_i)
+        voronoi_times.append(voronoi_times_i)
 
-    times, calcs, idx = run(SimpleBenchmark, X)
-    vtimes, vcalcs, vidx = run(VoronoiBenchmark, X)
+    voronoi_times = np.array(voronoi_times)
+    simple_times = np.array(simple_times)
+    voronoi_mean_time = np.mean(voronoi_times, axis = 0)
+    simple_mean_time = np.mean(simple_times, axis = 0)
+    voronoi_time_std = np.std(voronoi_times, axis = 0)
+    simple_time_std = np.std(simple_times, axis = 0)
 
-    n = min(len(idx), len(vidx))
-
-    assert np.allclose(vidx, idx)
-
-    from matplotlib import pyplot as plt
-
-    plt.figure()
-    plt.title("Times per Iteration")
-    plt.loglog(times, label="Simple FPS")
-    plt.loglog(vtimes, label="Voronoi FPS")
-    plt.xlabel("iteration")
-    plt.ylabel("time")
+    index = []
+    for i in range(20):
+        index.append(np.power(10, i/10))
+    index = np.around(index, decimals = 1)
+    index = index.astype(int)
+    plt.figure(figsize=(10,8))
+    mpl.rcParams['font.size'] = 20
+    plt.yscale('log')
+    plt.xscale('log')
+    plt.title("Time taken per iteration")
+    plt.errorbar(index, simple_mean_time[index], simple_time_std[index], capsize=5, color = 'r', ecolor='k', errorevery = 3,  label="Simple FPS")
+    plt.errorbar(index, voronoi_mean_time[index], voronoi_time_std[index], capsize=5, color = 'b', ecolor='g', errorevery = 3, label=" Voronoi FPS")
+    plt.xlabel("$n_{iteration}$")
+    plt.ylabel("time ($s$)")
     plt.legend()
+    plt.show()
 
-    plt.figure()
-    plt.title("Total Number of Distances Calculated by each Iteration")
-    plt.loglog([np.sum(calcs[:i]) for i in range(X.shape[-1] - 1)], label="Simple FPS")
+    _, simple_n_calcs = run(SimpleBenchmark, X)
+    _, voronoi_n_calcs = run(VoronoiBenchmark, X)
+    plt.figure(figsize=(10,8))
+    mpl.rcParams['font.size'] = 20
+    plt.title("Total number of distances calculated by each iteration")
+    plt.loglog([np.sum(simple_n_calcs[:i]) for i in range(X.shape[-1] - 1)], color = 'r', label="Simple FPS")
     plt.loglog(
-        [np.sum(np.sum(vcalcs, axis=0)[:i]) for i in range(X.shape[-1] - 1)],
+        [np.sum(np.sum(voronoi_n_calcs, axis=0)[:i]) for i in range(X.shape[-1] - 1)], color = 'b',
         label="Voronoi FPS",
     )
-    plt.xlabel("iteration")
-    plt.ylabel("Total number of distances computed")
+    plt.xlabel("$n_{iteration}$")
+    plt.ylabel("Total number of computed distances")
     plt.legend()
-
-    plt.figure()
-    plt.title("Percentage of Distances Calculated at Each Iteration")
-    plt.loglog(calcs / X.shape[-1], label="Simple FPS")
-    plt.loglog(np.sum(vcalcs, axis=0) / X.shape[-1], label="Voronoi FPS")
-    plt.xlabel("iteration")
-    plt.ylabel("percentage of distances computed")
-    plt.legend()
-
-    plt.figure()
-    plt.title("Computations per Step in Voronoi FPS")
-    plt.plot(vcalcs[0], label="points inside `active` polyhedra")
-    plt.plot(vcalcs[1], label="centers of `active` polyhedra")
-    plt.xlabel("iteration")
-    plt.ylabel("number of distances computed")
-    plt.legend(title="Calculating distance\nbetween previous\nselected and: ")
-    plt.show()
