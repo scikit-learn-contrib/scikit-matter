@@ -2,7 +2,7 @@ import numpy as np
 
 from .simple_fps import FPS
 
-VORONOI_CUTOFF_FRACTION = 1.0 # / 6.0
+VORONOI_CUTOFF_FRACTION = 1.0 / 6.0
 
 
 class VoronoiFPS(FPS):
@@ -130,9 +130,10 @@ class VoronoiFPS(FPS):
                         + self.norms_[last_selected]
                         - 2 * X[:, last_selected].T @ X[:, active_points]
                     )                    
-                    updated_points = np.concatenate(
-                        (np.where(new_dist < self.haussdorf_)[0], [last_selected])
-                    )
+                    
+                    # updates haussdorf distances and keeps track of the updated points
+                    new_dist[last_selected] = 0
+                    updated_points = np.where(new_dist < self.haussdorf_)[0]
                     np.minimum(self.haussdorf_, new_dist, self.haussdorf_)
 
                 old_voronoi_loc = list(set(self.vlocation_of_idx[updated_points]))
