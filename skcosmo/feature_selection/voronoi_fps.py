@@ -156,5 +156,6 @@ class VoronoiFPS(FPS):
         self.eligible_[:] = False
         self.eligible_[self.furthest_point[: self.n_selected_ + 1]] = True
         self.eligible_[self.selected_idx_[: self.n_selected_]] = False
+        #self.eligible_[:] = True # just select among all
         assert self.vlocation_of_idx[last_selected] == self.n_selected_
         return self.haussdorf_

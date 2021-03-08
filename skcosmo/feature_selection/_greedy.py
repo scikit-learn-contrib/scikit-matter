@@ -225,7 +225,7 @@ class GreedySelector(SelectorMixin, MetaEstimatorMixin, BaseEstimator):
         scores = scorer(X, y)
         scores = scores[self.eligible_]
 
-        if self.score_threshold is not None and max(scores) < self.score_threshold:
+        if self.score_threshold is not None and np.max(scores) < self.score_threshold:
             return None
         else:
             return np.where(self.eligible_)[0][np.argmax(scores)]
