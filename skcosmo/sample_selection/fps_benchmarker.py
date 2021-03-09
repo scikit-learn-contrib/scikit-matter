@@ -247,7 +247,7 @@ class SimpleBenchmark(FPS):
 
 def run(benchmark, X, **benchmark_args):
 
-    b = benchmark(n_features_to_select=X.shape[0] - 1, **benchmark_args)
+    b = benchmark(**benchmark_args)
     b.fit(X.T)
 
     return (*b._get_benchmarks(), b.selected_idx_)
@@ -255,10 +255,12 @@ def run(benchmark, X, **benchmark_args):
 
 if __name__ == "__main__":
 
-    X = np.load("./skcosmo/datasets/data/csd-1000r-large.npz")["X"]
-
-    times, calcs, idx = run(SimpleBenchmark, X)
-    vtimes, vcalcs, vidx = run(VoronoiBenchmark, X)
+    #X = np.load("./skcosmo/datasets/data/csd-1000r-large.npz")["X"]
+    X = np.random.normal(size=(100000,100))
+    X *= np.arange(X.shape[1])
+    
+    times, calcs, idx = run(SimpleBenchmark, X, n_features_to_select=10000)
+    vtimes, vcalcs, vidx = run(VoronoiBenchmark, X, n_features_to_select= 10000)
 
     n = min(len(idx), len(vidx))
 

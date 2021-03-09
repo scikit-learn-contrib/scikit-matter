@@ -77,6 +77,11 @@ def run(benchmark, X, **benchmark_args):
 if __name__ == "__main__":
 
     X = np.load("./skcosmo/datasets/data/csd-1000r-large.npz")["X"]
+    
+    X = np.random.normal(size=(10000,100))
+    X *= np.arange(X.shape[1])
+    
+    
     simple_times = []
     voronoi_times = []
     for i in range(2):

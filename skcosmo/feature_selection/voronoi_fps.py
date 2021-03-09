@@ -26,18 +26,12 @@ class VoronoiFPS(FPS):
 
         # index of the voronoi cell associated with each of the columns of X
         self.vlocation_of_idx = np.full(n_features, -1)
-
-        # number of points in each voronoi polyhedron (VP)
-        self.number_in_voronoi = np.full(self.n_features_to_select, 0)
-        self.number_in_voronoi[0] = n_features
-
-        # furthest point in from each VP center
-        self.furthest_point = np.full(self.n_features_to_select, -1, dtype=int)
-
+        
         # quarter of the square distance between new selected point and previously
         # selected points
         self.sel_d2q_ = np.zeros(self.n_features_to_select, float)
-
+        self.new_dist_ = np.zeros(n_features)
+        
         super()._init_greedy_search(X, y, n_to_select)
 
     def _continue_greedy_search(self, X, y, n_to_select):
@@ -45,14 +39,8 @@ class VoronoiFPS(FPS):
 
         super()._continue_greedy_search(X, y, n_to_select)
 
-        n_pad = n_to_select - self.n_selected_
-        self.number_in_voronoi = np.pad(
-            self.number_in_voronoi, (0, n_pad), "constant", constant_values=0
-        )
         self.sel_d2q_ = np.pad(self.sel_d2q_, (0, n_pad), "constant", constant_values=0)
-        self.furthest_point = np.concatenate(
-            (self.furthest_point, np.zeros(n_pad, dtype=int))
-        )
+        self.new_dist_ = np.zeros(X.shape[1])
 
     def _get_active(self, X, last_selected):
         """
@@ -85,15 +73,14 @@ class VoronoiFPS(FPS):
         # but |d(XS) - d(SL)|^2>= d(XS)^2 if and only if d(SL)/2 > d(SX)
         active_points = np.where(
                         self.sel_d2q_[self.vlocation_of_idx]
-                        <self.haussdorf_)[0]
-                    
+                        <self.haussdorf_)[0]        
+
         return active_points
 
     def _calculate_distances(self, X, last_selected, **kwargs):
         
         # n_selected has not been incremented, so index of new voronoi is
         # n_selected
-        self.eligible_[last_selected] = False
 
         if self.n_selected_ == 0:
             self.haussdorf_ = super()._calculate_distances(X, last_selected)
@@ -114,48 +101,33 @@ class VoronoiFPS(FPS):
                 ):
                     # if the number of distances we need to compute is large, it is
                     # better to switch to a full-matrix-algebra calculation.
-                    new_dist = super()._calculate_distances(X, last_selected)
-                    updated_points = np.where(new_dist < self.haussdorf_)[0]
+                    self.new_dist_[:] = super()._calculate_distances(X, last_selected)
+                    updated_points = np.where(self.new_dist_ < self.haussdorf_)[0]
                     self.number_calculated_dist += np.shape(self.haussdorf_)[0]
-                    np.minimum(self.haussdorf_, new_dist, self.haussdorf_)
+                    np.minimum(self.haussdorf_, self.new_dist_, self.haussdorf_)
                 else:
                     # ... else we only iterate over the active points, although
                     # this involves more memory jumps, and can be more costly than
                     # computing all distances.
-                    new_dist = self.haussdorf_.copy()
+                    self.new_dist_ = self.haussdorf_.copy()
                     self.number_calculated_dist += np.shape(active_points)[0]
                     
-                    new_dist[active_points] = (
+                    self.new_dist_[active_points] = (
                         self.norms_[active_points]
                         + self.norms_[last_selected]
                         - 2 * X[:, last_selected].T @ X[:, active_points]
                     )                    
                     
                     # updates haussdorf distances and keeps track of the updated points
-                    new_dist[last_selected] = 0
-                    updated_points = np.where(new_dist < self.haussdorf_)[0]
-                    np.minimum(self.haussdorf_, new_dist, self.haussdorf_)
-
-                old_voronoi_loc = list(set(self.vlocation_of_idx[updated_points]))
+                    self.new_dist_[last_selected] = 0
+                    updated_points = np.where(self.new_dist_ < self.haussdorf_)[0]
+                    np.minimum(self.haussdorf_, self.new_dist_, self.haussdorf_)
             else:
                 updated_points = np.array([])
-                old_voronoi_loc = []
 
         self.vlocation_of_idx[last_selected] = self.n_selected_
         if len(updated_points) > 0:
             self.vlocation_of_idx[updated_points] = self.n_selected_
-        for v in old_voronoi_loc:
-            saved_points = np.where(v == self.vlocation_of_idx)[0]
-            self.number_in_voronoi[v] = np.shape(saved_points)[0]
-            furthest_point = np.argmax(self.haussdorf_[saved_points])
-            self.furthest_point[v] = saved_points[furthest_point]
-            
-        self.number_in_voronoi[self.n_selected_] = np.shape(updated_points)[0]
-        furthest_point = np.argmax(self.haussdorf_[updated_points])
-        self.furthest_point[self.n_selected_] = updated_points[furthest_point]
-        self.eligible_[:] = False
-        self.eligible_[self.furthest_point[: self.n_selected_ + 1]] = True
-        self.eligible_[self.selected_idx_[: self.n_selected_]] = False
-        #self.eligible_[:] = True # just select among all
+        
         assert self.vlocation_of_idx[last_selected] == self.n_selected_
         return self.haussdorf_
