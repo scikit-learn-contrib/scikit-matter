@@ -2,7 +2,7 @@ import numpy as np
 
 from .simple_fps import FPS
 
-VORONOI_CUTOFF_FRACTION = 1.0 / 6.0
+VORONOI_CUTOFF_FRACTION = 1.0/ 6.0
 
 
 class VoronoiFPS(FPS):
@@ -73,7 +73,7 @@ class VoronoiFPS(FPS):
         # but |d(XS) - d(SL)|^2>= d(XS)^2 if and only if d(SL)/2 > d(SX)
         active_points = np.where(
                         self.sel_d2q_[self.vlocation_of_idx]
-                        <self.haussdorf_)[0]        
+                        <self.haussdorf_)[0]
 
         return active_points
 
@@ -86,8 +86,7 @@ class VoronoiFPS(FPS):
             self.haussdorf_ = super()._calculate_distances(X, last_selected)
             # tracker of how many distances must be computed at each step                        
             self.number_calculated_dist = np.shape(self.haussdorf_)[0]
-            updated_points = np.arange(X.shape[-1], dtype=int)
-            old_voronoi_loc = []
+            updated_points = np.arange(X.shape[-1], dtype=int)            
         else:
             active_points = self._get_active(X, last_selected)
             self.number_calculated_dist = self.n_selected_
@@ -102,30 +101,27 @@ class VoronoiFPS(FPS):
                     # if the number of distances we need to compute is large, it is
                     # better to switch to a full-matrix-algebra calculation.
                     self.new_dist_[:] = super()._calculate_distances(X, last_selected)
-                    updated_points = np.where(self.new_dist_ < self.haussdorf_)[0]
-                    self.number_calculated_dist += np.shape(self.haussdorf_)[0]
-                    np.minimum(self.haussdorf_, self.new_dist_, self.haussdorf_)
+                    self.number_calculated_dist += np.shape(self.haussdorf_)[0]                    
                 else:
                     # ... else we only iterate over the active points, although
                     # this involves more memory jumps, and can be more costly than
                     # computing all distances.
-                    self.new_dist_ = self.haussdorf_.copy()
+                    self.new_dist_[:] = self.haussdorf_
                     self.number_calculated_dist += np.shape(active_points)[0]
                     
                     self.new_dist_[active_points] = (
                         self.norms_[active_points]
                         + self.norms_[last_selected]
                         - 2 * X[:, last_selected].T @ X[:, active_points]
-                    )                    
-                    
-                    # updates haussdorf distances and keeps track of the updated points
+                    )                                                            
                     self.new_dist_[last_selected] = 0
-                    updated_points = np.where(self.new_dist_ < self.haussdorf_)[0]
-                    np.minimum(self.haussdorf_, self.new_dist_, self.haussdorf_)
+                
+                # updates haussdorf distances and keeps track of the updated points                    
+                updated_points = np.where(self.new_dist_ < self.haussdorf_)[0]
+                np.minimum(self.haussdorf_, self.new_dist_, self.haussdorf_)                    
             else:
                 updated_points = np.array([])
 
-        self.vlocation_of_idx[last_selected] = self.n_selected_
         if len(updated_points) > 0:
             self.vlocation_of_idx[updated_points] = self.n_selected_
         

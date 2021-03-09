@@ -256,11 +256,11 @@ def run(benchmark, X, **benchmark_args):
 if __name__ == "__main__":
 
     #X = np.load("./skcosmo/datasets/data/csd-1000r-large.npz")["X"]
-    X = np.random.normal(size=(100000,100))
-    X *= np.arange(X.shape[1])
+    X = np.random.normal(size=(100000,1000))
+    X*=1/(1.0+np.arange(X.shape[1]))
     
-    times, calcs, idx = run(SimpleBenchmark, X, n_features_to_select=10000)
-    vtimes, vcalcs, vidx = run(VoronoiBenchmark, X, n_features_to_select= 10000)
+    times, calcs, idx = run(SimpleBenchmark, X, n_features_to_select=1000)
+    vtimes, vcalcs, vidx = run(VoronoiBenchmark, X, n_features_to_select= 1000)
 
     n = min(len(idx), len(vidx))
 
