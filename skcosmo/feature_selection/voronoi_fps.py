@@ -2,7 +2,7 @@ import numpy as np
 
 from .simple_fps import FPS
 
-VORONOI_CUTOFF_FRACTION = 1.0/ 6.0
+VORONOI_CUTOFF_FRACTION = 1.0 #/ 6.0
 
 
 class VoronoiFPS(FPS):

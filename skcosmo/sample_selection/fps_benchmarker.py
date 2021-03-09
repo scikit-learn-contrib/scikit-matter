@@ -257,10 +257,10 @@ if __name__ == "__main__":
 
     #X = np.load("./skcosmo/datasets/data/csd-1000r-large.npz")["X"]
     X = np.random.normal(size=(100000,1000))
-    X*=1/(1.0+np.arange(X.shape[1]))
+    X*=1/(1.0+np.arange(X.shape[1])**2)
     
-    times, calcs, idx = run(SimpleBenchmark, X, n_features_to_select=1000)
-    vtimes, vcalcs, vidx = run(VoronoiBenchmark, X, n_features_to_select= 1000)
+    times, calcs, idx = run(SimpleBenchmark, X, n_features_to_select=100)
+    vtimes, vcalcs, vidx = run(VoronoiBenchmark, X, n_features_to_select= 100)
 
     n = min(len(idx), len(vidx))
 
@@ -270,8 +270,8 @@ if __name__ == "__main__":
 
     plt.figure()
     plt.title("Times per Iteration")
-    plt.loglog(times, label="Simple FPS")
-    plt.loglog(vtimes, label="Voronoi FPS")
+    plt.semilogy(times, 'b.', label="Simple FPS")
+    plt.semilogy(vtimes, 'r.', label="Voronoi FPS")
     plt.xlabel("iteration")
     plt.ylabel("time")
     plt.legend()
@@ -289,17 +289,24 @@ if __name__ == "__main__":
 
     plt.figure()
     plt.title("Percentage of Distances Calculated at Each Iteration")
-    plt.loglog(calcs / X.shape[-1], label="Simple FPS")
-    plt.loglog(np.sum(vcalcs, axis=0) / X.shape[-1], label="Voronoi FPS")
+    plt.loglog(calcs / X.shape[-1], 'b.', label="Simple FPS")
+    plt.loglog(np.sum(vcalcs, axis=0) / X.shape[-1], 'r.', label="Voronoi FPS")
     plt.xlabel("iteration")
     plt.ylabel("percentage of distances computed")
     plt.legend()
 
     plt.figure()
     plt.title("Computations per Step in Voronoi FPS")
-    plt.plot(vcalcs[0], label="points inside `active` polyhedra")
-    plt.plot(vcalcs[1], label="centers of `active` polyhedra")
+    plt.plot(vcalcs[0], 'r.', label="points inside `active` polyhedra")
+    plt.plot(vcalcs[1], 'b-', label="centers of `active` polyhedra")
     plt.xlabel("iteration")
     plt.ylabel("number of distances computed")
+    plt.legend(title="Calculating distance\nbetween previous\nselected and: ")
+    
+    plt.figure()
+    plt.title("Computations vs time in Voronoi FPS")
+    plt.plot((vcalcs[0]+vcalcs[1]), vtimes,  'r.')
+    plt.xlabel("number of distances computed")
+    plt.ylabel("time")
     plt.legend(title="Calculating distance\nbetween previous\nselected and: ")
     plt.show()
