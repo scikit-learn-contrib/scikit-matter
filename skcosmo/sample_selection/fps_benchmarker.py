@@ -250,17 +250,24 @@ def run(benchmark, X, **benchmark_args):
     b = benchmark(**benchmark_args)
     b.fit(X.T)
 
-    return (*b._get_benchmarks(), b.selected_idx_)
+    return (*b._get_benchmarks(), b.selected_idx_, b)
 
 
 if __name__ == "__main__":
 
     #X = np.load("./skcosmo/datasets/data/csd-1000r-large.npz")["X"]
-    X = np.random.normal(size=(100000,1000))
+    X = np.random.normal(size=(100000,100))
     X*=1/(1.0+np.arange(X.shape[1])**2)
+        
+    sb_time = -time.time()
+    times, calcs, idx, sb = run(SimpleBenchmark, X, n_features_to_select=1000)
+    sb_time += time.time()
     
-    times, calcs, idx = run(SimpleBenchmark, X, n_features_to_select=100)
-    vtimes, vcalcs, vidx = run(VoronoiBenchmark, X, n_features_to_select= 100)
+    vb_time = -time.time()
+    vtimes, vcalcs, vidx, vb = run(VoronoiBenchmark, X, n_features_to_select= 1000)
+    vb_time += time.time()
+    
+    print("Total timing: SIMPLE: ", sb_time, "  VORONOI: ", vb_time)
 
     n = min(len(idx), len(vidx))
 
@@ -305,8 +312,10 @@ if __name__ == "__main__":
     
     plt.figure()
     plt.title("Computations vs time in Voronoi FPS")
-    plt.plot((vcalcs[0]+vcalcs[1]), vtimes,  'r.')
+    plt.loglog(np.array(vb.stats)[:,0], np.array(vb.stats)[:,1],  'r.')
     plt.xlabel("number of distances computed")
     plt.ylabel("time")
     plt.legend(title="Calculating distance\nbetween previous\nselected and: ")
     plt.show()
+    
+    np.savetxt("timing.dat", vb.stats)
