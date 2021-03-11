@@ -4,8 +4,8 @@ Installation
 scikit-COSMO is, by design, relatively lightweight, and only requires that `numpy <numpy.org>`_
 and the most recent release of `scikit-learn <scikit-learn.org>`_ be installed.
 
-Install with pip
-################
+Install from source 
+###################
 
 .. code-block:: bash
 
