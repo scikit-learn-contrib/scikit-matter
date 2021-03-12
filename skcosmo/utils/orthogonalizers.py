@@ -78,76 +78,10 @@ def Y_feature_orthogonalizer(y, X, tol=1e-12, copy=True):
         return y
 
 
-def feature_orthogonalizer(idx, X_proxy, Y_proxy, tol=1e-12):
+def Y_sample_orthogonalizer(y, X, y_ref, X_ref, tol=1e-12, copy=True):
     """
-    Orthogonalizes two matrices, meant to represent a feature matrix
-    :math:`{\\mathbf{X}}` and a property matrix :math:`{\\mathbf{Y}}`, given
-    the selected features :math:`{c}`
-
-    Update to :math:`{\\mathbf{X}}`, where :math:`{\\mathbf{X}_{c}}` is a column
-    vector containing the most recently-chosen feature:
-
-    .. math::
-
-        \\mathbf{X} \\leftarrow \\mathbf{X} -
-        \\left(\\frac{\\mathbf{X}_{c}\\mathbf{X}{c}^T}
-        {\\lVert\\mathbf{X}_{c}\\rVert^2}\\right)\\mathbf{X}
-
-    Update to :math:`{\\mathbf{Y}}`, where :math:`{\\mathbf{X}_{\\mathbf{c}}}`
-    is a matrix containing all previously-chosen features:
-
-    .. math::
-        \\mathbf{Y} \\leftarrow \\mathbf{Y} -
-        \\mathbf{X}_{\\mathbf{c}} \\left(\\mathbf{X}_{\\mathbf{c}}^T
-        \\mathbf{X}_{\\mathbf{c}}\\right)^{-1}
-        \\mathbf{X}_{\\mathbf{c}}^T \\mathbf{Y}
-
-    :param idx: indices of selected features
-    :type idx: list of int
-
-    :param X_proxy: feature matrix
-    :type X_proxy: array of shape (n_samples x n_features)
-
-    :param Y_proxy: property matrix
-    :type Y_proxy: array of shape (n_samples x n_properties)
-
-    :param tol: cutoff for small eigenvalues to send to np.linalg.pinv
-    :type tol: float
-
-    """
-    if X_proxy is not None:
-        Aci = X_proxy[:, idx]
-
-        if Y_proxy is not None:
-            v = np.linalg.pinv(np.matmul(Aci.T, Aci), rcond=tol)
-            v = np.matmul(Aci, v)
-            v = np.matmul(v, Aci.T)
-
-            Y_proxy -= np.matmul(v, Y_proxy)
-
-        X_proxy = X_orthogonalizer(X_proxy, idx[-1])
-
-    return X_proxy, Y_proxy
-
-
-def sample_orthogonalizer(idx, X_proxy, Y_proxy, tol=1e-12):
-    """
-    Orthogonalizes two matrices, meant to represent a feature matrix
-    :math:`{\\mathbf{X}}` and a property matrix :math:`{\\mathbf{Y}}`, given
-    the selected samples :math:`{r}`
-
-    Update to :math:`{\\mathbf{X}}`, where :math:`{\\mathbf{x}_{r}}` is a row
-    vector containing the most recently-chosen sample:
-
-    .. math::
-
-        \\mathbf{X} \\leftarrow \\mathbf{X} -
-        \\mathbf{X} \\left(\\frac{\\mathbf{x}_{r}^T \\mathbf{x}_{r}}
-        {\\lVert \\mathbf{x}_{r}\\rVert^2}\\right)
-
-    Update to :math:`{\\mathbf{Y}}`, where :math:`{\\mathbf{X}_{\\mathbf{r}}}`
-    and :math:`{\\mathbf{Y}_{\\mathbf{r}}}`
-    contain the features and properties of the previously-chosen samples:
+    Orthogonalizes a matrix of targets :math:`{\\mathbf{Y}}`given a reference feature matrix
+    :math:`{\\mathbf{X}_r}` and reference target matrix :math:`{\\mathbf{Y}_r}`:
 
     .. math::
 
@@ -156,30 +90,29 @@ def sample_orthogonalizer(idx, X_proxy, Y_proxy, tol=1e-12):
         \\mathbf{X}_{\\mathbf{r}}\\right)^{-1}\\mathbf{X}_{\\mathbf{r}}^T
         \\mathbf{Y}_{\\mathbf{r}}
 
-    :param idx: indices of selected samples
-    :type idx: list of int
 
-    :param X_proxy: feature matrix
-    :type X_proxy: array of shape (n_samples x n_features)
+    :param y: property matrix
+    :type y: array of shape (n_samples x n_properties)
 
-    :param Y_proxy: property matrix
-    :type Y_proxy: array of shape (n_samples x n_properties)
+    :param X: corresponding feature matrix
+    :type X: array of shape (n_samples x n_features)
+
+    :param y_ref: reference property matrix
+    :type y_ref: array of shape (n_ref x n_properties)
+
+    :param X_ref: reference feature matrix
+    :type X_ref: array of shape (n_ref x n_features)
 
     :param tol: cutoff for small eigenvalues to send to np.linalg.pinv
     :type tol: float
 
+    :param copy: whether to return a copy of y or edit in-place, default=True
+    :type copy: boolean
     """
-    if X_proxy is not None:
-        if Y_proxy is not None:
-            Y_proxy -= (
-                X_proxy
-                @ (
-                    np.linalg.pinv(X_proxy[idx].T @ X_proxy[idx], rcond=tol)
-                    @ X_proxy[idx].T
-                )
-                @ Y_proxy[idx]
-            )
 
-        X_proxy = X_orthogonalizer(X_proxy.T, idx[-1]).T
-
-    return X_proxy, Y_proxy
+    y_frag = X @ (np.linalg.pinv(X_ref.T @ X_ref, rcond=tol) @ X_ref.T) @ y_ref
+    if copy:
+        return y.copy() - y_frag
+    else:
+        y -= y_frag
+        return y

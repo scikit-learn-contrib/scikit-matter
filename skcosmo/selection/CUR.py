@@ -19,7 +19,11 @@ from scipy.sparse.linalg import eigs as speig
 from sklearn.utils import check_X_y, check_array
 from skcosmo.utils import get_progress_bar
 from skcosmo.utils import pcovr_covariance, pcovr_kernel
-from skcosmo.utils import feature_orthogonalizer, sample_orthogonalizer
+from skcosmo.utils import (
+    X_orthogonalizer,
+    Y_feature_orthogonalizer,
+    Y_sample_orthogonalizer,
+)
 
 
 class _BaseCUR:
@@ -81,7 +85,7 @@ class _BaseCUR:
             return self.idx[:n]
 
         for i in self.report_progress(range(len(self.idx), n)):
-            if self.iter:
+            if self.iter or i == 0:
                 v, U = speig(self.product, k=self.k, tol=self.tol)
                 U = U[:, np.flip(np.argsort(v))]
                 pi = (np.real(U)[:, : self.k] ** 2.0).sum(axis=1)
@@ -172,16 +176,12 @@ class SampleCUR(_BaseCUR):
                 raise Exception(r"For $\alpha < 1$, $Y$ must be supplied.")
         else:
             self.A, self.Y = check_array(X, copy=True), None
+        self.A_current = self.A.copy()
 
-        if not self.iter:
-            self.A_current = None
-            self.Y_current = None
+        if self.Y is not None:
+            self.Y_current = self.Y.copy()
         else:
-            self.A_current = self.A.copy()
-            if self.Y is not None:
-                self.Y_current = self.Y.copy()
-            else:
-                self.Y_current = None
+            self.Y_current = None
 
         self.product = self.get_product()
 
@@ -213,9 +213,15 @@ class SampleCUR(_BaseCUR):
 
         """
         if self.iter:
-            self.A_current, self.Y_current = sample_orthogonalizer(
-                self.idx, self.A_current, self.Y_current, self.tol
-            )
+            if self.Y_current is not None:
+                self.Y_current = Y_sample_orthogonalizer(
+                    self.Y_current,
+                    self.A_current,
+                    self.Y_current[self.idx],
+                    self.A_current[self.idx],
+                    self.tol,
+                )
+            self.A_current = X_orthogonalizer(self.A_current.T, c=self.idx[-1]).T
 
 
 class FeatureCUR(_BaseCUR):
@@ -318,6 +324,8 @@ class FeatureCUR(_BaseCUR):
 
         """
         if self.iter:
-            self.A_current, self.Y_current = feature_orthogonalizer(
-                self.idx, self.A_current, self.Y_current, self.tol
-            )
+            if self.Y_current is not None:
+                self.Y_current = Y_feature_orthogonalizer(
+                    self.Y_current, self.A_current[:, self.idx], self.tol
+                )
+            self.A_current = X_orthogonalizer(self.A_current, c=self.idx[-1])

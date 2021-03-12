@@ -7,7 +7,7 @@ and Farthest Point Sampling.
 
 In their classical form, these methods determine a data subset that maximizes the
 variance (CUR) or distribution (FPS) of the features or samples. These methods
-can be modified to include  aspects of supervised methods, in a formulation
+can be modified to combine supervised and unsupervised learning, in a formulation
 denoted `PCov-CUR` and `PCov-FPS`.
 For further reading, refer to [Imbalzano2018]_ and [Cersonsky2021]_.
 
@@ -38,6 +38,9 @@ single iteration based upon the relative :math:`\pi` importance.
 These selection methods can be modified to be semi-supervised by using augmented
 right or left singular vectors, as shown in [Cersonsky2021]_.
 
+Feature Selection using CUR
+----------------------------
+
 .. currentmodule:: skcosmo.feature_selection
 .. autoclass:: CUR
     :show-inheritance:
@@ -45,15 +48,33 @@ right or left singular vectors, as shown in [Cersonsky2021]_.
 
     .. automethod:: fit
 
-WARNING
--------
-The following two CUR methods are undergoing re-structuring, and will soon be
-replaced with classes similar in structure to `CUR`.
+Sample Selection using CUR
+----------------------------
+
+.. currentmodule:: skcosmo.sample_selection
+.. autoclass:: CUR
+    :show-inheritance:
+    :no-undoc-members:
+
+    .. automethod:: fit
+
+
+Feature Selection using CUR + PCovR
+-----------------------------------
+
+**WARNING: the following method is currently under development, and will soon
+be replaced by a sklearn-style method named** `skcosmo.feature_selection.PCovCUR`
 
 .. currentmodule:: skcosmo.feature_selection
 .. autoclass:: FeatureCUR
     :show-inheritance:
     :members:
+
+Sample Selection using CUR + PCovR
+----------------------------------
+
+**WARNING: the following method is currently under development, and will soon
+be replaced by a sklearn-style method named** `skcosmo.sample_selection.PCovCUR`
 
 .. currentmodule:: skcosmo.sample_selection
 .. autoclass:: SampleCUR
@@ -72,8 +93,9 @@ In FPS, the selection of the first point is made at random or by a separate metr
 Each subsequent selection is made to maximize the distance to the previous selections.
 It is common to use the Euclidean distance, however other distance metrics may be employed.
 
-These selection methods can be modified to be semi-supervised by using the
-PCovR covariance and Gram matrices to compute the distances, as shown in [Cersonsky2021]_.
+
+Feature Selection using FPS
+---------------------------
 
 .. currentmodule:: skcosmo.feature_selection
 .. autoclass:: FPS
@@ -82,17 +104,35 @@ PCovR covariance and Gram matrices to compute the distances, as shown in [Cerson
 
     .. automethod:: fit
 
+Sample Selection using FPS
+--------------------------
 
-WARNING
--------
-The following two FPS methods are undergoing re-structuring, and will soon be
-replaced with classes similar in structure to `FPS`.
+.. currentmodule:: skcosmo.sample_selection
+.. autoclass:: FPS
+    :show-inheritance:
+    :no-undoc-members:
+
+    .. automethod:: fit
+
+
+Feature Selection using FPS + PCovR
+-----------------------------------
+
+**WARNING: the following method is currently under development, and will soon
+be replaced by a sklearn-style method named** `skcosmo.feature_selection.PCovFPS`
 
 .. currentmodule:: skcosmo.feature_selection
 .. autoclass:: FeatureFPS
     :show-inheritance:
 
     .. automethod:: select
+
+
+Sample Selection using FPS + PCovR
+-----------------------------------
+
+**WARNING: the following method is currently under development, and will soon
+be replaced by a sklearn-style method named** `skcosmo.sample_selection.PCovFPS`
 
 .. currentmodule:: skcosmo.sample_selection
 .. autoclass:: SampleFPS
