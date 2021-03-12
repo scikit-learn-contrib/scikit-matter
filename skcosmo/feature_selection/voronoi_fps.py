@@ -6,13 +6,18 @@ import numbers
 
 class VoronoiFPS(FPS):
     """
-    Base Class defined for Voronoi FPS methods.
-    The method selects columns of a feature matrix X based on how dissimilar they are
-    from each other. At each point there is a set Xsel of columns, and each of the
-    selected columns is the center of a Voronoi polyhedron.
-    The method keeps track of which of the X columns falls within the Voronoi cell
-    of the columns of Xsel, and uses this information, as well as the distances between
-    the Xsel, to reduce the number of distances that must be computed.
+    In FPS, points are selected based upon their Hausdorff distance to
+    previous selections, i.e. the minimum distance between a given point and
+    any previously selected points. This implicitly constructs a Voronoi
+    tessellation which is updated with each new selection, as each unselected
+    point "belongs" to the Voronoi polyhedron of the nearest previous selection.
+
+    This implicit tessellation enabled a more efficient evaluation of the FPS --
+    at each iteration, we need only consider for selection those points at the
+    boundaries of the Voronoi polyhedra, and when updating the tessellation
+    we need only consider moving those points whose Hausdorff distance is
+    greater than half of the distance between the corresponding Voronoi center
+    and the newly selected point, per the triangle equality.
 
     :param initialize: predetermined index; if None provided, first index selected
                  is 0
@@ -43,15 +48,19 @@ class VoronoiFPS(FPS):
     def _init_greedy_search(self, X, y, n_to_select):
 
         n_features = X.shape[1]
-        # index of the voronoi cell associated with each of the columns of X
+        """index of the voronoi cell associated with each of the columns of X"""
         self.vlocation_of_idx = np.full(n_features, -1)
 
-        # quarter of the square distance between new selected point and previously
-        # selected points
+        """quarter of the square distance between new selected point and previously
+        selected points"""
         self.sel_d2q_ = np.zeros(self.n_features_to_select, float)
         self.new_dist_ = np.zeros(n_features)
 
-        # determines the optimal switching point for full calculation
+        """ Determines the optimal switching point for full calculation.
+        The point is that when calculating distances in Voronoi_FPS it is necessary
+        to "jump" between indexes in the array. This results in a significant increase in time.
+        Therefore, if you need to recalculate a large number of distances, it is more advantageous
+        to run Simple_FPS"""
         if self.full_fraction is None:
             simple_fps_timing = -time()
             for i in range(self.n_trial_calculation_):
@@ -114,16 +123,19 @@ class VoronoiFPS(FPS):
             - 2 * (self.X_selected_[:, : self.n_selected_].T @ X[:, last_selected])
         ) * 0.25
 
-        # these are the points for which need to recompute distances.
-        # L is the last point selected
-        # S are the selected points from before this iteration
-        # X are the candidates
-        # the logic here is that we want to check if d(XL) can be smaller than
-        # min(d(XS)) (which is stored in self.haussdorf_)
-        # now, if a point belongs to the Voronoi cell of S then min(d(XS_i))=d(XS).
-        # Triangle inequality implies that d(XL)>=|d(XS) - d(SL)| so we just need to
-        # check if |d(XS) - d(SL)|>= d(XS) to know that we don't need to check X.
-        # but |d(XS) - d(SL)|^2>= d(XS)^2 if and only if d(SL)/2 > d(SX)
+         """
+         These are the points for which need to recompute distances.
+         Let:
+         L is the last point selected;
+         S are the selected points from before this iteration;
+         X are the candidates;
+         The logic here is that we want to check if d(XL) can be smaller than
+         min(d(XS)) (which is stored in self.haussdorf_)
+         now, if a point belongs to the Voronoi cell of S then min(d(XS_i))=d(XS).
+         Triangle inequality implies that d(XL)>=|d(XS) - d(SL)| so we just need to
+         check if |d(XS) - d(SL)|>= d(XS) to know that we don't need to check X.
+         but |d(XS) - d(SL)|^2>= d(XS)^2 if and only if d(SL)/2 > d(SX)
+         """
         active_points = np.where(
                         self.sel_d2q_[self.vlocation_of_idx]
                         <self.haussdorf_)[0]

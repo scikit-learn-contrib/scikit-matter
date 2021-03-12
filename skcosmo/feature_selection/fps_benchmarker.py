@@ -8,6 +8,7 @@ from skcosmo.feature_selection.simple_fps import FPS
 
 import time
 
+
 class VoronoiBenchmark(VoronoiFPS):
     def _init_greedy_search(self, X, y, n_to_select):
         self.start_ = time.time()
@@ -67,62 +68,88 @@ class SimpleBenchmark(FPS):
 
 
 def run(benchmark, X, **benchmark_args):
-    number_of_samples  = np.shape(X)[1]
+    number_of_samples = np.shape(X)[1]
     initialize = np.random.randint(0, number_of_samples)
-    b = benchmark( initialize=initialize, **benchmark_args)
+    b = benchmark(initialize=initialize, **benchmark_args)
     b.fit(X)
 
-    return (b._get_benchmarks())
+    return b._get_benchmarks()
+
 
 if __name__ == "__main__":
 
-    X = np.random.normal(size=(100000,100))
-    X*=1/(1.0+np.arange(X.shape[1])**2)
-    X=X.T
+    X = np.random.normal(size=(100000, 100))
+    X *= 1 / (1.0 + np.arange(X.shape[1]) ** 2)
+    X = X.T
     simple_times = []
     voronoi_times = []
     for i in range(1):
-        simple_times_i, _ = run(SimpleBenchmark, X, n_features_to_select = 3200)
-        voronoi_times_i, _ = run(VoronoiBenchmark, X, n_features_to_select = 3200)
+        simple_times_i, _ = run(SimpleBenchmark, X, n_features_to_select=3200)
+        voronoi_times_i, _ = run(VoronoiBenchmark, X, n_features_to_select=3200)
         simple_times.append(simple_times_i)
         voronoi_times.append(voronoi_times_i)
 
     voronoi_times = np.array(voronoi_times)
     simple_times = np.array(simple_times)
-    voronoi_mean_time = np.mean(voronoi_times, axis = 0)
-    simple_mean_time = np.mean(simple_times, axis = 0)
-    voronoi_time_std = np.std(voronoi_times, axis = 0)
-    simple_time_std = np.std(simple_times, axis = 0)
+    voronoi_mean_time = np.mean(voronoi_times, axis=0)
+    simple_mean_time = np.mean(simple_times, axis=0)
+    voronoi_time_std = np.std(voronoi_times, axis=0)
+    simple_time_std = np.std(simple_times, axis=0)
 
     index = []
     for i in range(35):
-        index.append(np.power(10, i/10))
-    index = np.around(index, decimals = 1)
+        index.append(np.power(10, i / 10))
+    index = np.around(index, decimals=1)
     index = index.astype(int)
-    plt.figure(figsize=(10,8))
-    mpl.rcParams['font.size'] = 20
-    plt.yscale('log')
-    plt.xscale('log')
+    plt.figure(figsize=(10, 8))
+    mpl.rcParams["font.size"] = 20
+    plt.yscale("log")
+    plt.xscale("log")
     plt.title("Time taken per iteration")
-    plt.errorbar(index, simple_mean_time[index], simple_time_std[index], capsize=5, color = 'r', ecolor='k', errorevery = 3,  label="Simple FPS")
-    plt.errorbar(index, voronoi_mean_time[index], voronoi_time_std[index], capsize=5, color = 'b', ecolor='g', errorevery = 3, label=" Voronoi FPS")
+    plt.errorbar(
+        index,
+        simple_mean_time[index],
+        simple_time_std[index],
+        capsize=5,
+        color="r",
+        ecolor="k",
+        errorevery=3,
+        label="Simple FPS",
+    )
+    plt.errorbar(
+        index,
+        voronoi_mean_time[index],
+        voronoi_time_std[index],
+        capsize=5,
+        color="b",
+        ecolor="g",
+        errorevery=3,
+        label=" Voronoi FPS",
+    )
     plt.xlabel("$n_{iteration}$")
     plt.ylabel("time ($s$)")
     plt.legend()
     plt.show()
 
-    sb_time =- time.time()
-    _, simple_n_calcs = run(SimpleBenchmark, X, n_features_to_select = 3200)
+    sb_time = -time.time()
+    _, simple_n_calcs = run(SimpleBenchmark, X, n_features_to_select=3200)
     sb_time += time.time()
-    vr_time =- time.time()
-    _, voronoi_n_calcs = run(VoronoiBenchmark, X, n_features_to_select = 3200, full_fraction = 0.09)
+    vr_time = -time.time()
+    _, voronoi_n_calcs = run(
+        VoronoiBenchmark, X, n_features_to_select=3200, full_fraction=0.09
+    )
     vr_time += time.time()
-    plt.figure(figsize=(10,8))
-    mpl.rcParams['font.size'] = 20
+    plt.figure(figsize=(10, 8))
+    mpl.rcParams["font.size"] = 20
     plt.title("Total number of distances calculated by each iteration")
-    plt.loglog([np.sum(simple_n_calcs[:i]) for i in range(X.shape[-1] - 1)], color = 'r', label="Simple FPS")
     plt.loglog(
-        [np.sum(np.sum(voronoi_n_calcs, axis=0)[:i]) for i in range(X.shape[-1] - 1)], color = 'b',
+        [np.sum(simple_n_calcs[:i]) for i in range(X.shape[-1] - 1)],
+        color="r",
+        label="Simple FPS",
+    )
+    plt.loglog(
+        [np.sum(np.sum(voronoi_n_calcs, axis=0)[:i]) for i in range(X.shape[-1] - 1)],
+        color="b",
         label="Voronoi FPS",
     )
     plt.xlabel("$n_{iteration}$")
