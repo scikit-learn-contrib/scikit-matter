@@ -69,24 +69,21 @@ class SimpleBenchmark(FPS):
 def run(benchmark, X, **benchmark_args):
     number_of_samples  = np.shape(X)[1]
     initialize = np.random.randint(0, number_of_samples)
-    b = benchmark(n_features_to_select=X.shape[-1] - 1, initialize=initialize, **benchmark_args)
+    b = benchmark( initialize=initialize, **benchmark_args)
     b.fit(X)
 
     return (b._get_benchmarks())
 
 if __name__ == "__main__":
 
-    X = np.load("./skcosmo/datasets/data/csd-1000r-large.npz")["X"]
-    
-    X = np.random.normal(size=(10000,100))
-    X *= np.arange(X.shape[1])
-    
-    
+    X = np.random.normal(size=(100000,100))
+    X*=1/(1.0+np.arange(X.shape[1])**2)
+    X=X.T
     simple_times = []
     voronoi_times = []
-    for i in range(2):
-        simple_times_i, _ = run(SimpleBenchmark, X)
-        voronoi_times_i, _ = run(VoronoiBenchmark, X)
+    for i in range(1):
+        simple_times_i, _ = run(SimpleBenchmark, X, n_features_to_select = 3200)
+        voronoi_times_i, _ = run(VoronoiBenchmark, X, n_features_to_select = 3200)
         simple_times.append(simple_times_i)
         voronoi_times.append(voronoi_times_i)
 
@@ -98,7 +95,7 @@ if __name__ == "__main__":
     simple_time_std = np.std(simple_times, axis = 0)
 
     index = []
-    for i in range(20):
+    for i in range(35):
         index.append(np.power(10, i/10))
     index = np.around(index, decimals = 1)
     index = index.astype(int)
@@ -114,8 +111,12 @@ if __name__ == "__main__":
     plt.legend()
     plt.show()
 
-    _, simple_n_calcs = run(SimpleBenchmark, X)
-    _, voronoi_n_calcs = run(VoronoiBenchmark, X)
+    sb_time =- time.time()
+    _, simple_n_calcs = run(SimpleBenchmark, X, n_features_to_select = 3200)
+    sb_time += time.time()
+    vr_time =- time.time()
+    _, voronoi_n_calcs = run(VoronoiBenchmark, X, n_features_to_select = 3200, full_fraction = 0.09)
+    vr_time += time.time()
     plt.figure(figsize=(10,8))
     mpl.rcParams['font.size'] = 20
     plt.title("Total number of distances calculated by each iteration")
@@ -127,3 +128,4 @@ if __name__ == "__main__":
     plt.xlabel("$n_{iteration}$")
     plt.ylabel("Total number of computed distances")
     plt.legend()
+    print("Total timing: SIMPLE: ", sb_time, "  VORONOI: ", vr_time)
