@@ -311,8 +311,8 @@ class KPCovR(_BasePCA, LinearModel):
         K = self._get_kernel(X)
 
         if self.center:
-            self._centerer = KernelNormalizer()
-            K = self._centerer.fit_transform(K)
+            self.centerer_ = KernelNormalizer()
+            K = self.centerer_.fit_transform(K)
 
         self.n_samples = X.shape[0]
 
@@ -358,7 +358,7 @@ class KPCovR(_BasePCA, LinearModel):
         X = check_array(X)
         K = self._get_kernel(X, self.X_fit_)
         if self.center:
-            K = self._centerer.transform(K)
+            K = self.centerer_.transform(K)
 
         return K @ self.pky_
 
@@ -383,7 +383,7 @@ class KPCovR(_BasePCA, LinearModel):
         K = self._get_kernel(X, self.X_fit_)
 
         if self.center:
-            K = self._centerer.transform(K)
+            K = self.centerer_.transform(K)
 
         return K @ self.pkt_
 
