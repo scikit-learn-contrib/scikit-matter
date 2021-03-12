@@ -59,10 +59,10 @@ class CUR(GreedySelector):
     y_selected_ : ndarray (n_samples_to_select, n_properties)
                   The corresponding target values for the samples selected
 
-    X_current_ : ndarray (n_samples, n_features)
+    X_current : ndarray (n_samples, n_features)
                   The samples, orthogonalized by previously selected samples
 
-    y_current_ : ndarray (n_samples, n_properties)
+    y_current : ndarray (n_samples, n_properties)
                 The properties, if supplied, orthogonalized by a regression on
                 the previously selected samples
 
@@ -178,7 +178,8 @@ class CUR(GreedySelector):
             flip_sign=True,
             random_state=random_state,
         )
-        new_pi = (np.real(U[:, : self.k]) ** 2.0).sum(axis=1)
+        U = np.real(U)
+        new_pi = (U[:, : self.k] ** 2.0).sum(axis=1)
         return new_pi
 
     def _update_post_selection(self, X, y, last_selected):

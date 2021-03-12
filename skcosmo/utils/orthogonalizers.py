@@ -110,7 +110,10 @@ def Y_sample_orthogonalizer(y, X, y_ref, X_ref, tol=1e-12, copy=True):
     :type copy: boolean
     """
 
-    y_frag = X @ (np.linalg.pinv(X_ref.T @ X_ref, rcond=tol) @ X_ref.T) @ y_ref
+    y_frag = (
+        X @ (np.linalg.pinv(X_ref.T @ X_ref, rcond=tol) @ X_ref.T) @ y_ref
+    ).reshape(y.shape)
+
     if copy:
         return y.copy() - y_frag
     else:
