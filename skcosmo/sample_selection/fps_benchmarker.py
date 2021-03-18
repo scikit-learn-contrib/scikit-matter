@@ -255,18 +255,18 @@ def run(benchmark, X, **benchmark_args):
 
 if __name__ == "__main__":
 
-    #X = np.load("./skcosmo/datasets/data/csd-1000r-large.npz")["X"]
-    X = np.random.normal(size=(100000,100))
-    X*=1/(1.0+np.arange(X.shape[1])**2)
-        
+    # X = np.load("./skcosmo/datasets/data/csd-1000r-large.npz")["X"]
+    X = np.random.normal(size=(100000, 100))
+    X *= 1 / (1.0 + np.arange(X.shape[1]) ** 2)
+
     sb_time = -time.time()
     times, calcs, idx, sb = run(SimpleBenchmark, X, n_features_to_select=1000)
     sb_time += time.time()
-    
+
     vb_time = -time.time()
-    vtimes, vcalcs, vidx, vb = run(VoronoiBenchmark, X, n_features_to_select= 1000)
+    vtimes, vcalcs, vidx, vb = run(VoronoiBenchmark, X, n_features_to_select=1000)
     vb_time += time.time()
-    
+
     print("Total timing: SIMPLE: ", sb_time, "  VORONOI: ", vb_time)
 
     n = min(len(idx), len(vidx))
@@ -277,8 +277,8 @@ if __name__ == "__main__":
 
     plt.figure()
     plt.title("Times per Iteration")
-    plt.semilogy(times, 'b.', label="Simple FPS")
-    plt.semilogy(vtimes, 'r.', label="Voronoi FPS")
+    plt.semilogy(times, "b.", label="Simple FPS")
+    plt.semilogy(vtimes, "r.", label="Voronoi FPS")
     plt.xlabel("iteration")
     plt.ylabel("time")
     plt.legend()
@@ -296,26 +296,26 @@ if __name__ == "__main__":
 
     plt.figure()
     plt.title("Percentage of Distances Calculated at Each Iteration")
-    plt.loglog(calcs / X.shape[-1], 'b.', label="Simple FPS")
-    plt.loglog(np.sum(vcalcs, axis=0) / X.shape[-1], 'r.', label="Voronoi FPS")
+    plt.loglog(calcs / X.shape[-1], "b.", label="Simple FPS")
+    plt.loglog(np.sum(vcalcs, axis=0) / X.shape[-1], "r.", label="Voronoi FPS")
     plt.xlabel("iteration")
     plt.ylabel("percentage of distances computed")
     plt.legend()
 
     plt.figure()
     plt.title("Computations per Step in Voronoi FPS")
-    plt.plot(vcalcs[0], 'r.', label="points inside `active` polyhedra")
-    plt.plot(vcalcs[1], 'b-', label="centers of `active` polyhedra")
+    plt.plot(vcalcs[0], "r.", label="points inside `active` polyhedra")
+    plt.plot(vcalcs[1], "b-", label="centers of `active` polyhedra")
     plt.xlabel("iteration")
     plt.ylabel("number of distances computed")
     plt.legend(title="Calculating distance\nbetween previous\nselected and: ")
-    
+
     plt.figure()
     plt.title("Computations vs time in Voronoi FPS")
-    plt.loglog(np.array(vb.stats)[:,0], np.array(vb.stats)[:,1],  'r.')
+    plt.loglog(np.array(vb.stats)[:, 0], np.array(vb.stats)[:, 1], "r.")
     plt.xlabel("number of distances computed")
     plt.ylabel("time")
     plt.legend(title="Calculating distance\nbetween previous\nselected and: ")
     plt.show()
-    
+
     np.savetxt("timing.dat", vb.stats)

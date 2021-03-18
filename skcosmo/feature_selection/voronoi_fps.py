@@ -25,25 +25,26 @@ class VoronoiFPS(FPS):
 
 
     """
+
     def __init__(
-            self,
-            n_features_to_select=None,
-            initialize=0,
-            tolerance=1e-12,
-            progress_bar=False,
-            n_trial_calculation = 4,
-            full_fraction = None
-        ):
+        self,
+        n_features_to_select=None,
+        initialize=0,
+        tolerance=1e-12,
+        progress_bar=False,
+        n_trial_calculation=4,
+        full_fraction=None,
+    ):
 
         self.n_trial_calculation_ = n_trial_calculation
         self.full_fraction = full_fraction
 
         super().__init__(
-                n_features_to_select=n_features_to_select,
-                progress_bar=progress_bar,
-                initialize = initialize,
-                tolerance=tolerance,
-            )
+            n_features_to_select=n_features_to_select,
+            progress_bar=progress_bar,
+            initialize=initialize,
+            tolerance=tolerance,
+        )
 
     def _init_greedy_search(self, X, y, n_to_select):
 
@@ -64,7 +65,7 @@ class VoronoiFPS(FPS):
         if self.full_fraction is None:
             simple_fps_timing = -time()
             for i in range(self.n_trial_calculation_):
-                dummy = X.T @ X[:,0]
+                dummy = X.T @ X[:, 0]
             simple_fps_timing += time()
             simple_fps_timing /= self.n_trial_calculation_
 
@@ -72,11 +73,13 @@ class VoronoiFPS(FPS):
             top_fraction = 1
             while top_fraction - lower_fraction > 0.01:
                 voronoi_fps_times = np.zeros(self.n_trial_calculation_)
-                self.full_fraction = (top_fraction + lower_fraction)/2
+                self.full_fraction = (top_fraction + lower_fraction) / 2
                 for i in range(self.n_trial_calculation_):
-                    sel = np.random.randint(n_features, size=int(n_features*self.full_fraction))
-                    voronoi_fps_times[i] =- time()
-                    dummy = X[:,0] @ X[:,sel]
+                    sel = np.random.randint(
+                        n_features, size=int(n_features * self.full_fraction)
+                    )
+                    voronoi_fps_times[i] = -time()
+                    dummy = X[:, 0] @ X[:, sel]
                     voronoi_fps_times[i] += time()
                 voronoi_fps_timing = np.sum(voronoi_fps_times)
                 voronoi_fps_timing /= self.n_trial_calculation_
@@ -84,14 +87,18 @@ class VoronoiFPS(FPS):
                     lower_fraction = self.full_fraction
                 else:
                     top_fraction = self.full_fraction
-                print(f"optimal switching point = {self.full_fraction}, voronoi time = {voronoi_fps_timing},",
-                      f"simple fps timing =  {simple_fps_timing}")
-            self.full_fraction = lower_fraction # make sure we are on the "good" side
+                print(
+                    f"optimal switching point = {self.full_fraction}, voronoi time = {voronoi_fps_timing},",
+                    f"simple fps timing =  {simple_fps_timing}",
+                )
+            self.full_fraction = lower_fraction  # make sure we are on the "good" side
         else:
             if isinstance(self.full_fraction, numbers.Real):
                 if not 0 < self.full_fraction <= 1:
-                    raise ValueError("Switching point should be real and more than 0 and less than 1",
-                                      f"received {self.full_fraction}")
+                    raise ValueError(
+                        "Switching point should be real and more than 0 and less than 1",
+                        f"received {self.full_fraction}",
+                    )
         self.stats = []
 
         super()._init_greedy_search(X, y, n_to_select)
@@ -123,7 +130,7 @@ class VoronoiFPS(FPS):
             - 2 * (self.X_selected_[:, : self.n_selected_].T @ X[:, last_selected])
         ) * 0.25
 
-         """
+        """
          These are the points for which need to recompute distances.
          Let:
          L is the last point selected;
@@ -135,10 +142,10 @@ class VoronoiFPS(FPS):
          Triangle inequality implies that d(XL)>=|d(XS) - d(SL)| so we just need to
          check if |d(XS) - d(SL)|>= d(XS) to know that we don't need to check X.
          but |d(XS) - d(SL)|^2>= d(XS)^2 if and only if d(SL)/2 > d(SX)
-         """
+        """
         active_points = np.where(
-                        self.sel_d2q_[self.vlocation_of_idx]
-                        <self.haussdorf_)[0]
+            self.sel_d2q_[self.vlocation_of_idx] < self.haussdorf_
+        )[0]
 
         return active_points
 
@@ -161,10 +168,7 @@ class VoronoiFPS(FPS):
             # we need to compute distances between the new point and all the points
             # in the active Voronoi cells.
             if len(active_points) > 0:
-                if (
-                    len(active_points) / X.shape[1]
-                    > self.full_fraction
-                ):
+                if len(active_points) / X.shape[1] > self.full_fraction:
                     # if the number of distances we need to compute is large, it is
                     # better to switch to a full-matrix-algebra calculation.
                     self.new_dist_[:] = super()._calculate_distances(X, last_selected)
@@ -174,7 +178,7 @@ class VoronoiFPS(FPS):
                     # ... else we only iterate over the active points, although
                     # this involves more memory jumps, and can be more costly than
                     # computing all distances.
-                    #print(active_points)
+                    # print(active_points)
                     self.new_dist_[:] = self.haussdorf_
                     self.number_calculated_dist += np.shape(active_points)[0]
 
@@ -196,5 +200,5 @@ class VoronoiFPS(FPS):
 
         assert self.vlocation_of_idx[last_selected] == self.n_selected_
 
-        self.stats.append([ncomp, time()-start])
+        self.stats.append([ncomp, time() - start])
         return self.haussdorf_
