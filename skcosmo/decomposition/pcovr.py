@@ -374,7 +374,7 @@ class PCovR(_BasePCA, LinearModel):
                 "Unrecognized svd_solver='{0}'" "".format(self._fit_svd_solver)
             )
 
-        self.singular_values_ = S.copy()
+        self.singular_values_ = np.sqrt(S.copy())
         self.explained_variance_ = (S ** 2) / (X.shape[0] - 1)
         self.explained_variance_ratio_ = (
             self.explained_variance_ / self.explained_variance_.sum()
@@ -426,7 +426,7 @@ class PCovR(_BasePCA, LinearModel):
                 "Unrecognized svd_solver='{0}'" "".format(self._fit_svd_solver)
             )
 
-        self.singular_values_ = S.copy()
+        self.singular_values_ = np.sqrt(S.copy())
         self.explained_variance_ = (S ** 2) / (X.shape[0] - 1)
         self.explained_variance_ratio_ = (
             self.explained_variance_ / self.explained_variance_.sum()
