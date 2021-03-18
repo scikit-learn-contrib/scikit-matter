@@ -1,9 +1,11 @@
 import unittest
 from skcosmo.decomposition import PCovR
+from sklearn.decomposition import PCA
 from sklearn.datasets import load_boston
 import numpy as np
 from sklearn import exceptions
 from sklearn.utils.validation import check_X_y
+from sklearn.preprocessing import StandardScaler
 
 
 class PCovRBaseTest(unittest.TestCase):
@@ -14,12 +16,36 @@ class PCovRBaseTest(unittest.TestCase):
         self.error_tol = 1e-5
 
         self.X, self.Y = load_boston(return_X_y=True)
+        self.X = StandardScaler().fit_transform(self.X)
+        self.Y = StandardScaler().fit_transform(np.vstack(self.Y))
 
     def setUp(self):
         pass
 
 
 class PCovRErrorTest(PCovRBaseTest):
+    def test_against_pca(self):
+        """
+        Tests that mixing = 1.0 corresponds to PCA
+        """
+
+        pcovr = PCovR(
+            mixing=1.0, n_components=3, space="sample", svd_solver="full"
+        ).fit(self.X, self.Y)
+        pca = PCA(n_components=3, svd_solver="full").fit(self.X)
+
+        # tests that the SVD is equivalent
+        self.assertTrue(np.allclose(pca.singular_values_, pcovr.singular_values_))
+        self.assertTrue(np.allclose(pca.explained_variance_, pcovr.explained_variance_))
+
+        T_pcovr = pcovr.transform(self.X)
+        T_pca = pca.transform(self.X)
+
+        # tests that the projections are equivalent
+        self.assertLessEqual(
+            np.linalg.norm(T_pcovr @ T_pcovr.T - T_pca @ T_pca.T), 1e-8
+        )
+
     def test_simple_reconstruction(self):
         """
         This test checks that PCovR with a full eigendecomposition at mixing=1

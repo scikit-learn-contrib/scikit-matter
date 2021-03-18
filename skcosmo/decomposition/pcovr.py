@@ -375,7 +375,7 @@ class PCovR(_BasePCA, LinearModel):
             )
 
         self.singular_values_ = np.sqrt(S.copy())
-        self.explained_variance_ = (S ** 2) / (X.shape[0] - 1)
+        self.explained_variance_ = S / (X.shape[0] - 1)
         self.explained_variance_ratio_ = (
             self.explained_variance_ / self.explained_variance_.sum()
         )
@@ -427,7 +427,7 @@ class PCovR(_BasePCA, LinearModel):
             )
 
         self.singular_values_ = np.sqrt(S.copy())
-        self.explained_variance_ = (S ** 2) / (X.shape[0] - 1)
+        self.explained_variance_ = S / (X.shape[0] - 1)
         self.explained_variance_ratio_ = (
             self.explained_variance_ / self.explained_variance_.sum()
         )
@@ -527,7 +527,7 @@ class PCovR(_BasePCA, LinearModel):
         U, Vt = svd_flip(U, Vt)
 
         # Get variance explained by singular values
-        explained_variance_ = (S ** 2) / (self.n_samples - 1)
+        explained_variance_ = S / (self.n_samples - 1)
         total_var = explained_variance_.sum()
         explained_variance_ratio_ = explained_variance_ / total_var
 
