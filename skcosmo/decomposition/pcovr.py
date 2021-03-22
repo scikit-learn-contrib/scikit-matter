@@ -68,7 +68,7 @@ class PCovR(_BasePCA, LinearModel):
 
     Parameters
     ----------
-    mixing: float, defaults to 0
+    mixing: float, defaults to 0.5
         mixing parameter, as described in PCovR as :math:`{\alpha}`, here named
         to avoid confusion with regularization parameter `alpha`
 
@@ -125,7 +125,7 @@ class PCovR(_BasePCA, LinearModel):
     Attributes
     ----------
 
-    mixing: float, defaults to 0
+    mixing: float, defaults to 0.5
         mixing parameter, as described in PCovR as :math:`{\alpha}`
 
     alpha: float, default=1E-6
@@ -189,7 +189,7 @@ class PCovR(_BasePCA, LinearModel):
 
     def __init__(
         self,
-        mixing=0.0,
+        mixing=0.5,
         n_components=None,
         svd_solver="auto",
         alpha=None,
