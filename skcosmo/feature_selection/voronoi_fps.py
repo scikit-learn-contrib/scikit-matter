@@ -84,8 +84,8 @@ class VoronoiFPS(FPS):
                     lower_fraction = self.full_fraction
                 else:
                     top_fraction = self.full_fraction
-                print(f"optimal switching point = {self.full_fraction}, voronoi time = {voronoi_fps_timing},",
-                      f"simple fps timing =  {simple_fps_timing}")
+                #print(f"optimal switching point = {self.full_fraction}, voronoi time = {voronoi_fps_timing},",
+                #      f"simple fps timing =  {simple_fps_timing}")
             self.full_fraction = lower_fraction # make sure we are on the "good" side
         else:
             if isinstance(self.full_fraction, numbers.Real):
@@ -123,19 +123,19 @@ class VoronoiFPS(FPS):
             - 2 * (self.X_selected_[:, : self.n_selected_].T @ X[:, last_selected])
         ) * 0.25
 
-         """
-         These are the points for which need to recompute distances.
-         Let:
-         L is the last point selected;
-         S are the selected points from before this iteration;
-         X are the candidates;
-         The logic here is that we want to check if d(XL) can be smaller than
-         min(d(XS)) (which is stored in self.haussdorf_)
-         now, if a point belongs to the Voronoi cell of S then min(d(XS_i))=d(XS).
-         Triangle inequality implies that d(XL)>=|d(XS) - d(SL)| so we just need to
-         check if |d(XS) - d(SL)|>= d(XS) to know that we don't need to check X.
-         but |d(XS) - d(SL)|^2>= d(XS)^2 if and only if d(SL)/2 > d(SX)
-         """
+        """
+        These are the points for which need to recompute distances.
+        Let:
+        L is the last point selected;
+        S are the selected points from before this iteration;
+        X are the candidates;
+        The logic here is that we want to check if d(XL) can be smaller than
+        min(d(XS)) (which is stored in self.haussdorf_)
+        now, if a point belongs to the Voronoi cell of S then min(d(XS_i))=d(XS).
+        Triangle inequality implies that d(XL)>=|d(XS) - d(SL)| so we just need to
+        check if |d(XS) - d(SL)|>= d(XS) to know that we don't need to check X.
+        but |d(XS) - d(SL)|^2>= d(XS)^2 if and only if d(SL)/2 > d(SX)
+        """
         active_points = np.where(
                         self.sel_d2q_[self.vlocation_of_idx]
                         <self.haussdorf_)[0]
@@ -153,7 +153,6 @@ class VoronoiFPS(FPS):
             # tracker of how many distances must be computed at each step
             self.number_calculated_dist = np.shape(self.haussdorf_)[0]
             updated_points = np.arange(X.shape[-1], dtype=int)
-            ncomp = np.shape(self.haussdorf_)[0]
         else:
             active_points = self._get_active(X, last_selected)
             self.number_calculated_dist = self.n_selected_
@@ -169,12 +168,10 @@ class VoronoiFPS(FPS):
                     # better to switch to a full-matrix-algebra calculation.
                     self.new_dist_[:] = super()._calculate_distances(X, last_selected)
                     self.number_calculated_dist += np.shape(self.haussdorf_)[0]
-                    ncomp = np.shape(self.haussdorf_)[0]
                 else:
                     # ... else we only iterate over the active points, although
                     # this involves more memory jumps, and can be more costly than
                     # computing all distances.
-                    #print(active_points)
                     self.new_dist_[:] = self.haussdorf_
                     self.number_calculated_dist += np.shape(active_points)[0]
 
@@ -184,7 +181,6 @@ class VoronoiFPS(FPS):
                         - 2 * X[:, last_selected] @ X[:, active_points]
                     )
                     self.new_dist_[last_selected] = 0
-                    ncomp = len(active_points)
                 # updates haussdorf distances and keeps track of the updated points
                 updated_points = np.where(self.new_dist_ < self.haussdorf_)[0]
                 np.minimum(self.haussdorf_, self.new_dist_, self.haussdorf_)
@@ -196,5 +192,5 @@ class VoronoiFPS(FPS):
 
         assert self.vlocation_of_idx[last_selected] == self.n_selected_
 
-        self.stats.append([ncomp, time()-start])
+        self.stats.append([self.number_calculated_dist, time()-start])
         return self.haussdorf_
