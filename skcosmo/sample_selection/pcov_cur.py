@@ -101,8 +101,6 @@ class PCovCUR(CUR):
         iterative=True,
         k=1,
         tolerance=1e-12,
-        iterated_power="auto",
-        random_state=None,
         progress_bar=False,
     ):
 
@@ -114,8 +112,6 @@ class PCovCUR(CUR):
             iterative=iterative,
             k=k,
             tolerance=tolerance,
-            iterated_power=iterated_power,
-            random_state=random_state,
             progress_bar=progress_bar,
         )
 

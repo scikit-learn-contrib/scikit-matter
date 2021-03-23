@@ -50,14 +50,6 @@ class PCovCUR(CUR):
     tolerance: float
          threshold below which scores will be considered 0, defaults to 1E-12
 
-    iterated_power : int or 'auto', default='auto'
-         Number of iterations for the power method computed by
-         svd_solver == 'randomized'.
-         Must be of range [0, infinity).
-
-    random_state : int, RandomState instance or None, default=None
-         Pass an int for reproducible results across multiple function calls.
-
     progress_bar: boolean, default=False
                   option to use `tqdm <https://tqdm.github.io/>`_
                   progress bar to monitor selections
@@ -108,8 +100,6 @@ class PCovCUR(CUR):
         iterative=True,
         k=1,
         tolerance=1e-12,
-        iterated_power="auto",
-        random_state=None,
         progress_bar=False,
     ):
 
@@ -121,8 +111,6 @@ class PCovCUR(CUR):
             iterative=iterative,
             k=k,
             tolerance=tolerance,
-            iterated_power=iterated_power,
-            random_state=random_state,
             progress_bar=progress_bar,
         )
 
@@ -145,7 +133,6 @@ class PCovCUR(CUR):
             y,
             rcond=1e-12,
             rank=None,
-            random_state=self.random_state,
         )
 
         if self.k < Ct.shape[0] - 1:
