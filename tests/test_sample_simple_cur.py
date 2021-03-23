@@ -53,13 +53,13 @@ class TestCUR(unittest.TestCase):
         This test checks that the model can be restarted with a new instance
         """
 
-        ref_selector = CUR(n_samples_to_select=self.X.shape[0] - 2)
+        ref_selector = CUR(n_samples_to_select=self.X.shape[0] - 3)
         ref_idx = ref_selector.fit(self.X, self.y).selected_idx_
 
         selector = CUR(n_samples_to_select=1)
         selector.fit(self.X, self.y)
 
-        for i in range(self.X.shape[0] - 2):
+        for i in range(self.X.shape[0] - 3):
             selector.n_samples_to_select += 1
             selector.fit(self.X, self.y, warm_start=True)
             self.assertEqual(selector.selected_idx_[i], ref_idx[i])

@@ -1,7 +1,5 @@
 import numpy as np
-
-from sklearn.utils import check_random_state
-from sklearn.utils.extmath import randomized_svd
+import scipy
 
 from ._greedy import GreedySelector
 from ..utils.orthogonalizers import X_orthogonalizer, Y_feature_orthogonalizer
@@ -35,14 +33,6 @@ class CUR(GreedySelector):
 
     tolerance: float
          threshold below which scores will be considered 0, defaults to 1E-12
-
-    iterated_power : int or 'auto', default='auto'
-         Number of iterations for the power method computed by
-         svd_solver == 'randomized'.
-         Must be of range [0, infinity).
-
-    random_state : int, RandomState instance or None, default=None
-         Pass an int for reproducible results across multiple function calls.
 
     progress_bar: boolean, default=False
                   option to use `tqdm <https://tqdm.github.io/>`_
@@ -93,16 +83,12 @@ class CUR(GreedySelector):
         iterative=True,
         k=1,
         tolerance=1e-12,
-        iterated_power="auto",
-        random_state=None,
         progress_bar=False,
     ):
 
         scoring = self.score
         self.k = k
         self.iterative = iterative
-        self.iterated_power = iterated_power
-        self.random_state = random_state
 
         super().__init__(
             scoring=scoring,
@@ -162,15 +148,9 @@ class CUR(GreedySelector):
         where :math:`{\\mathbf{C} = \\mathbf{X}^T\\mathbf{X}.
         """
 
-        random_state = check_random_state(self.random_state)
-
-        # sign flipping is done inside
-        _, _, Vt = randomized_svd(
+        _, _, Vt = scipy.sparse.linalg.svds(
             X,
-            n_components=self.k,
-            n_iter=self.iterated_power,
-            flip_sign=True,
-            random_state=random_state,
+            k=self.k,
         )
         new_pi = (np.real(Vt) ** 2.0).sum(axis=0)
         return new_pi
