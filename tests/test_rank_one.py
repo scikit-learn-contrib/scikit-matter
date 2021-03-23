@@ -1,53 +1,38 @@
+import pyximport  # noqa
 import unittest
 import numpy as np
 from sklearn.preprocessing import StandardScaler
-from skcosmo.utils.rank_one_updates import BNS_val, GuEisenstadt
 from skcosmo.utils import X_orthogonalizer as x_orth
+
+pyximport.install(reload_support=True)  # noqa
+from skcosmo.utils.roupdate import rank1_update  # noqa
 
 EPSILON = 1e-8
 
 
 class TestR1(unittest.TestCase):
-    def setUp(self):
-        X = np.random.uniform(size=(100, 500))
+    def test_accuracy(self):
+        X = np.random.uniform(-1, 1, size=(1000, 100))
         X = StandardScaler().fit_transform(X)
+
         C = X.T @ X
-        vC, UC = np.linalg.eig(C)
-        self.vC = np.real(vC)
-        self.UC = np.real(UC)
+        vC, UC = np.linalg.eigh(C)
+        j1 = np.argmax(UC[:, -1] ** 2)
 
-        i = np.random.choice(X.shape[1])
+        xc = X[:, j1]
+        xc = xc / np.sqrt(xc @ xc)
+        X1 = x_orth(X, c=j1)
 
-        Xp = x_orth(X.copy(), c=i)
+        C1 = X1.T @ X1
+        vC1, UC1 = np.linalg.eigh(C1)
 
-        C_prime = Xp.T @ Xp
+        v = X.T @ xc
+        lam, Q = rank1_update(-vC[::-1], UC[:, ::-1].T @ v)
+        r1vC1 = -1.0 * np.asarray(lam)[::-1]
+        r1UC1 = (UC[:, ::-1] @ Q)[:, ::-1]
 
-        real_eig, real_vec = np.linalg.eig(C_prime)
-
-        real_vec = np.real(real_vec[:, np.argsort(-real_eig)])
-        real_eig = np.real(real_eig[np.argsort(-real_eig)])
-
-        self.c = C[:, [i]] / np.sqrt(C[i, i])
-
-        self.i = np.argmax(vC)
-
-
-class TestBNS(TestR1):
-    def test_accuracy(self):
-        new_eig = BNS_val(self.UC, self.vC, self.c, -1, self.i, z=None)
-
-        print(new_eig, self.vC[self.i])
-
-        self.assertTrue(new_eig == self.vC[self.i])
-
-
-class TestGE(TestR1):
-    def test_accuracy(self):
-        new_eig = GuEisenstadt(self.vC.flatten(), self.c.flatten(), self.i)
-
-        print(new_eig, self.vC[self.i])
-
-        self.assertTrue(new_eig == self.vC[self.i])
+        self.assertTrue(np.allclose(r1vC1, vC1))
+        self.assertTrue(np.allclose(r1UC1[:, -1] ** 2, UC1[:, -1] ** 2))
 
 
 if __name__ == "__main__":
