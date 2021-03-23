@@ -11,15 +11,15 @@ import pyximport
 pyximport.install(reload_support=True)  # noqa
 from skcosmo.utils.roupdate import rank1_update  # noqa
 
-n_samples =  1000
-n_features =  100
+n_samples =  2000
+n_features =  200
 n_select = 20
 X = make_low_rank_matrix(n_samples=n_samples, n_features=n_features, effective_rank=100)
 X = StandardScaler().fit_transform(X)
 
 X_cur = X.copy()
 print("TEST MATRIX ", np.linalg.norm(X_cur), np.linalg.norm(X_cur**2))
-cur = CUR(n_features_to_select=1, iterated_power=200)   # we want exact eigenvectors....
+cur = CUR(n_features_to_select=1)   # we want exact eigenvectors....
 cur_times = np.nan * np.zeros(n_select, dtype=int)
 cur_idx = np.zeros(n_select, dtype=int)
 start = time.time()
