@@ -11,14 +11,15 @@ import pyximport
 pyximport.install(reload_support=True)  # noqa
 from skcosmo.utils.roupdate import rank1_update  # noqa
 
-n_samples = 1000
-n_features = 100
+n_samples =  1000
+n_features =  100
 n_select = 10
 X = make_low_rank_matrix(n_samples=n_samples, n_features=n_features, effective_rank=100)
 X = StandardScaler().fit_transform(X)
 
 X_cur = X.copy()
-cur = CUR(n_features_to_select=1)
+print("TEST MATRIX ", np.linalg.norm(X_cur), np.linalg.norm(X_cur**2))
+cur = CUR(n_features_to_select=1, iterated_power=200)   # we want exact eigenvectors....
 cur_times = np.nan * np.zeros(n_select, dtype=int)
 cur_idx = np.zeros(n_select, dtype=int)
 start = time.time()
@@ -45,10 +46,11 @@ vC_current = vC.copy()
 UC_current = UC.copy()
 for i in tqdm(range(1, n_select+1)):
     j1 = np.argmax(UC_current[:, -1] ** 2)
-
+    
     r1_times[i-1] = time.time() - start;
     start = time.time()
     r1_idx[i-1] = j1
+    print("CHECK ", r1_idx[i-1], cur_idx[i-1])
 
     xc = X_current[:, j1]
     xc = xc / np.sqrt(xc @ xc)
@@ -64,10 +66,8 @@ for i in tqdm(range(1, n_select+1)):
 
     print(max(vC1), max(vC_current))
 
-    if i > 2:
-        break
-plt.semilogy(cur_times)
-plt.semilogy(r1_times)
+plt.semilogy(cur_times, 'b-')
+plt.semilogy(r1_times, 'r-')
 plt.show()
 
 print(np.linalg.norm(X[:, cur_idx] - X[:, r1_idx]))
