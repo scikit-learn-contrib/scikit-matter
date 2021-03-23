@@ -1,7 +1,8 @@
 import unittest
 import numpy as np
 
-from sklearn.datasets import load_boston
+from sklearn.datasets import load_boston as load
+from skcosmo.datasets import load_csd_1000r as load
 from sklearn import exceptions
 
 from skcosmo.feature_selection import CUR
@@ -9,11 +10,10 @@ from skcosmo.feature_selection import CUR
 
 class TestCUR(unittest.TestCase):
     def setUp(self):
-        self.X, _ = load_boston(return_X_y=True)
-        self.idx = [9, 11, 6, 1, 0, 12, 2, 8, 10, 7, 5, 3, 4]
+        self.X, _ = load(return_X_y=True)
 
     def test_bad_y(self):
-        self.X, self.Y = load_boston(return_X_y=True)
+        self.X, self.Y = load(return_X_y=True)
         selector = CUR(n_features_to_select=2)
         with self.assertRaises(ValueError):
             selector.fit(X=self.X, y=self.Y[:2])
@@ -28,23 +28,29 @@ class TestCUR(unittest.TestCase):
         This test checks that the model can be restarted with a new instance
         """
 
+        ref_selector = CUR(n_features_to_select=self.X.shape[-1] - 2).fit(X=self.X)
+        ref_idx = ref_selector.selected_idx_
+
         selector = CUR(n_features_to_select=1)
         selector.fit(self.X)
 
-        for i in range(len(self.idx) - 2):
+        for i in range(self.X.shape[-1] - 2):
             selector.n_features_to_select += 1
             selector.fit(self.X, warm_start=True)
-            self.assertEqual(selector.selected_idx_[i], self.idx[i])
+            self.assertEqual(selector.selected_idx_[i], ref_idx[i])
 
     def test_non_it(self):
         """
         This test checks that the model can be run non-iteratively
         """
-        self.idx = [9, 11, 6, 10, 12, 2, 8, 1, 5, 0, 7, 4, 3]
-        selector = CUR(n_features_to_select=12, iterative=False)
+        C = self.X.T @ self.X
+        _, UC = np.linalg.eigh(C)
+        ref_idx = np.argsort(-(UC[:, -1] ** 2.0))[:-1]
+
+        selector = CUR(n_features_to_select=self.X.shape[-1] - 1, iterative=False)
         selector.fit(self.X)
 
-        self.assertTrue(np.allclose(selector.selected_idx_, self.idx[:-1]))
+        self.assertTrue(np.allclose(selector.selected_idx_, ref_idx))
 
 
 if __name__ == "__main__":
