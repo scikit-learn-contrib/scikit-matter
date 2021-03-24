@@ -41,7 +41,7 @@ class KPCovR(_BasePCA, LinearModel):
 
     Parameters
     ----------
-    mixing: float, defaults to 1
+    mixing: float, defaults to 0.5
         mixing parameter, as described in PCovR as :math:`{\\alpha}`
 
     n_components: int, float or str, default=None
@@ -96,7 +96,7 @@ class KPCovR(_BasePCA, LinearModel):
         Learn the inverse transform for non-precomputed kernels.
         (i.e. learn to find the pre-image of a point)
 
-    tol: float, default=0.0
+    tol: float, default=1e-12
         Tolerance for singular values computed by svd_solver == 'arpack'.
         Must be of range [0.0, infinity).
 
@@ -118,13 +118,13 @@ class KPCovR(_BasePCA, LinearModel):
     Attributes
     ----------
 
-    mixing: float, defaults to 1
+    mixing: float, defaults to 0.5
         mixing parameter, as described in PCovR as :math:`{\\alpha}`
 
     alpha: float, default=1E-6
             Regularization parameter to use in all regression operations.
 
-    tol: float, default=0.0
+    tol: float, default=1e-12
         Tolerance for singular values computed by svd_solver == 'arpack'.
         Must be of range [0.0, infinity).
 
@@ -189,7 +189,7 @@ class KPCovR(_BasePCA, LinearModel):
 
     def __init__(
         self,
-        mixing=0.0,
+        mixing=0.5,
         n_components=None,
         svd_solver="auto",
         kernel="linear",
