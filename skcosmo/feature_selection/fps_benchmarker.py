@@ -6,22 +6,44 @@ from sklearn.datasets import make_low_rank_matrix
 
 from skcosmo.feature_selection.voronoi_fps import VoronoiFPS
 from skcosmo.feature_selection.simple_fps import FPS
-
-import time
-
-
+"""
+The number of calculated distances during the VoronoiFPS algorithm can be represented as:
+$n_{selected} +{n_updated}$,
+where
+$n_{selected}$ is the number of vertices already selected, and $n_{updated}$ is the number of points
+that can get into the resulting Voronoi polyhedron.
+According to this it is possible to define 3 modes of algorithm performance:
+1. Initial - small number of selected points (relative to the size of dataset). There are few polyhedrons
+in the system so far, a large number of points at each step can change its polyhedron, so the number of
+calculations is large. Here the main contribution is made by the second summand
+2. Intermediate - the number of polyhedrons is already large enough that a significant part of points does not
+change its polyhedron. At the same time, the number of selected points relative to the dataset size is also
+small. This is the target mode of the algorithm, at which it gives the best speedup. In this mode, both
+summands are much smaller than the size of the dataset, the contribution of the first summand becomes
+predominant.
+3. Final, the number of selected points is comparable to the size of the dataset. At this stage, the
+first summand is already much larger than the second summand, it can be neglected in this limit.
+At this stage the Voronoi algorithm is already undesirable, because at each iteration the distance from the
+new vertex to all the previously selected ones is calculated. Simple FPS at this stage already calculates
+distances only from the selected vertex to the remaining points, the number of which is much smaller.
+Consequently, an important task is to determine the intermediate mode conditions for different parameters
+$n_{select}$, $N$ and $M$. This can be done using the presented algorithm.
+The number of samples in the dataset is input. Then a random matrix of size $NxM$ is generated - where M
+takes the value $2^k$, k lies from 0 to 7. Next, all the features are scaled, and a small noise is added to
+them. The result of the algorithm is a plot of the dependence $(n_{d}-n_{selected})/N$ on $n_{selected}/N$
+where $n_{d}$ is the number of distances calculated at each step. The sooner the plot goes to zero,
+the sooner the algorithm begins to work in the intermediate mode. The above graphs are an example of
+the "curse of dimensionality$ - as the number of features increases, the time to reach the intermediate mode
+also increases significantly.
+"""
 class VoronoiBenchmark(VoronoiFPS):
     def _init_greedy_search(self, X, y, n_to_select):
-        self.start_ = time.time()
-        self.times_ = np.zeros(n_to_select)
         self.n_dist_calc_each_ = np.zeros((2, n_to_select))
         self.n_dist_calc_each_[1] = np.arange(n_to_select)
         super()._init_greedy_search(X, y, n_to_select)
 
     def _continue_greedy_search(self, X, y, n_to_select):
         n_pad = n_to_select - self.n_selected_
-        self.start_ = time.time()
-        self.times_ = np.pad(self.times_, (0, n_pad), "constant", constant_values=0)
         self.n_dist_calc_each_ = np.pad(
             self.n_dist_calc_each_, (0, n_pad), "constant", constant_values=0
         )
@@ -34,25 +56,19 @@ class VoronoiBenchmark(VoronoiFPS):
         return self.haussdorf_
 
     def _update_post_selection(self, X, y, last_selected):
-        self.times_[self.n_selected_] = time.time() - self.start_
-        self.start_ = time.time()
         super()._update_post_selection(X, y, last_selected)
 
     def _get_benchmarks(self):
-        return self.times_, self.n_dist_calc_each_
+        return self.n_dist_calc_each_
 
 
 class SimpleBenchmark(FPS):
     def _init_greedy_search(self, X, y, n_to_select):
-        self.start_ = time.time()
-        self.times_ = np.zeros(n_to_select)
         self.n_dist_calc_ = np.zeros(n_to_select)
         super()._init_greedy_search(X, y, n_to_select)
 
     def _continue_greedy_search(self, X, y, n_to_select):
         n_pad = n_to_select - self.n_selected_
-        self.start_ = time.time()
-        self.times_ = np.pad(self.times_, (0, n_pad), "constant", constant_values=0)
         self.n_dist_calc_ = np.pad(
             self.n_dist_calc_, (0, n_pad), "constant", constant_values=0
         )
@@ -60,12 +76,10 @@ class SimpleBenchmark(FPS):
 
     def _update_post_selection(self, X, y, last_selected):
         self.n_dist_calc_[self.n_selected_] = X.shape[-1]
-        self.times_[self.n_selected_] = time.time() - self.start_
-        self.start_ = time.time()
         super()._update_post_selection(X, y, last_selected)
 
     def _get_benchmarks(self):
-        return self.times_, self.n_dist_calc_
+        return self.n_dist_calc_
 
 
 def run(benchmark, X, **benchmark_args):
@@ -76,178 +90,42 @@ def run(benchmark, X, **benchmark_args):
 
     return b._get_benchmarks()
 
-def building_figure(n_samples, n_features, n_features_to_select, scaling = True):
-        print('=======================================')
-        print(f"n_samples = {n_samples}", f"n_features = {n_features}")
-        X = make_low_rank_matrix(n_samples = n_samples, n_features=n_features, effective_rank = 10)
-        if scaling:
-            X *= 1 / (1.0 + np.arange(X.shape[1]) ** 2)
-        simple_times = []
-        voronoi_times = []
-        st = []
-        vt = []
-        sd = []
-        vd = []
-        for nfts in n_features_to_select:
-            sb_time = -time.time()
-            simple_times_i, simple_n_calcs = run(SimpleBenchmark, X, n_features_to_select=nfts, tolerance = 0)
-            sb_time += time.time()
-            vr_time = -time.time()
-            voronoi_times_i, voronoi_n_calcs = run(VoronoiBenchmark, X, n_features_to_select=nfts, tolerance = 0)
-            vr_time += time.time()
-            st.append(sb_time)
-            vt.append(vr_time)
-            sd.append(np.sum(np.sum(voronoi_n_calcs, axis=0)[:-1]))
-            vd.append(np.sum(simple_n_calcs[:-1]))
-
-        simple_times.append(simple_times_i)
-        voronoi_times.append(voronoi_times_i)
-
-        voronoi_times = np.array(voronoi_times)
-        simple_times = np.array(simple_times)
-        voronoi_mean_time = np.mean(voronoi_times, axis=0)
-        simple_mean_time = np.mean(simple_times, axis=0)
-        voronoi_time_std = np.std(voronoi_times, axis=0)
-        simple_time_std = np.std(simple_times, axis=0)
-        plt.figure(figsize=(10, 8))
-        mpl.rcParams["font.size"] = 20
-        plt.yscale("log")
-        plt.xscale("log")
-        plt.title("Time taken per iteration")
-        index = [i for i in range(n_features_to_select[-1])]
-        plt.errorbar(
-            index,
-            simple_mean_time[index],
-            simple_time_std[index],
-            capsize=5,
-            color="r",
-            ecolor="k",
-            errorevery=3,
-            label="Simple FPS",
-        )
-        plt.errorbar(
-            index,
-            voronoi_mean_time[index],
-            voronoi_time_std[index],
-            capsize=5,
-            color="b",
-            ecolor="g",
-            errorevery=3,
-            label=" Voronoi FPS",
-        )
-        plt.xlabel("$n_{iteration}$")
-        plt.ylabel("time ($s$)")
-        plt.legend()
-        plt.show()
-
-        plt.figure(figsize=(10, 8))
-        mpl.rcParams["font.size"] = 20
-        plt.title("Total number of distances calculated by each iteration")
-        plt.loglog(
-            [np.sum(simple_n_calcs[:i]) for i in range(n_features_to_select[-1])],
-            color="r",
-            label="Simple FPS",
-        )
-        plt.loglog(
-            [np.sum(np.sum(voronoi_n_calcs, axis=0)[:i]) for i in range(n_features_to_select[-1])],
-            color="b",
-            label="Voronoi FPS",
-        )
-        plt.xlabel("$n_{iteration}$")
-        plt.ylabel("Total number of computed distances")
-        plt.legend()
-        plt.show()
-        return [n_features_to_select/n_features, st, vt, sd, vd]
+def data_generation(n_samples, n_features):
+    X = np.random.normal(size=(n_samples, n_features))
+    X += np.random.poisson(size=(n_samples, n_features)) * 0.1
+    X *= 1 / (1.0 + np.arange(X.shape[1]) ** 2)
+    X -= np.random.normal(size=(n_samples, n_features)) * 0.01
+    X = X.T
+    return X
 
 if __name__ == "__main__":
-
-    samples = [10**i for i in range(0, 4)]
-    n_features_to_select = np.array([1, 10, 100, 500])
-    n_features = 1000
-    stats_1 = {}
-    for sample in samples:
-        stats_1[sample] =  building_figure(n_features = n_features, n_samples = sample, n_features_to_select=n_features_to_select)
-
-    samples = [10**i for i in range(3, 6)]
-    n_features_to_select = np.array([10, 100, 500, 999])
-    n_features = 1000
-    stats_2 = {}
-    for sample in samples:
-        stats_2[sample] =  building_figure(n_features = n_features, n_samples = sample, n_features_to_select=n_features_to_select)
-
-    mpl.rcParams["font.size"] = 15
-    fig, axs = plt.subplots(2, 2,figsize=(20,16))
-    axs[0, 0].plot(stats_1[1][0], stats_1[1][1], label = 'SimpleFPS')
-    axs[0, 0].plot(stats_1[1][0], stats_1[1][2], label = 'VoronoiFPS')
-    axs[0, 1].plot(stats_1[10][0], stats_1[10][1], label = 'SimpleFPS')
-    axs[0, 1].plot(stats_1[10][0], stats_1[10][2], label = 'VoronoiFPS')
-    axs[1, 0].plot(stats_1[100][0], stats_1[100][1], label = 'SimpleFPS')
-    axs[1, 0].plot(stats_1[100][0], stats_1[100][2], label = 'VoronoiFPS')
-    axs[1, 1].plot(stats_1[1000][0], stats_1[1000][1], label = 'SimpleFPS')
-    axs[1, 1].plot(stats_1[1000][0], stats_1[1000][2], label = 'VoronoiFPS')
-    axs[0, 0].set_title('1000 n_samples = n_features')
-    axs[0, 0].legend()
-    axs[0, 1].set_title('100 n_samples =  n_features')
-    axs[0, 1].legend()
-    axs[1, 0].set_title('10 n_samples = n_features')
-    axs[1, 0].legend()
-    axs[1, 1].set_title('n_samples = n_features')
-    axs[1, 1].legend()
-    for ax in axs.flat:
-        ax.set(xlabel='$n_{features\_to\_select}/n_{features}$', ylabel='time')
-    plt.show()
-
-    mpl.rcParams["font.size"] = 15
-    fig, axs = plt.subplots(2, 2,figsize=(20,16))
-    axs[0, 0].plot(stats_2[1000][0], stats_2[1000][1], label = 'SimpleFPS')
-    axs[0, 0].plot(stats_2[1000][0], stats_2[1000][2], label = 'VoronoiFPS')
-    axs[0, 1].plot(stats_2[10000][0], stats_2[10000][1], label = 'SimpleFPS')
-    axs[0, 1].plot(stats_2[10000][0], stats_2[10000][2], label = 'VoronoiFPS')
-    axs[1, 0].plot(stats_2[100000][0], stats_2[100000][1], label = 'SimpleFPS')
-    axs[1, 0].plot(stats_2[100000][0], stats_2[100000][2], label = 'VoronoiFPS')
-    axs[0, 0].set_title('n_samples = n_features')
-    axs[0, 0].legend()
-    axs[0, 1].set_title('n_samples = 10 n_features')
-    axs[0, 1].legend()
-    axs[1, 0].set_title('n_samples = 100 n_features')
-    axs[1, 0].legend()
-    for ax in axs.flat:
-        ax.set(xlabel='$n_{features\_to\_select}/n_{features}$', ylabel='time')
-    plt.show()
-
-    fig, axs = plt.subplots(2, 2,figsize=(20,16))
-    axs[0, 0].plot(stats_1[1][0], stats_1[1][3], label = 'SimpleFPS')
-    axs[0, 0].plot(stats_1[1][0], stats_1[1][4], label = 'VoronoiFPS')
-    axs[0, 1].plot(stats_1[10][0], stats_1[10][3], label = 'SimpleFPS')
-    axs[0, 1].plot(stats_1[10][0], stats_1[10][4], label = 'VoronoiFPS')
-    axs[1, 0].plot(stats_1[100][0], stats_1[100][3], label = 'SimpleFPS')
-    axs[1, 0].plot(stats_1[100][0], stats_1[100][4], label = 'VoronoiFPS')
-    axs[1, 1].plot(stats_1[1000][0], stats_1[1000][3], label = 'SimpleFPS')
-    axs[1, 1].plot(stats_1[1000][0], stats_1[1000][4], label = 'VoronoiFPS')
-    axs[0, 0].set_title('1000 n_samples = n_features')
-    axs[0, 0].legend()
-    axs[0, 1].set_title('100 n_samples =  n_features')
-    axs[0, 1].legend()
-    axs[1, 0].set_title('10 n_samples = n_features')
-    axs[1, 0].legend()
-    axs[1, 1].set_title('n_samples = n_features')
-    axs[1, 1].legend()
-    for ax in axs.flat:
-        ax.set(xlabel='$n_{features\_to\_select}/n_{features}$', ylabel='$n_{calc\_dist}$')
-    plt.show()
-    fig, axs = plt.subplots(2, 2,figsize=(20,16))
-    axs[0, 0].plot(stats_2[1000][0], stats_2[1000][3], label = 'SimpleFPS')
-    axs[0, 0].plot(stats_2[1000][0], stats_2[1000][4], label = 'VoronoiFPS')
-    axs[0, 1].plot(stats_2[10000][0], stats_2[10000][3], label = 'SimpleFPS')
-    axs[0, 1].plot(stats_2[10000][0], stats_2[10000][4], label = 'VoronoiFPS')
-    axs[1, 0].plot(stats_2[100000][0], stats_2[100000][3], label = 'SimpleFPS')
-    axs[1, 0].plot(stats_2[100000][0], stats_2[100000][4], label = 'VoronoiFPS')
-    axs[0, 0].set_title('n_samples = n_features')
-    axs[0, 0].legend()
-    axs[0, 1].set_title('n_samples = 10 n_features')
-    axs[0, 1].legend()
-    axs[1, 0].set_title('n_samples = 100 n_features')
-    axs[1, 0].legend()
-    for ax in axs.flat:
-        ax.set(xlabel='$n_{features\_to\_select}/n_{features}$', ylabel='$n_{calc\_dist}$')
+    print("Enter number of samples")
+    n_samples = int(input())
+    ntfs = int(np.round(0.08*n_samples))
+    n_features = [2**i for i in range(5, -1, -1)]
+    n_iter = 20
+    plt.figure(figsize=(10, 8))
+    mpl.rcParams["font.size"] = 20
+    print('=======================================')
+    print("SimpleFPS,", f"n_samples = {n_samples}")
+    X = data_generation(n_samples, 1)
+    simple_n_calcs = run(SimpleBenchmark, X, n_features_to_select=ntfs)
+    iterations = np.arange(ntfs)/n_samples
+    plt.plot(iterations, (simple_n_calcs - iterations)/n_samples, label = "SimpleFPS calculation")
+    aver_par = max(10, int(np.round(0.001*10000)))
+    for feature in n_features:
+        print('=======================================')
+        print(f"n_samples = {n_samples}", f"n_features = {feature}")
+        stats = np.zeros((2,ntfs))
+        for i in range(n_iter):
+            X = data_generation(n_samples, feature)
+            voronoi_n_calcs = run(VoronoiBenchmark, X.copy(), n_features_to_select=ntfs)
+            stats += [voronoi_n_calcs[1]/n_samples, voronoi_n_calcs[0]/n_samples]
+        averaged = [np.sum((stats[1] - stats[0])[i:i+aver_par]/n_iter)/aver_par for i in range(0, ntfs-10)]
+        index = np.arange(ntfs-10)
+        plt.plot(index/n_samples, averaged, label = f"n_features = {feature}")
+    plt.ylabel("$n_{dist}/N$", fontsize = 25)
+    plt.xlabel("$n_{selected}/N$", fontsize = 25)
+    plt.title(f"n_samples = {n_samples}")
+    plt.legend()
     plt.show()
