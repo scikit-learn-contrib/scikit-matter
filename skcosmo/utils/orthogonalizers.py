@@ -31,20 +31,10 @@ def X_orthogonalizer(x1, c=None, x2=None, tol=1e-12):
     if x2 is None and c is not None:
         x2 = x1[:, [c]]
 
-    orthogonalizer = np.eye(x1.shape[0])
-
-    for i in range(x2.shape[-1]):
-        col = orthogonalizer @ x2[:, [i]]
-
-        if np.linalg.norm(col) < tol:
-            warnings.warn("Column vector contains only zeros.")
-        else:
-            col /= np.linalg.norm(col)
-
-        orthogonalizer = (np.eye(x1.shape[0]) - col @ col.T) @ orthogonalizer
-
-    return orthogonalizer @ x1
-
+    # normalize x2 column-wise
+    xn = x2 / np.sqrt((x2**2).sum(axis=0))
+    
+    return x1 - xn @ (xn.T@x1)
 
 def Y_feature_orthogonalizer(y, X, tol=1e-12, copy=True):
     r"""
