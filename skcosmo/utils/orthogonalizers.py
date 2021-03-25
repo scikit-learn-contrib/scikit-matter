@@ -13,7 +13,7 @@ import numpy as np
 import warnings
 
 
-def X_orthogonalizer(x1, c=None, x2=None, tol=1e-12):
+def X_orthogonalizer(x1, c=None, x2=None, tol=1e-12, copy=False):
     """
     Orthogonalizes a feature matrix by the given columns. Can be used to
     orthogonalize by samples by calling `X = X_orthogonalizer(X.T, row_index).T`.
@@ -24,17 +24,37 @@ def X_orthogonalizer(x1, c=None, x2=None, tol=1e-12):
     :param c: index of the column to orthogonalize by
     :type c: int, less than m
 
-    :param x2: a separate set of columns to orthogonalize by
+    :param x2: a separate set of columns to orthogonalize with column-by-column
     :type x2: matrix of shape (n x a)
     """
 
     if x2 is None and c is not None:
-        x2 = x1[:, [c]]
+        cols = x1[:, [c]]
+    elif x2.shape[0] == x1.shape[0]:
+        cols = np.reshape(x2, (x1.shape[0], -1))
+    else:
+        raise ValueError(
+            f"Orthogonalization only with a matrix containing {x1.shape[0]} entries."
+        )
 
-    # normalize x2 column-wise
-    xn = x2 / np.sqrt((x2**2).sum(axis=0))
-    
-    return x1 - xn @ (xn.T@x1)
+    if copy:
+        xnew = x1.copy()
+    else:
+        xnew = x1
+
+    for i in range(cols.shape[-1]):
+
+        col = cols[:, [i]]
+
+        if np.linalg.norm(col) < tol:
+            warnings.warn("Column vector contains only zeros.")
+        else:
+            col /= np.linalg.norm(col, axis=0)
+
+        xnew -= col @ (col.T @ xnew)
+
+    return xnew
+
 
 def Y_feature_orthogonalizer(y, X, tol=1e-12, copy=True):
     r"""

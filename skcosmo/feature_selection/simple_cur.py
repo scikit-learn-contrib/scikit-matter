@@ -145,12 +145,8 @@ class CUR(GreedySelector):
         where :math:`{\\mathbf{C} = \\mathbf{X}^T\\mathbf{X}.
         """
 
-        _, _, Vt = scipy.sparse.linalg.svds(
-            X,
-            k=self.k,
-            return_singular_vectors = 'vh'
-        )        
-        
+        _, _, Vt = scipy.sparse.linalg.svds(X, k=self.k, return_singular_vectors="vh")
+
         new_pi = (np.real(Vt) ** 2.0).sum(axis=0)
         return new_pi
 
