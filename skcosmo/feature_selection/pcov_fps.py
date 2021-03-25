@@ -21,8 +21,6 @@ class PCovFPS(FPS):
         (1 - \\alpha)(\\mathbf{X}^T\\mathbf{X})^{-1/2}\\mathbf{X}^T
         \\mathbf{\\hat{Y}\\hat{Y}}^T\\mathbf{X}(\\mathbf{X}^T\\mathbf{X})^{-1/2}
 
-    Please note: the best results
-
     Parameters
     ----------
 
