@@ -87,9 +87,9 @@ class VoronoiFPS(FPS):
                     lower_fraction = self.full_fraction
                 else:
                     top_fraction = self.full_fraction
-                #print(f"optimal switching point = {self.full_fraction}, voronoi time = {voronoi_fps_timing},",
+                # print(f"optimal switching point = {self.full_fraction}, voronoi time = {voronoi_fps_timing},",
                 #      f"simple fps timing =  {simple_fps_timing}")
-            self.full_fraction = lower_fraction # make sure we are on the "good" side
+            self.full_fraction = lower_fraction  # make sure we are on the "good" side
         else:
             if isinstance(self.full_fraction, numbers.Real):
                 if not 0 < self.full_fraction <= 1:
@@ -194,5 +194,5 @@ class VoronoiFPS(FPS):
 
         assert self.vlocation_of_idx[last_selected] == self.n_selected_
 
-        self.stats.append([self.number_calculated_dist, time()-start])
+        self.stats.append([self.number_calculated_dist, time() - start])
         return self.haussdorf_
