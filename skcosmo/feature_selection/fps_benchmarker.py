@@ -75,15 +75,8 @@ if __name__ == "__main__":
     ntfs = int(np.round(0.08*n_samples))
     n_features = [2**i for i in range(5, -1, -1)]
     n_iter = 20
-    plt.figure(figsize=(10, 8))
-    mpl.rcParams["font.size"] = 20
-    print('=======================================')
-    print("SimpleFPS,", f"n_samples = {n_samples}")
-    X = data_generation(n_samples, 1)
-    simple_n_calcs = run(SimpleBenchmark, X, n_features_to_select=ntfs)
-    iterations = np.arange(ntfs)/n_samples
-    plt.plot(iterations, (simple_n_calcs - iterations)/n_samples, label = "SimpleFPS")
     aver_par = max(10, int(np.round(0.001*10000)))
+    statistics = []
     for feature in n_features:
         print('=======================================')
         print(f"n_samples = {n_samples}", f"n_features = {feature}")
@@ -94,9 +87,25 @@ if __name__ == "__main__":
             stats += [voronoi_n_calcs[1]/n_samples, voronoi_n_calcs[0]/n_samples]
         averaged = [np.sum((stats[1] - stats[0])[i:i+aver_par]/n_iter)/aver_par for i in range(0, ntfs-10)]
         index = np.arange(ntfs-10)
-        plt.plot(index/n_samples, averaged, label = f"VoronoiFPS, M = {feature}")
-    plt.ylabel("$n_{dist}/N$", fontsize = 25)
-    plt.xlabel("$n_{selected}/N$", fontsize = 25)
-    plt.title(f'N = {n_samples}')
-    plt.legend()
+        statistics.append([index/n_samples, averaged])
+
+    plt.figure(figsize=(10, 8))
+    mpl.rcParams['pdf.fonttype'] = 42
+    mpl.rcParams["font.size"] = 20
+    print('=======================================')
+    print("FPS,", f"n_samples = {n_samples}")
+    X = data_generation(n_samples, 1)
+    simple_n_calcs = run(SimpleBenchmark, X, n_features_to_select=ntfs)
+    iterations = np.arange(ntfs)/n_samples
+    plt.xscale('log')
+    plt.plot(iterations, simple_n_calcs/n_samples - iterations, "--k")
+    plt.text(x = 0.9, y = 0.8, s = 'FPS', transform = plt.gca().transAxes, ha = 'right')
+    for i in range(len(n_features)):
+        line = r"$n_\mathrm{features}$ = " + r"{}".format(n_features[i])
+        plt.plot(statistics[i][0],statistics[i][1], label = line)
+    plt.ylabel("$n_\mathrm{checked}/n_\mathrm{samples}$", fontsize = 25)
+    plt.xlabel(r"$m/n_\mathrm{samples}$", fontsize = 25)
+    line = "$n_\mathrm{samples}$ = " + "{}".format(n_samples)
+    plt.title(line)
+    plt.legend( prop={'size': 14}, title = 'Voronoi FPS')
     plt.savefig("fps_benchmark.pdf")
