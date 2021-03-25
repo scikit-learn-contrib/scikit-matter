@@ -65,7 +65,7 @@ cpdef double dlamdvec(double [:] dref, double [:] vref, int i, double[:] dvec) n
         di = 0
         while fabs(eta) > 10*eps:
             psi1 = 0; psi2 = 0; psi1s = 0; psi2s = 0
-            for k in range(i+1):
+            for k in range(i+1):                
                 idlam = 1.0/(d[k] - lam)
                 psi1 += v[k] * idlam
                 psi1s += v[k] * idlam*idlam
@@ -85,7 +85,7 @@ cpdef double dlamdvec(double [:] dref, double [:] vref, int i, double[:] dvec) n
         lam -=  di1
         di = di - di1
         di1 = 0
-        while fabs(eta) > 10*eps:
+        while fabs(eta) > 10*eps and fabs(d[n-1]-lam)>0:
             psi1 = 0; psi2 = 0; psi1s = 0; psi2s = 0
             for k in range(i+1):
                 idlam = 1.0/(d[k] - lam)
@@ -142,8 +142,11 @@ cpdef rank1_update(double[:] d, double [:] v):
     with nogil, parallel():                        
         for k in prange(sz, schedule="static"):
             nQ2 = 0
-            for j in range(sz):
-                Q[k,j] = zt[j]/dvec[j,k]
+            for j in range(sz):                   
+                if ( fabs(dvec[j,k]) >  1e-100 ):
+                    Q[k,j] = zt[j]/dvec[j,k]
+                else: 
+                    Q[k,j] = 0
                 nQ2 += Q[k,j]*Q[k,j]
             for j in range(sz):
                 Q[k,j] /= sqrt(nQ2)

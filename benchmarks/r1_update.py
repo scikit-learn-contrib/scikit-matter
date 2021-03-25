@@ -11,10 +11,11 @@ import scipy as sp
 import pyximport
 pyximport.install(reload_support=True)  # noqa
 from skcosmo.utils.roupdate import rank1_update  # noqa
+#from skcosmo.utils.rank_one import rank1_update
 
-n_samples =  2000
-n_features =  1000
-n_select = 20
+n_samples =  4000
+n_features =  2000
+n_select = 5
 X = make_low_rank_matrix(n_samples=n_samples, n_features=n_features, effective_rank=100)
 X = StandardScaler().fit_transform(X)
 
@@ -59,6 +60,9 @@ UC_current = UC[:,::-1].copy()
 # lazy list to keep track of dropped features
 idx_current = list(range(n_features)) 
 for i in tqdm(range(1, n_select+1)):
+
+    print("Minimum eigenvalue separation ", min(abs(vC_current[1:]- vC_current[:-1])))
+    
     j1 = np.argmax(UC_current[:, 0] ** 2)
     
     r1_times[i-1] = time.time() - start;
@@ -90,6 +94,7 @@ for i in tqdm(range(1, n_select+1)):
     vC_current = vC_current[:-1]
     UC_current = np.vstack([UC_current[:j1,:-1], UC_current[j1+1:,:-1]])
     idx_current.pop(j1)
+    
     print("bookkeeping: ", time.time() - st3)
     print("total: ", time.time() - st1)
     
