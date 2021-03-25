@@ -1,5 +1,6 @@
 import unittest
 import numpy as np
+from scipy.sparse.linalg import eigs as speig
 
 from sklearn.datasets import load_boston
 from sklearn import exceptions
@@ -40,11 +41,16 @@ class TestCUR(unittest.TestCase):
         """
         This test checks that the model can be run non-iteratively
         """
-        self.idx = [9, 11, 6, 10, 12, 2, 8, 1, 5, 0, 7, 4, 3]
+
+        C = self.X.T @ self.X
+        _, UC =speig(C, k=1)
+        pi = (np.real(UC[:, :1])**2.0).sum(axis=1)
+        idx = np.argsort(-pi)
+
         selector = CUR(n_features_to_select=12, iterative=False)
         selector.fit(self.X)
 
-        self.assertTrue(np.allclose(selector.selected_idx_, self.idx[:-1]))
+        self.assertTrue(np.allclose(selector.selected_idx_, idx[:12]))
 
 
 if __name__ == "__main__":

@@ -64,9 +64,6 @@ class CUR(GreedySelector):
                 The properties, if supplied, orthogonalized by a regression on
                 the previously selected features
 
-    eligible_ : ndarray of shape (n_features,), dtype=bool
-        A mask of features eligible for selection
-
     n_selected_ : int
         The number of features that have been selected thus far
 
@@ -192,6 +189,6 @@ class CUR(GreedySelector):
                     self.y_current_, X=self.X_selected_, tol=1e-12
                 )
 
-            self.pi_[self.eligible_] = self._compute_pi(
-                self.X_current_[:, self.eligible_], self.y_current_
-            )
+            self.pi_ = self._compute_pi(self.X_current_, self.y_current_)
+
+        self.pi_[last_selected] = 0.0
