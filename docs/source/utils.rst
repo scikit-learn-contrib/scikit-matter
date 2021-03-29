@@ -23,8 +23,9 @@ Orthogonalizers for CUR
 
 When computing non-iterative CUR, it is necessary to orthogonalize the input matrices after each selection. For this, we have supplied a feature and a sample orthogonalizer for feature and sample selection.
 
-.. autofunction:: feature_orthogonalizer
-.. autofunction:: sample_orthogonalizer
+.. autofunction:: X_orthogonalizer
+.. autofunction:: Y_feature_orthogonalizer
+.. autofunction:: Y_sample_orthogonalizer
 
 
 Random Partitioning with Overlaps

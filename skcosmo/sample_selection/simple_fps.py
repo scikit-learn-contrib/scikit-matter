@@ -47,9 +47,6 @@ class FPS(GreedySelector):
     y_selected_ : ndarray (n_samples_to_select, n_properties)
                   The corresponding target values for the samples selected
 
-    eligible_ : ndarray of shape (n_samples,), dtype=bool
-                A mask of samples eligible for selection
-
     n_selected_ : int
                 The number of samples that have been selected thus far
 

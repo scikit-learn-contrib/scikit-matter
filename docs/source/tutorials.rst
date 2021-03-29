@@ -15,7 +15,7 @@ check out the pedagogic notebooks in our companion project `kernel-tutorials <ht
   :Caption: Feature and Sample Selection
 
   read-only-examples/FeatureSelection*
-  read-only-examples/Selectors+Pipelines*
+  read-only-examples/Selectors-Pipelines*
 
 
 .. toctree::

@@ -1,18 +1,34 @@
 import numpy as np
-import scipy
+from scipy.sparse.linalg import eigs as speig
+from scipy.linalg import eig
 
-from ._greedy import GreedySelector
-from ..utils.orthogonalizers import X_orthogonalizer, Y_feature_orthogonalizer
+from .simple_cur import CUR
+from ..utils import pcovr_covariance
 
 
-class CUR(GreedySelector):
+class PCovCUR(CUR):
     """Transformer that performs Greedy Feature Selection by choosing features
-    which maximize the magnitude of the right singular vectors, consistent with
-    classic CUR matrix decomposition.
+    which maximize the importance score :math:`\\pi`, which is the sum over
+    the squares of the first :math:`k` components of the right singular vectors
 
+    .. math::
+
+        \\pi_j =
+        \\sum_i^k \\left(\\mathbf{U}_\\mathbf{\\tilde{C}}\\right)_{ij}^2.
+
+    where :math:`{\\mathbf{\\tilde{C}} = \\alpha \\mathbf{X}^T\\mathbf{X} +
+    (1 - \\alpha)(\\mathbf{X}^T\\mathbf{X})^{-1/2}\\mathbf{X}^T
+    \\mathbf{\\hat{Y}\\hat{Y}}^T\\mathbf{X}(\\mathbf{X}^T\\mathbf{X})^{-1/2}}`
+    for some mixing parameter :math:`{\\alpha}`. When :math:`{\\alpha = 1}`,
+    this defaults to the covariance matrix
+    :math:`{\\mathbf{C} = \\mathbf{X}^T\\mathbf{X}}` used in CUR.
 
     Parameters
     ----------
+
+    mixing: float, default=0.5
+            The PCovR mixing parameter, as described in PCovR as
+            :math:`{\\alpha}`
 
     n_features_to_select : int or float, default=None
         The number of features to select. If `None`, half of the features are
@@ -75,6 +91,7 @@ class CUR(GreedySelector):
 
     def __init__(
         self,
+        mixing=0.5,
         n_features_to_select=None,
         score_thresh_to_select=None,
         iterative=True,
@@ -83,54 +100,16 @@ class CUR(GreedySelector):
         progress_bar=False,
     ):
 
-        scoring = self.score
-        self.k = k
-        self.iterative = iterative
+        self.mixing = mixing
 
         super().__init__(
-            scoring=scoring,
             n_features_to_select=n_features_to_select,
+            score_thresh_to_select=score_thresh_to_select,
+            iterative=iterative,
+            k=k,
+            tolerance=tolerance,
             progress_bar=progress_bar,
-            score_thresh_to_select=tolerance,
         )
-
-    def _init_greedy_search(self, X, y, n_to_select):
-        """
-        Initializes the search. Prepares an array to store the selected
-        features and computes their initial importance score.
-        """
-
-        self.X_current = X.copy()
-        if y is not None:
-            self.y_current = y.copy()
-        else:
-            self.y_current = None
-        self.pi_ = self._compute_pi(self.X_current, self.y_current)
-
-        super()._init_greedy_search(X, y, n_to_select)
-
-    def _continue_greedy_search(self, X, y, n_to_select):
-        """
-        Continues the search. Prepares an array to store the selected
-        features, orthogonalizes the features by those already selected,
-        and computes their initial importance.
-        """
-
-        self.X_current = X_orthogonalizer(X, x2=self.X_selected_)
-        if self.y_current is not None:
-            self.y_current = Y_feature_orthogonalizer(
-                self.y_current, X=self.X_selected_, tol=1e-12
-            )
-        self.pi_ = self._compute_pi(self.X_current, self.y_current)
-
-        super()._continue_greedy_search(X, y, n_to_select)
-
-    def score(self, X, y):
-        """
-        Returns the current importance of all features
-        """
-
-        return self.pi_
 
     def _compute_pi(self, X, y=None):
         """
@@ -145,30 +124,19 @@ class CUR(GreedySelector):
         where :math:`{\\mathbf{C} = \\mathbf{X}^T\\mathbf{X}.
         """
 
-        _, _, Vt = scipy.sparse.linalg.svds(
+        Ct = pcovr_covariance(
+            self.mixing,
             X,
-            k=self.k,
+            y,
+            rcond=1e-12,
+            rank=None,
         )
-        new_pi = (np.real(Vt) ** 2.0).sum(axis=0)
-        return new_pi
 
-    def _update_post_selection(self, X, y, last_selected):
-        """
-        Saves the most recently selected feature, increments the feature counter,
-        and, if the CUR is iterative, orthogonalizes the remaining features by
-        the most recently selected.
-        """
-        super()._update_post_selection(X, y, last_selected)
+        if self.k < Ct.shape[0] - 1:
+            v, U = speig(Ct, k=self.k, tol=1e-12)
+        else:
+            v, U = eig(Ct)
+        U = U[:, np.flip(np.argsort(v))]
+        pi = (np.real(U)[:, : self.k] ** 2.0).sum(axis=1)
 
-        if self.iterative:
-            self.X_current = X_orthogonalizer(
-                x1=self.X_current, c=last_selected, tol=1e-12
-            )
-            if self.y_current is not None:
-                self.y_current = Y_feature_orthogonalizer(
-                    self.y_current, X=self.X_selected_, tol=1e-12
-                )
-
-            self.pi_ = self._compute_pi(self.X_current, self.y_current)
-
-        self.pi_[last_selected] = 0.0
+        return pi

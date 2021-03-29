@@ -48,37 +48,29 @@ Feature Selection using CUR
 
     .. automethod:: fit
 
+Feature Selection using CUR + PCovR
+-----------------------------------
+
+.. currentmodule:: skcosmo.feature_selection
+.. autoclass:: PCovCUR
+    :members:
+
+
 Sample Selection using CUR
 ----------------------------
 
 .. currentmodule:: skcosmo.sample_selection
 .. autoclass:: CUR
-    :show-inheritance:
     :no-undoc-members:
 
     .. automethod:: fit
 
 
-Feature Selection using CUR + PCovR
------------------------------------
-
-**WARNING: the following method is currently under development, and will soon
-be replaced by a sklearn-style method named** `skcosmo.feature_selection.PCovCUR`
-
-.. currentmodule:: skcosmo.feature_selection
-.. autoclass:: FeatureCUR
-    :show-inheritance:
-    :members:
-
 Sample Selection using CUR + PCovR
 ----------------------------------
 
-**WARNING: the following method is currently under development, and will soon
-be replaced by a sklearn-style method named** `skcosmo.sample_selection.PCovCUR`
-
 .. currentmodule:: skcosmo.sample_selection
-.. autoclass:: SampleCUR
-    :show-inheritance:
+.. autoclass:: PCovCUR
     :members:
 
 .. _FPS-api:
@@ -99,43 +91,32 @@ Feature Selection using FPS
 
 .. currentmodule:: skcosmo.feature_selection
 .. autoclass:: FPS
-    :show-inheritance:
     :no-undoc-members:
 
     .. automethod:: fit
+
+Feature Selection using FPS + PCovR
+-----------------------------------
+
+.. currentmodule:: skcosmo.feature_selection
+.. autoclass:: PCovFPS
+    :no-undoc-members:
+
+    .. automethod:: fit
+
 
 Sample Selection using FPS
 --------------------------
 
 .. currentmodule:: skcosmo.sample_selection
 .. autoclass:: FPS
-    :show-inheritance:
     :no-undoc-members:
 
     .. automethod:: fit
 
 
-Feature Selection using FPS + PCovR
------------------------------------
-
-**WARNING: the following method is currently under development, and will soon
-be replaced by a sklearn-style method named** `skcosmo.feature_selection.PCovFPS`
-
-.. currentmodule:: skcosmo.feature_selection
-.. autoclass:: FeatureFPS
-    :show-inheritance:
-
-    .. automethod:: select
-
-
 Sample Selection using FPS + PCovR
 -----------------------------------
 
-**WARNING: the following method is currently under development, and will soon
-be replaced by a sklearn-style method named** `skcosmo.sample_selection.PCovFPS`
-
 .. currentmodule:: skcosmo.sample_selection
-.. autoclass:: SampleFPS
-    :show-inheritance:
-
-    .. automethod:: select
+.. autoclass:: PCovFPS
