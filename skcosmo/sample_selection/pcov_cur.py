@@ -7,7 +7,7 @@ from ..utils import pcovr_kernel
 
 
 class PCovCUR(CUR):
-    r"""Transformer that performs Greedy Feature Selection using by choosing samples
+    r"""Transformer that performs Greedy Feature Selection by choosing samples
     which maximize the importance score :math:`\pi`, which is the sum over
     the squares of the first :math:`k` components of the right singular vectors
 
@@ -70,9 +70,6 @@ class PCovCUR(CUR):
     y_current : ndarray (n_samples, n_properties)
                 The properties, if supplied, orthogonalized by a regression on
                 the previously selected samples
-
-    eligible_ : ndarray of shape (n_samples,), dtype=bool
-        A mask of samples eligible for selection
 
     n_selected_ : int
         The number of samples that have been selected thus far

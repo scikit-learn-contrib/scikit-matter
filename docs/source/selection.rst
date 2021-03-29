@@ -48,31 +48,29 @@ Feature Selection using CUR
 
     .. automethod:: fit
 
-Sample Selection using CUR
-----------------------------
-
-.. currentmodule:: skcosmo.sample_selection
-.. autoclass:: CUR
-    :show-inheritance:
-    :no-undoc-members:
-
-    .. automethod:: fit
-
-
 Feature Selection using CUR + PCovR
 -----------------------------------
 
 .. currentmodule:: skcosmo.feature_selection
 .. autoclass:: PCovCUR
-    :show-inheritance:
     :members:
+
+
+Sample Selection using CUR
+----------------------------
+
+.. currentmodule:: skcosmo.sample_selection
+.. autoclass:: CUR
+    :no-undoc-members:
+
+    .. automethod:: fit
+
 
 Sample Selection using CUR + PCovR
 ----------------------------------
 
 .. currentmodule:: skcosmo.sample_selection
 .. autoclass:: PCovCUR
-    :show-inheritance:
     :members:
 
 .. _FPS-api:
@@ -93,28 +91,25 @@ Feature Selection using FPS
 
 .. currentmodule:: skcosmo.feature_selection
 .. autoclass:: FPS
-    :show-inheritance:
     :no-undoc-members:
 
     .. automethod:: fit
-
-Sample Selection using FPS
---------------------------
-
-.. currentmodule:: skcosmo.sample_selection
-.. autoclass:: FPS
-    :show-inheritance:
-    :no-undoc-members:
-
-    .. automethod:: fit
-
 
 Feature Selection using FPS + PCovR
 -----------------------------------
 
 .. currentmodule:: skcosmo.feature_selection
 .. autoclass:: PCovFPS
-    :show-inheritance:
+    :no-undoc-members:
+
+    .. automethod:: fit
+
+
+Sample Selection using FPS
+--------------------------
+
+.. currentmodule:: skcosmo.sample_selection
+.. autoclass:: FPS
     :no-undoc-members:
 
     .. automethod:: fit
@@ -125,4 +120,3 @@ Sample Selection using FPS + PCovR
 
 .. currentmodule:: skcosmo.sample_selection
 .. autoclass:: PCovFPS
-    :show-inheritance:

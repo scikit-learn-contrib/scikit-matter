@@ -62,9 +62,6 @@ class PCovFPS(FPS):
     X_selected_ : ndarray (n_samples, n_features_to_select)
                   The features selected
 
-    eligible_ : ndarray of shape (n_features,), dtype=bool
-        A mask of features eligible for selection
-
     n_selected_ : int
         The number of features that have been selected thus far
 

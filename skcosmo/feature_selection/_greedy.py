@@ -59,9 +59,6 @@ class GreedySelector(SelectorMixin, MetaEstimatorMixin, BaseEstimator):
     X_selected_ : ndarray (n_samples, n_features_to_select)
                   The features selected
 
-    eligible_ : ndarray of shape (n_features,), dtype=bool
-        A mask of features eligible for selection
-
     n_selected_ : int
         The number of features that have been selected thus far
 
@@ -202,7 +199,6 @@ class GreedySelector(SelectorMixin, MetaEstimatorMixin, BaseEstimator):
     def _init_greedy_search(self, X, y, n_to_select):
         """ Initializes the search. Prepares an array to store the selected features. """
 
-        self.eligible_ = np.ones(X.shape[-1], dtype=bool)
         self.X_selected_ = np.zeros((X.shape[0], n_to_select), float)
         self.selected_idx_ = np.zeros((n_to_select), int)
 
@@ -223,12 +219,12 @@ class GreedySelector(SelectorMixin, MetaEstimatorMixin, BaseEstimator):
     def _get_best_new_feature(self, scorer, X, y):
 
         scores = scorer(X, y)
-        scores = scores[self.eligible_]
 
-        if self.score_threshold is not None and max(scores) < self.score_threshold:
+        amax = np.argmax(scores)
+        if self.score_threshold is not None and scores[amax] < self.score_threshold:
             return None
         else:
-            return np.where(self.eligible_)[0][np.argmax(scores)]
+            return amax
 
     def _update_post_selection(self, X, y, last_selected):
         """
@@ -238,7 +234,6 @@ class GreedySelector(SelectorMixin, MetaEstimatorMixin, BaseEstimator):
         self.X_selected_[:, self.n_selected_] = X[:, last_selected]
         self.selected_idx_[self.n_selected_] = last_selected
         self.n_selected_ += 1
-        self.eligible_[last_selected] = False
 
     def _get_support_mask(self):
         check_is_fitted(self, ["support_"])
@@ -246,7 +241,8 @@ class GreedySelector(SelectorMixin, MetaEstimatorMixin, BaseEstimator):
 
     def _postprocess(self, X, y):
         """ Post-process X and / or y when selection is finished """
-        self.support_ = ~self.eligible_
+        self.support_ = np.full(X.shape[1], False)
+        self.support_[self.selected_idx_] = True
 
     def _more_tags(self):
         return {

@@ -45,9 +45,6 @@ class FPS(GreedySelector):
     X_selected_ : ndarray (n_samples, n_features_to_select)
                   The features selected
 
-    eligible_ : ndarray of shape (n_features,), dtype=bool
-        A mask of features eligible for selection
-
     n_selected_ : int
         The number of features that have been selected thus far
 
@@ -135,7 +132,6 @@ class FPS(GreedySelector):
         """
 
         self.haussdorf_at_select_[last_selected] = self.haussdorf_[last_selected]
-        self.haussdorf_[last_selected] = 0
 
         # distances of all points to the new point
         new_dist = self._calculate_distances(X, last_selected)

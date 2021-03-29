@@ -63,9 +63,6 @@ class GreedySelector(SelectorMixin, BaseEstimator, MetaEstimatorMixin):
     y_selected_ : ndarray (n_samples_to_select, n_targets)
               The corresponding targets of the selected samples
 
-    eligible_ : ndarray of shape (n_samples,), dtype=bool
-        A mask of samples eligible for selection
-
     n_selected_ : int
         The number of samples that have been selected thus far
 
@@ -208,8 +205,6 @@ class GreedySelector(SelectorMixin, BaseEstimator, MetaEstimatorMixin):
     def _init_greedy_search(self, X, y, n_to_select):
         """ Initializes the search. Prepares an array to store the selected samples. """
 
-        self.eligible_ = np.ones(X.shape[0], dtype=bool)
-
         self.X_selected_ = np.zeros((n_to_select, X.shape[1]), float)
         if y is not None:
             self.y_selected_ = np.zeros(
@@ -244,12 +239,12 @@ class GreedySelector(SelectorMixin, BaseEstimator, MetaEstimatorMixin):
     def _get_best_new_sample(self, scorer, X, y):
 
         scores = scorer(X, y)
-        scores = scores[self.eligible_]
+        amax = np.argmax(scores)
 
-        if self.score_threshold is not None and max(scores) < self.score_threshold:
+        if self.score_threshold is not None and scores[amax] < self.score_threshold:
             return None
         else:
-            return np.where(self.eligible_)[0][np.argmax(scores)]
+            return amax
 
     def _update_post_selection(self, X, y, last_selected):
         """
@@ -261,7 +256,6 @@ class GreedySelector(SelectorMixin, BaseEstimator, MetaEstimatorMixin):
             self.y_selected_[self.n_selected_] = y[last_selected]
         self.selected_idx_[self.n_selected_] = last_selected
         self.n_selected_ += 1
-        self.eligible_[last_selected] = False
 
     def _get_support_mask(self):
         check_is_fitted(self, ["support_"])
@@ -269,7 +263,8 @@ class GreedySelector(SelectorMixin, BaseEstimator, MetaEstimatorMixin):
 
     def _postprocess(self, X, y):
         """ Post-process X and / or y when selection is finished """
-        self.support_ = ~self.eligible_
+        self.support_ = np.full(X.shape[0], False)
+        self.support_[self.selected_idx_] = True
 
     def _more_tags(self):
         return {

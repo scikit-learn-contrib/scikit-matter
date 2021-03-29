@@ -6,7 +6,7 @@ from ..utils import X_orthogonalizer, Y_sample_orthogonalizer
 
 
 class CUR(GreedySelector):
-    """Transformer that performs Greedy Feature Selection using by choosing samples
+    """Transformer that performs Greedy Feature Selection by choosing samples
     which maximize the magnitude of the left singular vectors, consistent with
     classic CUR matrix decomposition.
 
@@ -55,9 +55,6 @@ class CUR(GreedySelector):
     y_current : ndarray (n_samples, n_properties)
                 The properties, if supplied, orthogonalized by a regression on
                 the previously selected samples
-
-    eligible_ : ndarray of shape (n_samples,), dtype=bool
-                A mask of samples eligible for selection
 
     n_selected_ : int
                 The number of samples that have been selected thus far
@@ -183,13 +180,6 @@ class CUR(GreedySelector):
                 x1=self.X_current.T, c=last_selected, tol=1e-12
             ).T
 
-            if self.y_current is not None:
-                self.pi_[self.eligible_] = self._compute_pi(
-                    self.X_current[self.eligible_], self.y_current[self.eligible_]
-                )
-            else:
-                self.pi_[self.eligible_] = self._compute_pi(
-                    self.X_current[self.eligible_], self.y_current
-                )
+            self.pi_ = self._compute_pi(self.X_current, self.y_current)
 
         self.pi_[last_selected] = 0.0
