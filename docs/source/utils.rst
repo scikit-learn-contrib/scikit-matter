@@ -25,7 +25,7 @@ When computing non-iterative CUR, it is necessary to orthogonalize the input mat
 
 .. autofunction:: X_orthogonalizer
 .. autofunction:: Y_feature_orthogonalizer
-.. autofunction:: sample_orthogonalizer
+.. autofunction:: Y_sample_orthogonalizer
 
 
 Random Partitioning with Overlaps
