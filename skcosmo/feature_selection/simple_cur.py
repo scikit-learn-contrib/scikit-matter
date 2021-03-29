@@ -47,10 +47,10 @@ class CUR(GreedySelector):
     X_selected_ : ndarray (n_samples, n_features_to_select)
                   The features selected
 
-    X_current_ : ndarray (n_samples, n_features)
+    X_current : ndarray (n_samples, n_features)
                   The features, orthogonalized by previously selected features
 
-    y_current_ : ndarray (n_samples, n_properties)
+    y_current : ndarray (n_samples, n_properties)
                 The properties, if supplied, orthogonalized by a regression on
                 the previously selected features
 
@@ -103,12 +103,12 @@ class CUR(GreedySelector):
         features and computes their initial importance score.
         """
 
-        self.X_current_ = X.copy()
+        self.X_current = X.copy()
         if y is not None:
-            self.y_current_ = y.copy()
+            self.y_current = y.copy()
         else:
-            self.y_current_ = None
-        self.pi_ = self._compute_pi(self.X_current_, self.y_current_)
+            self.y_current = None
+        self.pi_ = self._compute_pi(self.X_current, self.y_current)
 
         super()._init_greedy_search(X, y, n_to_select)
 
@@ -119,12 +119,12 @@ class CUR(GreedySelector):
         and computes their initial importance.
         """
 
-        self.X_current_ = X_orthogonalizer(X, x2=self.X_selected_)
-        if self.y_current_ is not None:
-            self.y_current_ = Y_feature_orthogonalizer(
-                self.y_current_, X=self.X_selected_, tol=1e-12
+        self.X_current = X_orthogonalizer(X, x2=self.X_selected_)
+        if self.y_current is not None:
+            self.y_current = Y_feature_orthogonalizer(
+                self.y_current, X=self.X_selected_, tol=1e-12
             )
-        self.pi_ = self._compute_pi(self.X_current_, self.y_current_)
+        self.pi_ = self._compute_pi(self.X_current, self.y_current)
 
         super()._continue_greedy_search(X, y, n_to_select)
 
@@ -164,14 +164,14 @@ class CUR(GreedySelector):
         super()._update_post_selection(X, y, last_selected)
 
         if self.iterative:
-            self.X_current_ = X_orthogonalizer(
-                x1=self.X_current_, c=last_selected, tol=1e-12
+            self.X_current = X_orthogonalizer(
+                x1=self.X_current, c=last_selected, tol=1e-12
             )
-            if self.y_current_ is not None:
-                self.y_current_ = Y_feature_orthogonalizer(
-                    self.y_current_, X=self.X_selected_, tol=1e-12
+            if self.y_current is not None:
+                self.y_current = Y_feature_orthogonalizer(
+                    self.y_current, X=self.X_selected_, tol=1e-12
                 )
 
             self.pi_[self.eligible_] = self._compute_pi(
-                self.X_current_[:, self.eligible_], self.y_current_
+                self.X_current[:, self.eligible_], self.y_current
             )

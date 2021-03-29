@@ -64,10 +64,10 @@ class PCovCUR(CUR):
     y_selected_ : ndarray (n_samples_to_select, n_properties)
                   The targets selected
 
-    X_current_ : ndarray (n_samples, n_features)
+    X_current : ndarray (n_samples, n_features)
                   The samples, orthogonalized by previously selected samples
 
-    y_current_ : ndarray (n_samples, n_properties)
+    y_current : ndarray (n_samples, n_properties)
                 The properties, if supplied, orthogonalized by a regression on
                 the previously selected samples
 
