@@ -1,7 +1,9 @@
 import unittest
-from skcosmo.preprocessing.flexible_scaler import KernelNormalizer
-import sklearn
+
 import numpy as np
+import sklearn
+
+from skcosmo.preprocessing import KernelNormalizer
 
 
 class KernelTests(unittest.TestCase):
