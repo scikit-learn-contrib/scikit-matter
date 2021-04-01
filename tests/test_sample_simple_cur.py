@@ -11,6 +11,7 @@ from skcosmo.sample_selection import CUR
 class TestCUR(unittest.TestCase):
     def setUp(self):
         self.X, self.y = load(return_X_y=True)
+        self.n_select = min(self.X.shape) // 2
 
     def test_bad_y(self):
         selector = CUR(n_samples_to_select=2)
@@ -37,7 +38,7 @@ class TestCUR(unittest.TestCase):
         This test checks that the model can be restarted with a new instance
         """
 
-        ref_selector = CUR(n_samples_to_select=self.X.shape[0] - 2)
+        ref_selector = CUR(n_samples_to_select=self.n_select)
         ref_idx = ref_selector.fit(self.X).selected_idx_
 
         selector = CUR(n_samples_to_select=1)
@@ -53,13 +54,13 @@ class TestCUR(unittest.TestCase):
         This test checks that the model can be restarted with a new instance
         """
 
-        ref_selector = CUR(n_samples_to_select=self.X.shape[0] - 3)
+        ref_selector = CUR(n_samples_to_select=self.n_select)
         ref_idx = ref_selector.fit(self.X, self.y).selected_idx_
 
         selector = CUR(n_samples_to_select=1)
         selector.fit(self.X, self.y)
 
-        for i in range(self.X.shape[0] - 3):
+        for i in range(self.n_select):
             selector.n_samples_to_select += 1
             selector.fit(self.X, self.y, warm_start=True)
             self.assertEqual(selector.selected_idx_[i], ref_idx[i])
@@ -71,7 +72,7 @@ class TestCUR(unittest.TestCase):
 
         K = self.X @ self.X.T
         _, UK = np.linalg.eigh(K)
-        ref_idx = np.argsort(-(UK[:, -1] ** 2.0))[:-1]
+        ref_idx = np.argsort(-(UK[:, -1] ** 2.0))[: self.n_select]
 
         selector = CUR(n_samples_to_select=len(ref_idx), iterative=False)
         selector.fit(self.X)
