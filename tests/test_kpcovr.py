@@ -1,10 +1,12 @@
 import unittest
-from skcosmo.decomposition import KPCovR, PCovR
-from sklearn.datasets import load_boston
 import numpy as np
+
 from sklearn import exceptions
+from sklearn.datasets import load_boston
 from sklearn.linear_model import RidgeCV
 from sklearn.utils.validation import check_X_y
+
+from skcosmo.decomposition import KPCovR, PCovR
 from skcosmo.preprocessing import StandardFlexibleScaler as SFS
 
 

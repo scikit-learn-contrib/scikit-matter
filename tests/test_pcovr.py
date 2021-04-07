@@ -1,11 +1,13 @@
 import unittest
-from skcosmo.decomposition import PCovR
-from sklearn.decomposition import PCA
-from sklearn.datasets import load_boston
 import numpy as np
+
 from sklearn import exceptions
-from sklearn.utils.validation import check_X_y
+from sklearn.datasets import load_boston
+from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
+from sklearn.utils.validation import check_X_y
+
+from skcosmo.decomposition import PCovR
 
 
 class PCovRBaseTest(unittest.TestCase):

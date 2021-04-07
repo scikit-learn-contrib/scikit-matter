@@ -1,7 +1,7 @@
 import unittest
-from parameterized import parameterized
-
 import numpy as np
+
+from parameterized import parameterized
 from scipy.stats import ortho_group
 from sklearn.datasets import load_iris
 
