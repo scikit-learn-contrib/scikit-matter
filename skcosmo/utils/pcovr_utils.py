@@ -27,31 +27,31 @@ def pcovr_covariance(
 
     where :math:`\mathbf{\hat{Y}}`` are the properties obtained by linear regression.
 
-    :param mixing: mixing parameter,
-                   as described in PCovR as :math:`{\alpha}`, defaults to 1
-    :type mixing: float
+    Parameters
+    ----------
+    mixing : float
+             mixing parameter, as described in PCovR as :math:`{\alpha}`,
+             defaults to 1
 
-    :param X: Data matrix :math:`\mathbf{X}`
-    :type X: array of shape (n x m)
+    X : array of shape (n x m)
+        Data matrix :math:`\mathbf{X}`
 
-    :param Y: array to include in biased selection when mixing < 1
-    :type Y: array of shape (n x p)
+    Y : array of shape (n x p)
+        Array to include in biased selection when mixing < 1
 
-    :param rcond: threshold below which eigenvalues will be considered 0,
-                      defaults to 1E-12
-    :type rcond: float
+    rcond : float,  default=1E-12
+            threshold below which eigenvalues will be considered 0,
 
-    :param return_isqrt: Whether to return the calculated inverse square root of
-                         the covariance. Used when inverse square root is needed
-                         and the pcovr_covariance has already been calculated
-    :type return_isqrt: boolean
+    return_isqrt : boolean
+                    Whether to return the calculated inverse square root of
+                    the covariance. Used when inverse square root is needed
+                    and the pcovr_covariance has already been calculated
 
-    :param rank: number of eigenpairs to estimate the inverse square root
-                 with. Defaults to min(X.shape)
-    :type rank: int
+    rank : int, default=min(X.shape)
+           number of eigenpairs to estimate the inverse square root with
 
-    :param random_state: random seed to use for randomized svd
-    :type random_state: int
+    random_state : int
+                   random seed to use for randomized svd
 
     """
 
@@ -110,19 +110,21 @@ def pcovr_kernel(mixing, X, Y, **kernel_params):
         \mathbf{\tilde{K}} = \alpha \mathbf{X} \mathbf{X}^T +
         (1 - \alpha) \mathbf{Y}\mathbf{Y}^T
 
-    :param mixing: mixing parameter,
+    Parameters
+    ----------
+
+    mixing : float, mixing parameter,
                    as described in PCovR as :math:`{\alpha}`, defaults to 1
-    :type mixing: float
 
-    :param X: Data matrix :math:`\mathbf{X}`
-    :type X: array of shape (n x m)
+    X : array of shape (n x m)
+        Data matrix :math:`\mathbf{X}`
 
-    :param Y: array to include in biased selection when mixing < 1
-    :type Y: array of shape (n x p)
+    Y : array of shape (n x p)
+        Array to include in biased selection when mixing < 1
 
-    :param kernel_params: dictionary of arguments to pass to pairwise_kernels
-                         if none are specified, assumes that the kernel is linear
-    :type kernel_params: dictionary, optional
+    kernel_params : dictionary, optional
+                    dictionary of arguments to pass to pairwise_kernels
+                    if none are specified, assumes that the kernel is linear
 
     """
 
