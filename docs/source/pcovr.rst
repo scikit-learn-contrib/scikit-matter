@@ -29,7 +29,7 @@ Kernel PCovR
 
 .. currentmodule:: skcosmo.decomposition
 
-.. autoclass:: KPCovR
+.. autoclass:: KernelPCovR
     :show-inheritance:
     :special-members:
 

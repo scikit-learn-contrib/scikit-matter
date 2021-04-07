@@ -26,7 +26,7 @@ from skcosmo.preprocessing import KernelNormalizer
 from skcosmo.utils import pcovr_kernel
 
 
-class KPCovR(_BasePCA, LinearModel):
+class KernelPCovR(_BasePCA, LinearModel):
     r"""
     Kernel Principal Covariates Regression, as described in [Helfrecht2020]_
     determines a latent-space projection :math:`\mathbf{T}` which
@@ -167,7 +167,7 @@ class KPCovR(_BasePCA, LinearModel):
     Examples
     --------
     >>> import numpy as np
-    >>> from skcosmo.decomposition import KPCovR
+    >>> from skcosmo.decomposition import KernelPCovR
     >>> from skcosmo.preprocessing import StandardFlexibleScaler as SFS
     >>>
     >>> X = np.array([[-1, 1, -3, 1], [1, -2, 1, 2], [-2, 0, -2, -2], [1, 0, 2, -1]])
@@ -175,9 +175,9 @@ class KPCovR(_BasePCA, LinearModel):
     >>> Y = np.array([[ 0, -5], [-1, 1], [1, -5], [-3, 2]])
     >>> Y = SFS(column_wise=True).fit_transform(Y)
     >>>
-    >>> kpcovr = KPCovR(mixing=0.1, n_components=2, kernel='rbf', gamma=2)
+    >>> kpcovr = KernelPCovR(mixing=0.1, n_components=2, kernel='rbf', gamma=2)
     >>> kpcovr.fit(X, Y)
-        KPCovR(coef0=1, degree=3, fit_inverse_transform=False, gamma=0.01, kernel='rbf',
+        KernelPCovR(coef0=1, degree=3, fit_inverse_transform=False, gamma=0.01, kernel='rbf',
            kernel_params=None, mixing=None, n_components=2, n_jobs=None,
            alpha=None, tol=1e-12)
     >>> T = kpcovr.transform(X)
@@ -423,7 +423,7 @@ class KPCovR(_BasePCA, LinearModel):
 
     def score(self, X, Y):
         r"""
-        Computes the loss values for KPCovR on the given predictor and
+        Computes the loss values for KernelPCovR on the given predictor and
         response variables. The loss in :math:`\mathbf{K}`, as explained in
         [Helfrecht2020]_ does not correspond to a traditional Gram loss
         :math:`\mathbf{K} - \mathbf{TT}^T`. Indicating the kernel between set

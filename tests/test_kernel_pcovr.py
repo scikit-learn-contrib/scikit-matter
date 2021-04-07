@@ -6,11 +6,12 @@ from sklearn.datasets import load_boston
 from sklearn.linear_model import RidgeCV
 from sklearn.utils.validation import check_X_y
 
-from skcosmo.decomposition import KPCovR, PCovR
+from skcosmo.decomposition import KernelPCovR
+from skcosmo.decomposition import PCovR
 from skcosmo.preprocessing import StandardFlexibleScaler as SFS
 
 
-class KPCovRBaseTest(unittest.TestCase):
+class KernelPCovRBaseTest(unittest.TestCase):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -27,7 +28,7 @@ class KPCovRBaseTest(unittest.TestCase):
         self.X = SFS().fit_transform(self.X)
         self.Y = SFS(column_wise=True).fit_transform(self.Y)
 
-        self.model = lambda mixing=0.5, **kwargs: KPCovR(
+        self.model = lambda mixing=0.5, **kwargs: KernelPCovR(
             mixing, alpha=1e-8, svd_solver=kwargs.pop("svd_solver", "full"), **kwargs
         )
 
@@ -35,17 +36,17 @@ class KPCovRBaseTest(unittest.TestCase):
         pass
 
 
-class KPCovRErrorTest(KPCovRBaseTest):
+class KernelPCovRErrorTest(KernelPCovRBaseTest):
     def test_lr_with_x_errors(self):
         """
-        This test checks that KPCovR returns a non-null property prediction
+        This test checks that KernelPCovR returns a non-null property prediction
         and that the prediction error increases with `mixing`
         """
         prev_error = -1.0
 
         for i, mixing in enumerate(np.linspace(0, 1, 6)):
 
-            kpcovr = KPCovR(mixing=mixing, n_components=2, tol=1e-12)
+            kpcovr = KernelPCovR(mixing=mixing, n_components=2, tol=1e-12)
             kpcovr.fit(self.X, self.Y)
 
             error = (
@@ -62,7 +63,7 @@ class KPCovRErrorTest(KPCovRBaseTest):
 
     def test_reconstruction_errors(self):
         """
-        This test checks that KPCovR returns a non-null reconstructed X
+        This test checks that KernelPCovR returns a non-null reconstructed X
         and that the reconstruction error decreases with `mixing`
         """
 
@@ -70,7 +71,7 @@ class KPCovRErrorTest(KPCovRBaseTest):
         prev_x_error = 10.0
 
         for i, mixing in enumerate(np.linspace(0, 1, 6)):
-            kpcovr = KPCovR(
+            kpcovr = KernelPCovR(
                 mixing=mixing, n_components=2, fit_inverse_transform=True, tol=1e-12
             )
             kpcovr.fit(self.X, self.Y)
@@ -118,33 +119,33 @@ class KPCovRErrorTest(KPCovRBaseTest):
             )
 
 
-class KPCovRInfrastructureTest(KPCovRBaseTest):
+class KernelPCovRInfrastructureTest(KernelPCovRBaseTest):
     def test_nonfitted_failure(self):
         """
-        This test checks that KPCovR will raise a `NonFittedError` if
+        This test checks that KernelPCovR will raise a `NonFittedError` if
         `transform` is called before the model is fitted
         """
-        kpcovr = KPCovR(mixing=0.5, n_components=2, tol=1e-12)
+        kpcovr = KernelPCovR(mixing=0.5, n_components=2, tol=1e-12)
         with self.assertRaises(exceptions.NotFittedError):
             _ = kpcovr.transform(self.X)
 
     def test_no_arg_predict(self):
         """
-        This test checks that KPCovR will raise a `ValueError` if
+        This test checks that KernelPCovR will raise a `ValueError` if
         `predict` is called without arguments
         """
-        kpcovr = KPCovR(mixing=0.5, n_components=2, tol=1e-12)
+        kpcovr = KernelPCovR(mixing=0.5, n_components=2, tol=1e-12)
         kpcovr.fit(self.X, self.Y)
         with self.assertRaises(ValueError):
             _ = kpcovr.predict()
 
     def test_T_shape(self):
         """
-        This test checks that KPCovR returns a latent space projection
+        This test checks that KernelPCovR returns a latent space projection
         consistent with the shape of the input matrix
         """
         n_components = 5
-        kpcovr = KPCovR(mixing=0.5, n_components=n_components, tol=1e-12)
+        kpcovr = KernelPCovR(mixing=0.5, n_components=n_components, tol=1e-12)
         kpcovr.fit(self.X, self.Y)
         T = kpcovr.transform(self.X)
         self.assertTrue(check_X_y(self.X, T, multi_output=True))
@@ -174,10 +175,10 @@ class KPCovRInfrastructureTest(KPCovRBaseTest):
         _ = kpcovr.score(self.X, self.Y)
 
 
-class KernelTests(KPCovRBaseTest):
+class KernelTests(KernelPCovRBaseTest):
     def test_kernel_types(self):
         """
-        This test checks that KPCovR can handle all kernels passable to
+        This test checks that KernelPCovR can handle all kernels passable to
         sklearn kernel classes, including callable kernels
         """
 
@@ -191,7 +192,7 @@ class KernelTests(KPCovRBaseTest):
         }
         for kernel in ["linear", "poly", "rbf", "sigmoid", "cosine", _linear_kernel]:
             with self.subTest(kernel=kernel):
-                kpcovr = KPCovR(
+                kpcovr = KernelPCovR(
                     mixing=0.5,
                     n_components=2,
                     kernel=kernel,
@@ -201,7 +202,7 @@ class KernelTests(KPCovRBaseTest):
 
     def test_linear_matches_pcovr(self):
         """
-        This test checks that KPCovR returns the same results as PCovR when
+        This test checks that KernelPCovR returns the same results as PCovR when
         using a linear kernel
         """
 
@@ -216,8 +217,8 @@ class KernelTests(KPCovRBaseTest):
             alpha=1e-8,
         )
 
-        # computing projection and predicton loss with linear KPCovR
-        kpcovr = KPCovR(kernel="linear", fit_inverse_transform=True, **hypers)
+        # computing projection and predicton loss with linear KernelPCovR
+        kpcovr = KernelPCovR(kernel="linear", fit_inverse_transform=True, **hypers)
         kpcovr.fit(self.X, self.Y, Yhat=Yhat)
         ly = (
             np.linalg.norm(self.Y - kpcovr.predict(self.X)) ** 2.0
@@ -255,7 +256,7 @@ class KernelTests(KPCovRBaseTest):
         )
 
 
-class KPCovRTestSVDSolvers(KPCovRBaseTest):
+class KernelPCovRTestSVDSolvers(KernelPCovRBaseTest):
     def test_svd_solvers(self):
         """
         This test checks that PCovR works with all svd_solver modes and assigns
