@@ -1,8 +1,10 @@
 ipykernel
 matplotlib
 nbsphinx
+nbconvert
 numpy
 scikit-learn >=0.24.0
 sphinx >=3.3
 sphinx_rtd_theme
 tqdm
+traitlets
