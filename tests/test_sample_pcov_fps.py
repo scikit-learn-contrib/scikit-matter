@@ -16,11 +16,11 @@ class TestPCovFPS(unittest.TestCase):
         samples and `warm_start`
         """
 
-        selector = PCovFPS(n_samples_to_select=1, initialize=self.idx[0])
+        selector = PCovFPS(n_to_select=1, initialize=self.idx[0])
         selector.fit(self.X, y=self.y)
 
         for i in range(2, len(self.idx)):
-            selector.n_samples_to_select = i
+            selector.n_to_select = i
             selector.fit(self.X, y=self.y, warm_start=True)
             self.assertEqual(selector.selected_idx_[i - 1], self.idx[i - 1])
 
@@ -30,7 +30,7 @@ class TestPCovFPS(unittest.TestCase):
         """
 
         with self.assertRaises(ValueError) as cm:
-            _ = PCovFPS(n_samples_to_select=1, mixing=1.0)
+            _ = PCovFPS(n_to_select=1, mixing=1.0)
             self.assertEquals(
                 str(cm.message),
                 "Mixing = 1.0 corresponds to traditional FPS."
