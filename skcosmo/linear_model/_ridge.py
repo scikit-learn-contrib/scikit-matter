@@ -106,9 +106,9 @@ class RidgeRegression2FoldCV(MultiOutputMixin, RegressorMixin):
         self.alphas = np.asarray(alphas)
         self.alpha_type = alpha_type
         self.regularization_method = regularization_method
+        self.scoring = scoring
         self.random_state = random_state
         self.shuffle = shuffle
-        self.scoring = scoring
         self.n_jobs = n_jobs
 
     def fit(self, X, y):

@@ -222,9 +222,6 @@ class PCovR(_BasePCA, LinearModel):
 
         self.estimator = estimator
 
-        if alpha is None:
-            self.alpha = getattr(self.estimator, "alpha", 1e-6)
-
     def fit(self, X, Y, Yhat=None, W=None):
         r"""
 
@@ -260,6 +257,9 @@ class PCovR(_BasePCA, LinearModel):
             by ridge regression.
 
         """
+
+        if self.alpha is None:
+            self.alpha = getattr(self.estimator, "alpha", 1e-6)
 
         X, Y = check_X_y(X, Y, y_numeric=True, multi_output=True)
 

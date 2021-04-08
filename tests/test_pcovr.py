@@ -401,6 +401,7 @@ class PCovRInfrastructureTest(PCovRBaseTest):
     def test_default_alpha(self):
         pcovr = PCovR(mixing=0.5)
         estimator_reg = getattr(pcovr.estimator, "alpha")
+        pcovr.fit(self.X, self.Y)
         self.assertEqual(pcovr.alpha, estimator_reg)
 
     def test_default_ncomponents(self):

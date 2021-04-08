@@ -125,21 +125,6 @@ class KernelPCovR(_BasePCA, LinearModel):
     Attributes
     ----------
 
-    mixing: float, defaults to 0.5
-        mixing parameter, as described in PCovR as :math:`{\\alpha}`
-
-    alpha: float, default=1E-6
-            Regularization parameter to use in all regression operations.
-
-    tol: float, default=1e-12
-        Tolerance for singular values computed by svd_solver == 'arpack'.
-        Must be of range [0.0, infinity).
-
-    n_components: int
-        The estimated number of components, which equals the parameter
-        n_components, or the lesser value of n_features and n_samples
-        if n_components is None.
-
     pt__: ndarray of size :math:`({n_{components}, n_{components}})`
            pseudo-inverse of the latent-space projection, which
            can be used to contruct projectors from latent-space
