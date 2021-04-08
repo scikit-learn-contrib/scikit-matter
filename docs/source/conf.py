@@ -13,17 +13,45 @@
 import os
 import sys
 import sphinx_rtd_theme
-import shutil
+from nbconvert import NotebookExporter
+from traitlets.config import Config
 
 ROOT = os.path.abspath(os.path.join("..", ".."))
 sys.path.insert(0, ROOT)
 
-shutil.rmtree(os.path.join(ROOT, "docs/source/read-only-examples"), ignore_errors=True)
-shutil.copytree(
-    os.path.join(ROOT, "examples"),
-    os.path.join(ROOT, "docs/source/read-only-examples"),
-    ignore=shutil.ignore_patterns(".ipynb_checkpoints", "*.txt", "*no-doc*"),
-)
+# Copying and Compiling of Examples
+if not os.path.exists(os.path.join(ROOT, "docs/source/read-only-examples")):
+    os.mkdir(os.path.join(ROOT, "docs/source/read-only-examples"))
+
+# Set up nbconvert configuration to strip empty cells and tables of contents
+c = Config()
+c.NotebookExporter.preprocessors = [
+    "nbconvert.preprocessors.RegexRemovePreprocessor",
+    "nbconvert.preprocessors.ExecutePreprocessor",
+]
+
+# Remove any cells containing lines with the phrase "Table of Contents" or
+# consist solely of whitespace
+c.RegexRemovePreprocessor.enabled = True
+c.RegexRemovePreprocessor.patterns = [".*Table of Contents.*", "\\s*\\Z"]
+
+# Execute each notebook in a python3 kernel to make sure the content is there
+c.ExecutePreprocessor.enabled = True
+c.ExecutePreprocessor.kernel = "python3"
+
+exporter = NotebookExporter(config=c)
+
+for nb in os.listdir(os.path.join(ROOT, "examples")):
+    # Skip any non-notebooks
+    if nb.endswith("ipynb") and "no-doc" not in nb:
+        nb_in = os.path.join(ROOT, "examples", nb)
+        nb_out = os.path.join(ROOT, "docs/source/read-only-examples", nb)
+
+        # Skip any notebooks which already exist
+        if not os.path.exists(nb_out):
+            with open(nb_out, "w") as out_stream:
+                converted = exporter.from_filename(nb_in)[0]
+                out_stream.write(converted)
 
 import skcosmo  # noqa
 
@@ -51,8 +79,7 @@ extensions = [
     "nbsphinx",
 ]
 
-nbsphinx_execute = "always"
-nbsphinx_allow_errors = True
+nbsphinx_execute = "never"
 
 source_suffix = [".rst", ".ipynb"]
 
