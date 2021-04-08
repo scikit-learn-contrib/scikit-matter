@@ -1,9 +1,9 @@
 import numpy as np
-from scipy.sparse.linalg import eigs as speig
 from scipy.linalg import eig
+from scipy.sparse.linalg import eigs as speig
 
-from .simple_cur import CUR
 from ..utils import pcovr_covariance
+from .simple_cur import CUR
 
 
 class PCovCUR(CUR):

@@ -1,8 +1,7 @@
 import numpy as np
-
 from scipy import linalg
-from sklearn.utils.extmath import randomized_svd
 from sklearn.metrics.pairwise import pairwise_kernels
+from sklearn.utils.extmath import randomized_svd
 
 
 def pcovr_covariance(

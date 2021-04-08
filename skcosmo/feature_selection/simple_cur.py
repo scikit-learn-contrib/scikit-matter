@@ -1,8 +1,8 @@
 import numpy as np
 import scipy
 
-from ._greedy import GreedySelector
 from ..utils.orthogonalizers import X_orthogonalizer, Y_feature_orthogonalizer
+from ._greedy import GreedySelector
 
 
 class CUR(GreedySelector):

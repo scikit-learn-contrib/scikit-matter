@@ -1,22 +1,19 @@
-import numpy as np
 import numbers
 
+import numpy as np
 from scipy import linalg
 from scipy.sparse.linalg import svds
-
 from sklearn.decomposition._base import _BasePCA
 from sklearn.decomposition._pca import _infer_dimension
-from sklearn.utils import check_random_state
-from sklearn.utils import check_array
-from sklearn.utils.extmath import randomized_svd, svd_flip
-from sklearn.utils.extmath import stable_cumsum
-from sklearn.utils.validation import check_X_y, check_is_fitted
-from sklearn.utils._arpack import _init_arpack_v0
 from sklearn.linear_model._base import LinearModel
 from sklearn.metrics.pairwise import pairwise_kernels
+from sklearn.utils import check_array, check_random_state
+from sklearn.utils._arpack import _init_arpack_v0
+from sklearn.utils.extmath import randomized_svd, stable_cumsum, svd_flip
+from sklearn.utils.validation import check_is_fitted, check_X_y
 
-from skcosmo.utils import pcovr_kernel
 from skcosmo.preprocessing import KernelNormalizer
+from skcosmo.utils import pcovr_kernel
 
 
 class KPCovR(_BasePCA, LinearModel):

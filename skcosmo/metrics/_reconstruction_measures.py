@@ -1,11 +1,10 @@
+import numpy as np
+from joblib import Parallel, delayed
+
 from skcosmo.model_selection import train_test_split
 
-from ..preprocessing import StandardFlexibleScaler
 from ..linear_model import OrthogonalRegression, RidgeRegression2FoldCV
-
-import numpy as np
-
-from joblib import Parallel, delayed
+from ..preprocessing import StandardFlexibleScaler
 
 
 def pointwise_global_reconstruction_error(

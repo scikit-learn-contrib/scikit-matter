@@ -1,7 +1,8 @@
-import numpy as np
 import numbers
 
+import numpy as np
 from sklearn.utils.validation import NotFittedError
+
 from ._greedy import GreedySelector
 
 

@@ -9,8 +9,9 @@ Authors: Rose K. Cersonsky
 
 """
 
-import numpy as np
 import warnings
+
+import numpy as np
 
 
 def X_orthogonalizer(x1, c=None, x2=None, tol=1e-12):

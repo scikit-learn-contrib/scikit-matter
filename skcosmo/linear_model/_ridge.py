@@ -1,10 +1,8 @@
 import numpy as np
-
-from sklearn.model_selection import KFold
-from sklearn.base import RegressorMixin, MultiOutputMixin
-from sklearn.metrics import check_scoring
-
 from joblib import Parallel, delayed
+from sklearn.base import MultiOutputMixin, RegressorMixin
+from sklearn.metrics import check_scoring
+from sklearn.model_selection import KFold
 
 
 class RidgeRegression2FoldCV(MultiOutputMixin, RegressorMixin):

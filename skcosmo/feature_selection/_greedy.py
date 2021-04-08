@@ -5,10 +5,10 @@ import numbers
 import warnings
 
 import numpy as np
-
-from sklearn.feature_selection._base import SelectorMixin
 from sklearn.base import BaseEstimator, MetaEstimatorMixin
-from sklearn.utils.validation import check_is_fitted, check_array
+from sklearn.feature_selection._base import SelectorMixin
+from sklearn.utils.validation import check_array, check_is_fitted
+
 from skcosmo.utils import get_progress_bar
 
 
