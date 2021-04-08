@@ -20,6 +20,12 @@ check out the pedagogic notebooks in our companion project `kernel-tutorials <ht
 
 .. toctree::
   :glob:
+  :Caption: Orthogonal Regression
+
+  read-only-examples/OrthogonalRegressionNonAnalytic.ipynb
+
+.. toctree::
+  :glob:
   :Caption: Feature Reconstruction Measures
 
   read-only-examples/PlotGFRE
