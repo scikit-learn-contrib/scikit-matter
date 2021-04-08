@@ -1,6 +1,9 @@
 import numpy as np
 from scipy.linalg import orthogonal_procrustes
-from sklearn.base import MultiOutputMixin, RegressorMixin
+from sklearn.base import (
+    MultiOutputMixin,
+    RegressorMixin,
+)
 from sklearn.linear_model import LinearRegression
 
 

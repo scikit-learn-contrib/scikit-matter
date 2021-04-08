@@ -1,4 +1,7 @@
-from os.path import dirname, join
+from os.path import (
+    dirname,
+    join,
+)
 
 import numpy as np
 from sklearn.utils import Bunch

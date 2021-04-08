@@ -1,7 +1,10 @@
 import numpy as np
 import scipy
 
-from ..utils.orthogonalizers import X_orthogonalizer, Y_feature_orthogonalizer
+from ..utils.orthogonalizers import (
+    X_orthogonalizer,
+    Y_feature_orthogonalizer,
+)
 from ._greedy import GreedySelector
 
 

@@ -9,12 +9,25 @@ from sklearn.decomposition._base import _BasePCA
 from sklearn.decomposition._pca import _infer_dimension
 from sklearn.linear_model import Ridge as LR
 from sklearn.linear_model._base import LinearModel
-from sklearn.utils import check_array, check_random_state
+from sklearn.utils import (
+    check_array,
+    check_random_state,
+)
 from sklearn.utils._arpack import _init_arpack_v0
-from sklearn.utils.extmath import randomized_svd, stable_cumsum, svd_flip
-from sklearn.utils.validation import check_is_fitted, check_X_y
+from sklearn.utils.extmath import (
+    randomized_svd,
+    stable_cumsum,
+    svd_flip,
+)
+from sklearn.utils.validation import (
+    check_is_fitted,
+    check_X_y,
+)
 
-from skcosmo.utils import pcovr_covariance, pcovr_kernel
+from skcosmo.utils import (
+    pcovr_covariance,
+    pcovr_kernel,
+)
 
 
 class PCovR(_BasePCA, LinearModel):
