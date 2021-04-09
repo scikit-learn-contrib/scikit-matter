@@ -40,22 +40,22 @@ def pointwise_global_reconstruction_error(
 
     Parameters
     ----------
-    X : array_like of shape (n_samples, X_n_features)
+    X : ndarray of shape (n_samples, X_n_features)
         Source data which reconstructs target Y.
         For feature reconstruction of Y using X use input shape (samples, features).
         For sample reconstruction of Y using X use input shape (features, samples).
 
-    Y : array_like of shape (n_samples, Y_n_targets)
+    Y : ndarray of shape (n_samples, Y_n_targets)
         Target data which is reconstructed with X.
         For feature reconstruction of Y using X use input shape (samples, features).
         For sample reconstruction of Y using X use input shape (features, samples).
 
-    train_idx : array_like, default=None
+    train_idx : ndarray, dtype=int, default=None
         array of indices used for training, if None,
         If None, the complement of the ``test_idx`` is used. If ``train_size`` is
         also None, 2-fold split is taken.
 
-    test_idx : array_like, default=None
+    test_idx : ndarray, dtype=int, default=None
         array of indices used for training, if None,
         If None, the complement of the ``train_idx`` is used. If ``test_size`` is
         also None, 2-fold split is taken.
@@ -70,7 +70,7 @@ def pointwise_global_reconstruction_error(
 
     Returns
     -------
-    pointwise_global_reconstruction_error : array_like
+    pointwise_global_reconstruction_error : ndarray
         The global reconstruction error for each sample/point
 
     """
@@ -129,22 +129,22 @@ def global_reconstruction_error(
 
     Parameters
     ----------
-    X : array_like of shape (n_samples, X_n_features)
+    X : ndarray of shape (n_samples, X_n_features)
         Source data which reconstructs target Y.
         For feature reconstruction of Y using X use input shape (samples, features).
         For sample reconstruction of Y using X use input shape (features, samples).
 
-    Y : array_like of shape (n_samples, Y_n_targets)
+    Y : ndarray of shape (n_samples, Y_n_targets)
         Target data which is reconstructed with X.
         For feature reconstruction of Y using X use input shape (samples, features).
         For sample reconstruction of Y using X use input shape (features, samples).
 
-    train_idx : array_like, default=None
+    train_idx : ndarray, dtype=int, default=None
         array of indices used for training, if None,
         If None, the complement of the ``test_idx`` is used. If ``train_size`` is
         also None, 2-fold split is taken.
 
-    test_idx : array_like, default=None
+    test_idx : ndarray, dtype=int, default=None
         array of indices used for training, if None,
         If None, the complement of the ``train_idx`` is used. If ``test_size`` is
         also None, 2-fold split is taken.
@@ -159,7 +159,7 @@ def global_reconstruction_error(
 
     Returns
     -------
-    global_reconstruction_error : array_like
+    global_reconstruction_error : ndarray
         The global reconstruction error
 
     """
@@ -206,22 +206,22 @@ def pointwise_global_reconstruction_distortion(
 
     Parameters
     ----------
-    X : array_like of shape (n_samples, X_n_features)
+    X : ndarray of shape (n_samples, X_n_features)
         Source data which reconstructs target Y.
         For feature reconstruction of Y using X use input shape (samples, features).
         For sample reconstruction of Y using X use input shape (features, samples).
 
-    Y : array_like of shape (n_samples, Y_n_targets)
+    Y : ndarray of shape (n_samples, Y_n_targets)
         Target data which is reconstructed with X.
         For feature reconstruction of Y using X use input shape (samples, features).
         For sample reconstruction of Y using X use input shape (features, samples).
 
-    train_idx : array_like, default=None
+    train_idx : ndarray, dtype=int, default=None
         array of indices used for training, if None,
         If None, the complement of the ``test_idx`` is used. If ``train_size`` is
         also None, 2-fold split is taken.
 
-    test_idx : array_like, default=None
+    test_idx : ndarray, dtype=int, default=None
         array of indices used for training, if None,
         If None, the complement of the ``train_idx`` is used. If ``test_size`` is
         also None, 2-fold split is taken.
@@ -236,7 +236,7 @@ def pointwise_global_reconstruction_distortion(
 
     Returns
     -------
-    pointwise_global_reconstruction_distortion : array_like
+    pointwise_global_reconstruction_distortion : ndarray
         The global reconstruction distortion for each sample/point
 
     """
@@ -300,22 +300,22 @@ def global_reconstruction_distortion(
 
     Parameters
     ----------
-    X : array_like of shape (n_samples, X_n_features)
+    X : ndarray of shape (n_samples, X_n_features)
         Source data which reconstructs target Y.
         For feature reconstruction of Y using X use input shape (samples, features).
         For sample reconstruction of Y using X use input shape (features, samples).
 
-    Y : array_like of shape (n_samples, Y_n_targets)
+    Y : ndarray of shape (n_samples, Y_n_targets)
         Target data which is reconstructed with X.
         For feature reconstruction of Y using X use input shape (samples, features).
         For sample reconstruction of Y using X use input shape (features, samples).
 
-    train_idx : array_like, default=None
+    train_idx : ndarray, dtype=int, default=None
         array of indices used for training, if None,
         If None, the complement of the ``test_idx`` is used. If ``train_size`` is
         also None, 2-fold split is taken.
 
-    test_idx : array_like, default=None
+    test_idx : ndarray, dtype=int, default=None
         array of indices used for training, if None,
         If None, the complement of the ``train_idx`` is used. If ``test_size`` is
         also None, 2-fold split is taken.
@@ -330,7 +330,7 @@ def global_reconstruction_distortion(
 
     Returns
     -------
-    global_reconstruction_distortion : array_like
+    global_reconstruction_distortion : ndarray
         The global reconstruction distortion
 
     """
@@ -380,12 +380,12 @@ def pointwise_local_reconstruction_error(
 
     Parameters
     ----------
-    X : array_like of shape (n_samples, X_n_features)
+    X : ndarray of shape (n_samples, X_n_features)
         Source data which reconstructs target Y.
         For feature reconstruction of Y using X use input shape (samples, features).
         For sample reconstruction of Y using X use input shape (features, samples).
 
-    Y : array_like of shape (n_samples, Y_n_targets)
+    Y : ndarray of shape (n_samples, Y_n_targets)
         Target data which is reconstructed with X.
         For feature reconstruction of Y using X use input shape (samples, features).
         For sample reconstruction of Y using X use input shape (features, samples).
@@ -394,12 +394,12 @@ def pointwise_local_reconstruction_error(
         Number of neighbour points used to compute the local reconstruction weight for
         each sample/point.
 
-    train_idx : array_like, default=None
+    train_idx : ndarray, dtype=int, default=None
         array of indices used for training, if None,
         If None, the complement of the ``test_idx`` is used. If ``train_size`` is
         also None, 2-fold split is taken.
 
-    test_idx : array_like, default=None
+    test_idx : ndarray, dtype=int, default=None
         array of indices used for training, if None,
         If None, the complement of the ``train_idx`` is used. If ``test_size`` is
         also None, 2-fold split is taken.
@@ -414,7 +414,7 @@ def pointwise_local_reconstruction_error(
 
     Returns
     -------
-    pointwise_local_reconstruction_error : array_like
+    pointwise_local_reconstruction_error : ndarray
         The local reconstruction error for each sample/point
 
     """
@@ -509,12 +509,12 @@ def local_reconstruction_error(
 
     Parameters
     ----------
-    X : array_like of shape (n_samples, X_n_features)
+    X : ndarray of shape (n_samples, X_n_features)
         Source data which reconstructs target Y.
         For feature reconstruction of Y using X use input shape (samples, features).
         For sample reconstruction of Y using X use input shape (features, samples).
 
-    Y : array_like of shape (n_samples, Y_n_targets)
+    Y : ndarray of shape (n_samples, Y_n_targets)
         Target data which is reconstructed with X.
         For feature reconstruction of Y using X use input shape (samples, features).
         For sample reconstruction of Y using X use input shape (features, samples).
@@ -523,12 +523,12 @@ def local_reconstruction_error(
         Number of neighbour points used to compute the local reconstruction weight for
         each sample/point.
 
-    train_idx : array_like, default=None
+    train_idx : ndarray, dtype=int, default=None
         array of indices used for training, if None,
         If None, the complement of the ``test_idx`` is used. If ``train_size`` is
         also None, 2-fold split is taken.
 
-    test_idx : array_like, default=None
+    test_idx : ndarray, dtype=int, default=None
         array of indices used for training, if None,
         If None, the complement of the ``train_idx`` is used. If ``test_size`` is
         also None, 2-fold split is taken.
@@ -543,7 +543,7 @@ def local_reconstruction_error(
 
     Returns
     -------
-    local_reconstruction_error : array_like
+    local_reconstruction_error : ndarray
         The local reconstruction error
 
     """

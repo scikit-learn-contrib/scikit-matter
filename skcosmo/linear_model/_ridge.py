@@ -37,11 +37,11 @@ class RidgeRegression2FoldCV(MultiOutputMixin, RegressorMixin):
         Regularization strength; must be a positive float. Regularization
         improves the conditioning of the problem and reduces the variance of
         the estimates. Larger values specify stronger regularization.
-    alpha_type : string, default="absolute"
+    alpha_type : str, default="absolute"
         "absolute" assumes that `alphas` are absolute values and does not scale them,
         "relative" assumes that `alphas` as relative values in the range [0,1] and
         scales them with respect to the largest eigenvalue.
-    regularization_method : string, default="tikhonov"
+    regularization_method : str, default="tikhonov"
         "tikhonov" uses the ``alphas`` with standard Tihhonov regularization,
         "cutoff" uses the ``alphas as a cutoff for the eigenvalues of the kernel,
         The case "cutoff" with "relative" ``alphas`` has the same effect as the `rcond`
@@ -56,7 +56,7 @@ class RidgeRegression2FoldCV(MultiOutputMixin, RegressorMixin):
     shuffle : bool, default=True
         Whether or not to shuffle the data before splitting. If shuffle=False
         then stratify must be None.
-    scoring : string, callable, default=None
+    scoring : str, callable, default=None
         A string (see model evaluation documentation) or
         a scorer callable object / function with signature
         ``scorer(estimator, X, y)``.
@@ -115,11 +115,11 @@ class RidgeRegression2FoldCV(MultiOutputMixin, RegressorMixin):
         """
         Parameters
         ----------
-        X : array_like of shape (n_samples, n_features)
+        X : ndarray of shape (n_samples, n_features)
             Training data, where n_samples is the number of samples
             and n_features is the number of features.
 
-        y : array_like of shape (n_samples, n_targets)
+        y : ndarray of shape (n_samples, n_targets)
             Training data, where n_samples is the number of samples
             and n_targets is the number of target properties.
         """
@@ -156,7 +156,7 @@ class RidgeRegression2FoldCV(MultiOutputMixin, RegressorMixin):
         """
         Parameters
         ----------
-        X : array_like of shape (n_samples, n_features)
+        X : ndarray of shape (n_samples, n_features)
             Training data, where n_samples is the number of samples
             and n_features is the number of features.
         """

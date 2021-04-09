@@ -33,16 +33,16 @@ def pcovr_covariance(
              mixing parameter, as described in PCovR as :math:`{\alpha}`,
              defaults to 1
 
-    X : array of shape (n x m)
+    X : ndarray of shape (n x m)
         Data matrix :math:`\mathbf{X}`
 
-    Y : array of shape (n x p)
+    Y : ndarray of shape (n x p)
         Array to include in biased selection when mixing < 1
 
     rcond : float,  default=1E-12
             threshold below which eigenvalues will be considered 0,
 
-    return_isqrt : boolean
+    return_isqrt : bool
                     Whether to return the calculated inverse square root of
                     the covariance. Used when inverse square root is needed
                     and the pcovr_covariance has already been calculated
@@ -116,13 +116,13 @@ def pcovr_kernel(mixing, X, Y, **kernel_params):
     mixing : float, mixing parameter,
                    as described in PCovR as :math:`{\alpha}`, defaults to 1
 
-    X : array of shape (n x m)
+    X : ndarray of shape (n x m)
         Data matrix :math:`\mathbf{X}`
 
-    Y : array of shape (n x p)
+    Y : ndarray of shape (n x p)
         Array to include in biased selection when mixing < 1
 
-    kernel_params : dictionary, optional
+    kernel_params : dict, optional
                     dictionary of arguments to pass to pairwise_kernels
                     if none are specified, assumes that the kernel is linear
 

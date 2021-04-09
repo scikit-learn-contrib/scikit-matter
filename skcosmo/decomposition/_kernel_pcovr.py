@@ -89,11 +89,11 @@ class KernelPCovR(_BasePCA, LinearModel):
         Independent term in poly and sigmoid kernels.
         Ignored by other kernels.
 
-    kernel_params: mapping of string to any, default=None
+    kernel_params: mapping of str to any, default=None
         Parameters (keyword arguments) and values for kernel passed as
         callable object. Ignored by other kernels.
 
-    center: boolean, default=False
+    center: bool, default=False
             Whether to center any computed kernels
 
     alpha: float, default=1E-6
@@ -261,7 +261,7 @@ class KernelPCovR(_BasePCA, LinearModel):
 
         Parameters
         ----------
-        X: array-like, shape (n_samples, n_features)
+        X:  ndarray, shape (n_samples, n_features)
             Training data, where n_samples is the number of samples and
             n_features is the number of features.
 
@@ -270,7 +270,7 @@ class KernelPCovR(_BasePCA, LinearModel):
             to have unit variance, otherwise :math:`\\mathbf{X}` should be
             scaled so that each feature has a variance of 1 / n_features.
 
-        Y: array-like, shape (n_samples, n_properties)
+        Y:  ndarray, shape (n_samples, n_properties)
             Training data, where n_samples is the number of samples and
             n_properties is the number of properties
 
@@ -279,7 +279,7 @@ class KernelPCovR(_BasePCA, LinearModel):
             to have unit variance, otherwise :math:`\\mathbf{Y}` should be
             scaled so that each feature has a variance of 1 / n_features.
 
-        Yhat: array-like, shape (n_samples, n_properties), optional
+        Yhat: ndarray, shape (n_samples, n_properties), optional
             Regressed training data, where n_samples is the number of samples and
             n_properties is the number of properties. If not supplied, computed
             by ridge regression.
@@ -363,7 +363,7 @@ class KernelPCovR(_BasePCA, LinearModel):
 
         Parameters
         ----------
-        X: array-like, shape (n_samples, n_features)
+        X: ndarray, shape (n_samples, n_features)
             New data, where n_samples is the number of samples
             and n_features is the number of features.
 
@@ -395,13 +395,13 @@ class KernelPCovR(_BasePCA, LinearModel):
 
         Parameters
         ----------
-        T: array-like, shape (n_samples, n_components)
+        T: ndarray, shape (n_samples, n_components)
             Projected data, where n_samples is the number of samples
             and n_components is the number of components.
 
         Returns
         -------
-        X_original array-like, shape (n_samples, n_features)
+        X_original ndarray, shape (n_samples, n_features)
         """
 
         return T @ self.ptx_
