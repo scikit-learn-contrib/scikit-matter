@@ -77,7 +77,7 @@ class PCovR(_BasePCA, LinearModel):
 
     Parameters
     ----------
-    mixing: float, defaults to 0.5
+    mixing: float, default=0.5
         mixing parameter, as described in PCovR as :math:`{\alpha}`, here named
         to avoid confusion with regularization parameter `alpha`
 
@@ -111,7 +111,7 @@ class PCovR(_BasePCA, LinearModel):
 
     space: {'feature', 'sample', 'auto'}, default='auto'
             whether to compute the PCovR in `sample` or `feature` space
-            defaults to `sample` when :math:`{n_{samples} < n_{features}}` and
+            default=`sample` when :math:`{n_{samples} < n_{features}}` and
             `feature` when :math:`{n_{features} < n_{samples}}`
 
     alpha: float, default=1E-6
@@ -134,7 +134,7 @@ class PCovR(_BasePCA, LinearModel):
     Attributes
     ----------
 
-    mixing: float, defaults to 0.5
+    mixing: float, default=0.5
         mixing parameter, as described in PCovR as :math:`{\alpha}`
 
     alpha: float, default=1E-6
@@ -146,7 +146,7 @@ class PCovR(_BasePCA, LinearModel):
 
     space: {'feature', 'sample', 'auto'}, default='auto'
             whether to compute the PCovR in `sample` or `feature` space
-            defaults to `sample` when :math:`{n_{samples} < n_{features}}` and
+            default=`sample` when :math:`{n_{samples} < n_{features}}` and
             `feature` when :math:`{n_{features} < n_{samples}}`
 
     n_components : int

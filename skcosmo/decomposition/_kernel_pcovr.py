@@ -48,7 +48,7 @@ class KernelPCovR(_BasePCA, LinearModel):
 
     Parameters
     ----------
-    mixing: float, defaults to 0.5
+    mixing: float, default=0.5
         mixing parameter, as described in PCovR as :math:`{\\alpha}`
 
     n_components: int, float or str, default=None

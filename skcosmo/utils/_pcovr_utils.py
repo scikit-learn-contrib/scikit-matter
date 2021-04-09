@@ -31,7 +31,6 @@ def pcovr_covariance(
     ----------
     mixing : float
              mixing parameter, as described in PCovR as :math:`{\alpha}`,
-             defaults to 1
 
     X : ndarray of shape (n x m)
         Data matrix :math:`\mathbf{X}`
@@ -42,7 +41,7 @@ def pcovr_covariance(
     rcond : float,  default=1E-12
             threshold below which eigenvalues will be considered 0,
 
-    return_isqrt : bool
+    return_isqrt : bool, default=False
                     Whether to return the calculated inverse square root of
                     the covariance. Used when inverse square root is needed
                     and the pcovr_covariance has already been calculated
@@ -50,7 +49,7 @@ def pcovr_covariance(
     rank : int, default=min(X.shape)
            number of eigenpairs to estimate the inverse square root with
 
-    random_state : int
+    random_state : int, default=0
                    random seed to use for randomized svd
 
     """
@@ -113,8 +112,8 @@ def pcovr_kernel(mixing, X, Y, **kernel_params):
     Parameters
     ----------
 
-    mixing : float, mixing parameter,
-                   as described in PCovR as :math:`{\alpha}`, defaults to 1
+    mixing : float
+             mixing parameter, as described in PCovR as :math:`{\alpha}`
 
     X : ndarray of shape (n x m)
         Data matrix :math:`\mathbf{X}`
