@@ -1,6 +1,6 @@
 import unittest
-import numpy as np
 
+import numpy as np
 from sklearn.datasets import load_boston
 
 from skcosmo.feature_selection import PCovCUR
@@ -16,7 +16,7 @@ class TestPCovCUR(unittest.TestCase):
         This test checks that the model returns a known set of indices
         """
 
-        selector = PCovCUR(n_features_to_select=12)
+        selector = PCovCUR(n_to_select=12)
         selector.fit(self.X, self.y)
 
         self.assertTrue(np.allclose(selector.selected_idx_, self.idx[:-1]))
@@ -26,11 +26,11 @@ class TestPCovCUR(unittest.TestCase):
         This test checks that the model can be restarted with a new instance
         """
 
-        selector = PCovCUR(n_features_to_select=1)
+        selector = PCovCUR(n_to_select=1)
         selector.fit(self.X, self.y)
 
         for i in range(len(self.idx) - 2):
-            selector.n_features_to_select += 1
+            selector.n_to_select += 1
             selector.fit(self.X, warm_start=True)
             self.assertEqual(selector.selected_idx_[i], self.idx[i])
 
@@ -39,7 +39,7 @@ class TestPCovCUR(unittest.TestCase):
         This test checks that the model can be run non-iteratively
         """
         self.idx = [9, 11, 6, 10, 12, 2, 8, 1, 5, 0, 7, 4, 3]
-        selector = PCovCUR(n_features_to_select=12, iterative=False)
+        selector = PCovCUR(n_to_select=12, iterative=False)
         selector.fit(self.X, self.y)
 
         self.assertTrue(np.allclose(selector.selected_idx_, self.idx[:-1]))

@@ -1,21 +1,20 @@
 import unittest
-import numpy as np
 
+import numpy as np
 from sklearn.datasets import load_boston
-from sklearn import exceptions
 from sklearn.exceptions import NotFittedError
 
-from skcosmo.feature_selection._greedy import GreedySelector
+from skcosmo._selection import GreedySelector
 
 
 class GreedyTester(GreedySelector):
     def __init__(
-        self, n_features_to_select=None, score_thresh_to_select=None, **kwargs
+        self, n_to_select=None, score_threshold=None, selection_type="feature", **kwargs
     ):
         super().__init__(
-            scoring=self.score,
-            n_features_to_select=n_features_to_select,
-            score_thresh_to_select=score_thresh_to_select,
+            selection_type=selection_type,
+            n_to_select=n_to_select,
+            score_threshold=score_threshold,
             **kwargs,
         )
 
@@ -29,8 +28,14 @@ class TestGreedy(unittest.TestCase):
     def setUp(self):
         self.X, _ = load_boston(return_X_y=True)
 
+    def test_bad_type(self):
+        with self.assertRaises(
+            ValueError, msg="Only feature and sample selection supported."
+        ):
+            _ = GreedyTester(selection_type="bad").fit(self.X)
+
     def test_score_threshold(self):
-        selector = GreedyTester(score_thresh_to_select=20, n_features_to_select=12)
+        selector = GreedyTester(score_threshold=20, n_to_select=12)
         with self.assertWarns(
             Warning, msg="Score threshold of 20 reached. Terminating search at 10 / 12."
         ):
@@ -38,12 +43,10 @@ class TestGreedy(unittest.TestCase):
 
     def test_score_threshold_and_full(self):
         with self.assertRaises(ValueError) as cm:
-            _ = GreedyTester(
-                score_thresh_to_select=20, full=True, n_features_to_select=12
-            )
+            _ = GreedyTester(score_threshold=20, full=True, n_to_select=12).fit(self.X)
             self.assertEqual(
                 str(cm.message),
-                "You cannot specify both `score_thresh_to_select` and `full=True`.",
+                "You cannot specify both `score_threshold` and `full=True`.",
             )
 
     def test_bad_warm_start(self):
@@ -57,14 +60,17 @@ class TestGreedy(unittest.TestCase):
 
     def test_bad_y(self):
         self.X, self.Y = load_boston(return_X_y=True)
-        selector = GreedyTester(n_features_to_select=2)
+        selector = GreedyTester(n_to_select=2)
         with self.assertRaises(ValueError):
             selector.fit(X=self.X, y=self.Y[:2])
 
     def test_bad_transform(self):
-        selector = GreedyTester(n_features_to_select=2)
-        with self.assertRaises(exceptions.NotFittedError):
-            _ = selector.transform(self.X)
+        selector = GreedyTester(n_to_select=2)
+        with self.assertRaises(ValueError) as cm:
+            _ = selector.transform(self.X[:, :3])
+            self.assertEqual(
+                str(cm.message), "X has a different shape than during fitting."
+            )
 
     def test_no_nfeatures(self):
         selector = GreedyTester()
@@ -72,20 +78,20 @@ class TestGreedy(unittest.TestCase):
         self.assertEqual(len(selector.selected_idx_), self.X.shape[1] // 2)
 
     def test_decimal_nfeatures(self):
-        selector = GreedyTester(n_features_to_select=0.2)
+        selector = GreedyTester(n_to_select=0.2)
         selector.fit(self.X)
         self.assertEqual(len(selector.selected_idx_), int(self.X.shape[1] * 0.2))
 
     def test_bad_nfeatures(self):
         for nf in [1.2, "1", 20]:
             with self.subTest(n_features=nf):
-                selector = GreedyTester(n_features_to_select=nf)
+                selector = GreedyTester(n_to_select=nf)
                 with self.assertRaises(ValueError) as cm:
                     selector.fit(self.X)
                     self.assertEqual(
                         str(cm.message),
                         (
-                            "n_features_to_select must be either None, an "
+                            "n_to_select must be either None, an "
                             "integer in [1, n_features - 1] "
                             "representing the absolute "
                             "number of features, or a float in (0, 1] "
@@ -104,23 +110,8 @@ class TestGreedy(unittest.TestCase):
         selector.fit(self.X)
         _ = selector._get_support_mask()
 
-    def test_no_tqdm(self):
-        """
-        This test checks that the selector cannot use a progress bar when tqdm
-        is not installed
-        """
-        import sys
-
-        sys.modules["tqdm"] = None
-
-        with self.assertRaises(ImportError) as cm:
-            _ = GreedyTester(progress_bar=True)
-            self.assertEqual(
-                str(cm.exception),
-                "tqdm must be installed to use a progress bar."
-                "Either install tqdm or re-run with"
-                "progress_bar = False",
-            )
+        Xr = selector.transform(self.X)
+        self.assertEqual(Xr.shape[1], self.X.shape[1] // 2)
 
 
 if __name__ == "__main__":

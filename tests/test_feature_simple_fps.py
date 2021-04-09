@@ -17,11 +17,11 @@ class TestFPS(unittest.TestCase):
         features and `warm_start`
         """
 
-        selector = FPS(n_features_to_select=1, initialize=self.idx[0])
+        selector = FPS(n_to_select=1, initialize=self.idx[0])
         selector.fit(self.X)
 
         for i in range(2, len(self.idx)):
-            selector.n_features_to_select = i
+            selector.n_to_select = i
             selector.fit(self.X, warm_start=True)
             self.assertEqual(selector.selected_idx_[i - 1], self.idx[i - 1])
 
@@ -33,11 +33,11 @@ class TestFPS(unittest.TestCase):
 
         for initialize in [self.idx[0], "random"]:
             with self.subTest(initialize=initialize):
-                selector = FPS(n_features_to_select=1, initialize=initialize)
+                selector = FPS(n_to_select=1, initialize=initialize)
                 selector.fit(self.X)
 
         with self.assertRaises(ValueError) as cm:
-            selector = FPS(n_features_to_select=1, initialize="bad")
+            selector = FPS(n_to_select=1, initialize="bad")
             selector.fit(self.X)
             self.assertEquals(
                 str(cm.message), "Invalid value of the initialize parameter"
@@ -47,7 +47,7 @@ class TestFPS(unittest.TestCase):
         """
         This test checks that the haussdorf distances are returnable after fitting
         """
-        selector = FPS(n_features_to_select=10)
+        selector = FPS(n_to_select=10)
         selector.fit(self.X)
         d = selector.get_select_distance()
 
@@ -55,7 +55,7 @@ class TestFPS(unittest.TestCase):
         self.assertTrue(all(dist_grad > 0))
 
         with self.assertRaises(NotFittedError):
-            selector = FPS(n_features_to_select=10)
+            selector = FPS(n_to_select=10)
             _ = selector.get_select_distance()
 
 
