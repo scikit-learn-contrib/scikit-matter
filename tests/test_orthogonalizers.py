@@ -1,12 +1,14 @@
 import unittest
+
 import numpy as np
+from sklearn.preprocessing import StandardScaler
+
+from skcosmo.datasets import load_csd_1000r
 from skcosmo.utils import (
     X_orthogonalizer,
     Y_feature_orthogonalizer,
     Y_sample_orthogonalizer,
 )
-from skcosmo.datasets import load_csd_1000r
-from sklearn.preprocessing import StandardScaler
 
 EPSILON = 1e-8
 
@@ -56,6 +58,7 @@ class TestXOrth(unittest.TestCase):
         n_uncorrelated = self.n_samples // 2
 
         X_random = np.random.uniform(-1, 1, size=(self.n_samples, self.n_features))
+        X_random2 = np.random.uniform(-1, 1, size=(self.n_samples, self.n_features))
         X_correlated = np.zeros((self.n_samples, self.n_features))
         X_correlated[:n_uncorrelated] = np.random.uniform(
             -1, 1, size=(n_uncorrelated, self.n_features)
@@ -74,6 +77,10 @@ class TestXOrth(unittest.TestCase):
                 X_random = X_orthogonalizer(X_random.T, c=idx).T
                 self.assertLessEqual(np.linalg.norm(X_random[idx]), EPSILON)
 
+            with self.subTest(type="random X with column"):
+                X_random2 = X_orthogonalizer(X_random2.T, x2=X_random2[idx].T).T
+                self.assertLessEqual(np.linalg.norm(X_random2[idx]), EPSILON)
+
             with self.subTest(type="correlated X"):
                 X_correlated = X_orthogonalizer(X_correlated.T, c=idx).T
                 self.assertLessEqual(np.linalg.norm(X_correlated[idx]), EPSILON)
@@ -88,25 +95,50 @@ class TestXOrth(unittest.TestCase):
         n_uncorrelated = self.n_samples // 2
 
         X_correlated = np.zeros((self.n_samples, self.n_features))
-        X_correlated[:n_uncorrelated] = np.random.uniform(
-            -1, 1, size=(n_uncorrelated, self.n_features)
+        X_correlated[:, :n_uncorrelated] = np.random.uniform(
+            -1, 1, size=(self.n_samples, n_uncorrelated)
         )
 
-        for i in range(n_uncorrelated, self.n_samples):
-            X_correlated[i] = X_correlated[i - n_uncorrelated] * np.random.uniform(
-                -1, 1
-            )
+        for i in range(n_uncorrelated, self.n_features):
+            X_correlated[:, i] = X_correlated[
+                :, i - n_uncorrelated
+            ] * np.random.uniform(-1, 1)
 
         X_correlated = X_orthogonalizer(
             X_correlated, x2=X_correlated[:, :n_uncorrelated]
         )
+
         self.assertLessEqual(np.linalg.norm(X_correlated), EPSILON)
+
+    def test_multicolumn(self):
+        # checks that an error is raised when x2 is the wrong shape for x1
+        with self.assertRaises(ValueError) as cm:
+            X_orthogonalizer(
+                np.random.uniform(-3, 3, size=(self.n_samples, self.n_features)),
+                x2=np.random.uniform(-3, 3, size=(self.n_samples + 4, self.n_features)),
+            )
+            self.assertEqual(
+                str(cm.message),
+                "You can only orthogonalize a matrix using a vector with the same number of rows."
+                f"Matrix X has {self.n_samples} rows, whereas the orthogonalizing matrix has {self.n_samples+4} rows.",
+            )
 
     def test_warning(self):
         # checks that a warning is raised when trying to orthogonalize by
         # an empty vector
         with self.assertWarns(Warning, msg="Column vector contains only zeros."):
             X_orthogonalizer(np.zeros((self.n_samples, self.n_features)), 0)
+
+    def test_copy(self):
+        # checks that the X_orthogonalizer works in-place when copy=True
+
+        X_random = np.random.uniform(-1, 1, size=(self.n_samples, self.n_features))
+
+        idx = np.random.choice(X_random.shape[-1])
+
+        new_X = X_orthogonalizer(X_random, idx, tol=EPSILON, copy=True)
+        X_orthogonalizer(X_random, idx, tol=EPSILON, copy=False)
+        self.assertTrue(np.allclose(X_random, new_X))
 
 
 class TestYOrths(unittest.TestCase):
