@@ -4,12 +4,11 @@ from joblib import (
     delayed,
 )
 
-from skcosmo.model_selection import train_test_split
-
 from ..linear_model import (
     OrthogonalRegression,
     RidgeRegression2FoldCV,
 )
+from ..model_selection import train_test_split
 from ..preprocessing import StandardFlexibleScaler
 
 

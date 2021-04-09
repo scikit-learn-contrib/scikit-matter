@@ -24,7 +24,7 @@ from sklearn.utils.validation import (
     check_X_y,
 )
 
-from skcosmo.utils import (
+from ..utils import (
     pcovr_covariance,
     pcovr_kernel,
 )

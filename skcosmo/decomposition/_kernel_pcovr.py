@@ -22,8 +22,8 @@ from sklearn.utils.validation import (
     check_X_y,
 )
 
-from skcosmo.preprocessing import KernelNormalizer
-from skcosmo.utils import pcovr_kernel
+from ..preprocessing import KernelNormalizer
+from ..utils import pcovr_kernel
 
 
 class KernelPCovR(_BasePCA, LinearModel):
