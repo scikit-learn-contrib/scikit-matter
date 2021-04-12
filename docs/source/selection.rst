@@ -246,3 +246,14 @@ be instantiated using
     selector.fit(X, y)
 
     Xr = selector.transform(X)
+
+Voronoi FPS
+###########
+In the case of sample selection, it may be computationally beneficial to use
+VoronoiFPS in place of FPS to compute a sample subset. VoronoiFPS can be instantiated:
+
+.. code-block:: python
+ ## TODO
+
+In many cases, this algorithm may not increase upon the efficiency. The ``sweet
+spot for Voronoi FPS is when... ## TODO
