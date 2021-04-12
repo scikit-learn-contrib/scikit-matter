@@ -48,15 +48,9 @@ class TestVoronoiFPS(TestFPS):
         This test check work of the switching point calculator into the
         _init_greedy_search function
         """
-        max_samples = min(self.X.shape[1], 13)
-        n_samples = [2, max_samples]
-        full_frac = []
-        for n_sample in n_samples:
-            selector = VoronoiFPS(n_to_select=1, full_fraction=None)
-            selector.fit(self.X[:, :n_sample])
-            full_frac.append(selector.full_fraction)
-        for i in range(len(n_samples) - 1):
-            self.assertTrue(full_frac[i] >= full_frac[i + 1])
+        selector = VoronoiFPS(n_to_select=1)
+        selector.fit(self.X)
+        self.assertTrue(1 > selector.full_fraction)
         selector = VoronoiFPS(n_to_select=1, full_fraction=0.5)
         selector.fit(self.X)
         self.assertEqual(selector.full_fraction, 0.5)
