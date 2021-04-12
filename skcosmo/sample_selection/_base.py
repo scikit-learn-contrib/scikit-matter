@@ -2,7 +2,12 @@
 Sequential sample selection
 """
 
-from .._selection import _CUR, _FPS, _PCovCUR, _PCovFPS
+from .._selection import (
+    _CUR,
+    _FPS,
+    _PCovCUR,
+    _PCovFPS,
+)
 from ._voronoi_fps import _VoronoiFPS
 
 
