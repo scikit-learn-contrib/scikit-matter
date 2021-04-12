@@ -2,10 +2,9 @@ import unittest
 
 import numpy as np
 from sklearn.exceptions import NotFittedError
-
-from skcosmo.sample_selection import FPS
-from skcosmo.sample_selection.voronoi_fps import VoronoiFPS
 from test_sample_simple_fps import TestFPS
+
+from skcosmo.sample_selection import FPS, VoronoiFPS
 
 
 class TestVoronoiFPS(TestFPS):
@@ -44,18 +43,17 @@ class TestVoronoiFPS(TestFPS):
                 str(cm.message), "Invalid value of the initialize parameter"
             )
 
-    ## TODO: Rewrite in terms of sample selection
     def test_switching_point(self):
         """
         This test check work of the switching point calculator into the
         _init_greedy_search function
         """
-        max_samples = min(self.X.shape[0], 13)
+        max_samples = min(self.X.shape[1], 13)
         n_samples = [2, max_samples]
         full_frac = []
         for n_sample in n_samples:
             selector = VoronoiFPS(n_to_select=1, full_fraction=None)
-            selector.fit(self.X[:n_sample])
+            selector.fit(self.X[:, :n_sample])
             full_frac.append(selector.full_fraction)
         for i in range(len(n_samples) - 1):
             self.assertTrue(full_frac[i] >= full_frac[i + 1])

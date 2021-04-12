@@ -3,10 +3,10 @@ from time import time
 
 import numpy as np
 
-from ._base import FPS
+from .._selection import _FPS
 
 
-class VoronoiFPS(FPS):
+class _VoronoiFPS(_FPS):
     """
     In FPS, points are selected based upon their Hausdorff distance to
     previous selections, i.e. the minimum distance between a given point and
@@ -27,7 +27,7 @@ class VoronoiFPS(FPS):
     calculations outweighs the increase from book-keeping. For simple
     metrics (such as Euclidean distance), VoronoiFPS will likely not
     accelerate, and may decelerate, computations when compared
-    to SimpleFPS.
+    to FPS.
 
     Parameters
     ----------
@@ -80,6 +80,7 @@ class VoronoiFPS(FPS):
         super().__init__(
             n_to_select=n_to_select,
             progress_bar=progress_bar,
+            selection_type="sample",
             initialize=initialize,
             score_threshold=score_threshold,
         )
