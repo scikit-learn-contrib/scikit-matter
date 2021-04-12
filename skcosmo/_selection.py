@@ -537,6 +537,7 @@ class _CUR(GreedySelector):
             U, _, _ = scipy.sparse.linalg.svds(
                 X,
                 k=self.k,
+                return_singular_vectors="u"
             )
             U = np.real(U)
             new_pi = (U[:, : self.k] ** 2.0).sum(axis=1)
@@ -544,6 +545,7 @@ class _CUR(GreedySelector):
             _, _, Vt = scipy.sparse.linalg.svds(
                 X,
                 k=self.k,
+                return_singular_vectors="vh"
             )
             new_pi = (np.real(Vt) ** 2.0).sum(axis=0)
 
