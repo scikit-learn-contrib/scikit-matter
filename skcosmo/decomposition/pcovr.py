@@ -640,7 +640,7 @@ class PCovR(_BasePCA, LinearModel):
         return super().transform(X)
 
     def score(self, X, Y, T=None):
-        r"""Return the total reconstruction error for X and Y,
+        r"""Return the (negative) total reconstruction error for X and Y,
         defined as:
 
         .. math::
@@ -652,6 +652,8 @@ class PCovR(_BasePCA, LinearModel):
         .. math::
 
             \ell_{Y} = \frac{\lVert \mathbf{Y} - \mathbf{T}\mathbf{P}_{TY} \rVert ^ 2}{\lVert \mathbf{Y}\rVert ^ 2}
+
+        The negative loss :math:`-\ell = -(\ell_{X} + \ell{Y})` is returned for easier use in sklearn pipelines, e.g., a grid search, where methods named 'score' are meant to be maximized.
 
 
         Parameters
@@ -665,7 +667,7 @@ class PCovR(_BasePCA, LinearModel):
         Returns
         -------
         loss : float
-             Sum of the loss in reconstructing X from the latent-space projection T
+             Negative sum of the loss in reconstructing X from the latent-space projection T
              and the loss in predicting Y from the latent-space projection T
         """
 
@@ -675,7 +677,7 @@ class PCovR(_BasePCA, LinearModel):
         x = self.inverse_transform(T)
         y = self.predict(T=T)
 
-        return (
+        return -(
             np.linalg.norm(X - x) ** 2.0 / np.linalg.norm(X) ** 2.0
             + np.linalg.norm(Y - y) ** 2.0 / np.linalg.norm(Y) ** 2.0
         )
