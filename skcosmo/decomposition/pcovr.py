@@ -462,7 +462,10 @@ class PCovR(_BasePCA, LinearModel):
         )
 
         P = (self.mixing * X.T) + (1.0 - self.mixing) * W @ Yhat.T
-        T = Vt.T @ np.diagflat(1 / np.sqrt(S))
+        S_sqrt_inv = np.diagflat(
+            [1.0 / np.sqrt(s) if s > self.tol else 0.0 for s in S]
+        )
+        T = Vt.T @ S_sqrt_inv
 
         self.pxt_ = P @ T
         self.pty_ = T.T @ Y
