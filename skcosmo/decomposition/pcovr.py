@@ -387,7 +387,7 @@ class PCovR(_BasePCA, LinearModel):
             return_isqrt=True,
         )
         try:
-            Csqrt = np.linalg.inv(iCsqrt)
+            Csqrt = np.linalg.lstsq(iCsqrt, np.eye(len(iCsqrt)), rcond=None)[0]
 
         # if we can avoid recomputing Csqrt, we should, but sometimes we
         # run into a singular matrix, which is what we do here
