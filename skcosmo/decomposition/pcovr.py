@@ -294,7 +294,7 @@ class PCovR(_BasePCA, LinearModel):
                     'with the supplied feature space'
                 )
         else:
-            if self.regressor_.coef_.shape[0] != y.shape[1]:
+            if self.regressor_.coef_.shape[0] != Y.shape[1]:
                 raise ValueError(
                     'The target regressor has a shape incompatible '
                     'with the supplied target space'
