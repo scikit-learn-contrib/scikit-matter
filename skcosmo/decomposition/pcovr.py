@@ -225,7 +225,7 @@ class PCovR(_BasePCA, LinearModel):
 
         self.regressor = regressor
 
-    def fit(self, X, y):
+    def fit(self, X, Y):
         r"""
 
         Fit the model with X and Y. Depending on the dimensions of X,
@@ -284,7 +284,7 @@ class PCovR(_BasePCA, LinearModel):
             )
 
         self.regressor_ = check_lr_fit(
-            self.regressor, X, y=y
+            self.regressor, X, y=Y
         )
 
         if self.regressor_.coef_.ndim == 1:
