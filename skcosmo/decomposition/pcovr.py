@@ -251,14 +251,6 @@ class PCovR(_BasePCA, LinearModel):
             to have unit variance, otherwise :math:`\mathbf{Y}` should be
             scaled so that each feature has a variance of 1 / n_features.
 
-        Yhat : array-like, shape (n_samples, n_properties), optional
-            Regressed training data, where n_samples is the number of samples and
-            n_properties is the number of properties. If not supplied, computed
-            by ridge regression.
-        W : array-like, shape (n_features, n_properties), optional
-            Weights of regressed training data. If not supplied, computed
-            by ridge regression.
-
         """
 
         X, Y = check_X_y(X, Y, y_numeric=True, multi_output=True)
@@ -669,10 +661,9 @@ class PCovR(_BasePCA, LinearModel):
 
         Returns
         -------
-        lx : float
-             Loss in reconstructing X from the latent-space projection T
-        ly : float
-             Loss in predicting Y from the latent-space projection T
+        loss : float
+             Sum of the loss in reconstructing X from the latent-space projection T
+             and the loss in predicting Y from the latent-space projection T
         """
 
         if T is None:
