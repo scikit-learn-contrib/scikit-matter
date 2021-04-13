@@ -3,6 +3,36 @@ from scipy import linalg
 from sklearn.metrics.pairwise import pairwise_kernels
 from sklearn.utils.extmath import randomized_svd
 
+from sklearn.exceptions import NotFittedError
+from sklearn.utils.validation import check_is_fitted
+from sklearn.base import clone
+from copy import deepcopy
+
+def check_lr_fit(regressor, X, y=None):
+    r"""
+        Checks that an regressor is fitted, and if not,
+        fits it with the provided data
+
+        :param regressor: sklearn-style regressor
+        :type regressor: object
+        :param X: feature matrix with which to fit the regressor
+            if it is not already fitted
+        :type X: array
+        :param y: target values with which to fit the regressor
+            if it is not already fitted
+        :type y: array
+        :param sample_weight: sample weights with which to fit
+            the regressor if not already fitted
+        :type sample_weight: array of shape (n_samples,)
+    """
+    try:
+        check_is_fitted(regressor)
+        fitted_regressor = deepcopy(regressor)
+    except NotFittedError:
+        fitted_regressor = clone(regressor)
+        fitted_regressor.fit(X, y=y)
+
+    return fitted_regressor
 
 def pcovr_covariance(
     mixing,
