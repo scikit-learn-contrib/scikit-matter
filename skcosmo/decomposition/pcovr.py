@@ -7,11 +7,7 @@ from scipy.linalg import sqrtm as MatrixSqrt
 from scipy.sparse.linalg import svds
 from sklearn.decomposition._base import _BasePCA
 from sklearn.decomposition._pca import _infer_dimension
-from sklearn.linear_model import (
-    LinearRegression, 
-    Ridge, 
-    RidgeCV
-)
+from sklearn.linear_model import LinearRegression, Ridge, RidgeCV
 from sklearn.linear_model._base import LinearModel
 from sklearn.utils import (
     check_array,
@@ -28,11 +24,7 @@ from sklearn.utils.validation import (
     check_X_y,
 )
 
-from skcosmo.utils import (
-    pcovr_covariance,
-    pcovr_kernel,
-    check_lr_fit
-)
+from skcosmo.utils import pcovr_covariance, pcovr_kernel, check_lr_fit
 
 
 class PCovR(_BasePCA, LinearModel):
@@ -121,9 +113,9 @@ class PCovR(_BasePCA, LinearModel):
 
     regressor:
              regressor for computing approximated :math:`{\mathbf{\hat{Y}}}`.
-             The regressor must be one of `sklearn.linear_model.Ridge`, 
-             `sklearn.linear_model.RidgeCV`, or `sklearn.linear_model.LinearRegression`. 
-             If a pre-fitted regressor is provided, 
+             The regressor must be one of `sklearn.linear_model.Ridge`,
+             `sklearn.linear_model.RidgeCV`, or `sklearn.linear_model.LinearRegression`.
+             If a pre-fitted regressor is provided,
              it is used to compute :math:`{\mathbf{\hat{Y}}}`.
              The default regressor is `sklearn.linear_model.Ridge('alpha':1e-6, 'fit_intercept':False, 'tol':1e-12`)
 
@@ -273,36 +265,36 @@ class PCovR(_BasePCA, LinearModel):
             else:
                 self.n_components = min(X.shape) - 1
 
-        if not any([
-            isinstance(self.regressor, LinearRegression),
-            isinstance(self.regressor, Ridge),
-            isinstance(self.regressor, RidgeCV)
-        ]):
+        if not any(
+            [
+                isinstance(self.regressor, LinearRegression),
+                isinstance(self.regressor, Ridge),
+                isinstance(self.regressor, RidgeCV),
+            ]
+        ):
             raise ValueError(
-                'Regressor must be an instance of '
-                '`LinearRegression`, `Ridge`, or `RidgeCV`'
+                "Regressor must be an instance of "
+                "`LinearRegression`, `Ridge`, or `RidgeCV`"
             )
 
-        self.regressor_ = check_lr_fit(
-            self.regressor, X, y=Y
-        )
+        self.regressor_ = check_lr_fit(self.regressor, X, y=Y)
 
         if self.regressor_.coef_.ndim == 1:
             if self.regressor_.coef_.shape[0] != X.shape[1]:
                 raise ValueError(
-                    'The target regressor has a shape incompatible '
-                    'with the supplied feature space'
+                    "The target regressor has a shape incompatible "
+                    "with the supplied feature space"
                 )
         else:
             if self.regressor_.coef_.shape[0] != Y.shape[1]:
                 raise ValueError(
-                    'The target regressor has a shape incompatible '
-                    'with the supplied target space'
+                    "The target regressor has a shape incompatible "
+                    "with the supplied target space"
                 )
             elif self.regressor_.coef_.shape[1] != X.shape[1]:
                 raise ValueError(
-                    'The target regressor has a shape incompatible '
-                    'with the supplied feature space'
+                    "The target regressor has a shape incompatible "
+                    "with the supplied feature space"
                 )
 
         W = self.regressor_.coef_.T.reshape(X.shape[1], -1)
@@ -462,9 +454,7 @@ class PCovR(_BasePCA, LinearModel):
         )
 
         P = (self.mixing * X.T) + (1.0 - self.mixing) * W @ Yhat.T
-        S_sqrt_inv = np.diagflat(
-            [1.0 / np.sqrt(s) if s > self.tol else 0.0 for s in S]
-        )
+        S_sqrt_inv = np.diagflat([1.0 / np.sqrt(s) if s > self.tol else 0.0 for s in S])
         T = Vt.T @ S_sqrt_inv
 
         self.pxt_ = P @ T

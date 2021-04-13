@@ -213,7 +213,9 @@ class KernelTests(KPCovRBaseTest):
         alpha = 1e-8
 
         # computing projection and predicton loss with linear KPCovR
-        kpcovr = KPCovR(kernel="linear", fit_inverse_transform=True, alpha=alpha, **hypers)
+        kpcovr = KPCovR(
+            kernel="linear", fit_inverse_transform=True, alpha=alpha, **hypers
+        )
         kpcovr.fit(self.X, self.Y, Yhat=Yhat)
         ly = (
             np.linalg.norm(self.Y - kpcovr.predict(self.X)) ** 2.0

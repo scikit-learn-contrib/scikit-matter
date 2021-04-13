@@ -13,7 +13,9 @@ class PCovRBaseTest(unittest.TestCase):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.model = lambda mixing=0.5, regressor=Ridge(alpha=1e-8, fit_intercept=False, tol=1e-12), **kwargs: PCovR(mixing,  **kwargs)
+        self.model = lambda mixing=0.5, regressor=Ridge(
+            alpha=1e-8, fit_intercept=False, tol=1e-12
+        ), **kwargs: PCovR(mixing, **kwargs)
         self.error_tol = 1e-5
 
         self.X, self.Y = load_boston(return_X_y=True)
