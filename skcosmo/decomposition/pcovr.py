@@ -306,7 +306,7 @@ class PCovR(_BasePCA, LinearModel):
                 )
 
         W = self.regressor_.coef_.T.reshape(X.shape[1], -1)
-        yhat = self.regressor_.predict(X).reshape(X.shape[0], -1)
+        Yhat = self.regressor_.predict(X).reshape(X.shape[0], -1)
 
         # Handle svd_solver
         self._fit_svd_solver = self.svd_solver
