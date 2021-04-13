@@ -7,7 +7,11 @@ from scipy.linalg import sqrtm as MatrixSqrt
 from scipy.sparse.linalg import svds
 from sklearn.decomposition._base import _BasePCA
 from sklearn.decomposition._pca import _infer_dimension
-from sklearn.linear_model import Ridge as LR
+from sklearn.linear_model import (
+    LinearRegression, 
+    Ridge, 
+    RidgeCV
+)
 from sklearn.linear_model._base import LinearModel
 from sklearn.utils import (
     check_array,
@@ -27,6 +31,7 @@ from sklearn.utils.validation import (
 from skcosmo.utils import (
     pcovr_covariance,
     pcovr_kernel,
+    check_lr_fit
 )
 
 
@@ -114,13 +119,13 @@ class PCovR(_BasePCA, LinearModel):
             defaults to `sample` when :math:`{n_{samples} < n_{features}}` and
             `feature` when :math:`{n_{features} < n_{samples}}`
 
-    alpha: float, default=1E-6
-            Regularization parameter to use in all regression operations.
-            Defaults to alpha included in `lr_args`, or if none is specified, 1E-6.
-
-    estimator:
-             estimator for computing approximated :math:`{\mathbf{\hat{Y}}}`,
-             default = `sklearn.linear_model.Ridge('alpha':1e-6, 'fit_intercept':False, 'tol':1e-12`)
+    regressor:
+             regressor for computing approximated :math:`{\mathbf{\hat{Y}}}`.
+             The regressor must be one of `sklearn.linear_model.Ridge`, 
+             `sklearn.linear_model.RidgeCV`, or `sklearn.linear_model.LinearRegression`. 
+             If a pre-fitted regressor is provided, 
+             it is used to compute :math:`{\mathbf{\hat{Y}}}`.
+             The default regressor is `sklearn.linear_model.Ridge('alpha':1e-6, 'fit_intercept':False, 'tol':1e-12`)
 
     iterated_power : int or 'auto', default='auto'
          Number of iterations for the power method computed by
@@ -201,17 +206,15 @@ class PCovR(_BasePCA, LinearModel):
         mixing=0.5,
         n_components=None,
         svd_solver="auto",
-        alpha=None,
         tol=1e-12,
         space="auto",
-        estimator=LR(alpha=1e-6, fit_intercept=False, tol=1e-12),
+        regressor=Ridge(alpha=1e-6, fit_intercept=False, tol=1e-12),
         iterated_power="auto",
         random_state=None,
     ):
 
         self.mixing = mixing
         self.n_components = n_components
-        self.alpha = alpha
         self.space = space
 
         self.whiten = False
@@ -220,12 +223,9 @@ class PCovR(_BasePCA, LinearModel):
         self.iterated_power = iterated_power
         self.random_state = random_state
 
-        self.estimator = estimator
+        self.regressor = regressor
 
-        if alpha is None:
-            self.alpha = getattr(self.estimator, "alpha", 1e-6)
-
-    def fit(self, X, Y, Yhat=None, W=None):
+    def fit(self, X, y):
         r"""
 
         Fit the model with X and Y. Depending on the dimensions of X,
@@ -281,12 +281,40 @@ class PCovR(_BasePCA, LinearModel):
             else:
                 self.n_components = min(X.shape) - 1
 
-        if W is None:
-            self.estimator.fit(X, Y)
-            W = self.estimator.coef_.T.reshape(X.shape[1], -1)
+        if not any([
+            isinstance(self.regressor, LinearRegression),
+            isinstance(self.regressor, Ridge),
+            isinstance(self.regressor, RidgeCV)
+        ]):
+            raise ValueError(
+                'Regressor must be an instance of '
+                '`LinearRegression`, `Ridge`, or `RidgeCV`'
+            )
 
-        if Yhat is None:
-            Yhat = self.estimator.predict(X).reshape(X.shape[0], -1)
+        self.regressor_ = check_lr_fit(
+            self.regressor, X, y=y
+        )
+
+        if self.regressor_.coef_.ndim == 1:
+            if self.regressor_.coef_.shape[0] != X.shape[1]:
+                raise ValueError(
+                    'The target regressor has a shape incompatible '
+                    'with the supplied feature space'
+                )
+        else:
+            if self.regressor_.coef_.shape[0] != y.shape[1]:
+                raise ValueError(
+                    'The target regressor has a shape incompatible '
+                    'with the supplied target space'
+                )
+            elif self.regressor_.coef_.shape[1] != X.shape[1]:
+                raise ValueError(
+                    'The target regressor has a shape incompatible '
+                    'with the supplied feature space'
+                )
+
+        W = self.regressor_.coef_.T.reshape(X.shape[1], -1)
+        yhat = self.regressor_.predict(X).reshape(X.shape[0], -1)
 
         # Handle svd_solver
         self._fit_svd_solver = self.svd_solver
