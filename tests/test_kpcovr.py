@@ -3,7 +3,7 @@ from skcosmo.decomposition import KPCovR, PCovR
 from sklearn.datasets import load_boston
 import numpy as np
 from sklearn import exceptions
-from sklearn.linear_model import RidgeCV
+from sklearn.linear_model import RidgeCV, Ridge
 from sklearn.utils.validation import check_X_y
 from skcosmo.preprocessing import StandardFlexibleScaler as SFS
 
@@ -209,11 +209,11 @@ class KernelTests(KPCovRBaseTest):
         hypers = dict(
             mixing=0.5,
             n_components=1,
-            alpha=1e-8,
         )
+        alpha = 1e-8
 
         # computing projection and predicton loss with linear KPCovR
-        kpcovr = KPCovR(kernel="linear", fit_inverse_transform=True, **hypers)
+        kpcovr = KPCovR(kernel="linear", fit_inverse_transform=True, alpha=alpha, **hypers)
         kpcovr.fit(self.X, self.Y, Yhat=Yhat)
         ly = (
             np.linalg.norm(self.Y - kpcovr.predict(self.X)) ** 2.0
@@ -221,8 +221,8 @@ class KernelTests(KPCovRBaseTest):
         )
 
         # computing projection and predicton loss with PCovR
-        ref_pcovr = PCovR(**hypers, space="sample")
-        ref_pcovr.fit(self.X, self.Y, Yhat=Yhat)
+        ref_pcovr = PCovR(**hypers, regressor=ridge, space="sample")
+        ref_pcovr.fit(self.X, self.Y)
         ly_ref = (
             np.linalg.norm(self.Y - ref_pcovr.predict(self.X)) ** 2.0
             / np.linalg.norm(self.Y) ** 2.0
