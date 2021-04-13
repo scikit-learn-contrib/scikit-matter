@@ -11,6 +11,7 @@ from ._orthogonalizers import (
 from .pcovr_utils import (
     pcovr_covariance,
     pcovr_kernel,
+    check_lr_fit
 )
 from .progress_bar import get_progress_bar
 
@@ -18,6 +19,7 @@ __all__ = [
     "get_progress_bar",
     "pcovr_covariance",
     "pcovr_kernel",
+    "check_lr_fit",
     "X_orthogonalizer",
     "Y_sample_orthogonalizer",
     "Y_feature_orthogonalizer",
