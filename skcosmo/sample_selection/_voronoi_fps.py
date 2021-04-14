@@ -32,23 +32,6 @@ class _VoronoiFPS(_FPS):
     Parameters
     ----------
 
-    n_to_select: int or float, default=None
-        The number of features to select. If `None`,
-        half of the features are selected. If integer, the parameter is the
-        absolute number of features to select. If float between 0 and 1, it is
-        the fraction of features to select.
-
-    initialize: int or 'random', default=0
-        Index of the first feature to be selected. If 'random', picks a random
-        value when fit starts.
-
-    score_threshold: float, defaults to 1E-12
-        threshold below which distances will be considered 0
-
-    progress_bar: boolean, default=False
-        option to use `tqdm <https://tqdm.github.io/>`_
-        progress bar to monitor selections
-
     n_trial_calculation: integer, default=4
         Number of calculations used for the switching point between Voronoi FPS
         and traditional FPS (for detail look at full_fraction).
@@ -64,26 +47,12 @@ class _VoronoiFPS(_FPS):
         and memory operations.
     """
 
-    def __init__(
-        self,
-        n_to_select=None,
-        initialize=0,
-        score_threshold=1e-12,
-        progress_bar=False,
-        n_trial_calculation=4,
-        full_fraction=None,
-    ):
+    def __init__(self, n_trial_calculation=4, full_fraction=None, **kwargs):
 
         self.n_trial_calculation = n_trial_calculation
         self.full_fraction = full_fraction
 
-        super().__init__(
-            n_to_select=n_to_select,
-            progress_bar=progress_bar,
-            selection_type="sample",
-            initialize=initialize,
-            score_threshold=score_threshold,
-        )
+        super().__init__(selection_type="sample", **kwargs)
 
     def _init_greedy_search(self, X, y, n_to_select):
         """Initializes the search. Prepares an array to store the selected
