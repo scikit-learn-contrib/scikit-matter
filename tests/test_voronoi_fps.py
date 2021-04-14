@@ -2,9 +2,12 @@ import unittest
 
 import numpy as np
 from sklearn.exceptions import NotFittedError
-from test_sample_simple_fps import TestFPS
 
-from skcosmo.sample_selection import FPS, VoronoiFPS
+from skcosmo.sample_selection import (
+    FPS,
+    VoronoiFPS,
+)
+from test_sample_simple_fps import TestFPS
 
 
 class TestVoronoiFPS(TestFPS):
@@ -51,30 +54,45 @@ class TestVoronoiFPS(TestFPS):
         selector = VoronoiFPS(n_to_select=1)
         selector.fit(self.X)
         self.assertTrue(1 > selector.full_fraction)
+
         selector = VoronoiFPS(n_to_select=1, full_fraction=0.5)
         selector.fit(self.X)
         self.assertEqual(selector.full_fraction, 0.5)
-        with self.assertRaises(ValueError) as cm:
-            selector = VoronoiFPS(n_to_select=1, n_trial_calculation=0)
-            selector.fit(self.X)
-            self.assertEquals(
-                str(cm.message),
-                "Number of trial calculation should be more or equal to 1",
-            )
-        with self.assertRaises(TypeError) as cm:
-            selector = VoronoiFPS(n_to_select=1, n_trial_calculation=0.3)
-            selector.fit(self.X)
-            self.assertEquals(
-                str(cm.message), "Number of trial calculation should be integer"
-            )
 
-        with self.assertRaises(ValueError) as cm:
-            selector = VoronoiFPS(n_to_select=1, full_fraction=1.1)
-            selector.fit(self.X)
-            self.assertEquals(
-                str(cm.message),
-                f"Switching point should be real and more than 0 and less than 1 received {selector.full_fraction}",
-            )
+        with self.subTest(name="bad_ntrial"):
+            with self.assertRaises(ValueError) as cm:
+                selector = VoronoiFPS(n_to_select=1, n_trial_calculation=0)
+                selector.fit(self.X)
+                self.assertEquals(
+                    str(cm.message),
+                    "Number of trial calculation should be more or equal to 1",
+                )
+
+        with self.subTest(name="float_ntrial"):
+            with self.assertRaises(TypeError) as cm:
+                selector = VoronoiFPS(n_to_select=1, n_trial_calculation=0.3)
+                selector.fit(self.X)
+                self.assertEquals(
+                    str(cm.message), "Number of trial calculation should be integer"
+                )
+
+        with self.subTest(name="large_ff"):
+            with self.assertRaises(ValueError) as cm:
+                selector = VoronoiFPS(n_to_select=1, full_fraction=1.1)
+                selector.fit(self.X)
+                self.assertEquals(
+                    str(cm.message),
+                    f"Switching point should be real and more than 0 and less than 1 received {selector.full_fraction}",
+                )
+
+        with self.subTest(name="string_ff"):
+            with self.assertRaises(ValueError) as cm:
+                selector = VoronoiFPS(n_to_select=1, full_fraction="STRING")
+                selector.fit(self.X)
+                self.assertEquals(
+                    str(cm.message),
+                    f"Switching point should be real and more than 0 and less than 1 received {selector.full_fraction}",
+                )
 
     def test_get_distances(self):
         """
@@ -114,6 +132,51 @@ class TestVoronoiFPS(TestFPS):
         except Exception:
             f = 0
         self.assertEqual(f, 1)
+
+        # print(selector.vlocation_of_idx )
+        # self.assertEqual(
+        #     len(np.where(selector.vlocation_of_idx == selector.n_selected_)[0]), 1
+        # )
+
+    def test_d2q(self):
+
+        selector = VoronoiFPS(n_to_select=3)
+        selector.fit(self.X)
+
+        active_points = np.where(
+            selector.sel_d2q_[selector.vlocation_of_idx] < selector.haussdorf_
+        )[0]
+
+        ap = selector._get_active(self.X, selector.selected_idx_[-1])
+
+        self.assertTrue(
+            np.allclose(
+                active_points,
+                ap,
+            )
+        )
+
+        selector = VoronoiFPS(n_to_select=1)
+
+        ap = selector._get_active(self.X, 0)
+
+        self.assertTrue(
+            np.allclose(
+                np.arange(self.X.shape[0]),
+                ap,
+            )
+        )
+
+    def test_calc_disc(self):
+        selector = VoronoiFPS(n_to_select=3, initialize=0)
+        selector.fit(self.X)
+
+        self.assertTrue(
+            np.allclose(
+                selector.haussdorf_,
+                selector._calculate_distances(self.X, selector.selected_idx_[-1]),
+            )
+        )
 
 
 if __name__ == "__main__":

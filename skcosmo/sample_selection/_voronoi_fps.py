@@ -90,14 +90,14 @@ class _VoronoiFPS(_FPS):
         features. This function also determines the switching point if it was not
         given during initialization."""
 
-        n_features = X.shape[1]
-        self.vlocation_of_idx = np.full(n_features, -1)
+        n_to_select_from = X.shape[0]
+        self.vlocation_of_idx = np.full(n_to_select_from, -1)
         """index of the voronoi cell associated with each of the columns of X"""
 
         self.sel_d2q_ = np.zeros(self.n_to_select, float)
         """quarter of the square distance between new selected point and previously
         selected points"""
-        self.new_dist_ = np.zeros(n_features)
+        self.new_dist_ = np.zeros(n_to_select_from)
 
         """ Determines the optimal switching point for full calculation.
         The point is that when calculating distances in Voronoi_FPS it is necessary
@@ -113,7 +113,7 @@ class _VoronoiFPS(_FPS):
                     "Number of trial calculation should be more or equal to 1"
                 )
             for i in range(self.n_trial_calculation):
-                _ = X.T @ X[:, 0]
+                _ = X @ X[[0]].T
             simple_fps_timing += time()
             simple_fps_timing /= self.n_trial_calculation
 
@@ -124,10 +124,11 @@ class _VoronoiFPS(_FPS):
                 self.full_fraction = (top_fraction + lower_fraction) / 2
                 for i in range(self.n_trial_calculation):
                     sel = np.random.randint(
-                        n_features, size=int(n_features * self.full_fraction)
+                        n_to_select_from,
+                        size=int(n_to_select_from * self.full_fraction),
                     )
                     voronoi_fps_times[i] = -time()
-                    _ = X[:, 0] @ X[:, sel]
+                    _ = X[0] @ X[sel].T
                     voronoi_fps_times[i] += time()
                 voronoi_fps_timing = np.sum(voronoi_fps_times)
                 voronoi_fps_timing /= self.n_trial_calculation
@@ -144,6 +145,11 @@ class _VoronoiFPS(_FPS):
                         "Switching point should be real and more than 0 and less than 1",
                         f"received {self.full_fraction}",
                     )
+            else:
+                raise ValueError(
+                    "Switching point should be real and more than 0 and less than 1",
+                    f"received {self.full_fraction}",
+                )
 
         super()._init_greedy_search(X, y, n_to_select)
 
@@ -155,28 +161,19 @@ class _VoronoiFPS(_FPS):
         n_pad = n_to_select - self.n_selected_
 
         self.sel_d2q_ = np.pad(self.sel_d2q_, (0, n_pad), "constant", constant_values=0)
-        self.new_dist_ = np.zeros(X.shape[1])
+        self.new_dist_ = np.zeros(X.shape[0])
 
     def _get_active(self, X, last_selected):
         """
         Finds the indices of the Voronoi cells that might change due to the fact
-        that a new point has been selected (index is last_selected)
-        """
-        # because we haven't called super() yet, self.n_selected_ has not been
-        # incremented yet
+        that a new point has been selected (index is last_selected,
+        because we haven't called super() yet, self.n_selected_ has not been
+        incremented yet)
 
-        """must compute distance of the new point to all the previous FPS. Some
-            of these might have been computed already, but bookkeeping is
-            worse that recomputing
-            """
+        must compute distance of the new point to all the previous FPS. Some
+        of these might have been computed already, but bookkeeping is
+        worse that recomputing
 
-        self.sel_d2q_[: self.n_selected_] = (
-            self.norms_[self.selected_idx_[: self.n_selected_]]
-            + self.norms_[last_selected]
-            - 2 * (self.X_selected_[:, : self.n_selected_].T @ X[:, last_selected])
-        ) * 0.25
-        """calculation in a single block"""
-        """
         These are the points for which need to recompute distances.
         Let:
         L is the last point selected;
@@ -189,58 +186,68 @@ class _VoronoiFPS(_FPS):
         check if |d(XS) - d(SL)|>= d(XS) to know that we don't need to check X.
         but |d(XS) - d(SL)|^2>= d(XS)^2 if and only if d(SL)/2 > d(SX)
         """
-        active_points = np.where(
-            self.sel_d2q_[self.vlocation_of_idx] < self.haussdorf_
-        )[0]
 
-        return active_points
+        if not hasattr(self, "n_selected_") or self.n_selected_ == 0:
+            return np.arange(X.shape[0], dtype=int)
+
+        else:
+            self.sel_d2q_[: self.n_selected_] = (
+                self.norms_[self.selected_idx_[: self.n_selected_]]
+                + self.norms_[last_selected]
+                - 2 * (self.X_selected_[: self.n_selected_] @ X[last_selected].T)
+            ) * 0.25
+
+            # calculation in a single block"""
+            active_points = np.where(
+                self.sel_d2q_[self.vlocation_of_idx] < self.haussdorf_
+            )[0]
+
+            return active_points
 
     def _calculate_distances(self, X, last_selected, **kwargs):
 
         """n_selected has not been incremented, so index of new voronoi is
         n_selected"""
 
-        if self.n_selected_ == 0:
-            self.haussdorf_ = super()._calculate_distances(X, last_selected)
-            updated_points = np.arange(X.shape[-1], dtype=int)
-            """tracker of how many distances must be computed at each step"""
-        else:
-            active_points = self._get_active(X, last_selected)
+        active_points = self._get_active(X, last_selected)
 
-            """we need to compute distances between the new point and all the
-               points in the active Voronoi cells."""
-            if len(active_points) > 0:
-                if len(active_points) / X.shape[1] > self.full_fraction:
-                    self.new_dist_[:] = super()._calculate_distances(X, last_selected)
-                    """if the number of distances we need to compute is large,
-                    it is better to switch to a full-matrix-algebra calculation.
-                    """
-                else:
-                    """
-                    ... else we only iterate over the active points, although
-                    this involves more memory jumps, and can be more costly than
-                    computing all distances.
-                    """
-                    self.new_dist_[:] = self.haussdorf_
-
-                    self.new_dist_[active_points] = (
-                        self.norms_[active_points]
-                        + self.norms_[last_selected]
-                        - 2 * X[:, last_selected] @ X[:, active_points]
-                    )
-                    self.new_dist_[last_selected] = 0
-                updated_points = np.where(self.new_dist_ < self.haussdorf_)[0]
-                """updates haussdorf distances and keeps track of the updated
-                points"""
-                np.minimum(
-                    self.haussdorf_, self.new_dist_, self.haussdorf_, casting="unsafe"
+        if len(active_points) > 0:
+            if len(active_points) / X.shape[0] > self.full_fraction:
+                self.new_dist_ = (
+                    self.norms_
+                    + self.norms_[last_selected]
+                    - 2 * X[last_selected] @ X.T
                 )
+                """if the number of distances we need to compute is large,
+                it is better to switch to a full-matrix-algebra calculation.
+                """
             else:
-                updated_points = np.array([])
+                """
+                ... else we only iterate over the active points, although
+                this involves more memory jumps, and can be more costly than
+                computing all distances.
+                """
+                self.new_dist_[:] = self.haussdorf_
+
+                self.new_dist_[active_points] = (
+                    self.norms_[active_points]
+                    + self.norms_[last_selected]
+                    - 2 * X[last_selected] @ X[active_points].T
+                )
+                self.new_dist_[last_selected] = 0
+
+            updated_points = np.where(self.new_dist_ < self.haussdorf_)[0]
+            """updates haussdorf distances and keeps track of the updated
+            points"""
+            np.minimum(
+                self.haussdorf_, self.new_dist_, self.haussdorf_, casting="unsafe"
+            )
+        else:
+            updated_points = np.array([])
 
         if len(updated_points) > 0:
             self.vlocation_of_idx[updated_points] = self.n_selected_
 
-        assert self.vlocation_of_idx[last_selected] == self.n_selected_
+        self.vlocation_of_idx[last_selected] = self.n_selected_
 
         return self.haussdorf_
