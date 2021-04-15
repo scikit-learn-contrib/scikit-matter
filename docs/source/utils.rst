@@ -3,7 +3,7 @@ Utility Classes
 
 .. _PCovR_dist-api:
 
-.. currentmodule:: skcosmo.utils.pcovr_utils
+.. currentmodule:: skcosmo.utils._pcovr_utils
 
 Modified Gram Matrix :math:`\mathbf{\tilde{K}}`
 ###############################################
@@ -19,7 +19,7 @@ Modified Covariance Matrix :math:`\mathbf{\tilde{C}}`
 Orthogonalizers for CUR
 #######################
 
-.. currentmodule:: skcosmo.utils.orthogonalizers
+.. currentmodule:: skcosmo.utils._orthogonalizers
 
 When computing non-iterative CUR, it is necessary to orthogonalize the input matrices after each selection. For this, we have supplied a feature and a sample orthogonalizer for feature and sample selection.
 
