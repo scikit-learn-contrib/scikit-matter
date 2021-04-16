@@ -70,10 +70,9 @@ class _VoronoiFPS(_FPS):
         self.vlocation_of_idx = np.full(n_to_select_from, 1)
         # index of the voronoi cell associated with each of the columns of X
 
-        self.sel_d2q_ = np.zeros(self.n_to_select, float)
-        # quarter of the square distance between new selected point and previously
+        self.dSL_ = np.zeros(self.n_to_select, float)
+        # distance between new selected point and previously
         # selected points
-        self.new_dist_ = np.zeros(n_to_select_from)
 
         if self.full_fraction is None:
             simple_fps_timing = -time()
@@ -132,8 +131,7 @@ class _VoronoiFPS(_FPS):
 
         n_pad = n_to_select - self.n_selected_
 
-        self.sel_d2q_ = np.pad(self.sel_d2q_, (0, n_pad), "constant", constant_values=0)
-        self.new_dist_ = np.zeros(X.shape[0])
+        self.dSL_ = np.pad(self.dSL_, (0, n_pad), "constant", constant_values=0)
 
     def _get_active(self, X, last_selected):
         """
@@ -155,7 +153,7 @@ class _VoronoiFPS(_FPS):
         min(d(X,S)) (which is stored in self.haussdorf_)
         now, if a point belongs to the Voronoi cell of S then
         min(d(X,S_i))=d(X,S). Triangle inequality implies that
-        d(X,L)>=|d(X,S) - d(S,L)| so we just need to check if
+        d(S,L) < |d(X,S) + d(L,X)| so we just need to check if
         |d(X,S) - d(S,L)|>= d(X,S) to know that we don't need to check X.
         but |d(X,S) - d(S,L)|^2>= d(X,S)^2 if and only if d(S,L)/2 > d(S,X)
         """
@@ -164,7 +162,7 @@ class _VoronoiFPS(_FPS):
             return np.arange(X.shape[0], dtype=int)
 
         else:
-            self.sel_d2q_[: self.n_selected_] = (
+            self.dSL_[: self.n_selected_] = (
                 self.norms_[self.selected_idx_[: self.n_selected_]]
                 + self.norms_[last_selected]
                 - 2 * (self.X_selected_[: self.n_selected_] @ X[last_selected].T)
@@ -172,7 +170,7 @@ class _VoronoiFPS(_FPS):
             # calculation in a single block
 
             active_points = np.where(
-                self.sel_d2q_[self.vlocation_of_idx] < self.haussdorf_
+                self.dSL_[self.vlocation_of_idx] < self.haussdorf_
             )[0]
 
             return active_points
@@ -220,9 +218,8 @@ class _VoronoiFPS(_FPS):
                     + self.norms_[last_selected]
                     - 2 * X[last_selected] @ X.T
                 )
-
             else:
-                self.new_dist_[:] = self.haussdorf_
+                self.new_dist_ = self.haussdorf_.copy()
 
                 self.new_dist_[active_points] = (
                     self.norms_[active_points]
