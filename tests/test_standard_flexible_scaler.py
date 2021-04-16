@@ -1,8 +1,10 @@
 import unittest
-from skcosmo.preprocessing.flexible_scaler import StandardFlexibleScaler
-from sklearn.preprocessing import StandardScaler
-import sklearn
+
 import numpy as np
+import sklearn
+from sklearn.preprocessing import StandardScaler
+
+from skcosmo.preprocessing import StandardFlexibleScaler
 
 
 class ScalerTests(unittest.TestCase):
@@ -140,6 +142,34 @@ class ScalerTests(unittest.TestCase):
         X = np.random.uniform(0, 100, size=(3, 3))
         X[0][0] = X[1][0] = X[2][0] = 2
         model = StandardFlexibleScaler(column_wise=True)
+        with self.assertRaises(ValueError):
+            model.fit(X)
+
+    def test_atol(self):
+        """Checks that we can define absolute tolerance and it control the
+        minimal variance of columns ot the whole matrix"""
+        X = np.random.uniform(0, 100, size=(3, 3))
+        atol = ((X[:, 0] - X[:, 0].mean(axis=0)) ** 2).mean(axis=0) + 1e-8
+        model = StandardFlexibleScaler(column_wise=True, atol=atol, rtol=0)
+        with self.assertRaises(ValueError):
+            model.fit(X)
+        atol = (X - X.mean(axis=0) ** 2).mean(axis=0) + 1e-8
+        model = StandardFlexibleScaler(column_wise=False, atol=atol, rtol=0)
+        with self.assertRaises(ValueError):
+            model.fit(X)
+
+    def test_rtol(self):
+        """Checks that we can define relative tolerance and it control the
+        minimal variance of columns or the whole matrix"""
+        X = np.random.uniform(0, 100, size=(3, 3))
+        mean = X[:, 0].mean(axis=0)
+        rtol = ((X[:, 0] - mean) ** 2).mean(axis=0) / mean + 1e-8
+        model = StandardFlexibleScaler(column_wise=True, atol=0, rtol=rtol)
+        with self.assertRaises(ValueError):
+            model.fit(X)
+        mean = X.mean(axis=0)
+        rtol = ((X - mean) ** 2).mean(axis=0) / mean + 1e-8
+        model = StandardFlexibleScaler(column_wise=False, atol=0, rtol=rtol)
         with self.assertRaises(ValueError):
             model.fit(X)
 

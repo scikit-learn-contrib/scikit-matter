@@ -1,7 +1,9 @@
 import unittest
-from skcosmo.preprocessing.flexible_scaler import SparseKernelCenterer
-import sklearn
+
 import numpy as np
+import sklearn
+
+from skcosmo.preprocessing import SparseKernelCenterer
 
 
 class SparseKernelTests(unittest.TestCase):
