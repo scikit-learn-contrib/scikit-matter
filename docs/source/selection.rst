@@ -249,6 +249,9 @@ be instantiated using
 
 Voronoi FPS
 ###########
+
+.. currentmodule:: skcosmo.sample_selection
+
 .. autoclass :: VoronoiFPS
 
 These selectors can be instantiated using :py:class:`skcosmo.sample_selection.VoronoiFPS`.
@@ -282,4 +285,5 @@ to divide the space with Voronoi polyhedrons, but not yet comparable to the tota
 number of samples, when the cost of bookkeeping significantly degrades the speed
 of work compared to FPS. You can find an example of work of Voronoi FPS for
 different dimensionality on the next figure:
+
 .. image:: vorFPS.pdf
