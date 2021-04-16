@@ -55,24 +55,26 @@ class _VoronoiFPS(_FPS):
         super().__init__(selection_type="sample", **kwargs)
 
     def _init_greedy_search(self, X, y, n_to_select):
-        """Initializes the search. Prepares an array to store the selected
+        """
+        Initializes the search. Prepares an array to store the selected
         features. This function also determines the switching point if it was not
-        given during initialization."""
+        given during initialization.
+        The point is that when calculating distances in Voronoi_FPS it is
+        necessary to "jump" between indexes in the array. This results in a
+        significant increase in time. Therefore, if you need to recalculate a
+        large number of distances, it is more advantageous to run simple
+        calculation along the whole matrix.
+        """
 
         n_to_select_from = X.shape[0]
-        self.vlocation_of_idx = np.full(n_to_select_from, -1)
-        """index of the voronoi cell associated with each of the columns of X"""
+        self.vlocation_of_idx = np.full(n_to_select_from, 1)
+        # index of the voronoi cell associated with each of the columns of X
 
         self.sel_d2q_ = np.zeros(self.n_to_select, float)
-        """quarter of the square distance between new selected point and previously
-        selected points"""
+        # quarter of the square distance between new selected point and previously
+        # selected points
         self.new_dist_ = np.zeros(n_to_select_from)
 
-        """ Determines the optimal switching point for full calculation.
-        The point is that when calculating distances in Voronoi_FPS it is necessary
-        to "jump" between indexes in the array. This results in a significant increase in time.
-        Therefore, if you need to recalculate a large number of distances, it is more advantageous
-        to run Simple_FPS"""
         if self.full_fraction is None:
             simple_fps_timing = -time()
             if not isinstance(self.n_trial_calculation, numbers.Integral):
@@ -123,7 +125,8 @@ class _VoronoiFPS(_FPS):
         super()._init_greedy_search(X, y, n_to_select)
 
     def _continue_greedy_search(self, X, y, n_to_select):
-        """ Continues the search. Prepares an array to store the selected features. """
+        """Continues the search. Prepares an array to store the selected
+        features."""
 
         super()._continue_greedy_search(X, y, n_to_select)
 
@@ -139,9 +142,9 @@ class _VoronoiFPS(_FPS):
         because we haven't called super() yet, self.n_selected_ has not been
         incremented yet)
 
-        must compute distance of the new point to all the previous FPS. Some
-        of these might have been computed already, but bookkeeping is
-        worse that recomputing
+        This function calculates the distances between the last selected point
+        and the previously selected points. Next, the list of points to which
+        the distance is to be calculated is shortened.
 
         These are the points for which need to recompute distances.
         Let:
@@ -149,11 +152,12 @@ class _VoronoiFPS(_FPS):
         S are the selected points from before this iteration;
         X are the candidates;
         The logic here is that we want to check if d(XL) can be smaller than
-        min(d(XS)) (which is stored in self.haussdorf_)
-        now, if a point belongs to the Voronoi cell of S then min(d(XS_i))=d(XS).
-        Triangle inequality implies that d(XL)>=|d(XS) - d(SL)| so we just need to
-        check if |d(XS) - d(SL)|>= d(XS) to know that we don't need to check X.
-        but |d(XS) - d(SL)|^2>= d(XS)^2 if and only if d(SL)/2 > d(SX)
+        min(d(X,S)) (which is stored in self.haussdorf_)
+        now, if a point belongs to the Voronoi cell of S then
+        min(d(X,S_i))=d(X,S). Triangle inequality implies that
+        d(X,L)>=|d(X,S) - d(S,L)| so we just need to check if
+        |d(X,S) - d(S,L)|>= d(X,S) to know that we don't need to check X.
+        but |d(X,S) - d(S,L)|^2>= d(X,S)^2 if and only if d(S,L)/2 > d(S,X)
         """
 
         if not hasattr(self, "n_selected_") or self.n_selected_ == 0:
@@ -165,18 +169,47 @@ class _VoronoiFPS(_FPS):
                 + self.norms_[last_selected]
                 - 2 * (self.X_selected_[: self.n_selected_] @ X[last_selected].T)
             ) * 0.25
+            # calculation in a single block
 
-            # calculation in a single block"""
             active_points = np.where(
                 self.sel_d2q_[self.vlocation_of_idx] < self.haussdorf_
             )[0]
 
             return active_points
 
-    def _calculate_distances(self, X, last_selected, **kwargs):
+    def _update_post_selection(self, X, y, last_selected):
+        """
+        Saves the most recently selected feature and increments the feature counter
+        """
 
-        """n_selected has not been incremented, so index of new voronoi is
-        n_selected"""
+        if self._axis == 1:
+            self.X_selected_[:, self.n_selected_] = np.take(
+                X, last_selected, axis=self._axis
+            )
+        else:
+            self.X_selected_[self.n_selected_] = np.take(
+                X, last_selected, axis=self._axis
+            )
+
+            if hasattr(self, "y_selected_"):
+                self.y_selected_[self.n_selected_] = y[last_selected]
+
+        self.selected_idx_[self.n_selected_] = last_selected
+        self.n_selected_ += 1
+
+    def score(self, X, y=None):
+        """
+        Let:
+        L is the last point selected;
+        S are the selected points from before this iteration;
+        X is the one active point;
+        This function calculates d(L, X) and checks the condition
+        d(L, X)< min d(X, S_i). If so, we move X to a new polyhedron.
+        If the number of active points is too high, it is faster to calculate
+        the distances between L and all the points in the dataset.
+        """
+
+        last_selected = self.selected_idx_[self.n_selected_ - 1]
 
         active_points = self._get_active(X, last_selected)
 
@@ -187,15 +220,8 @@ class _VoronoiFPS(_FPS):
                     + self.norms_[last_selected]
                     - 2 * X[last_selected] @ X.T
                 )
-                """if the number of distances we need to compute is large,
-                it is better to switch to a full-matrix-algebra calculation.
-                """
+
             else:
-                """
-                ... else we only iterate over the active points, although
-                this involves more memory jumps, and can be more costly than
-                computing all distances.
-                """
                 self.new_dist_[:] = self.haussdorf_
 
                 self.new_dist_[active_points] = (
@@ -206,8 +232,6 @@ class _VoronoiFPS(_FPS):
                 self.new_dist_[last_selected] = 0
 
             updated_points = np.where(self.new_dist_ < self.haussdorf_)[0]
-            """updates haussdorf distances and keeps track of the updated
-            points"""
             np.minimum(
                 self.haussdorf_, self.new_dist_, self.haussdorf_, casting="unsafe"
             )
@@ -215,8 +239,8 @@ class _VoronoiFPS(_FPS):
             updated_points = np.array([])
 
         if len(updated_points) > 0:
-            self.vlocation_of_idx[updated_points] = self.n_selected_
+            self.vlocation_of_idx[updated_points] = self.n_selected_ - 1
 
-        self.vlocation_of_idx[last_selected] = self.n_selected_
+        self.vlocation_of_idx[last_selected] = self.n_selected_ - 1
 
         return self.haussdorf_

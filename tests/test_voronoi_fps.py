@@ -111,10 +111,10 @@ class TestVoronoiFPS(TestFPS):
         This test checks that the voronoi FPS strictly computes less distances
         than its normal FPS counterpart.
         """
-        vselector = VoronoiFPS(n_to_select=self.X.shape[-1] - 1)
+        vselector = VoronoiFPS(n_to_select=self.X.shape[0] - 1)
         vselector.fit(self.X)
 
-        selector = FPS(n_to_select=self.X.shape[-1] - 1)
+        selector = FPS(n_to_select=self.X.shape[0] - 1)
         selector.fit(self.X)
 
         self.assertTrue(np.allclose(vselector.selected_idx_, selector.selected_idx_))
@@ -133,18 +133,23 @@ class TestVoronoiFPS(TestFPS):
             f = 0
         self.assertEqual(f, 1)
 
-        # print(selector.vlocation_of_idx )
-        # self.assertEqual(
-        #     len(np.where(selector.vlocation_of_idx == selector.n_selected_)[0]), 1
-        # )
+        self.assertEqual(
+            len(np.where(selector.vlocation_of_idx == (selector.n_selected_ - 2))[0]), 1
+        )
 
     def test_d2q(self):
 
         selector = VoronoiFPS(n_to_select=3)
         selector.fit(self.X)
-
+        last_selected = np.argmax(selector.haussdorf_)
+        sel_d2q_ = (
+            selector.norms_[selector.selected_idx_[: selector.n_selected_]]
+            + selector.norms_[last_selected]
+            - 2
+            * (selector.X_selected_[: selector.n_selected_] @ self.X[last_selected].T)
+        ) * 0.25
         active_points = np.where(
-            selector.sel_d2q_[selector.vlocation_of_idx] < selector.haussdorf_
+            sel_d2q_[selector.vlocation_of_idx] < selector.haussdorf_
         )[0]
 
         ap = selector._get_active(self.X, selector.selected_idx_[-1])
@@ -174,7 +179,7 @@ class TestVoronoiFPS(TestFPS):
         self.assertTrue(
             np.allclose(
                 selector.haussdorf_,
-                selector._calculate_distances(self.X, selector.selected_idx_[-1]),
+                selector.score(self.X, selector.selected_idx_[-1]),
             )
         )
 
