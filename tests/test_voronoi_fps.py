@@ -137,19 +137,13 @@ class TestVoronoiFPS(TestFPS):
             len(np.where(selector.vlocation_of_idx == (selector.n_selected_ - 2))[0]), 1
         )
 
-    def test_d2q(self):
+    def test_dSL(self):
 
         selector = VoronoiFPS(n_to_select=3)
         selector.fit(self.X)
-        last_selected = np.argmax(selector.haussdorf_)
-        sel_d2q_ = (
-            selector.norms_[selector.selected_idx_[: selector.n_selected_]]
-            + selector.norms_[last_selected]
-            - 2
-            * (selector.X_selected_[: selector.n_selected_] @ self.X[last_selected].T)
-        ) * 0.25
+
         active_points = np.where(
-            sel_d2q_[selector.vlocation_of_idx] < selector.haussdorf_
+            selector.dSL_[selector.vlocation_of_idx] < selector.haussdorf_
         )[0]
 
         ap = selector._get_active(self.X, selector.selected_idx_[-1])
@@ -172,7 +166,8 @@ class TestVoronoiFPS(TestFPS):
             )
         )
 
-    def test_calc_disc(self):
+    def test_score(self):
+        """This test check that function score return haussdorf distance"""
         selector = VoronoiFPS(n_to_select=3, initialize=0)
         selector.fit(self.X)
 

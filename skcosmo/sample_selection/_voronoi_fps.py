@@ -3,10 +3,10 @@ from time import time
 
 import numpy as np
 
-from .._selection import _FPS
+from .._selection import GreedySelector
 
 
-class _VoronoiFPS(_FPS):
+class _VoronoiFPS(GreedySelector):
     """
     In FPS, points are selected based upon their Hausdorff distance to
     previous selections, i.e. the minimum distance between a given point and
@@ -47,11 +47,13 @@ class _VoronoiFPS(_FPS):
         and memory operations.
     """
 
-    def __init__(self, n_trial_calculation=4, full_fraction=None, **kwargs):
+    def __init__(
+        self, n_trial_calculation=4, full_fraction=None, initialize=0, **kwargs
+    ):
 
         self.n_trial_calculation = n_trial_calculation
         self.full_fraction = full_fraction
-
+        self.initialize = initialize
         super().__init__(selection_type="sample", **kwargs)
 
     def _init_greedy_search(self, X, y, n_to_select):
@@ -123,6 +125,20 @@ class _VoronoiFPS(_FPS):
 
         super()._init_greedy_search(X, y, n_to_select)
 
+        self.norms_ = (X ** 2).sum(axis=abs(self._axis - 1))
+
+        if self.initialize == "random":
+            initialize = np.random.randint(X.shape[self._axis])
+        elif isinstance(self.initialize, numbers.Integral):
+            initialize = self.initialize
+        else:
+            raise ValueError("Invalid value of the initialize parameter")
+
+        self.selected_idx_[0] = initialize
+        self.haussdorf_ = np.full(X.shape[self._axis], np.inf)
+        self.haussdorf_at_select_ = np.full(X.shape[self._axis], np.inf)
+        self._update_post_selection(X, y, self.selected_idx_[0])
+
     def _continue_greedy_search(self, X, y, n_to_select):
         """Continues the search. Prepares an array to store the selected
         features."""
@@ -175,28 +191,24 @@ class _VoronoiFPS(_FPS):
 
             return active_points
 
+    def get_select_distance(self):
+        """
+
+        Returns
+        -------
+
+        haussdorf_at_select : ndarray of shape (`n_to_select`)
+                     at the time of selection, the minimum distance from each
+                     selected point to the set of previously selected points.
+
+        """
+        mask = self.get_support(indices=True, ordered=True)
+        return self.haussdorf_at_select_[mask]
+
     def _update_post_selection(self, X, y, last_selected):
         """
-        Saves the most recently selected feature and increments the feature counter
-        """
-
-        if self._axis == 1:
-            self.X_selected_[:, self.n_selected_] = np.take(
-                X, last_selected, axis=self._axis
-            )
-        else:
-            self.X_selected_[self.n_selected_] = np.take(
-                X, last_selected, axis=self._axis
-            )
-
-            if hasattr(self, "y_selected_"):
-                self.y_selected_[self.n_selected_] = y[last_selected]
-
-        self.selected_idx_[self.n_selected_] = last_selected
-        self.n_selected_ += 1
-
-    def score(self, X, y=None):
-        """
+        Saves the most recently selected feature, increments the feature counter
+        and update the haussdorf distances
         Let:
         L is the last point selected;
         S are the selected points from before this iteration;
@@ -207,8 +219,7 @@ class _VoronoiFPS(_FPS):
         the distances between L and all the points in the dataset.
         """
 
-        last_selected = self.selected_idx_[self.n_selected_ - 1]
-
+        self.haussdorf_at_select_[last_selected] = self.haussdorf_[last_selected]
         active_points = self._get_active(X, last_selected)
 
         if len(active_points) > 0:
@@ -236,8 +247,26 @@ class _VoronoiFPS(_FPS):
             updated_points = np.array([])
 
         if len(updated_points) > 0:
-            self.vlocation_of_idx[updated_points] = self.n_selected_ - 1
+            self.vlocation_of_idx[updated_points] = self.n_selected_
 
-        self.vlocation_of_idx[last_selected] = self.n_selected_ - 1
+        self.vlocation_of_idx[last_selected] = self.n_selected_
+        super()._update_post_selection(X, y, last_selected)
 
+    def score(self, X=None, y=None):
+        """
+        Returns the Haussdorf distances of all samples to previous selections
+
+        NOTE: This function does not compute the importance score each time it
+        is called, in order to avoid unnecessary computations. The haussdorf
+        distance is updated in :py:func:`self._update_post_selection`
+
+        Parameters
+        ----------
+        X : ignored
+        y : ignored
+
+        Returns
+        -------
+        haussdorf : Haussdorf distances
+        """
         return self.haussdorf_
