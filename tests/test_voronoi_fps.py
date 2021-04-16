@@ -137,7 +137,7 @@ class TestVoronoiFPS(TestFPS):
             len(np.where(selector.vlocation_of_idx == (selector.n_selected_ - 2))[0]), 1
         )
 
-    def test_dSL(self):
+    def test_calculate_dSL(self):
 
         selector = VoronoiFPS(n_to_select=3)
         selector.fit(self.X)
