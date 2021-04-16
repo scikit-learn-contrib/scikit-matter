@@ -249,23 +249,7 @@ be instantiated using
 
 Voronoi FPS
 ###########
-In FPS, points are selected based upon their Hausdorff distance to
-previous selections, i.e. the minimum distance between a given point and
-any previously selected points. This implicitly constructs a Voronoi
-tessellation which is updated with each new selection, as each unselected
-point "belongs" to the Voronoi polyhedron of the nearest previous selection.
-
-This implicit tessellation enabled a more efficient evaluation of the FPS --
-at each iteration, we need only consider for selection those points at the
-boundaries of the Voronoi polyhedra, and when updating the tessellation
-we need only consider moving those points whose Hausdorff distance is
-greater than half of the distance between the corresponding Voronoi center
-and the newly selected point, per the triangle equality.
-
-This is particularly appealing when using a non-Euclidean or
-computationally-intensive distance metric, for which the
-decrease in computational time due to the reduction in distance
-calculations outweighs the increase from bookkeeping.
+.. autoclass :: VoronoiFPS
 
 These selectors can be instantiated using :py:class:`skcosmo.sample_selection.VoronoiFPS`.
 
@@ -277,7 +261,10 @@ These selectors can be instantiated using :py:class:`skcosmo.sample_selection.Vo
                         progress_bar=True,
                         score_threshold=1E-12
                         full=False,
-
+                        #n_trial_calculation used for calculation of full_fraction,
+                        #so you need to determine only one parameter
+                        n_trial_calculation = 4,
+                        full_fraction = None,
                         # int or 'random', default=0
                         # Index of the first selection.
                         # If ‘random’, picks a random value when fit starts.
@@ -289,8 +276,10 @@ These selectors can be instantiated using :py:class:`skcosmo.sample_selection.Vo
 
 In many cases, this algorithm may not increase upon the efficiency. For example,
 for simple metrics (such as Euclidean distance), Voronoi FPS will likely not
-accelerate, and may decelerate, computations when compared to FPS.  The ``sweet
+accelerate, and may decelerate, computations when compared to FPS.  The sweet
 spot for Voronoi FPS is when the number of selectable samples is already enough
 to divide the space with Voronoi polyhedrons, but not yet comparable to the total
 number of samples, when the cost of bookkeeping significantly degrades the speed
-of work compared to FPS. 
+of work compared to FPS. You can find an example of work of Voronoi FPS for
+different dimensionality on the next figure:
+.. image:: vorFPS.pdf
