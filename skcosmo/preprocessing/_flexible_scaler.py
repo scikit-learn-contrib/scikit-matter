@@ -50,11 +50,11 @@ class StandardFlexibleScaler(TransformerMixin, BaseEstimator):
         If True, normalize each column separately. If False, normalize the whole
         matrix with respect to its total variance.
 
-    rtol: float, default=1e-5
+    rtol: float, default=0
         The relative tolerance for the optimization: variance is
         considered zero when it is less than abs(mean) * rtol + atol.
 
-    atol: float, default=0
+    atol: float, default=1.0E-12
         The relative tolerance for the optimization: variance is
         considered zero when it is less than abs(mean) * rtol + atol.
 
@@ -110,8 +110,8 @@ class StandardFlexibleScaler(TransformerMixin, BaseEstimator):
         with_mean=True,
         with_std=True,
         column_wise=False,
-        rtol=1e-5,
-        atol=0,
+        rtol=0,
+        atol=1e-12,
         copy=False,
     ):
         """Initialize StandardFlexibleScaler."""
