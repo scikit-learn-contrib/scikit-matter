@@ -249,10 +249,16 @@ be instantiated using
 
 Voronoi FPS
 ###########
-
 .. currentmodule:: skcosmo.sample_selection
 
 .. autoclass :: VoronoiFPS
+
+This class is inherited from
+
+
+.. currentmodule:: skcosmo.sample_selection._voronoi_fps
+
+.. autoclass :: _VoronoiFPS
 
 These selectors can be instantiated using :py:class:`skcosmo.sample_selection.VoronoiFPS`.
 
@@ -283,7 +289,12 @@ accelerate, and may decelerate, computations when compared to FPS.  The sweet
 spot for Voronoi FPS is when the number of selectable samples is already enough
 to divide the space with Voronoi polyhedrons, but not yet comparable to the total
 number of samples, when the cost of bookkeeping significantly degrades the speed
-of work compared to FPS. You can find an example of work of Voronoi FPS for
-different dimensionality on the next figure:
+of work compared to FPS. 
 
-.. image:: vorFPS.pdf
+.. figure:: vorFPS.pdf
+
+   The basic idea of the Voronoi FPS algorithm. Let :math:`*_{m+1}` be a new chosen point, 
+   :math:`v(j)` was chosen earlier, :math:`j` is a point in the polyhedron with center 
+   :math:`v(j)`. From the inequalities of the triangle one can easily see that if 
+   :math:`d(v(j),j)<d(*_{m+1}, j)/2`, then point :math:`j` is guaranteed not to fall 
+   into the formed polyhedron and the distance to it can be uncalculated.
