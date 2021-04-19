@@ -8,7 +8,6 @@ from .._selection import (
     _PCovCUR,
     _PCovFPS,
 )
-from ._voronoi_fps import _VoronoiFPS
 
 
 class FPS(_FPS):
@@ -17,15 +16,6 @@ class FPS(_FPS):
     def __init__(self, **kwargs):
 
         super().__init__(selection_type="sample", **kwargs)
-
-
-class VoronoiFPS(_VoronoiFPS):
-    """Transformer that performs Greedy Sample Selection using Voronoi Farthest
-    Point Sampling."""
-
-    def __init__(self, **kwargs):
-
-        super().__init__(**kwargs)
 
 
 class PCovFPS(_PCovFPS):

@@ -8,7 +8,7 @@ from ._base import (
     FPS,
     PCovCUR,
     PCovFPS,
-    VoronoiFPS,
 )
+from ._voronoi_fps import VoronoiFPS
 
 __all__ = ["PCovFPS", "PCovCUR", "FPS", "CUR", "VoronoiFPS"]

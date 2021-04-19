@@ -6,7 +6,7 @@ import numpy as np
 from .._selection import GreedySelector
 
 
-class _VoronoiFPS(GreedySelector):
+class VoronoiFPS(GreedySelector):
     """
     In FPS, points are selected based upon their Hausdorff distance to
     previous selections, i.e. the minimum distance between a given point and
@@ -21,7 +21,15 @@ class _VoronoiFPS(GreedySelector):
     greater than half of the distance between the corresponding Voronoi center
     and the newly selected point, per the triangle equality.
 
-    This is particularly appealing when using a non-Euclidean or
+    .. image:: vorFPS.pdf
+
+    To demonstrate the algorithm behind Voronoi FPS, let :math:`*_{m+1}` be a new chosen point,
+    :math:`v(j)` was chosen earlier, :math:`j` is a point in the polyhedron with center
+    :math:`v(j)`. From the inequalities of the triangle one can easily see that if
+    :math:`d(v(j),j)<d(*_{m+1}, j)/2`, then point :math:`j` is guaranteed not to fall
+    into the formed polyhedron and the distance to it can be uncalculated.
+
+    This algorithm is particularly appealing when using a non-Euclidean or
     computationally-intensive distance metric, for which the
     decrease in computational time due to the reduction in distance
     calculations outweighs the increase from book-keeping. For simple
@@ -55,6 +63,66 @@ class _VoronoiFPS(GreedySelector):
         self.full_fraction = full_fraction
         self.initialize = initialize
         super().__init__(selection_type="sample", **kwargs)
+
+    def score(self, X=None, y=None):
+        """
+        Returns the Haussdorf distances of all samples to previous selections
+
+        NOTE: This function does not compute the importance score each time it
+        is called, in order to avoid unnecessary computations. The haussdorf
+        distance is updated in :py:func:`self._update_post_selection`
+
+        Parameters
+        ----------
+        X : ignored
+        y : ignored
+
+        Returns
+        -------
+        haussdorf : Haussdorf distances
+        """
+        return self.haussdorf_
+
+    def get_distance(self):
+        """
+
+        Traditional FPS employs a column-wise Euclidean
+        distance for feature selection, which can be expressed using the covariance matrix
+        :math:`\\mathbf{C} = \\mathbf{X} ^ T \\mathbf{X}`
+
+        .. math::
+            \\operatorname{d}_c(i, j) = C_{ii} - 2 C_{ij} + C_{jj}.
+
+        For sample selection, this is a row-wise Euclidean distance, which can
+        be expressed in terms of the Gram matrix :math:`\\mathbf{K} = \\mathbf{X} \\mathbf{X} ^ T`
+
+        .. math::
+            \\operatorname{d}_r(i, j) = K_{ii} - 2 K_{ij} + K_{jj}.
+
+        Returns
+        -------
+
+        haussdorf : ndarray of shape (`n_to_select_from_`)
+                     the minimum distance from each point to the set of selected
+                     points. once a point is selected, the distance is not updated;
+                     the final list will reflect the distances when selected.
+
+        """
+        return self.haussdorf_
+
+    def get_select_distance(self):
+        """
+
+        Returns
+        -------
+
+        haussdorf_at_select : ndarray of shape (`n_to_select`)
+                     at the time of selection, the minimum distance from each
+                     selected point to the set of previously selected points.
+
+        """
+        mask = self.get_support(indices=True, ordered=True)
+        return self.haussdorf_at_select_[mask]
 
     def _init_greedy_search(self, X, y, n_to_select):
         """
@@ -191,20 +259,6 @@ class _VoronoiFPS(GreedySelector):
 
             return active_points
 
-    def get_select_distance(self):
-        """
-
-        Returns
-        -------
-
-        haussdorf_at_select : ndarray of shape (`n_to_select`)
-                     at the time of selection, the minimum distance from each
-                     selected point to the set of previously selected points.
-
-        """
-        mask = self.get_support(indices=True, ordered=True)
-        return self.haussdorf_at_select_[mask]
-
     def _update_post_selection(self, X, y, last_selected):
         """
         Saves the most recently selected feature, increments the feature counter
@@ -251,22 +305,3 @@ class _VoronoiFPS(GreedySelector):
 
         self.vlocation_of_idx[last_selected] = self.n_selected_
         super()._update_post_selection(X, y, last_selected)
-
-    def score(self, X=None, y=None):
-        """
-        Returns the Haussdorf distances of all samples to previous selections
-
-        NOTE: This function does not compute the importance score each time it
-        is called, in order to avoid unnecessary computations. The haussdorf
-        distance is updated in :py:func:`self._update_post_selection`
-
-        Parameters
-        ----------
-        X : ignored
-        y : ignored
-
-        Returns
-        -------
-        haussdorf : Haussdorf distances
-        """
-        return self.haussdorf_
