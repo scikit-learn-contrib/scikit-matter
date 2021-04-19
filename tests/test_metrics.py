@@ -8,6 +8,7 @@ from skcosmo.metrics import (
     global_reconstruction_error,
     global_reconstruction_distortion,
     local_reconstruction_error,
+    pointwise_local_reconstruction_error,
 )
 
 
@@ -109,6 +110,36 @@ class ReconstructionMeasuresTests(unittest.TestCase):
         self.assertTrue(
             abs(lfre_val) < self.eps,
             f"local_reconstruction_error {lfre_val} surpasses threshold for zero {self.eps}",
+        )
+
+    def test_local_reconstruction_error_train_idx(self):
+        # tests that the local reconstruction error works when specifying a manual train idx
+
+        lfre_val = pointwise_local_reconstruction_error(
+            self.features_large,
+            self.features_large,
+            self.n_local_points,
+            train_idx=np.arange((len(self.features_large) // 4)),
+        )
+        test_size = len(self.features_large) - (len(self.features_large) // 4)
+        self.assertTrue(
+            len(lfre_val) == test_size,
+            f"size of pointwise LFRE  {len(lfre_val)} differs from expected test set size {test_size}",
+        )
+
+    def test_local_reconstruction_error_test_idx(self):
+        # tests that the local reconstruction error works when specifying a manual train idx
+
+        lfre_val = pointwise_local_reconstruction_error(
+            self.features_large,
+            self.features_large,
+            self.n_local_points,
+            test_idx=np.arange((len(self.features_large) // 4)),
+        )
+        test_size = len(self.features_large) // 4
+        self.assertTrue(
+            len(lfre_val) == test_size,
+            f"size of pointwise LFRE  {len(lfre_val)} differs from expected test set size {test_size}",
         )
 
 

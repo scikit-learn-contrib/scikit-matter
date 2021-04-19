@@ -568,7 +568,7 @@ def check_global_reconstruction_measures_input(
 ):
     """Returns default reconstruction measure inputs for all None parameters"""
     assert len(X) == len(Y)
-    if (train_idx is None) and test_idx is None:
+    if (train_idx is None) and (test_idx is None):
         train_idx, test_idx = train_test_split(
             np.arange(len(X)),
             test_size=0.5,
@@ -578,9 +578,9 @@ def check_global_reconstruction_measures_input(
             train_test_overlap=False,
         )
     elif train_idx is None:
-        train_idx = np.setdiff1d(test_idx, np.arange(len(X)))
+        train_idx = np.setdiff1d(np.arange(len(X)), test_idx)
     elif test_idx is None:
-        test_idx = np.setdiff1d(train_idx, np.arange(len(X)))
+        test_idx = np.setdiff1d(np.arange(len(X)), train_idx)
 
     if scaler is None:
         scaler = StandardFlexibleScaler()
@@ -602,33 +602,8 @@ def check_local_reconstruction_measures_input(
     X, Y, n_local_points, train_idx, test_idx, scaler, estimator
 ):
     """Returns default reconstruction measure inputs for all None parameters"""
-    assert len(X) == len(Y)
+    # only needs to check one extra parameter
     assert len(X) >= n_local_points
-    if (train_idx is None) and test_idx is None:
-        train_idx, test_idx = train_test_split(
-            np.arange(len(X)),
-            test_size=1.0,
-            train_size=0.5,
-            random_state=0x5F3759DF,
-            shuffle=True,
-            train_test_overlap=True,
-        )
-    elif train_idx is None:
-        train_idx = np.setdiff1d(test_idx, np.arange(len(X)))
-    elif test_idx is None:
-        test_idx = np.setdiff1d(train_idx, np.arange(len(X)))
-
-    if scaler is None:
-        scaler = StandardFlexibleScaler()
-
-    if estimator is None:
-        estimator = RidgeRegression2FoldCV(
-            alphas=np.geomspace(1e-9, 0.9, 20),
-            alpha_type="relative",
-            regularization_method="cutoff",
-            random_state=0x5F3759DF,
-            shuffle=True,
-            scoring="neg_root_mean_squared_error",
-            n_jobs=1,
-        )
-    return train_idx, test_idx, scaler, estimator
+    return check_global_reconstruction_measures_input(
+        X, Y, train_idx, test_idx, scaler, estimator
+    )
