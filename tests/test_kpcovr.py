@@ -25,7 +25,9 @@ class KPCovRBaseTest(unittest.TestCase):
         self.X = SFS().fit_transform(self.X)
         self.Y = SFS(column_wise=True).fit_transform(self.Y)
 
-        self.model = lambda mixing=0.5, **kwargs: KPCovR(mixing, alpha=1e-8, **kwargs)
+        self.model = lambda mixing=0.5, **kwargs: KPCovR(
+            mixing, alpha=1e-8, svd_solver=kwargs.pop("svd_solver", "full"), **kwargs
+        )
 
     def setUp(self):
         pass
