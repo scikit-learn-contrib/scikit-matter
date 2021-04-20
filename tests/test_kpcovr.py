@@ -25,7 +25,9 @@ class KPCovRBaseTest(unittest.TestCase):
         self.X = SFS().fit_transform(self.X)
         self.Y = SFS(column_wise=True).fit_transform(self.Y)
 
-        self.model = lambda mixing=0.5, **kwargs: KPCovR(mixing, alpha=1e-8, **kwargs)
+        self.model = lambda mixing=0.5, **kwargs: KPCovR(
+            mixing, alpha=1e-8, svd_solver=kwargs.pop("svd_solver", "full"), **kwargs
+        )
 
     def setUp(self):
         pass
@@ -41,11 +43,11 @@ class KPCovRErrorTest(KPCovRBaseTest):
 
         for i, mixing in enumerate(np.linspace(0, 1, 6)):
 
-            pcovr = KPCovR(mixing=mixing, n_components=2, tol=1e-12)
-            pcovr.fit(self.X, self.Y)
+            kpcovr = KPCovR(mixing=mixing, n_components=2, tol=1e-12)
+            kpcovr.fit(self.X, self.Y)
 
             error = (
-                np.linalg.norm(self.Y - pcovr.predict(self.X)) ** 2.0
+                np.linalg.norm(self.Y - kpcovr.predict(self.X)) ** 2.0
                 / np.linalg.norm(self.Y) ** 2.0
             )
 
@@ -221,7 +223,7 @@ class KernelTests(KPCovRBaseTest):
         )
 
         # computing projection and predicton loss with PCovR
-        ref_pcovr = PCovR(**hypers, space="sample")
+        ref_pcovr = PCovR(**hypers, space="sample", svd_solver="full")
         ref_pcovr.fit(self.X, self.Y, Yhat=Yhat)
         ly_ref = (
             np.linalg.norm(self.Y - ref_pcovr.predict(self.X)) ** 2.0
@@ -259,13 +261,13 @@ class KPCovRTestSVDSolvers(KPCovRBaseTest):
         """
         for solver in ["arpack", "full", "randomized", "auto"]:
             with self.subTest(solver=solver):
-                pcovr = self.model(tol=1e-12, svd_solver=solver)
-                pcovr.fit(self.X, self.Y)
+                kpcovr = self.model(tol=1e-12, svd_solver=solver)
+                kpcovr.fit(self.X, self.Y)
 
                 if solver == "arpack":
-                    self.assertTrue(pcovr.n_components == self.X.shape[0] - 1)
+                    self.assertTrue(kpcovr.n_components == self.X.shape[0] - 1)
                 else:
-                    self.assertTrue(pcovr.n_components == self.X.shape[0])
+                    self.assertTrue(kpcovr.n_components == self.X.shape[0])
 
     def test_bad_solver(self):
         """
@@ -273,8 +275,8 @@ class KPCovRTestSVDSolvers(KPCovRBaseTest):
         ['arpack', 'full', 'randomized', 'auto']
         """
         with self.assertRaises(ValueError) as cm:
-            pcovr = self.model(svd_solver="bad")
-            pcovr.fit(self.X, self.Y)
+            kpcovr = self.model(svd_solver="bad")
+            kpcovr.fit(self.X, self.Y)
 
             self.assertTrue(str(cm.message), "Unrecognized svd_solver='bad'" "")
 
@@ -285,18 +287,18 @@ class KPCovRTestSVDSolvers(KPCovRBaseTest):
         """
 
         # this one should pass
-        pcovr = self.model(n_components=0.5, svd_solver="full")
-        pcovr.fit(self.X, self.Y)
+        kpcovr = self.model(n_components=0.5, svd_solver="full")
+        kpcovr.fit(self.X, self.Y)
 
         for svd_solver in ["auto", "full"]:
 
             # this one should pass
-            pcovr = self.model(n_components=2, svd_solver=svd_solver)
-            pcovr.fit(self.X, self.Y)
+            kpcovr = self.model(n_components=2, svd_solver=svd_solver)
+            kpcovr.fit(self.X, self.Y)
 
             # this one should pass
-            pcovr = self.model(n_components="mle", svd_solver=svd_solver)
-            pcovr.fit(self.X, self.Y)
+            kpcovr = self.model(n_components="mle", svd_solver=svd_solver)
+            kpcovr.fit(self.X, self.Y)
 
     def test_bad_n_components(self):
         """
@@ -306,8 +308,8 @@ class KPCovRTestSVDSolvers(KPCovRBaseTest):
 
         with self.subTest(type="negative_ncomponents"):
             with self.assertRaises(ValueError) as cm:
-                pcovr = self.model(n_components=-1, svd_solver="auto")
-                pcovr.fit(self.X, self.Y)
+                kpcovr = self.model(n_components=-1, svd_solver="auto")
+                kpcovr.fit(self.X, self.Y)
 
                 self.assertTrue(
                     str(cm.message),
@@ -315,15 +317,15 @@ class KPCovRTestSVDSolvers(KPCovRBaseTest):
                     "min(n_samples, n_features)=%r with "
                     "svd_solver='%s'"
                     % (
-                        pcovr.n_components,
+                        kpcovr.n_components,
                         self.X.shape[0],
-                        pcovr.svd_solver,
+                        kpcovr.svd_solver,
                     ),
                 )
         with self.subTest(type="0_ncomponents"):
             with self.assertRaises(ValueError) as cm:
-                pcovr = self.model(n_components=0, svd_solver="randomized")
-                pcovr.fit(self.X, self.Y)
+                kpcovr = self.model(n_components=0, svd_solver="randomized")
+                kpcovr.fit(self.X, self.Y)
 
                 self.assertTrue(
                     str(cm.message),
@@ -331,37 +333,37 @@ class KPCovRTestSVDSolvers(KPCovRBaseTest):
                     "min(n_samples, n_features)=%r with "
                     "svd_solver='%s'"
                     % (
-                        pcovr.n_components,
+                        kpcovr.n_components,
                         self.X.shape[0],
-                        pcovr.svd_solver,
+                        kpcovr.svd_solver,
                     ),
                 )
         with self.subTest(type="arpack_X_ncomponents"):
             with self.assertRaises(ValueError) as cm:
-                pcovr = self.model(n_components=self.X.shape[0], svd_solver="arpack")
-                pcovr.fit(self.X, self.Y)
+                kpcovr = self.model(n_components=self.X.shape[0], svd_solver="arpack")
+                kpcovr.fit(self.X, self.Y)
                 self.assertTrue(
                     str(cm.message),
                     "self.n_components=%r must be strictly less than "
                     "min(n_samples, n_features)=%r with "
                     "svd_solver='%s'"
                     % (
-                        pcovr.n_components,
+                        kpcovr.n_components,
                         self.X.shape[0],
-                        pcovr.svd_solver,
+                        kpcovr.svd_solver,
                     ),
                 )
 
         for svd_solver in ["auto", "full"]:
             with self.subTest(type="pi_ncomponents"):
                 with self.assertRaises(ValueError) as cm:
-                    pcovr = self.model(n_components=np.pi, svd_solver=svd_solver)
-                    pcovr.fit(self.X, self.Y)
+                    kpcovr = self.model(n_components=np.pi, svd_solver=svd_solver)
+                    kpcovr.fit(self.X, self.Y)
                     self.assertTrue(
                         str(cm.message),
                         "self.n_components=%r must be of type int "
                         "when greater than or equal to 1, was of type=%r"
-                        % (pcovr.n_components, type(pcovr.n_components)),
+                        % (kpcovr.n_components, type(kpcovr.n_components)),
                     )
 
 
