@@ -401,10 +401,11 @@ class PCovR(_BasePCA, LinearModel):
             self.explained_variance_ / self.explained_variance_.sum()
         )
 
-        S_inv = np.diagflat([1.0 / s if s > self.tol else 0.0 for s in S])
-        self.pxt_ = np.linalg.multi_dot([iCsqrt, Vt.T, np.diagflat(S)])
-        self.ptx_ = np.linalg.multi_dot([S_inv, Vt, Csqrt])
-        self.pty_ = np.linalg.multi_dot([S_inv, Vt, iCsqrt, X.T, Y])
+        S_sqrt = np.diagflat([np.sqrt(s) if s > self.tol else 0.0 for s in S])
+        S_sqrt_inv = np.diagflat([1.0 / np.sqrt(s) if s > self.tol else 0.0 for s in S])
+        self.pxt_ = np.linalg.multi_dot([iCsqrt, Vt.T, S_sqrt])
+        self.ptx_ = np.linalg.multi_dot([S_sqrt_inv, Vt, Csqrt])
+        self.pty_ = np.linalg.multi_dot([S_sqrt_inv, Vt, iCsqrt, X.T, Y])
 
     def _fit_sample_space(self, X, Y, Yhat, W):
         r"""
