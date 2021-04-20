@@ -21,7 +21,7 @@ class VoronoiFPS(GreedySelector):
     greater than half of the distance between the corresponding Voronoi center
     and the newly selected point, per the triangle equality.
 
-    .. image:: vorFPS.pdf
+    .. image:: VoronoiFPS-Schematic.pdf
 
     To demonstrate the algorithm behind Voronoi FPS, let :math:`*_{m+1}` be a new chosen point,
     :math:`v(j)` was chosen earlier, :math:`j` is a point in the polyhedron with center
