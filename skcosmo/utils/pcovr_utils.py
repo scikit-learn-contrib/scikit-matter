@@ -95,7 +95,13 @@ def pcovr_covariance(
             rank = min(X.shape)
 
         if rank >= min(X.shape):
-            _, vC, UC = linalg.svd(X, full_matrices=False)
+            #_, vC, UC = linalg.svd(X, full_matrices=False)
+            vC, UC = np.linalg.eigh(X.T @ X)
+
+            vC = np.flip(vC)
+            UC = np.flip(UC, axis=1)[:, vC > rcond]
+            vC = np.sqrt(vC[vC > rcond])
+
         else:
             _, vC, UC = randomized_svd(
                 X,
@@ -105,8 +111,8 @@ def pcovr_covariance(
                 random_state=random_state,
             )
 
-        UC = UC.T[:, vC > rcond]
-        vC = vC[vC > rcond]
+            UC = UC.T[:, (vC ** 2) > rcond]
+            vC = vC[(vC ** 2) > rcond]
 
         C_isqrt = UC @ np.diagflat(1.0 / vC) @ UC.T
 
