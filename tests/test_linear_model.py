@@ -1,11 +1,17 @@
 import unittest
+
 import numpy as np
-
 from parameterized import parameterized
-from scipy.stats import ortho_group
 from sklearn.datasets import load_iris
+from sklearn.utils import (
+    check_random_state,
+    extmath,
+)
 
-from skcosmo.linear_model import OrthogonalRegression, RidgeRegression2FoldCV
+from skcosmo.linear_model import (
+    OrthogonalRegression,
+    RidgeRegression2FoldCV,
+)
 
 
 class BaseTests(unittest.TestCase):
@@ -15,10 +21,15 @@ class BaseTests(unittest.TestCase):
         cls.features_small = cls.features_all[:, [0, 1]]
         cls.features_large = cls.features_all[:, [0, 1, 0, 1]]
         cls.eps = 1e-9
-        np.random.seed(0x5F3759DF)
-        cls.features_rotated_small = cls.features_small.dot(
-            ortho_group.rvs(cls.features_small.shape[1])
+        random_state = 0
+        random_state = check_random_state(random_state)
+        random_orthonormal_mat = extmath.randomized_range_finder(
+            np.eye(cls.features_small.shape[1]),
+            size=cls.features_small.shape[1],
+            n_iter=10,
+            random_state=random_state,
         )
+        cls.features_rotated_small = cls.features_small @ random_orthonormal_mat
 
     def test_orthogonal_regression_small_to_rotated_small(self):
         # tests if OrthogonalRegression can predict rotated small features using small features with use_orthogonal_projector False
@@ -93,7 +104,7 @@ class RidgeTests(unittest.TestCase):
         cls.features_small = cls.features_all[:, [0, 1]]
         cls.features_large = cls.features_all[:, [0, 1, 0, 1]]
         cls.eps = 5e-8
-        np.random.seed(0x5F3759DF)
+        np.random.RandomState(0).seed(0x5F3759DF)
         cls.alphas = [1e-9, 1e-3, 1e-1, 0.5]
         cls.ridge_regressions = []
 

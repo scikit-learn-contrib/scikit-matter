@@ -1,19 +1,22 @@
 import unittest
-import numpy as np
 
+import numpy as np
 from sklearn import exceptions
 from sklearn.datasets import load_boston
 from sklearn.linear_model import RidgeCV
 from sklearn.utils.validation import check_X_y
 
-from skcosmo.decomposition import KernelPCovR
-from skcosmo.decomposition import PCovR
+from skcosmo.decomposition import (
+    KernelPCovR,
+    PCovR,
+)
 from skcosmo.preprocessing import StandardFlexibleScaler as SFS
 
 
 class KernelPCovRBaseTest(unittest.TestCase):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.random_state = np.random.RandomState(0)
 
         self.error_tol = 1e-6
 
@@ -21,7 +24,7 @@ class KernelPCovRBaseTest(unittest.TestCase):
 
         # artificial second property
         self.Y = np.array(
-            [self.Y, self.X @ np.random.randint(-2, 2, (self.X.shape[-1],))]
+            [self.Y, self.X @ self.random_state.randint(-2, 2, (self.X.shape[-1],))]
         ).T
         self.Y = self.Y.reshape(self.X.shape[0], -1)
 

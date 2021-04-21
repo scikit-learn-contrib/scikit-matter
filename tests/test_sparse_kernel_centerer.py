@@ -7,16 +7,20 @@ from skcosmo.preprocessing import SparseKernelCenterer
 
 
 class SparseKernelTests(unittest.TestCase):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.random_state = np.random.RandomState(0)
+
     def test_sample_weights(self):
         """Checks that sample weights of one are equal to the unweighted case and that the nonuniform weights are different from the unweighted case"""
-        X = np.random.uniform(-1, 1, size=(4, 5))
-        X_sparse = np.random.uniform(-1, 1, size=(3, 5))
+        X = self.random_state.uniform(-1, 1, size=(4, 5))
+        X_sparse = self.random_state.uniform(-1, 1, size=(3, 5))
 
         Knm = X @ X_sparse.T
         Kmm = X_sparse @ X_sparse.T
 
         equal_wts = np.ones(len(Knm))
-        nonequal_wts = np.random.uniform(-1, 1, size=(len(Knm),))
+        nonequal_wts = self.random_state.uniform(-1, 1, size=(len(Knm),))
         model = SparseKernelCenterer()
         weighted_model = SparseKernelCenterer()
         Knm_unweighted = model.fit_transform(Knm, Kmm)
@@ -35,8 +39,8 @@ class SparseKernelTests(unittest.TestCase):
 
     def test_invalid_sample_weights(self):
         """Checks that weights must be 1D array with the same length as the number of samples"""
-        X = np.random.uniform(-1, 1, size=(4, 5))
-        X_sparse = np.random.uniform(-1, 1, size=(3, 5))
+        X = self.random_state.uniform(-1, 1, size=(4, 5))
+        X_sparse = self.random_state.uniform(-1, 1, size=(3, 5))
 
         Knm = X @ X_sparse.T
         Kmm = X_sparse @ X_sparse.T
@@ -52,8 +56,8 @@ class SparseKernelTests(unittest.TestCase):
     def test_Square_Kmm(self):
         """Checks that the passed active kernel is square"""
 
-        X = np.random.uniform(-1, 1, size=(4, 5))
-        X_sparse = np.random.uniform(-1, 1, size=(3, 5))
+        X = self.random_state.uniform(-1, 1, size=(4, 5))
+        X_sparse = self.random_state.uniform(-1, 1, size=(3, 5))
 
         Knm = X @ X_sparse.T
         Kmm = X_sparse @ X.T
@@ -66,8 +70,8 @@ class SparseKernelTests(unittest.TestCase):
     def test_LatterDim(self):
         """Checks that a matrix must have the same latter dimension as its active counterpart cannot be normalized."""
 
-        X = np.random.uniform(-1, 1, size=(4, 5))
-        X_sparse = np.random.uniform(-1, 1, size=(3, 5))
+        X = self.random_state.uniform(-1, 1, size=(4, 5))
+        X_sparse = self.random_state.uniform(-1, 1, size=(3, 5))
 
         Knm = X @ X.T
         Kmm = X_sparse @ X_sparse.T
@@ -84,8 +88,8 @@ class SparseKernelTests(unittest.TestCase):
     def test_new_kernel(self):
         """Checks that it is impossible to normalize
         a matrix with a non-coincident size with the reference."""
-        X = np.random.uniform(-1, 1, size=(4, 5))
-        X_sparse = np.random.uniform(-1, 1, size=(3, 5))
+        X = self.random_state.uniform(-1, 1, size=(4, 5))
+        X_sparse = self.random_state.uniform(-1, 1, size=(3, 5))
 
         Knm = X @ X_sparse.T
         Kmm = X_sparse @ X_sparse.T
@@ -104,7 +108,7 @@ class SparseKernelTests(unittest.TestCase):
         """Checks that an error is returned when
         trying to use the transform function
         before the fit function"""
-        K = np.random.uniform(0, 100, size=(3, 3))
+        K = self.random_state.uniform(0, 100, size=(3, 3))
         model = SparseKernelCenterer()
         with self.assertRaises(sklearn.exceptions.NotFittedError):
             model.transform(K)
@@ -115,8 +119,8 @@ class SparseKernelTests(unittest.TestCase):
         directly from the equation.
         """
 
-        X = np.random.uniform(-1, 1, size=(4, 5))
-        X_sparse = np.random.uniform(-1, 1, size=(3, 5))
+        X = self.random_state.uniform(-1, 1, size=(4, 5))
+        X_sparse = self.random_state.uniform(-1, 1, size=(3, 5))
 
         Knm = X @ X_sparse.T
         Kmm = X_sparse @ X_sparse.T
@@ -139,8 +143,8 @@ class SparseKernelTests(unittest.TestCase):
         Compare with the value calculated
         directly from the equation.
         """
-        X = np.random.uniform(-1, 1, size=(4, 5))
-        X_sparse = np.random.uniform(-1, 1, size=(3, 5))
+        X = self.random_state.uniform(-1, 1, size=(4, 5))
+        X_sparse = self.random_state.uniform(-1, 1, size=(3, 5))
 
         Knm = X @ X_sparse.T
         Kmm = X_sparse @ X_sparse.T
@@ -159,8 +163,8 @@ class SparseKernelTests(unittest.TestCase):
         Compare with the value calculated
         directly from the equation.
         """
-        X = np.random.uniform(-1, 1, size=(4, 5))
-        X_sparse = np.random.uniform(-1, 1, size=(3, 5))
+        X = self.random_state.uniform(-1, 1, size=(4, 5))
+        X_sparse = self.random_state.uniform(-1, 1, size=(3, 5))
 
         Knm = X @ X_sparse.T
         Kmm = X_sparse @ X_sparse.T
@@ -180,8 +184,8 @@ class SparseKernelTests(unittest.TestCase):
         """Checks that the kernel is unchanged
         if no preprocessing is specified.
         """
-        X = np.random.uniform(-1, 1, size=(4, 5))
-        X_sparse = np.random.uniform(-1, 1, size=(3, 5))
+        X = self.random_state.uniform(-1, 1, size=(4, 5))
+        X_sparse = self.random_state.uniform(-1, 1, size=(3, 5))
 
         Knm = X @ X_sparse.T
         Kmm = X_sparse @ X_sparse.T

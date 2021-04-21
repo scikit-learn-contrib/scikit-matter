@@ -1,6 +1,6 @@
 import unittest
-import numpy as np
 
+import numpy as np
 from sklearn import exceptions
 from sklearn.datasets import load_boston
 from sklearn.decomposition import PCA

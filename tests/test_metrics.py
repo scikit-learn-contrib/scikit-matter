@@ -1,12 +1,15 @@
 import unittest
-import numpy as np
 
-from scipy.stats import ortho_group
+import numpy as np
 from sklearn.datasets import load_iris
+from sklearn.utils import (
+    check_random_state,
+    extmath,
+)
 
 from skcosmo.metrics import (
-    global_reconstruction_error,
     global_reconstruction_distortion,
+    global_reconstruction_error,
     local_reconstruction_error,
     pointwise_local_reconstruction_error,
 )
@@ -21,10 +24,15 @@ class ReconstructionMeasuresTests(unittest.TestCase):
         cls.eps = 1e-5
         cls.n_local_points = 15
 
-        np.random.seed(0x5F3759DF)
-        cls.features_rotated_small = cls.features_small.dot(
-            ortho_group.rvs(cls.features_small.shape[1])
+        random_state = 0
+        random_state = check_random_state(random_state)
+        random_orthonormal_mat = extmath.randomized_range_finder(
+            np.eye(cls.features_small.shape[1]),
+            size=cls.features_small.shape[1],
+            n_iter=10,
+            random_state=random_state,
         )
+        cls.features_rotated_small = cls.features_small @ random_orthonormal_mat
 
     def test_global_reconstruction_error_identity(self):
         gfre_val = global_reconstruction_error(self.features_large, self.features_large)

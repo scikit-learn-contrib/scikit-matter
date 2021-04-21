@@ -1,10 +1,13 @@
 import unittest
-import numpy as np
 
+import numpy as np
 import scipy
 from sklearn.datasets import load_boston
 
-from skcosmo.utils import pcovr_covariance, pcovr_kernel
+from skcosmo.utils import (
+    pcovr_covariance,
+    pcovr_kernel,
+)
 
 
 class CovarianceTest(unittest.TestCase):
