@@ -24,7 +24,7 @@ from sklearn.utils.validation import (
     check_X_y,
 )
 
-from skcosmo.utils import (
+from ..utils import (
     pcovr_covariance,
     pcovr_kernel,
 )
@@ -77,7 +77,7 @@ class PCovR(_BasePCA, LinearModel):
 
     Parameters
     ----------
-    mixing: float, defaults to 0.5
+    mixing: float, default=0.5
         mixing parameter, as described in PCovR as :math:`{\alpha}`, here named
         to avoid confusion with regularization parameter `alpha`
 
@@ -111,7 +111,7 @@ class PCovR(_BasePCA, LinearModel):
 
     space: {'feature', 'sample', 'auto'}, default='auto'
             whether to compute the PCovR in `sample` or `feature` space
-            defaults to `sample` when :math:`{n_{samples} < n_{features}}` and
+            default=`sample` when :math:`{n_{samples} < n_{features}}` and
             `feature` when :math:`{n_{features} < n_{samples}}`
 
     alpha: float, default=1E-6
@@ -134,7 +134,7 @@ class PCovR(_BasePCA, LinearModel):
     Attributes
     ----------
 
-    mixing: float, defaults to 0.5
+    mixing: float, default=0.5
         mixing parameter, as described in PCovR as :math:`{\alpha}`
 
     alpha: float, default=1E-6
@@ -146,7 +146,7 @@ class PCovR(_BasePCA, LinearModel):
 
     space: {'feature', 'sample', 'auto'}, default='auto'
             whether to compute the PCovR in `sample` or `feature` space
-            defaults to `sample` when :math:`{n_{samples} < n_{features}}` and
+            default=`sample` when :math:`{n_{samples} < n_{features}}` and
             `feature` when :math:`{n_{features} < n_{samples}}`
 
     n_components : int
@@ -222,9 +222,6 @@ class PCovR(_BasePCA, LinearModel):
 
         self.estimator = estimator
 
-        if alpha is None:
-            self.alpha = getattr(self.estimator, "alpha", 1e-6)
-
     def fit(self, X, Y, Yhat=None, W=None):
         r"""
 
@@ -233,7 +230,7 @@ class PCovR(_BasePCA, LinearModel):
 
         Parameters
         ----------
-        X : array-like, shape (n_samples, n_features)
+        X : ndarray, shape (n_samples, n_features)
             Training data, where n_samples is the number of samples and
             n_features is the number of features.
 
@@ -242,7 +239,7 @@ class PCovR(_BasePCA, LinearModel):
             to have unit variance, otherwise :math:`\mathbf{X}` should be
             scaled so that each feature has a variance of 1 / n_features.
 
-        Y : array-like, shape (n_samples, n_properties)
+        Y : ndarray, shape (n_samples, n_properties)
             Training data, where n_samples is the number of samples and
             n_properties is the number of properties
 
@@ -251,15 +248,18 @@ class PCovR(_BasePCA, LinearModel):
             to have unit variance, otherwise :math:`\mathbf{Y}` should be
             scaled so that each feature has a variance of 1 / n_features.
 
-        Yhat : array-like, shape (n_samples, n_properties), optional
+        Yhat : ndarray, shape (n_samples, n_properties), optional
             Regressed training data, where n_samples is the number of samples and
             n_properties is the number of properties. If not supplied, computed
             by ridge regression.
-        W : array-like, shape (n_features, n_properties), optional
+        W : ndarray, shape (n_features, n_properties), optional
             Weights of regressed training data. If not supplied, computed
             by ridge regression.
 
         """
+
+        if self.alpha is None:
+            self.alpha = getattr(self.estimator, "alpha", 1e-6)
 
         X, Y = check_X_y(X, Y, y_numeric=True, multi_output=True)
 
@@ -300,9 +300,9 @@ class PCovR(_BasePCA, LinearModel):
             else:
                 self._fit_svd_solver = "full"
 
-        self.n_samples, self.n_features = X.shape
+        self.n_samples_, self.n_features_ = X.shape
         if self.space is None or self.space == "auto":
-            if self.n_samples > self.n_features:
+            if self.n_samples_ > self.n_features_:
                 self.space = "feature"
             else:
                 self.space = "sample"
@@ -450,14 +450,14 @@ class PCovR(_BasePCA, LinearModel):
 
     def _decompose_truncated(self, mat):
 
-        if not 1 <= self.n_components <= min(self.n_samples, self.n_features):
+        if not 1 <= self.n_components <= min(self.n_samples_, self.n_features_):
             raise ValueError(
                 "n_components=%r must be between 1 and "
                 "min(n_samples, n_features)=%r with "
                 "svd_solver='%s'"
                 % (
                     self.n_components,
-                    min(self.n_samples, self.n_features),
+                    min(self.n_samples_, self.n_features_),
                     self.svd_solver,
                 )
             )
@@ -468,7 +468,7 @@ class PCovR(_BasePCA, LinearModel):
                 % (self.n_components, type(self.n_components))
             )
         elif self.svd_solver == "arpack" and self.n_components == min(
-            self.n_samples, self.n_features
+            self.n_samples_, self.n_features_
         ):
             raise ValueError(
                 "n_components=%r must be strictly less than "
@@ -476,7 +476,7 @@ class PCovR(_BasePCA, LinearModel):
                 "svd_solver='%s'"
                 % (
                     self.n_components,
-                    min(self.n_samples, self.n_features),
+                    min(self.n_samples_, self.n_features_),
                     self.svd_solver,
                 )
             )
@@ -507,18 +507,18 @@ class PCovR(_BasePCA, LinearModel):
 
     def _decompose_full(self, mat):
         if self.n_components == "mle":
-            if self.n_samples < self.n_features:
+            if self.n_samples_ < self.n_features_:
                 raise ValueError(
                     "n_components='mle' is only supported " "if n_samples >= n_features"
                 )
-        elif not 0 <= self.n_components <= min(self.n_samples, self.n_features):
+        elif not 0 <= self.n_components <= min(self.n_samples_, self.n_features_):
             raise ValueError(
                 "n_components=%r must be between 1 and "
                 "min(n_samples, n_features)=%r with "
                 "svd_solver='%s'"
                 % (
                     self.n_components,
-                    min(self.n_samples, self.n_features),
+                    min(self.n_samples_, self.n_features_),
                     self.svd_solver,
                 )
             )
@@ -536,13 +536,13 @@ class PCovR(_BasePCA, LinearModel):
         U, Vt = svd_flip(U, Vt)
 
         # Get variance explained by singular values
-        explained_variance_ = S / (self.n_samples - 1)
+        explained_variance_ = S / (self.n_samples_ - 1)
         total_var = explained_variance_.sum()
         explained_variance_ratio_ = explained_variance_ / total_var
 
         # Postprocess the number of components required
         if self.n_components == "mle":
-            self.n_components = _infer_dimension(explained_variance_, self.n_samples)
+            self.n_components = _infer_dimension(explained_variance_, self.n_samples_)
         elif 0 < self.n_components < 1.0:
             # number of components for which the cumulated explained
             # variance percentage is superior to the desired threshold
@@ -571,13 +571,13 @@ class PCovR(_BasePCA, LinearModel):
 
         Parameters
         ----------
-        T : array-like, shape (n_samples, n_components)
+        T : ndarray, shape (n_samples, n_components)
             Projected data, where n_samples is the number of samples
             and n_components is the number of components.
 
         Returns
         -------
-        X_original array-like, shape (n_samples, n_features)
+        X_original ndarray, shape (n_samples, n_features)
         """
 
         return T @ self.ptx_ + self.mean_
@@ -606,7 +606,7 @@ class PCovR(_BasePCA, LinearModel):
 
         Parameters
         ----------
-        X : array-like, shape (n_samples, n_features)
+        X : ndarray, shape (n_samples, n_features)
             New data, where n_samples is the number of samples
             and n_features is the number of features.
 
@@ -633,10 +633,10 @@ class PCovR(_BasePCA, LinearModel):
 
         Parameters
         ----------
-        X : array-like of shape (n_samples, n_features)
+        X : ndarray of shape (n_samples, n_features)
             The data.
 
-        Y : array-like of shape (n_samples, n_properties)
+        Y : ndarray of shape (n_samples, n_properties)
             The target.
 
         Returns

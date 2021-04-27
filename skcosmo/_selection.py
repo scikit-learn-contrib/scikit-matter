@@ -15,12 +15,13 @@ from sklearn.base import (
     MetaEstimatorMixin,
 )
 from sklearn.feature_selection._base import SelectorMixin
-from sklearn.utils import safe_mask
-from sklearn.utils._tags import _safe_tags
-from sklearn.utils.validation import (
+from sklearn.utils import (
     check_array,
-    check_is_fitted,
+    check_random_state,
+    safe_mask,
 )
+from sklearn.utils._tags import _safe_tags
+from sklearn.utils.validation import check_is_fitted
 
 from .utils import (
     X_orthogonalizer,
@@ -66,6 +67,8 @@ class GreedySelector(SelectorMixin, MetaEstimatorMixin, BaseEstimator):
         In the case that all non-redundant selections are exhausted, choose
         randomly from the remaining features. Stored in :py:attr:`self.full`.
 
+    random_state: int or RandomState instance, default=0
+
     Attributes
     ----------
     n_selected_ : int
@@ -85,6 +88,7 @@ class GreedySelector(SelectorMixin, MetaEstimatorMixin, BaseEstimator):
         score_threshold=None,
         progress_bar=False,
         full=False,
+        random_state=0,
     ):
 
         self.selection_type = selection_type
@@ -93,6 +97,7 @@ class GreedySelector(SelectorMixin, MetaEstimatorMixin, BaseEstimator):
 
         self.full = full
         self.progress_bar = progress_bar
+        self.random_state = random_state
 
     def fit(self, X, y=None, warm_start=False):
         """Learn the features to select.
@@ -301,7 +306,7 @@ class GreedySelector(SelectorMixin, MetaEstimatorMixin, BaseEstimator):
             return self._get_support_mask()
 
     def _init_greedy_search(self, X, y, n_to_select):
-        """ Initializes the search. Prepares an array to store the selected features. """
+        """Initializes the search. Prepares an array to store the selected features."""
 
         self.n_selected_ = 0
 
@@ -317,7 +322,7 @@ class GreedySelector(SelectorMixin, MetaEstimatorMixin, BaseEstimator):
         self.selected_idx_ = np.zeros((n_to_select), int)
 
     def _continue_greedy_search(self, X, y, n_to_select):
-        """ Continues the search. Prepares an array to store the selected features. """
+        """Continues the search. Prepares an array to store the selected features."""
 
         n_pad = [(0, 0), (0, 0)]
         n_pad[self._axis] = (0, n_to_select - self.n_selected_)
@@ -390,7 +395,7 @@ class GreedySelector(SelectorMixin, MetaEstimatorMixin, BaseEstimator):
         return self.support_
 
     def _postprocess(self, X, y):
-        """ Post-process X and / or y when selection is finished """
+        """Post-process X and / or y when selection is finished"""
         self.support_ = np.full(X.shape[self._axis], False)
         self.support_[self.selected_idx_] = True
 
@@ -887,7 +892,8 @@ class _FPS(GreedySelector):
         self.norms_ = (X ** 2).sum(axis=abs(self._axis - 1))
 
         if self.initialize == "random":
-            initialize = np.random.randint(X.shape[self._axis])
+            random_state = check_random_state(self.random_state)
+            initialize = random_state.randint(X.shape[self._axis])
         elif isinstance(self.initialize, numbers.Integral):
             initialize = self.initialize
         else:
@@ -1025,7 +1031,8 @@ class _PCovFPS(GreedySelector):
         self.norms_ = np.diag(self.pcovr_distance_)
 
         if self.initialize == "random":
-            initialize = np.random.randint(X.shape[self._axis])
+            random_state = check_random_state(self.random_state)
+            initialize = random_state.randint(X.shape[self._axis])
         elif isinstance(self.initialize, numbers.Integral):
             initialize = self.initialize
         else:

@@ -54,11 +54,11 @@ class OrthogonalRegression(MultiOutputMixin, RegressorMixin):
         """
         Parameters
         ----------
-        X : array_like of shape (n_samples, n_features)
+        X : ndarray of shape (n_samples, n_features)
             Training data, where n_samples is the number of samples
             and n_features is the number of features.
 
-        y : array_like of shape (n_samples, n_targets)
+        y : ndarray of shape (n_samples, n_targets)
             Training data, where n_samples is the number of samples
             and n_targets is the number of target properties.
         """
@@ -89,7 +89,7 @@ class OrthogonalRegression(MultiOutputMixin, RegressorMixin):
         """
         Parameters
         ----------
-        X : array_like of shape (n_samples, n_features)
+        X : ndarray of shape (n_samples, n_features)
             Training data, where n_samples is the number of samples
             and n_features is the number of features.
         """

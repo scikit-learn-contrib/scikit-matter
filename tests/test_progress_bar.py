@@ -1,4 +1,5 @@
 import unittest
+
 from skcosmo.utils import get_progress_bar
 
 

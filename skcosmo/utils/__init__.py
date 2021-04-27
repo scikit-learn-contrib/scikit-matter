@@ -8,11 +8,11 @@ from ._orthogonalizers import (
     Y_feature_orthogonalizer,
     Y_sample_orthogonalizer,
 )
-from .pcovr_utils import (
+from ._pcovr_utils import (
     pcovr_covariance,
     pcovr_kernel,
 )
-from .progress_bar import get_progress_bar
+from ._progress_bar import get_progress_bar
 
 __all__ = [
     "get_progress_bar",

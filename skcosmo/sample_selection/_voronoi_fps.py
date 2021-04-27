@@ -2,6 +2,7 @@ import numbers
 from time import time
 
 import numpy as np
+from sklearn.utils import check_random_state
 
 from .._selection import GreedySelector
 
@@ -163,7 +164,8 @@ class VoronoiFPS(GreedySelector):
                 voronoi_fps_times = np.zeros(self.n_trial_calculation)
                 self.full_fraction = (top_fraction + lower_fraction) / 2
                 for i in range(self.n_trial_calculation):
-                    sel = np.random.randint(
+                    random_state = check_random_state(self.random_state)
+                    sel = random_state.randint(
                         n_to_select_from,
                         size=int(n_to_select_from * self.full_fraction),
                     )
@@ -196,7 +198,8 @@ class VoronoiFPS(GreedySelector):
         self.norms_ = (X ** 2).sum(axis=abs(self._axis - 1))
 
         if self.initialize == "random":
-            initialize = np.random.randint(X.shape[self._axis])
+            random_state = check_random_state(self.random_state)
+            initialize = random_state.randint(X.shape[self._axis])
         elif isinstance(self.initialize, numbers.Integral):
             initialize = self.initialize
         else:
