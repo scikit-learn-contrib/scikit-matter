@@ -6,7 +6,7 @@ check out the pedagogic notebooks in our companion project `kernel-tutorials <ht
 
 .. toctree::
   :glob:
-  :Caption: PCovR and KPCovR
+  :Caption: PCovR and KernelPCovR
 
   read-only-examples/PCovR*
 

@@ -3,7 +3,7 @@ The :mod:`sklearn.preprocessing` module includes scaling, centering and
 normalization methods.
 """
 
-from ._flexible_scaler import (
+from ._data import (
     KernelNormalizer,
     SparseKernelCenterer,
     StandardFlexibleScaler,

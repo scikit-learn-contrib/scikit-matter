@@ -7,11 +7,15 @@ from skcosmo.preprocessing import KernelNormalizer
 
 
 class KernelTests(unittest.TestCase):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.random_state = np.random.RandomState(0)
+
     def test_sample_weights(self):
         """Checks that sample weights of one are equal to the unweighted case and that nonuniform weights are different from the unweighted case"""
-        K = np.random.uniform(0, 100, size=(3, 3))
+        K = self.random_state.uniform(0, 100, size=(3, 3))
         equal_wts = np.ones(len(K))
-        nonequal_wts = np.random.uniform(0, 100, size=(len(K),))
+        nonequal_wts = self.random_state.uniform(0, 100, size=(len(K),))
         model = KernelNormalizer()
         weighted_model = KernelNormalizer()
         K_unweighted = model.fit_transform(K)
@@ -26,7 +30,7 @@ class KernelTests(unittest.TestCase):
 
     def test_invalid_sample_weights(self):
         """Checks that weights must be 1D array with the same length as the number of samples"""
-        K = np.random.uniform(0, 100, size=(3, 3))
+        K = self.random_state.uniform(0, 100, size=(3, 3))
         wts_len = np.ones(len(K) + 1)
         wts_dim = np.ones((len(K), 2))
         model = KernelNormalizer()
@@ -43,7 +47,7 @@ class KernelTests(unittest.TestCase):
 
     def test_ValueError(self):
         """Checks that a non-square matrix cannot be normalized."""
-        K = np.random.uniform(0, 100, size=(3, 4))
+        K = self.random_state.uniform(0, 100, size=(3, 4))
         model = KernelNormalizer()
         with self.assertRaises(ValueError):
             model.fit(K)
@@ -51,8 +55,8 @@ class KernelTests(unittest.TestCase):
     def test_reference_ValueError(self):
         """Checks that it is impossible to normalize
         a matrix with a non-coincident size with the reference."""
-        K = np.random.uniform(0, 100, size=(3, 3))
-        K_2 = np.random.uniform(0, 100, size=(2, 2))
+        K = self.random_state.uniform(0, 100, size=(3, 3))
+        K_2 = self.random_state.uniform(0, 100, size=(2, 2))
         model = KernelNormalizer()
         model = model.fit(K)
         with self.assertRaises(ValueError):
@@ -62,7 +66,7 @@ class KernelTests(unittest.TestCase):
         """Checks that an error is returned when
         trying to use the transform function
         before the fit function"""
-        K = np.random.uniform(0, 100, size=(3, 3))
+        K = self.random_state.uniform(0, 100, size=(3, 3))
         model = KernelNormalizer()
         with self.assertRaises(sklearn.exceptions.NotFittedError):
             model.transform(K)
@@ -72,7 +76,7 @@ class KernelTests(unittest.TestCase):
         Compare with the value calculated
         directly from the equation.
         """
-        K = np.random.uniform(0, 100, size=(3, 3))
+        K = self.random_state.uniform(0, 100, size=(3, 3))
         model = KernelNormalizer()
         Ktr = model.fit_transform(K)
         Kc = K - K.mean(axis=0) - K.mean(axis=1)[:, np.newaxis] + K.mean()
@@ -86,7 +90,7 @@ class KernelTests(unittest.TestCase):
         Compare with the value calculated
         directly from the equation.
         """
-        K = np.random.uniform(0, 100, size=(3, 3))
+        K = self.random_state.uniform(0, 100, size=(3, 3))
         model = KernelNormalizer(with_center=True, with_trace=False)
         Ktr = model.fit_transform(K)
         Kc = K - K.mean(axis=0) - K.mean(axis=1)[:, np.newaxis] + K.mean()
@@ -99,7 +103,7 @@ class KernelTests(unittest.TestCase):
         Compare with the value calculated
         directly from the equation.
         """
-        K = np.random.uniform(0, 100, size=(3, 3))
+        K = self.random_state.uniform(0, 100, size=(3, 3))
         model = KernelNormalizer(with_center=False, with_trace=True)
         Ktr = model.fit_transform(K)
         Kc = K.copy()
@@ -111,7 +115,7 @@ class KernelTests(unittest.TestCase):
         """Checks that the kernel is unchanged
         if no preprocessing is specified.
         """
-        K = np.random.uniform(0, 100, size=(3, 3))
+        K = self.random_state.uniform(0, 100, size=(3, 3))
         model = KernelNormalizer(with_center=False, with_trace=False)
         Ktr = model.fit_transform(K)
         Kc = K.copy()
