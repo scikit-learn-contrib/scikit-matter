@@ -1,7 +1,6 @@
 from copy import deepcopy
 
 import numpy as np
-from scipy import linalg
 from sklearn.base import clone
 from sklearn.exceptions import NotFittedError
 from sklearn.metrics.pairwise import pairwise_kernels
@@ -94,7 +93,6 @@ def pcovr_covariance(
             rank = min(X.shape)
 
         if rank >= min(X.shape):
-            # _, vC, UC = linalg.svd(X, full_matrices=False)
             vC, UC = np.linalg.eigh(X.T @ X)
 
             vC = np.flip(vC)
