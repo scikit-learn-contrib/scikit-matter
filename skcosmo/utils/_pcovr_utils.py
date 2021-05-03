@@ -94,7 +94,7 @@ def pcovr_covariance(
             rank = min(X.shape)
 
         if rank >= min(X.shape):
-            #_, vC, UC = linalg.svd(X, full_matrices=False)
+            # _, vC, UC = linalg.svd(X, full_matrices=False)
             vC, UC = np.linalg.eigh(X.T @ X)
 
             vC = np.flip(vC)
