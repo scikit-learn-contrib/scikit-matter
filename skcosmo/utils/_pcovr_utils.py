@@ -29,32 +29,32 @@ def check_lr_fit(regressor, X, y=None):
         check_is_fitted(regressor)
         fitted_regressor = deepcopy(regressor)
 
-    except NotFittedError:
-        fitted_regressor = clone(regressor)
-        fitted_regressor.fit(X, y=y)
-
-    if fitted_regressor.coef_.ndim != y.ndim:
-        raise ValueError(
-            "The target regressor has a shape incompatible "
-            "with the supplied target space"
-        )
-    elif fitted_regressor.coef_.ndim == 1:
-        if fitted_regressor.coef_.shape[0] != X.shape[1]:
-            raise ValueError(
-                "The target regressor has a shape incompatible "
-                "with the supplied feature space"
-            )
-    else:
-        if fitted_regressor.coef_.shape[0] != y.shape[1]:
+        if fitted_regressor.coef_.ndim != y.ndim:
             raise ValueError(
                 "The target regressor has a shape incompatible "
                 "with the supplied target space"
             )
-        elif fitted_regressor.coef_.shape[1] != X.shape[1]:
-            raise ValueError(
-                "The target regressor has a shape incompatible "
-                "with the supplied feature space"
-            )
+        elif fitted_regressor.coef_.ndim == 1:
+            if fitted_regressor.coef_.shape[0] != X.shape[1]:
+                raise ValueError(
+                    "The target regressor has a shape incompatible "
+                    "with the supplied feature space"
+                )
+        else:
+            if fitted_regressor.coef_.shape[0] != y.shape[1]:
+                raise ValueError(
+                    "The target regressor has a shape incompatible "
+                    "with the supplied target space"
+                )
+            elif fitted_regressor.coef_.shape[1] != X.shape[1]:
+                raise ValueError(
+                    "The target regressor has a shape incompatible "
+                    "with the supplied feature space"
+                )
+
+    except NotFittedError:
+        fitted_regressor = clone(regressor)
+        fitted_regressor.fit(X, y=y)
 
     return fitted_regressor
 
