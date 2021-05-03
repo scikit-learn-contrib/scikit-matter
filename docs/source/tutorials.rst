@@ -6,7 +6,7 @@ check out the pedagogic notebooks in our companion project `kernel-tutorials <ht
 
 .. toctree::
   :glob:
-  :Caption: PCovR and KPCovR
+  :Caption: PCovR and KernelPCovR
 
   read-only-examples/PCovR*
 
@@ -17,6 +17,12 @@ check out the pedagogic notebooks in our companion project `kernel-tutorials <ht
   read-only-examples/FeatureSelection*
   read-only-examples/Selectors-Pipelines*
 
+
+.. toctree::
+  :glob:
+  :Caption: Orthogonal Regression
+
+  read-only-examples/OrthogonalRegressionNonAnalytic.ipynb
 
 .. toctree::
   :glob:

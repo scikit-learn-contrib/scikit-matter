@@ -246,3 +246,44 @@ be instantiated using
     selector.fit(X, y)
 
     Xr = selector.transform(X)
+
+Voronoi FPS
+###########
+
+.. currentmodule:: skcosmo.sample_selection._voronoi_fps
+
+.. autoclass :: VoronoiFPS
+
+These selectors can be instantiated using :py:class:`skcosmo.sample_selection.VoronoiFPS`.
+
+.. code-block:: python
+
+    from skcosmo.feature_selection import VoronoiFPS
+    selector = VoronoiFPS(
+                        n_to_select=4,
+                        progress_bar=True,
+                        score_threshold=1E-12
+                        full=False,
+                        #n_trial_calculation used for calculation of full_fraction,
+                        #so you need to determine only one parameter
+                        n_trial_calculation = 4,
+                        full_fraction = None,
+                        # int or 'random', default=0
+                        # Index of the first selection.
+                        # If ‘random’, picks a random value when fit starts.
+                        initialize = 0,
+                        )
+    selector.fit(X)
+
+    Xr = selector.transform(X)
+
+When *Not* to Use Voronoi FPS
+-----------------------------
+
+In many cases, this algorithm may not increase upon the efficiency. For example,
+for simple metrics (such as Euclidean distance), Voronoi FPS will likely not
+accelerate, and may decelerate, computations when compared to FPS.  The sweet
+spot for Voronoi FPS is when the number of selectable samples is already enough
+to divide the space with Voronoi polyhedrons, but not yet comparable to the total
+number of samples, when the cost of bookkeeping significantly degrades the speed
+of work compared to FPS.

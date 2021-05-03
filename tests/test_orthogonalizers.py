@@ -14,6 +14,10 @@ EPSILON = 1e-8
 
 
 class TestXOrth(unittest.TestCase):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.random_state = np.random.RandomState(0)
+
     def setUp(self):
 
         self.n_samples = 100
@@ -25,19 +29,21 @@ class TestXOrth(unittest.TestCase):
 
         n_uncorrelated = self.n_features // 2
 
-        X_random = np.random.uniform(-1, 1, size=(self.n_samples, self.n_features))
+        X_random = self.random_state.uniform(
+            -1, 1, size=(self.n_samples, self.n_features)
+        )
         X_correlated = np.zeros((self.n_samples, self.n_features))
-        X_correlated[:, :n_uncorrelated] = np.random.uniform(
+        X_correlated[:, :n_uncorrelated] = self.random_state.uniform(
             -1, 1, size=(self.n_samples, n_uncorrelated)
         )
 
         for i in range(n_uncorrelated, self.n_features):
             X_correlated[:, i] = X_correlated[
                 :, i - n_uncorrelated
-            ] * np.random.uniform(-1, 1)
+            ] * self.random_state.uniform(-1, 1)
 
         feat_idx = np.arange(min(self.n_samples, self.n_features, n_uncorrelated))
-        np.random.shuffle(feat_idx)
+        self.random_state.shuffle(feat_idx)
 
         for idx in feat_idx:
             with self.subTest(type="random X"):
@@ -57,20 +63,24 @@ class TestXOrth(unittest.TestCase):
 
         n_uncorrelated = self.n_samples // 2
 
-        X_random = np.random.uniform(-1, 1, size=(self.n_samples, self.n_features))
-        X_random2 = np.random.uniform(-1, 1, size=(self.n_samples, self.n_features))
+        X_random = self.random_state.uniform(
+            -1, 1, size=(self.n_samples, self.n_features)
+        )
+        X_random2 = self.random_state.uniform(
+            -1, 1, size=(self.n_samples, self.n_features)
+        )
         X_correlated = np.zeros((self.n_samples, self.n_features))
-        X_correlated[:n_uncorrelated] = np.random.uniform(
+        X_correlated[:n_uncorrelated] = self.random_state.uniform(
             -1, 1, size=(n_uncorrelated, self.n_features)
         )
 
         for i in range(n_uncorrelated, self.n_samples):
-            X_correlated[i] = X_correlated[i - n_uncorrelated] * np.random.uniform(
-                -1, 1
-            )
+            X_correlated[i] = X_correlated[
+                i - n_uncorrelated
+            ] * self.random_state.uniform(-1, 1)
 
         feat_idx = np.arange(min(self.n_samples, self.n_features, n_uncorrelated))
-        np.random.shuffle(feat_idx)
+        self.random_state.shuffle(feat_idx)
 
         for idx in feat_idx:
             with self.subTest(type="random X"):
@@ -95,14 +105,14 @@ class TestXOrth(unittest.TestCase):
         n_uncorrelated = self.n_samples // 2
 
         X_correlated = np.zeros((self.n_samples, self.n_features))
-        X_correlated[:, :n_uncorrelated] = np.random.uniform(
+        X_correlated[:, :n_uncorrelated] = self.random_state.uniform(
             -1, 1, size=(self.n_samples, n_uncorrelated)
         )
 
         for i in range(n_uncorrelated, self.n_features):
             X_correlated[:, i] = X_correlated[
                 :, i - n_uncorrelated
-            ] * np.random.uniform(-1, 1)
+            ] * self.random_state.uniform(-1, 1)
 
         X_correlated = X_orthogonalizer(
             X_correlated, x2=X_correlated[:, :n_uncorrelated]
@@ -114,8 +124,12 @@ class TestXOrth(unittest.TestCase):
         # checks that an error is raised when x2 is the wrong shape for x1
         with self.assertRaises(ValueError) as cm:
             X_orthogonalizer(
-                np.random.uniform(-3, 3, size=(self.n_samples, self.n_features)),
-                x2=np.random.uniform(-3, 3, size=(self.n_samples + 4, self.n_features)),
+                self.random_state.uniform(
+                    -3, 3, size=(self.n_samples, self.n_features)
+                ),
+                x2=self.random_state.uniform(
+                    -3, 3, size=(self.n_samples + 4, self.n_features)
+                ),
             )
             self.assertEqual(
                 str(cm.message),
@@ -132,9 +146,11 @@ class TestXOrth(unittest.TestCase):
     def test_copy(self):
         # checks that the X_orthogonalizer works in-place when copy=True
 
-        X_random = np.random.uniform(-1, 1, size=(self.n_samples, self.n_features))
+        X_random = self.random_state.uniform(
+            -1, 1, size=(self.n_samples, self.n_features)
+        )
 
-        idx = np.random.choice(X_random.shape[-1])
+        idx = self.random_state.choice(X_random.shape[-1])
 
         new_X = X_orthogonalizer(X_random, idx, tol=EPSILON, copy=True)
         X_orthogonalizer(X_random, idx, tol=EPSILON, copy=False)
@@ -142,6 +158,10 @@ class TestXOrth(unittest.TestCase):
 
 
 class TestYOrths(unittest.TestCase):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.random_state = np.random.RandomState(0)
+
     def setUp(self):
         self.X, self.y = load_csd_1000r(return_X_y=True)
         self.X = StandardScaler().fit_transform(self.X)
@@ -151,7 +171,7 @@ class TestYOrths(unittest.TestCase):
         # checks that the Y_feature_orthogonalizer removes all targets
         # predictable by the given set of features
 
-        Xc = self.X[:, np.random.choice(self.X.shape[-1], 3)]
+        Xc = self.X[:, self.random_state.choice(self.X.shape[-1], 3)]
         yhat = Xc @ np.linalg.pinv(Xc.T @ Xc, rcond=EPSILON) @ Xc.T @ self.y
 
         new_y = Y_feature_orthogonalizer(self.y, Xc, tol=EPSILON)
@@ -160,7 +180,7 @@ class TestYOrths(unittest.TestCase):
     def test_copy_feature(self):
         # checks the Y_feature_orthogonalizer operates in-place when copy=False
 
-        Xc = self.X[:, np.random.choice(self.X.shape[-1], 3)]
+        Xc = self.X[:, self.random_state.choice(self.X.shape[-1], 3)]
         new_y = Y_feature_orthogonalizer(self.y, Xc, tol=EPSILON, copy=False)
         self.assertTrue(np.allclose(self.y, new_y))
 
@@ -168,7 +188,7 @@ class TestYOrths(unittest.TestCase):
         # checks that the Y_samples_orthogonalizer removes all targets
         # predictable by the given set of samples
 
-        r = np.random.choice(self.X.shape[0], 3)
+        r = self.random_state.choice(self.X.shape[0], 3)
         Xr = self.X[r]
         yr = self.y[r]
 
@@ -180,7 +200,7 @@ class TestYOrths(unittest.TestCase):
     def test_copy_sample(self):
         # checks the Y_sample_orthogonalizer operates in-place when copy=False
 
-        r = np.random.choice(self.X.shape[0], 3)
+        r = self.random_state.choice(self.X.shape[0], 3)
         Xr = self.X[r]
         yr = self.y[r]
 

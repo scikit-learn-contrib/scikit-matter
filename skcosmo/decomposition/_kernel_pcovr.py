@@ -22,11 +22,11 @@ from sklearn.utils.validation import (
     check_X_y,
 )
 
-from skcosmo.preprocessing import KernelNormalizer
-from skcosmo.utils import pcovr_kernel
+from ..preprocessing import KernelNormalizer
+from ..utils import pcovr_kernel
 
 
-class KPCovR(_BasePCA, LinearModel):
+class KernelPCovR(_BasePCA, LinearModel):
     r"""
     Kernel Principal Covariates Regression, as described in [Helfrecht2020]_
     determines a latent-space projection :math:`\mathbf{T}` which
@@ -48,7 +48,7 @@ class KPCovR(_BasePCA, LinearModel):
 
     Parameters
     ----------
-    mixing: float, defaults to 0.5
+    mixing: float, default=0.5
         mixing parameter, as described in PCovR as :math:`{\\alpha}`
 
     n_components: int, float or str, default=None
@@ -89,11 +89,11 @@ class KPCovR(_BasePCA, LinearModel):
         Independent term in poly and sigmoid kernels.
         Ignored by other kernels.
 
-    kernel_params: mapping of string to any, default=None
+    kernel_params: mapping of str to any, default=None
         Parameters (keyword arguments) and values for kernel passed as
         callable object. Ignored by other kernels.
 
-    center: boolean, default=False
+    center: bool, default=False
             Whether to center any computed kernels
 
     alpha: float, default=1E-6
@@ -125,21 +125,6 @@ class KPCovR(_BasePCA, LinearModel):
     Attributes
     ----------
 
-    mixing: float, defaults to 0.5
-        mixing parameter, as described in PCovR as :math:`{\\alpha}`
-
-    alpha: float, default=1E-6
-            Regularization parameter to use in all regression operations.
-
-    tol: float, default=1e-12
-        Tolerance for singular values computed by svd_solver == 'arpack'.
-        Must be of range [0.0, infinity).
-
-    n_components: int
-        The estimated number of components, which equals the parameter
-        n_components, or the lesser value of n_features and n_samples
-        if n_components is None.
-
     pt__: ndarray of size :math:`({n_{components}, n_{components}})`
            pseudo-inverse of the latent-space projection, which
            can be used to contruct projectors from latent-space
@@ -167,7 +152,7 @@ class KPCovR(_BasePCA, LinearModel):
     Examples
     --------
     >>> import numpy as np
-    >>> from skcosmo.decomposition import KPCovR
+    >>> from skcosmo.decomposition import KernelPCovR
     >>> from skcosmo.preprocessing import StandardFlexibleScaler as SFS
     >>>
     >>> X = np.array([[-1, 1, -3, 1], [1, -2, 1, 2], [-2, 0, -2, -2], [1, 0, 2, -1]])
@@ -175,9 +160,9 @@ class KPCovR(_BasePCA, LinearModel):
     >>> Y = np.array([[ 0, -5], [-1, 1], [1, -5], [-3, 2]])
     >>> Y = SFS(column_wise=True).fit_transform(Y)
     >>>
-    >>> kpcovr = KPCovR(mixing=0.1, n_components=2, kernel='rbf', gamma=2)
+    >>> kpcovr = KernelPCovR(mixing=0.1, n_components=2, kernel='rbf', gamma=2)
     >>> kpcovr.fit(X, Y)
-        KPCovR(coef0=1, degree=3, fit_inverse_transform=False, gamma=0.01, kernel='rbf',
+        KernelPCovR(coef0=1, degree=3, fit_inverse_transform=False, gamma=0.01, kernel='rbf',
            kernel_params=None, mixing=None, n_components=2, n_jobs=None,
            alpha=None, tol=1e-12)
     >>> T = kpcovr.transform(X)
@@ -229,7 +214,7 @@ class KPCovR(_BasePCA, LinearModel):
         self.degree = degree
         self.coef0 = coef0
         self.n_jobs = n_jobs
-        self.n_samples = None
+        self.n_samples_ = None
 
         self.fit_inverse_transform = fit_inverse_transform
 
@@ -276,7 +261,7 @@ class KPCovR(_BasePCA, LinearModel):
 
         Parameters
         ----------
-        X: array-like, shape (n_samples, n_features)
+        X:  ndarray, shape (n_samples, n_features)
             Training data, where n_samples is the number of samples and
             n_features is the number of features.
 
@@ -285,7 +270,7 @@ class KPCovR(_BasePCA, LinearModel):
             to have unit variance, otherwise :math:`\\mathbf{X}` should be
             scaled so that each feature has a variance of 1 / n_features.
 
-        Y: array-like, shape (n_samples, n_properties)
+        Y:  ndarray, shape (n_samples, n_properties)
             Training data, where n_samples is the number of samples and
             n_properties is the number of properties
 
@@ -294,7 +279,7 @@ class KPCovR(_BasePCA, LinearModel):
             to have unit variance, otherwise :math:`\\mathbf{Y}` should be
             scaled so that each feature has a variance of 1 / n_features.
 
-        Yhat: array-like, shape (n_samples, n_properties), optional
+        Yhat: ndarray, shape (n_samples, n_properties), optional
             Regressed training data, where n_samples is the number of samples and
             n_properties is the number of properties. If not supplied, computed
             by ridge regression.
@@ -321,7 +306,7 @@ class KPCovR(_BasePCA, LinearModel):
             self.centerer_ = KernelNormalizer()
             K = self.centerer_.fit_transform(K)
 
-        self.n_samples = X.shape[0]
+        self.n_samples_ = X.shape[0]
 
         if W is None:
             if Yhat is None:
@@ -378,7 +363,7 @@ class KPCovR(_BasePCA, LinearModel):
 
         Parameters
         ----------
-        X: array-like, shape (n_samples, n_features)
+        X: ndarray, shape (n_samples, n_features)
             New data, where n_samples is the number of samples
             and n_features is the number of features.
 
@@ -410,20 +395,20 @@ class KPCovR(_BasePCA, LinearModel):
 
         Parameters
         ----------
-        T: array-like, shape (n_samples, n_components)
+        T: ndarray, shape (n_samples, n_components)
             Projected data, where n_samples is the number of samples
             and n_components is the number of components.
 
         Returns
         -------
-        X_original array-like, shape (n_samples, n_features)
+        X_original ndarray, shape (n_samples, n_features)
         """
 
         return T @ self.ptx_
 
     def score(self, X, Y):
         r"""
-        Computes the loss values for KPCovR on the given predictor and
+        Computes the loss values for KernelPCovR on the given predictor and
         response variables. The loss in :math:`\mathbf{K}`, as explained in
         [Helfrecht2020]_ does not correspond to a traditional Gram loss
         :math:`\mathbf{K} - \mathbf{TT}^T`. Indicating the kernel between set
@@ -477,14 +462,14 @@ class KPCovR(_BasePCA, LinearModel):
 
     def _decompose_truncated(self, mat):
 
-        if not 1 <= self.n_components <= self.n_samples:
+        if not 1 <= self.n_components <= self.n_samples_:
             raise ValueError(
                 "n_components=%r must be between 1 and "
                 "n_samples=%r with "
                 "svd_solver='%s'"
                 % (
                     self.n_components,
-                    self.n_samples,
+                    self.n_samples_,
                     self.svd_solver,
                 )
             )
@@ -494,14 +479,14 @@ class KPCovR(_BasePCA, LinearModel):
                 "when greater than or equal to 1, was of type=%r"
                 % (self.n_components, type(self.n_components))
             )
-        elif self.svd_solver == "arpack" and self.n_components == self.n_samples:
+        elif self.svd_solver == "arpack" and self.n_components == self.n_samples_:
             raise ValueError(
                 "n_components=%r must be strictly less than "
                 "n_samples=%r with "
                 "svd_solver='%s'"
                 % (
                     self.n_components,
-                    self.n_samples,
+                    self.n_samples_,
                     self.svd_solver,
                 )
             )
@@ -537,14 +522,14 @@ class KPCovR(_BasePCA, LinearModel):
     def _decompose_full(self, mat):
 
         if self.n_components != "mle":
-            if not 0 <= self.n_components <= self.n_samples:
+            if not 0 <= self.n_components <= self.n_samples_:
                 raise ValueError(
                     "n_components=%r must be between 1 and "
                     "n_samples=%r with "
                     "svd_solver='%s'"
                     % (
                         self.n_components,
-                        self.n_samples,
+                        self.n_samples_,
                         self.svd_solver,
                     )
                 )
@@ -565,13 +550,13 @@ class KPCovR(_BasePCA, LinearModel):
         U, Vt = svd_flip(U, Vt)
 
         # Get variance explained by singular values
-        explained_variance_ = (S ** 2) / (self.n_samples - 1)
+        explained_variance_ = (S ** 2) / (self.n_samples_ - 1)
         total_var = explained_variance_.sum()
         explained_variance_ratio_ = explained_variance_ / total_var
 
         # Postprocess the number of components required
         if self.n_components == "mle":
-            self.n_components = _infer_dimension(explained_variance_, self.n_samples)
+            self.n_components = _infer_dimension(explained_variance_, self.n_samples_)
         elif 0 < self.n_components < 1.0:
             # number of components for which the cumulated explained
             # variance percentage is superior to the desired threshold
