@@ -7,7 +7,11 @@ from scipy.linalg import sqrtm as MatrixSqrt
 from scipy.sparse.linalg import svds
 from sklearn.decomposition._base import _BasePCA
 from sklearn.decomposition._pca import _infer_dimension
-from sklearn.linear_model import LinearRegression, Ridge, RidgeCV
+from sklearn.linear_model import (
+    LinearRegression,
+    Ridge,
+    RidgeCV,
+)
 from sklearn.linear_model._base import LinearModel
 from sklearn.utils import (
     check_array,

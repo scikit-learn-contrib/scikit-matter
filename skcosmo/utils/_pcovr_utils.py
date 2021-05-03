@@ -1,12 +1,12 @@
+from copy import deepcopy
+
 import numpy as np
 from scipy import linalg
+from sklearn.base import clone
+from sklearn.exceptions import NotFittedError
 from sklearn.metrics.pairwise import pairwise_kernels
 from sklearn.utils.extmath import randomized_svd
-
-from sklearn.exceptions import NotFittedError
 from sklearn.utils.validation import check_is_fitted
-from sklearn.base import clone
-from copy import deepcopy
 
 
 def check_lr_fit(regressor, X, y=None):
