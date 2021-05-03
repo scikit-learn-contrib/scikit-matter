@@ -1,0 +1,73 @@
+---
+title: 'scikit-COSMO: A Toolbox of Machine Learning Methods for Materials Science'
+tags:
+    - Python
+authors:
+    - name: Rose K. Cersonsky ^[\url{mailto:rose.cersonsky@epfl.ch}]
+      orcid: 0000-0003-4515-3441
+      affiliation: 1
+    - name: Guillaume Fraux
+      orcid: 0000-0003-4824-6512
+      affiliation: 1
+    - name: Sergei Kliavinek
+      orcid: 0000-0001-8326-325X
+      affiliation: 1
+    - name: Alexander Goscinski
+      orcid: 0000-0001-8076-215X
+      affiliation: 1
+    - name: Benjamin A. Helfrecht
+      orcid: 0000-0002-2260-7183
+      affiliation: 1
+    - name: Michele Ceriotti ^[\url{mailto:michele.ceriotti@epfl.ch}]
+      orcid: 0000-0003-2571-2832
+      affiliation: 1
+affiliations:
+    - name: Laboratory of Computational Science and Modeling (COSMO), École Polytechnique Fédérale de Lausanne(EPFL), Lausanne, Switzerland
+      index: 1
+date: 21 Jun 2021
+bibliography: paper.bib
+---
+
+# Summary
+
+`scikit-COSMO` (`skcosmo`) focuses on machine learning methods that are of particular use (but not limited to) the field of materials science and computational chemistry. Currently, many
+machine learning studies employ the foundational `scikit-learn` repository, a
+collection of widely applicable machine learning algorithms and methods.
+Written in the same language (Python), style, and adhering to the same guidelines, we aim to provide
+users the ability to seamlessly include methods tailored for material science in machine learning
+workflows alongside those from `scikit-learn`.
+
+# Statement of need
+
+The `skcosmo` package provides machine learning algorithms developed to meet the needs of a specific community: those who use machine learning to understand or represent collections of atoms or molecules. The importance of particular subclasses of machine learning algorithms varies wildly between different fields; when applying machine
+learning to collections of atoms, there is a comparatively increased emphasis on the representation of data in a numerical format for machine learning pipelines, known as _featurization_. This stems from both the variety of featurization techniques and a the expanse of
+tunable hyperparameters within each technique, and it becomes necessary to compare featurizations, remove redundant features, or condense them. Currently, `skcosmo` contains algorithms developed by the Laboratory of Computational Science and Modeling (COSMO) to address these specific problems, the open-source implementation of which were all previously-unavailable.
+
+- Feature Reconstruction Measures[@Goscinski2021] - both global and local measures
+of the information density for a given representation. This set of
+unsupervised algorithms is of particular use in the choice of representation
+and hyperparameter optimization.
+- Hybrid Supervised-Unsupervised Dimensionality Reduction and Regression[@deJong1992, @Helfrecht2020] - linear and
+non-linear techniques to combine features into latent-space projections
+(similar to PCA) that also incorporate target information. This is of particular
+use when condensing features prior to property regression or constructing
+structure-property maps, such as those analyzable via[@Fraux2020]. In Kernel Principal Covariates Regression (KPCovR), a mixing parameter `\alpha` interpolates
+between kernel ridge regression (`\alpha=0`) and kernel principal
+components analysis (KPCA, `\alpha=1`). An example of KPCovR on a
+dataset of small molecules and their NMR chemical shieldings is shown in Fig. 1.
+
+    ![Kernel PCovR in Action](CSD-1000R_kernelized.gif)
+    **Fig. 1. The evolution of latent-space projections and regressions as the mixing parameter `\alpha` goes from 0 to 1 in Kernel PCovR.** In the left panel, the projection is plotted across the first two kernel principal covariates, with color indicating the property of interest (here NMR Chemical Shieldings from [@Ceriotti2019]). In the right panel, the comparison of the target property with that predicted using the latent space projection (color denotes error from target).
+
+- Feature and Sample Selection[@Imbalzano2018, @Cersonsky2021] - methods focused on determining
+a diverse or information-rich subset of features or samples for machine
+learning problems.
+
+scikit-COSMO also contains minimal datasets used to test the implementation, including a small subset of molecules and their NMR chemical shieldings, as reported in [@Ceriotti2019]. As a note, `skcosmo` itself does not compute atomic descriptors directly, and instead takes as input descriptors computed by prominent software such as `librascal` [@Musil2021], QUIP[@quip], and `DScribe`[https://github.com/SINGROUP/dscribe].
+
+# Acknowledgements
+
+We acknowledge contributions from the entire COSMO team, particularly
+Giulio Imbalzano and Max Veit.
+
+# References
