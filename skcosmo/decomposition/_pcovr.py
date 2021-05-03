@@ -287,24 +287,6 @@ class PCovR(_BasePCA, LinearModel):
 
         self.regressor_ = check_lr_fit(self.regressor, X, y=Y)
 
-        if self.regressor_.coef_.ndim == 1:
-            if self.regressor_.coef_.shape[0] != X.shape[1]:
-                raise ValueError(
-                    "The target regressor has a shape incompatible "
-                    "with the supplied feature space"
-                )
-        else:
-            if self.regressor_.coef_.shape[0] != Y.shape[1]:
-                raise ValueError(
-                    "The target regressor has a shape incompatible "
-                    "with the supplied target space"
-                )
-            elif self.regressor_.coef_.shape[1] != X.shape[1]:
-                raise ValueError(
-                    "The target regressor has a shape incompatible "
-                    "with the supplied feature space"
-                )
-
         W = self.regressor_.coef_.T.reshape(X.shape[1], -1)
         Yhat = self.regressor_.predict(X).reshape(X.shape[0], -1)
 
