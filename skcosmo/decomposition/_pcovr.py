@@ -142,9 +142,6 @@ class PCovR(_BasePCA, LinearModel):
     mixing: float, default=0.5
         mixing parameter, as described in PCovR as :math:`{\alpha}`
 
-    alpha: float, default=1E-6
-            Regularization parameter to use in all regression operations.
-
     tol: float, default=1e-12
         Tolerance for singular values computed by svd_solver == 'arpack'.
         Must be of range [0.0, infinity).
