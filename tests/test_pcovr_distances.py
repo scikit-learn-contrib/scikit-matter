@@ -36,6 +36,38 @@ class CovarianceTest(unittest.TestCase):
         with self.assertRaises(ValueError):
             _, _ = pcovr_covariance(0.5, self.X, self.Y, return_isqrt=False)
 
+    def test_inverse_covariance(self):
+        rcond = 1e-12
+        rng = np.random.default_rng(0)
+
+        # Make some random data where the last feature
+        # is a linear comibination of the other features.
+        # This gives us a covariance with a zero eigenvalue
+        # that should be dropped (via rcond).
+        # Hence, the inverse square root covariance
+        # should be identical between the "full"
+        # computation (eigh) and the approximate
+        # computation that takes the top n_features-1
+        # singular values (randomized svd).
+        X = rng.random((10, 5))
+        Y = rng.random(10)
+        x = rng.random(5)
+        Xx = np.column_stack((X, np.sum(X * x, axis=1)))
+        Xx -= np.mean(Xx, axis=0)
+
+        C_inv = np.linalg.pinv(Xx.T @ Xx, rcond=rcond)
+        C_isqrt = np.real(scipy.linalg.sqrtm(C_inv))
+
+        X_shape = min(self.X.shape)
+        _, C_isqrt_eigh = pcovr_covariance(0.5, Xx, Y, return_isqrt=True, rcond=rcond)
+        _, C_isqrt_svd = pcovr_covariance(
+            0.5, Xx, Y, return_isqrt=True, rank=X_shape - 1, rcond=rcond
+        )
+
+        for C, C_type in zip([C_isqrt_eigh, C_isqrt_svd], ["eigh", "svd"]):
+            with self.subTest(C_isqrt_type=C_type):
+                self.assertTrue(np.allclose(C_isqrt, C))
+
 
 class KernelTest(unittest.TestCase):
     def __init__(self, *args, **kwargs):
