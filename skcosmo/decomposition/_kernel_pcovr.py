@@ -5,6 +5,7 @@ from scipy import linalg
 from scipy.sparse.linalg import svds
 from sklearn.decomposition._base import _BasePCA
 from sklearn.decomposition._pca import _infer_dimension
+from sklearn.kernel_ridge import KernelRidge
 from sklearn.linear_model._base import LinearModel
 from sklearn.metrics.pairwise import pairwise_kernels
 from sklearn.utils import (
@@ -23,7 +24,10 @@ from sklearn.utils.validation import (
 )
 
 from ..preprocessing import KernelNormalizer
-from ..utils import pcovr_kernel
+from ..utils import (
+    check_krr_fit,
+    pcovr_kernel,
+)
 
 
 class KernelPCovR(_BasePCA, LinearModel):
@@ -184,12 +188,14 @@ class KernelPCovR(_BasePCA, LinearModel):
         mixing=0.5,
         n_components=None,
         svd_solver="auto",
-        kernel="linear",
-        gamma=None,
-        degree=3,
-        coef0=1,
-        alpha=1e-6,
-        kernel_params=None,
+        regressor=KernelRidge(
+            alpha=1e-6,
+            kernel="linear",
+            gamma=None,
+            degree=3,
+            coef0=1,
+            kernel_params=None,
+        ),
         center=False,
         fit_inverse_transform=False,
         tol=1e-12,
@@ -200,7 +206,6 @@ class KernelPCovR(_BasePCA, LinearModel):
 
         self.mixing = mixing
         self.n_components = n_components
-        self.alpha = alpha
 
         self.svd_solver = svd_solver
         self.tol = tol
@@ -208,11 +213,14 @@ class KernelPCovR(_BasePCA, LinearModel):
         self.random_state = random_state
         self.center = center
 
-        self.kernel = kernel
-        self.kernel_params = kernel_params
-        self.gamma = gamma
-        self.degree = degree
-        self.coef0 = coef0
+        self.regressor = regressor
+        self.alpha = self.regressor.alpha
+        self.kernel = self.regressor.kernel
+        self.kernel_params = self.regressor.kernel_params
+        self.gamma = self.regressor.gamma
+        self.degree = self.regressor.degree
+        self.coef0 = self.regressor.coef0
+
         self.n_jobs = n_jobs
         self.n_samples_ = None
 
@@ -254,7 +262,7 @@ class KernelPCovR(_BasePCA, LinearModel):
         T = K @ self.pkt_
         self.pt__ = np.linalg.lstsq(T, np.eye(T.shape[0]), rcond=self.alpha)[0]
 
-    def fit(self, X, Y, Yhat=None, W=None):
+    def fit(self, X, Y):
         """
 
         Fit the model with X and Y.
@@ -308,14 +316,17 @@ class KernelPCovR(_BasePCA, LinearModel):
 
         self.n_samples_ = X.shape[0]
 
-        if W is None:
-            if Yhat is None:
-                W = (np.linalg.lstsq(K, Y, rcond=self.alpha)[0]).reshape(X.shape[0], -1)
-            else:
-                W = np.linalg.lstsq(K, Yhat, rcond=self.alpha)[0]
+        if not isinstance(self.regressor, KernelRidge):
+            raise ValueError("Regressor must be an instance of KernelRidge")
 
-        if Yhat is None:
-            Yhat = K @ W
+        self.regressor_ = check_krr_fit(self.regressor, K, Y)
+
+        W = self.regressor_.dual_coef_.reshape(X.shape[0], -1)
+
+        # Use this instead of `self.regressor_.predict(X)`
+        # so we don't have to recompute
+        # the train kernel again to get the predictions
+        Yhat = K @ W
 
         # Handle svd_solver
         self._fit_svd_solver = self.svd_solver
@@ -455,6 +466,7 @@ class KernelPCovR(_BasePCA, LinearModel):
         t_n = K_NN @ self.pkt_
         t_v = K_VN @ self.pkt_
 
+        # TODO: change to lstsq
         w = t_n @ np.linalg.pinv(t_n.T @ t_n, rcond=self.alpha) @ t_v.T
         Lkpca = np.trace(K_VV - 2 * K_VN @ w + w.T @ K_VV @ w) / np.trace(K_VV)
 
