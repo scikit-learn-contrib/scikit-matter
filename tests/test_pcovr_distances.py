@@ -58,10 +58,9 @@ class CovarianceTest(unittest.TestCase):
         C_inv = np.linalg.pinv(Xx.T @ Xx, rcond=rcond)
         C_isqrt = np.real(scipy.linalg.sqrtm(C_inv))
 
-        X_shape = min(self.X.shape)
         _, C_isqrt_eigh = pcovr_covariance(0.5, Xx, Y, return_isqrt=True, rcond=rcond)
         _, C_isqrt_svd = pcovr_covariance(
-            0.5, Xx, Y, return_isqrt=True, rank=X_shape - 1, rcond=rcond
+            0.5, Xx, Y, return_isqrt=True, rank=min(Xx.shape) - 1, rcond=rcond
         )
 
         for C, C_type in zip([C_isqrt_eigh, C_isqrt_svd], ["eigh", "svd"]):
