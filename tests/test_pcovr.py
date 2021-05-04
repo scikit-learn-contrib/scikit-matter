@@ -5,6 +5,8 @@ from sklearn import exceptions
 from sklearn.datasets import load_boston
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
+from sklearn.linear_model import Ridge
+from sklearn.kernel_ridge import KernelRidge
 from sklearn.utils.validation import check_X_y
 
 from skcosmo.decomposition import PCovR
@@ -14,7 +16,9 @@ class PCovRBaseTest(unittest.TestCase):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.model = lambda mixing=0.5, **kwargs: PCovR(mixing, alpha=1e-8, **kwargs)
+        self.model = lambda mixing=0.5, regressor=Ridge(
+            alpha=1e-8, fit_intercept=False, tol=1e-12
+        ), **kwargs: PCovR(mixing, regressor=regressor, **kwargs)
         self.error_tol = 1e-5
 
         self.X, self.Y = load_boston(return_X_y=True)
@@ -75,8 +79,8 @@ class PCovRErrorTest(PCovRBaseTest):
             with self.subTest(space=space):
                 pcovr = self.model(mixing=0.0, n_components=1, space=space)
 
-                pcovr.estimator.fit(self.X, self.Y)
-                Yhat = pcovr.estimator.predict(self.X)
+                pcovr.regressor.fit(self.X, self.Y)
+                Yhat = pcovr.regressor.predict(self.X)
 
                 pcovr.fit(self.X, self.Y)
                 Yp = pcovr.predict(self.X)
@@ -398,12 +402,6 @@ class PCovRInfrastructureTest(PCovRBaseTest):
         self.assertTrue(check_X_y(self.X, T, multi_output=True))
         self.assertTrue(T.shape[-1] == n_components)
 
-    def test_default_alpha(self):
-        pcovr = PCovR(mixing=0.5)
-        estimator_reg = getattr(pcovr.estimator, "alpha")
-        pcovr.fit(self.X, self.Y)
-        self.assertEqual(pcovr.alpha, estimator_reg)
-
     def test_default_ncomponents(self):
         pcovr = PCovR(mixing=0.5)
         pcovr.fit(self.X, self.Y)
@@ -418,13 +416,84 @@ class PCovRInfrastructureTest(PCovRBaseTest):
         self.assertEqual(pcovr.pxy_.shape[0], self.X.shape[1])
         self.assertEqual(pcovr.pty_.shape[0], pcovr.n_components)
 
-    def test_Yhat_and_W(self):
-        pcovr = self.model(mixing=0.5)
+    def test_prefit_regressor(self):
+        regressor = Ridge(alpha=1e-8, fit_intercept=False, tol=1e-12)
+        regressor.fit(self.X, self.Y)
+        pcovr = self.model(mixing=0.5, regressor=regressor)
+        pcovr.fit(self.X, self.Y)
 
-        pcovr.estimator.fit(self.X, self.Y)
-        Yhat = pcovr.estimator.predict(self.X).reshape(self.X.shape[0], -1)
-        W = pcovr.estimator.coef_.T.reshape(self.X.shape[1], -1)
-        pcovr.fit(self.X, self.Y, Yhat, W)
+        Yhat_regressor = regressor.predict(self.X).reshape(self.X.shape[0], -1)
+        W_regressor = regressor.coef_.T.reshape(self.X.shape[1], -1)
+
+        Yhat_pcovr = pcovr.regressor_.predict(self.X).reshape(self.X.shape[0], -1)
+        W_pcovr = pcovr.regressor_.coef_.T.reshape(self.X.shape[1], -1)
+
+        self.assertTrue(np.allclose(Yhat_regressor, Yhat_pcovr))
+        self.assertTrue(np.allclose(W_regressor, W_pcovr))
+
+    def test_incompatible_regressor(self):
+        regressor = KernelRidge(alpha=1e-8, kernel="linear")
+        regressor.fit(self.X, self.Y)
+        pcovr = self.model(mixing=0.5, regressor=regressor)
+
+        with self.assertRaises(ValueError) as cm:
+            pcovr.fit(self.X, self.Y)
+            self.assertTrue(
+                str(cm.message),
+                "Regressor must be an instance of "
+                "`LinearRegression`, `Ridge`, or `RidgeCV`",
+            )
+
+    def test_incompatible_coef_shape(self):
+
+        # 1D properties (self.Y is 2D with one target)
+        # X shape doesn't match
+        regressor = Ridge(alpha=1e-8, fit_intercept=False, tol=1e-12)
+        regressor.fit(self.X, self.Y.squeeze())
+        pcovr = self.model(mixing=0.5, regressor=regressor)
+
+        with self.assertRaises(ValueError) as cm:
+            pcovr.fit(self.X[:, 0:-1], self.Y.squeeze())
+            self.assertTrue(
+                str(cm.message),
+                "The target regressor has a shape incompatible "
+                "with the supplied feature space",
+            )
+
+        # >= 2D properties
+        # Y shape doesn't match
+        regressor = Ridge(alpha=1e-8, fit_intercept=False, tol=1e-12)
+        regressor.fit(self.X, self.Y)
+        pcovr = self.model(mixing=0.5, regressor=regressor)
+
+        with self.assertRaises(ValueError) as cm:
+            pcovr.fit(self.X, self.Y.squeeze())
+            self.assertTrue(
+                str(cm.message),
+                "The target regressor has a shape incompatible "
+                "with the supplied target space",
+            )
+
+        with self.assertRaises(ValueError) as cm:
+            pcovr.fit(self.X, np.column_stack((self.Y, self.Y)))
+            self.assertTrue(
+                str(cm.message),
+                "The target regressor has a shape incompatible "
+                "with the supplied feature space",
+            )
+
+        # X shape doesn't match
+        regressor = Ridge(alpha=1e-8, fit_intercept=False, tol=1e-12)
+        regressor.fit(self.X, self.Y)
+        pcovr = self.model(mixing=0.5, regressor=regressor)
+
+        with self.assertRaises(ValueError) as cm:
+            pcovr.fit(self.X[:, 0:-1], self.Y)
+            self.assertTrue(
+                str(cm.message),
+                "The target regressor has a shape incompatible "
+                "with the supplied feature space",
+            )
 
 
 if __name__ == "__main__":

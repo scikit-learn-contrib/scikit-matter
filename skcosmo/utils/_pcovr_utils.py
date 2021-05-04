@@ -1,7 +1,62 @@
+from copy import deepcopy
+
 import numpy as np
-from scipy import linalg
+from sklearn.base import clone
+from sklearn.exceptions import NotFittedError
 from sklearn.metrics.pairwise import pairwise_kernels
 from sklearn.utils.extmath import randomized_svd
+from sklearn.utils.validation import check_is_fitted
+
+
+def check_lr_fit(regressor, X, y=None):
+    r"""
+    Checks that an regressor is fitted, and if not,
+    fits it with the provided data
+
+    :param regressor: sklearn-style regressor
+    :type regressor: object
+    :param X: feature matrix with which to fit the regressor
+        if it is not already fitted
+    :type X: array
+    :param y: target values with which to fit the regressor
+        if it is not already fitted
+    :type y: array
+    :param sample_weight: sample weights with which to fit
+        the regressor if not already fitted
+    :type sample_weight: array of shape (n_samples,)
+    """
+    try:
+        check_is_fitted(regressor)
+        fitted_regressor = deepcopy(regressor)
+
+        if fitted_regressor.coef_.ndim != y.ndim:
+            raise ValueError(
+                "The target regressor has a shape incompatible "
+                "with the supplied target space"
+            )
+        elif fitted_regressor.coef_.ndim == 1:
+            if fitted_regressor.coef_.shape[0] != X.shape[1]:
+                raise ValueError(
+                    "The target regressor has a shape incompatible "
+                    "with the supplied feature space"
+                )
+        else:
+            if fitted_regressor.coef_.shape[0] != y.shape[1]:
+                raise ValueError(
+                    "The target regressor has a shape incompatible "
+                    "with the supplied target space"
+                )
+            elif fitted_regressor.coef_.shape[1] != X.shape[1]:
+                raise ValueError(
+                    "The target regressor has a shape incompatible "
+                    "with the supplied feature space"
+                )
+
+    except NotFittedError:
+        fitted_regressor = clone(regressor)
+        fitted_regressor.fit(X, y=y)
+
+    return fitted_regressor
 
 
 def pcovr_covariance(
@@ -12,7 +67,7 @@ def pcovr_covariance(
     return_isqrt=False,
     rank=None,
     random_state=0,
-    iterated_power=None,
+    iterated_power="auto",
 ):
     r"""
     Creates the PCovR modified covariance
@@ -62,7 +117,12 @@ def pcovr_covariance(
             rank = min(X.shape)
 
         if rank >= min(X.shape):
-            _, vC, UC = linalg.svd(X, full_matrices=False)
+            vC, UC = np.linalg.eigh(X.T @ X)
+
+            vC = np.flip(vC)
+            UC = np.flip(UC, axis=1)[:, vC > rcond]
+            vC = np.sqrt(vC[vC > rcond])
+
         else:
             _, vC, UC = randomized_svd(
                 X,
@@ -72,8 +132,8 @@ def pcovr_covariance(
                 random_state=random_state,
             )
 
-        UC = UC.T[:, vC > rcond]
-        vC = vC[vC > rcond]
+            UC = UC.T[:, (vC ** 2) > rcond]
+            vC = vC[(vC ** 2) > rcond]
 
         C_isqrt = UC @ np.diagflat(1.0 / vC) @ UC.T
 

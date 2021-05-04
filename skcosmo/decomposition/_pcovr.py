@@ -7,7 +7,11 @@ from scipy.linalg import sqrtm as MatrixSqrt
 from scipy.sparse.linalg import svds
 from sklearn.decomposition._base import _BasePCA
 from sklearn.decomposition._pca import _infer_dimension
-from sklearn.linear_model import Ridge as LR
+from sklearn.linear_model import (
+    LinearRegression,
+    Ridge,
+    RidgeCV,
+)
 from sklearn.linear_model._base import LinearModel
 from sklearn.utils import (
     check_array,
@@ -25,6 +29,7 @@ from sklearn.utils.validation import (
 )
 
 from ..utils import (
+    check_lr_fit,
     pcovr_covariance,
     pcovr_kernel,
 )
@@ -114,13 +119,13 @@ class PCovR(_BasePCA, LinearModel):
             default=`sample` when :math:`{n_{samples} < n_{features}}` and
             `feature` when :math:`{n_{features} < n_{samples}}`
 
-    alpha: float, default=1E-6
-            Regularization parameter to use in all regression operations.
-            Defaults to alpha included in `lr_args`, or if none is specified, 1E-6.
-
-    estimator:
-             estimator for computing approximated :math:`{\mathbf{\hat{Y}}}`,
-             default = `sklearn.linear_model.Ridge('alpha':1e-6, 'fit_intercept':False, 'tol':1e-12`)
+    regressor:
+             regressor for computing approximated :math:`{\mathbf{\hat{Y}}}`.
+             The regressor must be one of `sklearn.linear_model.Ridge`,
+             `sklearn.linear_model.RidgeCV`, or `sklearn.linear_model.LinearRegression`.
+             If a pre-fitted regressor is provided,
+             it is used to compute :math:`{\mathbf{\hat{Y}}}`.
+             The default regressor is `sklearn.linear_model.Ridge('alpha':1e-6, 'fit_intercept':False, 'tol':1e-12`)
 
     iterated_power : int or 'auto', default='auto'
          Number of iterations for the power method computed by
@@ -183,7 +188,7 @@ class PCovR(_BasePCA, LinearModel):
     >>> Y = np.array([[ 0, -5], [-1, 1], [1, -5], [-3, 2]])
     >>> pcovr = PCovR(mixing=0.1, n_components=2)
     >>> pcovr.fit(X, Y)
-    PCovR(alpha=1e-06, mixing=0.1, n_components=2, space='sample')
+    PCovR(mixing=0.1, n_components=2, space='sample')
     >>> T = pcovr.transform(X)
         [[ 3.2630561 ,  0.06663787],
          [-2.69395511, -0.41582771],
@@ -201,17 +206,15 @@ class PCovR(_BasePCA, LinearModel):
         mixing=0.5,
         n_components=None,
         svd_solver="auto",
-        alpha=None,
         tol=1e-12,
         space="auto",
-        estimator=LR(alpha=1e-6, fit_intercept=False, tol=1e-12),
+        regressor=Ridge(alpha=1e-6, fit_intercept=False, tol=1e-12),
         iterated_power="auto",
         random_state=None,
     ):
 
         self.mixing = mixing
         self.n_components = n_components
-        self.alpha = alpha
         self.space = space
 
         self.whiten = False
@@ -220,9 +223,9 @@ class PCovR(_BasePCA, LinearModel):
         self.iterated_power = iterated_power
         self.random_state = random_state
 
-        self.estimator = estimator
+        self.regressor = regressor
 
-    def fit(self, X, Y, Yhat=None, W=None):
+    def fit(self, X, Y):
         r"""
 
         Fit the model with X and Y. Depending on the dimensions of X,
@@ -248,18 +251,7 @@ class PCovR(_BasePCA, LinearModel):
             to have unit variance, otherwise :math:`\mathbf{Y}` should be
             scaled so that each feature has a variance of 1 / n_features.
 
-        Yhat : ndarray, shape (n_samples, n_properties), optional
-            Regressed training data, where n_samples is the number of samples and
-            n_properties is the number of properties. If not supplied, computed
-            by ridge regression.
-        W : ndarray, shape (n_features, n_properties), optional
-            Weights of regressed training data. If not supplied, computed
-            by ridge regression.
-
         """
-
-        if self.alpha is None:
-            self.alpha = getattr(self.estimator, "alpha", 1e-6)
 
         X, Y = check_X_y(X, Y, y_numeric=True, multi_output=True)
 
@@ -281,12 +273,22 @@ class PCovR(_BasePCA, LinearModel):
             else:
                 self.n_components = min(X.shape) - 1
 
-        if W is None:
-            self.estimator.fit(X, Y)
-            W = self.estimator.coef_.T.reshape(X.shape[1], -1)
+        if not any(
+            [
+                isinstance(self.regressor, LinearRegression),
+                isinstance(self.regressor, Ridge),
+                isinstance(self.regressor, RidgeCV),
+            ]
+        ):
+            raise ValueError(
+                "Regressor must be an instance of "
+                "`LinearRegression`, `Ridge`, or `RidgeCV`"
+            )
 
-        if Yhat is None:
-            Yhat = self.estimator.predict(X).reshape(X.shape[0], -1)
+        self.regressor_ = check_lr_fit(self.regressor, X, y=Y)
+
+        W = self.regressor_.coef_.T.reshape(X.shape[1], -1)
+        Yhat = self.regressor_.predict(X).reshape(X.shape[0], -1)
 
         # Handle svd_solver
         self._fit_svd_solver = self.svd_solver
@@ -367,7 +369,7 @@ class PCovR(_BasePCA, LinearModel):
             return_isqrt=True,
         )
         try:
-            Csqrt = np.linalg.inv(iCsqrt)
+            Csqrt = np.linalg.lstsq(iCsqrt, np.eye(len(iCsqrt)), rcond=None)[0]
 
         # if we can avoid recomputing Csqrt, we should, but sometimes we
         # run into a singular matrix, which is what we do here
@@ -389,10 +391,11 @@ class PCovR(_BasePCA, LinearModel):
             self.explained_variance_ / self.explained_variance_.sum()
         )
 
-        S_inv = np.diagflat([1.0 / s if s > self.tol else 0.0 for s in S])
-        self.pxt_ = np.linalg.multi_dot([iCsqrt, Vt.T, np.diagflat(S)])
-        self.ptx_ = np.linalg.multi_dot([S_inv, Vt, Csqrt])
-        self.pty_ = np.linalg.multi_dot([S_inv, Vt, iCsqrt, X.T, Y])
+        S_sqrt = np.diagflat([np.sqrt(s) if s > self.tol else 0.0 for s in S])
+        S_sqrt_inv = np.diagflat([1.0 / np.sqrt(s) if s > self.tol else 0.0 for s in S])
+        self.pxt_ = np.linalg.multi_dot([iCsqrt, Vt.T, S_sqrt])
+        self.ptx_ = np.linalg.multi_dot([S_sqrt_inv, Vt, Csqrt])
+        self.pty_ = np.linalg.multi_dot([S_sqrt_inv, Vt, iCsqrt, X.T, Y])
 
     def _fit_sample_space(self, X, Y, Yhat, W):
         r"""
@@ -442,7 +445,8 @@ class PCovR(_BasePCA, LinearModel):
         )
 
         P = (self.mixing * X.T) + (1.0 - self.mixing) * W @ Yhat.T
-        T = Vt.T @ np.diagflat(1 / np.sqrt(S))
+        S_sqrt_inv = np.diagflat([1.0 / np.sqrt(s) if s > self.tol else 0.0 for s in S])
+        T = Vt.T @ S_sqrt_inv
 
         self.pxt_ = P @ T
         self.pty_ = T.T @ Y
@@ -617,7 +621,7 @@ class PCovR(_BasePCA, LinearModel):
         return super().transform(X)
 
     def score(self, X, Y, T=None):
-        r"""Return the total reconstruction error for X and Y,
+        r"""Return the (negative) total reconstruction error for X and Y,
         defined as:
 
         .. math::
@@ -630,6 +634,8 @@ class PCovR(_BasePCA, LinearModel):
 
             \ell_{Y} = \frac{\lVert \mathbf{Y} - \mathbf{T}\mathbf{P}_{TY} \rVert ^ 2}{\lVert \mathbf{Y}\rVert ^ 2}
 
+        The negative loss :math:`-\ell = -(\ell_{X} + \ell{Y})` is returned for easier use in sklearn pipelines, e.g., a grid search, where methods named 'score' are meant to be maximized.
+
 
         Parameters
         ----------
@@ -641,10 +647,9 @@ class PCovR(_BasePCA, LinearModel):
 
         Returns
         -------
-        lx : float
-             Loss in reconstructing X from the latent-space projection T
-        ly : float
-             Loss in predicting Y from the latent-space projection T
+        loss : float
+             Negative sum of the loss in reconstructing X from the latent-space projection T
+             and the loss in predicting Y from the latent-space projection T
         """
 
         if T is None:
@@ -653,7 +658,7 @@ class PCovR(_BasePCA, LinearModel):
         x = self.inverse_transform(T)
         y = self.predict(T=T)
 
-        return (
+        return -(
             np.linalg.norm(X - x) ** 2.0 / np.linalg.norm(X) ** 2.0
             + np.linalg.norm(Y - y) ** 2.0 / np.linalg.norm(Y) ** 2.0
         )
