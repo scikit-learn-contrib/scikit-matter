@@ -67,7 +67,7 @@ def pcovr_covariance(
     return_isqrt=False,
     rank=None,
     random_state=0,
-    iterated_power=None,
+    iterated_power="auto",
 ):
     r"""
     Creates the PCovR modified covariance
