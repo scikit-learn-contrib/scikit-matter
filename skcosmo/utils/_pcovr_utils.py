@@ -8,7 +8,57 @@ from sklearn.utils.extmath import randomized_svd
 from sklearn.utils.validation import check_is_fitted
 
 
-def check_lr_fit(regressor, X, y=None):
+def _check_coefs(fitted_regressor, X, y):
+    if fitted_regressor.coef_.ndim != y.ndim:
+        raise ValueError(
+            "The target regressor has a shape incompatible "
+            "with the supplied target space"
+        )
+    elif fitted_regressor.coef_.ndim == 1:
+        if fitted_regressor.coef_.shape[0] != X.shape[1]:
+            raise ValueError(
+                "The target regressor has a shape incompatible "
+                "with the supplied feature space"
+            )
+    else:
+        if fitted_regressor.coef_.shape[0] != y.shape[1]:
+            raise ValueError(
+                "The target regressor has a shape incompatible "
+                "with the supplied target space"
+            )
+        elif fitted_regressor.coef_.shape[1] != X.shape[1]:
+            raise ValueError(
+                "The target regressor has a shape incompatible "
+                "with the supplied feature space"
+            )
+
+
+def _check_dual_coefs(fitted_regressor, K, y):
+    if fitted_regressor.dual_coef_.ndim != y.ndim:
+        raise ValueError(
+            "The target regressor has a shape incompatible "
+            "with the supplied target space"
+        )
+    elif fitted_regressor.dual_coef_.ndim == 1:
+        if fitted_regressor.dual_coef_.shape[0] != K.shape[0]:
+            raise ValueError(
+                "The target regressor has a shape incompatible "
+                "with the supplied sample space"
+            )
+    else:
+        if fitted_regressor.dual_coef_.shape[0] != K.shape[0]:
+            raise ValueError(
+                "The target regressor has a shape incompatible "
+                "with the supplied sample space"
+            )
+        elif fitted_regressor.dual_coef_.shape[1] != y.shape[1]:
+            raise ValueError(
+                "The target regressor has a shape incompatible "
+                "with the supplied target space"
+            )
+
+
+def check_lr_fit(regressor, X, y):
     r"""
     Checks that an regressor is fitted, and if not,
     fits it with the provided data
@@ -28,33 +78,44 @@ def check_lr_fit(regressor, X, y=None):
     try:
         check_is_fitted(regressor)
         fitted_regressor = deepcopy(regressor)
-
-        if fitted_regressor.coef_.ndim != y.ndim:
-            raise ValueError(
-                "The target regressor has a shape incompatible "
-                "with the supplied target space"
-            )
-        elif fitted_regressor.coef_.ndim == 1:
-            if fitted_regressor.coef_.shape[0] != X.shape[1]:
-                raise ValueError(
-                    "The target regressor has a shape incompatible "
-                    "with the supplied feature space"
-                )
-        else:
-            if fitted_regressor.coef_.shape[0] != y.shape[1]:
-                raise ValueError(
-                    "The target regressor has a shape incompatible "
-                    "with the supplied target space"
-                )
-            elif fitted_regressor.coef_.shape[1] != X.shape[1]:
-                raise ValueError(
-                    "The target regressor has a shape incompatible "
-                    "with the supplied feature space"
-                )
+        _check_coefs(regressor, X, y)
 
     except NotFittedError:
         fitted_regressor = clone(regressor)
         fitted_regressor.fit(X, y=y)
+
+    return fitted_regressor
+
+
+def check_krr_fit(regressor, K, y):
+    r"""
+    Checks that an regressor is fitted, and if not,
+    fits it with the provided data
+
+    :param regressor: sklearn-style regressor
+    :type regressor: object
+    :param X: feature matrix with which to fit the regressor
+        if it is not already fitted
+    :type X: array
+    :param y: target values with which to fit the regressor
+        if it is not already fitted
+    :type y: array
+    :param sample_weight: sample weights with which to fit
+        the regressor if not already fitted
+    :type sample_weight: array of shape (n_samples,)
+    """
+    try:
+        check_is_fitted(regressor)
+        fitted_regressor = deepcopy(regressor)
+        _check_dual_coefs(regressor, K, y)
+
+    except NotFittedError:
+        fitted_regressor = clone(regressor)
+
+        # Use a precomputed kernel
+        # to avoid re-computing K
+        fitted_regressor.set_params(kernel="precomputed")
+        fitted_regressor.fit(K, y=y)
 
     return fitted_regressor
 
