@@ -3,6 +3,7 @@ import unittest
 import numpy as np
 from sklearn import exceptions
 from sklearn.datasets import load_boston
+from sklearn.kernel_ridge import KernelRidge
 from sklearn.linear_model import RidgeCV
 from sklearn.utils.validation import check_X_y
 
@@ -31,8 +32,18 @@ class KernelPCovRBaseTest(unittest.TestCase):
         self.X = SFS().fit_transform(self.X)
         self.Y = SFS(column_wise=True).fit_transform(self.Y)
 
-        self.model = lambda mixing=0.5, **kwargs: KernelPCovR(
-            mixing, alpha=1e-8, svd_solver=kwargs.pop("svd_solver", "full"), **kwargs
+        self.model = lambda mixing=0.5, regressor=KernelRidge(
+            alpha=1e-8,
+            kernel="linear",
+            gamma=None,
+            degree=3,
+            coef0=1,
+            kernel_params=None,
+        ), **kwargs: KernelPCovR(
+            mixing,
+            regressor=regressor,
+            svd_solver=kwargs.pop("svd_solver", "full"),
+            **kwargs
         )
 
     def setUp(self):
@@ -101,7 +112,11 @@ class KernelPCovRErrorTest(KernelPCovRBaseTest):
 
     def test_kpcovr_error(self):
         for i, mixing in enumerate(np.linspace(0, 1, 6)):
-            kpcovr = self.model(mixing=mixing, kernel="rbf", gamma=1.0, center=False)
+            kpcovr = self.model(
+                mixing=mixing,
+                regressor=KernelRidge(kernel="rbf", gamma=1.0),
+                center=False,
+            )
 
             kpcovr.fit(self.X, self.Y)
             K = kpcovr._get_kernel(self.X)
@@ -198,8 +213,9 @@ class KernelTests(KernelPCovRBaseTest):
                 kpcovr = KernelPCovR(
                     mixing=0.5,
                     n_components=2,
-                    kernel=kernel,
-                    **kernel_params.get(kernel, {})
+                    regressor=KernelRidge(
+                        kernel=kernel, **kernel_params.get(kernel, {})
+                    ),
                 )
                 kpcovr.fit(self.X, self.Y)
 
@@ -209,22 +225,23 @@ class KernelTests(KernelPCovRBaseTest):
         using a linear kernel
         """
 
-        # making a common Yhat so that the models are working off the same values
         ridge = RidgeCV(fit_intercept=False, alphas=np.logspace(-8, 2))
-        Yhat = ridge.fit(self.X, self.Y).predict(self.X)
+        ridge.fit(self.X, self.Y)
 
         # common instantiation parameters for the two models
         hypers = dict(
             mixing=0.5,
             n_components=1,
         )
-        alpha = 1e-8
 
         # computing projection and predicton loss with linear KernelPCovR
+        # and use the alpha from RidgeCV for level regression comparisons
         kpcovr = KernelPCovR(
-            kernel="linear", fit_inverse_transform=True, alpha=alpha, **hypers
+            regressor=KernelRidge(alpha=ridge.alpha_, kernel="linear"),
+            fit_inverse_transform=True,
+            **hypers
         )
-        kpcovr.fit(self.X, self.Y, Yhat=Yhat)
+        kpcovr.fit(self.X, self.Y)
         ly = (
             np.linalg.norm(self.Y - kpcovr.predict(self.X)) ** 2.0
             / np.linalg.norm(self.Y) ** 2.0
