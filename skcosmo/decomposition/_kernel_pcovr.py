@@ -3,6 +3,7 @@ import numbers
 import numpy as np
 from scipy import linalg
 from scipy.sparse.linalg import svds
+from sklearn.exceptions import NotFittedError
 from sklearn.decomposition._base import _BasePCA
 from sklearn.decomposition._pca import _infer_dimension
 from sklearn.kernel_ridge import KernelRidge
@@ -188,14 +189,7 @@ class KernelPCovR(_BasePCA, LinearModel):
         mixing=0.5,
         n_components=None,
         svd_solver="auto",
-        regressor=KernelRidge(
-            alpha=1e-6,
-            kernel="linear",
-            gamma=None,
-            degree=3,
-            coef0=1,
-            kernel_params=None,
-        ),
+        regressor=None,
         center=False,
         fit_inverse_transform=False,
         tol=1e-12,
@@ -213,13 +207,17 @@ class KernelPCovR(_BasePCA, LinearModel):
         self.random_state = random_state
         self.center = center
 
+        if regressor is None:
+            regressor = KernelRidge(
+                alpha=1e-6,
+                kernel="linear",
+                gamma=None,
+                degree=3,
+                coef0=1,
+                kernel_params=None,
+            )
+
         self.regressor = regressor
-        self.alpha = self.regressor.alpha
-        self.kernel = self.regressor.kernel
-        self.kernel_params = self.regressor.kernel_params
-        self.gamma = self.regressor.gamma
-        self.degree = self.regressor.degree
-        self.coef0 = self.regressor.coef0
 
         self.n_jobs = n_jobs
         self.n_samples_ = None
@@ -227,12 +225,29 @@ class KernelPCovR(_BasePCA, LinearModel):
         self.fit_inverse_transform = fit_inverse_transform
 
     def _get_kernel(self, X, Y=None):
-        if callable(self.kernel):
-            params = self.kernel_params or {}
+
+        try:
+            check_is_fitted(self, "regressor_")
+            regressor_params = self.regressor_.get_params()
+
+        except NotFittedError:
+            regressor_params = self.regressor.get_params()
+
+        if callable(regressor_params["kernel"]):
+            params = regressor_params["kernel_params"] or {}
         else:
-            params = {"gamma": self.gamma, "degree": self.degree, "coef0": self.coef0}
+            default_params = {"gamma": None, "degree": 3, "coef0": 1}
+            params = {
+                param: regressor_params.get(param, default)
+                for param, default in default_params.items()
+            }
         return pairwise_kernels(
-            X, Y, metric=self.kernel, filter_params=True, n_jobs=self.n_jobs, **params
+            X,
+            Y,
+            metric=regressor_params.get("kernel", "linear"),
+            filter_params=True,
+            n_jobs=self.n_jobs,
+            **params
         )
 
     def _fit(self, K, Yhat, W):
@@ -260,7 +275,9 @@ class KernelPCovR(_BasePCA, LinearModel):
         self.pkt_ = P @ U @ np.sqrt(np.diagflat(S_inv))
 
         T = K @ self.pkt_
-        self.pt__ = np.linalg.lstsq(T, np.eye(T.shape[0]), rcond=self.alpha)[0]
+        self.pt__ = np.linalg.lstsq(T, np.eye(T.shape[0]), rcond=self.regressor_.alpha)[
+            0
+        ]
 
     def fit(self, X, Y):
         """
@@ -319,14 +336,24 @@ class KernelPCovR(_BasePCA, LinearModel):
         if not isinstance(self.regressor, KernelRidge):
             raise ValueError("Regressor must be an instance of KernelRidge")
 
+        # Check if regressor is fitted; if not, fit with precomputed K
+        # to avoid needing to compute the kernel a second time
         self.regressor_ = check_krr_fit(self.regressor, K, Y)
 
         W = self.regressor_.dual_coef_.reshape(X.shape[0], -1)
+        Yhat = self.regressor_.predict(K)
 
-        # Use this instead of `self.regressor_.predict(X)`
-        # so we don't have to recompute
-        # the train kernel again to get the predictions
-        Yhat = K @ W
+        # Since we fit the regressor with a precomputed K,
+        # we "reset" it so that it will work on the particular X
+        # of the KPCovR call. The dual coefficients are kept.
+        # Can be bypassed if the regressor is pre-fitted.
+        try:
+            check_is_fitted(self.regressor)
+
+        except NotFittedError:
+            self.regressor_.set_params(**self.regressor.get_params())
+            self.regressor_.X_fit_ = self.X_fit_
+            self.regressor_._check_n_features(self.X_fit_, reset=True)
 
         # Handle svd_solver
         self._fit_svd_solver = self.svd_solver
@@ -467,7 +494,7 @@ class KernelPCovR(_BasePCA, LinearModel):
         t_v = K_VN @ self.pkt_
 
         # TODO: change to lstsq
-        w = t_n @ np.linalg.pinv(t_n.T @ t_n, rcond=self.alpha) @ t_v.T
+        w = t_n @ np.linalg.pinv(t_n.T @ t_n, rcond=self.regressor_.alpha) @ t_v.T
         Lkpca = np.trace(K_VV - 2 * K_VN @ w + w.T @ K_VV @ w) / np.trace(K_VV)
 
         return sum([Lkpca, Lkrr])
