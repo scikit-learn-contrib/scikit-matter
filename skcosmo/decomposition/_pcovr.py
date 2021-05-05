@@ -119,13 +119,13 @@ class PCovR(_BasePCA, LinearModel):
             default=`sample` when :math:`{n_{samples} < n_{features}}` and
             `feature` when :math:`{n_{features} < n_{samples}}`
 
-    regressor:
+    regressor: {`Ridge`, `RidgeCV`, `LinearRegression`}, default=None
              regressor for computing approximated :math:`{\mathbf{\hat{Y}}}`.
              The regressor must be one of `sklearn.linear_model.Ridge`,
              `sklearn.linear_model.RidgeCV`, or `sklearn.linear_model.LinearRegression`.
              If a pre-fitted regressor is provided,
              it is used to compute :math:`{\mathbf{\hat{Y}}}`.
-             The default regressor is `sklearn.linear_model.Ridge('alpha':1e-6, 'fit_intercept':False, 'tol':1e-12`)
+             If None, `sklearn.linear_model.Ridge('alpha':1e-6, 'fit_intercept':False, 'tol':1e-12)` is used as the regressor.
 
     iterated_power : int or 'auto', default='auto'
          Number of iterations for the power method computed by
@@ -205,7 +205,7 @@ class PCovR(_BasePCA, LinearModel):
         svd_solver="auto",
         tol=1e-12,
         space="auto",
-        regressor=Ridge(alpha=1e-6, fit_intercept=False, tol=1e-12),
+        regressor=None,
         iterated_power="auto",
         random_state=None,
     ):
@@ -219,6 +219,9 @@ class PCovR(_BasePCA, LinearModel):
         self.tol = tol
         self.iterated_power = iterated_power
         self.random_state = random_state
+
+        if regressor is None:
+            regressor = Ridge(alpha=1e-6, fit_intercept=False, tol=1e-12)
 
         self.regressor = regressor
 
