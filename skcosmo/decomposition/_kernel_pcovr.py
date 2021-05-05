@@ -80,29 +80,37 @@ class KernelPCovR(_BasePCA, LinearModel):
         If randomized :
             run randomized SVD by the method of Halko et al.
 
-    kernel: "linear" | "poly" | "rbf" | "sigmoid" | "cosine" | "precomputed"
-        Kernel. Default="linear".
+    regressor : instance of `sklearn.kernel_ridge.KernelRidge`, default=None
+        The regressor to use for computing
+        the property predictions :math:`\\hat{\\mathbf{Y}}`.
+        A pre-fitted regressor may be provided. The kernel parameters
+        for the unsupervised task are inherited from the regressor
+        in order to ensure that they are identical. Consequently,
+        even if you are performing a fully unsupervised analysis,
+        a regressor is required. The relevant kernel parameters are:
+            kernel: "linear" | "poly" | "rbf" | "sigmoid" | "cosine" | "precomputed"
+                Kernel. Default="linear".
 
-    gamma: float, default=1/n_features
-        Kernel coefficient for rbf, poly and sigmoid kernels. Ignored by other
-        kernels.
+            gamma: float, default=None
+                Kernel coefficient for rbf, poly and sigmoid kernels. Ignored by other
+                kernels.
 
-    degree: int, default=3
-        Degree for poly kernels. Ignored by other kernels.
+            degree: int, default=3
+                Degree for poly kernels. Ignored by other kernels.
 
-    coef0: float, default=1
-        Independent term in poly and sigmoid kernels.
-        Ignored by other kernels.
+            coef0: float, default=1
+                Independent term in poly and sigmoid kernels.
+                Ignored by other kernels.
 
-    kernel_params: mapping of str to any, default=None
-        Parameters (keyword arguments) and values for kernel passed as
-        callable object. Ignored by other kernels.
+            kernel_params: mapping of str to any, default=None
+                Parameters (keyword arguments) and values for kernel passed as
+                callable object. Ignored by other kernels.
+        The regularization `alpha` is also set through the regressor
+        and is used in all regression operations. If None,
+        `KernelRidge(alpha=1.0e-6, kernel="linear")` is used as the regressor.
 
     center: bool, default=False
             Whether to center any computed kernels
-
-    alpha: float, default=1E-6
-            Regularization parameter to use in all regression operations.
 
     fit_inverse_transform: bool, default=False
         Learn the inverse transform for non-precomputed kernels.
@@ -165,23 +173,22 @@ class KernelPCovR(_BasePCA, LinearModel):
     >>> Y = np.array([[ 0, -5], [-1, 1], [1, -5], [-3, 2]])
     >>> Y = SFS(column_wise=True).fit_transform(Y)
     >>>
-    >>> kpcovr = KernelPCovR(mixing=0.1, n_components=2, kernel='rbf', gamma=2)
+    >>> kpcovr = KernelPCovR(mixing=0.1, n_components=2, regressor=KernelRidge(kernel='rbf', gamma=2))
     >>> kpcovr.fit(X, Y)
-        KernelPCovR(coef0=1, degree=3, fit_inverse_transform=False, gamma=0.01, kernel='rbf',
-           kernel_params=None, mixing=None, n_components=2, n_jobs=None,
-           alpha=None, tol=1e-12)
+        KernelPCovR(mixing=0.1, n_components=2,
+                    regressor=KernelRidge(gamma=2, kernel='rbf'))
     >>> T = kpcovr.transform(X)
-        [[ 1.01199065, -0.35439061],
-         [-0.68099591,  0.48912275],
-         [ 1.4677616 ,  0.13757037],
-         [-1.79874193, -0.27232032]]
+        [[-0.55119827, -0.21793572],
+         [ 0.3768726 ,  0.31208068],
+         [-0.76898956,  0.08511876],
+         [ 0.92488574, -0.18627707]]
     >>> Yp = kpcovr.predict(X)
-        [[-0.01044648, -0.84443158],
-         [-0.1758848 ,  0.16224503],
-         [ 0.1573037 , -0.84211944],
-         [-0.51133139,  0.32552881]]
+        [[ 0.51713163, -0.99453229],
+         [-0.16083953,  0.8378709 ],
+         [ 1.18143489, -1.01072628],
+         [-1.52011339,  1.13439986]]
     >>> kpcovr.score(X, Y)
-        (0.5312320029915978, 0.06254540655698511)
+        1.0000774522028972
     """
 
     def __init__(
@@ -303,11 +310,6 @@ class KernelPCovR(_BasePCA, LinearModel):
             means and scaled. If features are related, the matrix should be scaled
             to have unit variance, otherwise :math:`\\mathbf{Y}` should be
             scaled so that each feature has a variance of 1 / n_features.
-
-        Yhat: ndarray, shape (n_samples, n_properties), optional
-            Regressed training data, where n_samples is the number of samples and
-            n_properties is the number of properties. If not supplied, computed
-            by ridge regression.
 
         Returns
         -------
