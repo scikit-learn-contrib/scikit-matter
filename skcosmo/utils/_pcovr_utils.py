@@ -9,6 +9,21 @@ from sklearn.utils.validation import check_is_fitted
 
 
 def _check_coefs(fitted_regressor, X, y):
+    r"""
+    Checks that the coefficients of a fitted
+    regression model is compatible with the shapes
+    of X and y
+
+    :param regressor: sklearn-style regressor
+    :type regressor: object
+    :param X: feature matrix with which to compare the
+        regression coefficients
+    :type X: array
+    :param y: target values with which to compare the
+        regression coefficients
+    :type y: array
+
+    """
     if fitted_regressor.coef_.ndim != y.ndim:
         raise ValueError(
             "The target regressor has a shape incompatible "
@@ -34,6 +49,21 @@ def _check_coefs(fitted_regressor, X, y):
 
 
 def _check_dual_coefs(fitted_regressor, K, y):
+    r"""
+    Checks that the dual coefficients of a fitted
+    regression model is compatible with the shapes
+    of X and y
+
+    :param regressor: sklearn-style regressor
+    :type regressor: object
+    :param X: feature matrix with which to compare the
+        regression coefficients
+    :type X: array
+    :param y: target values with which to compare the
+        regression coefficients
+    :type y: array
+
+    """
     if fitted_regressor.dual_coef_.ndim != y.ndim:
         raise ValueError(
             "The target regressor has a shape incompatible "
@@ -60,7 +90,7 @@ def _check_dual_coefs(fitted_regressor, K, y):
 
 def check_lr_fit(regressor, X, y):
     r"""
-    Checks that an regressor is fitted, and if not,
+    Checks that a (linear) regressor is fitted, and if not,
     fits it with the provided data
 
     :param regressor: sklearn-style regressor
@@ -71,9 +101,6 @@ def check_lr_fit(regressor, X, y):
     :param y: target values with which to fit the regressor
         if it is not already fitted
     :type y: array
-    :param sample_weight: sample weights with which to fit
-        the regressor if not already fitted
-    :type sample_weight: array of shape (n_samples,)
     """
     try:
         check_is_fitted(regressor)
@@ -89,7 +116,7 @@ def check_lr_fit(regressor, X, y):
 
 def check_krr_fit(regressor, K, y):
     r"""
-    Checks that an regressor is fitted, and if not,
+    Checks that a (kernel ridge) regressor is fitted, and if not,
     fits it with the provided data
 
     :param regressor: sklearn-style regressor
@@ -100,9 +127,6 @@ def check_krr_fit(regressor, K, y):
     :param y: target values with which to fit the regressor
         if it is not already fitted
     :type y: array
-    :param sample_weight: sample weights with which to fit
-        the regressor if not already fitted
-    :type sample_weight: array of shape (n_samples,)
     """
     try:
         check_is_fitted(regressor)
