@@ -431,6 +431,28 @@ class PCovRInfrastructureTest(PCovRBaseTest):
         self.assertTrue(np.allclose(Yhat_regressor, Yhat_pcovr))
         self.assertTrue(np.allclose(W_regressor, W_pcovr))
 
+    def test_regressor_modifications(self):
+        regressor = Ridge(alpha=1e-8)
+        pcovr = self.model(mixing=0.5, regressor=regressor)
+
+        # PCovR regressor matches the original
+        self.assertTrue(regressor.get_params() == pcovr.regressor.get_params())
+
+        # PCovR regressor updates its parameters
+        # to match the original regressor
+        regressor.set_params(alpha=1e-6)
+        self.assertTrue(regressor.get_params() == pcovr.regressor.get_params())
+
+        # Fitting regressor outside PCovR fits the PCovR regressor
+        regressor.fit(self.X, self.Y)
+        self.assertTrue(hasattr(pcovr.regressor, "coef_"))
+
+        # PCovR regressor doesn't change after fitting
+        pcovr.fit(self.X, self.Y)
+        regressor.set_params(alpha=1e-4)
+        self.assertTrue(hasattr(pcovr.regressor_, "coef_"))
+        self.assertTrue(regressor.get_params() != pcovr.regressor_.get_params())
+
     def test_incompatible_regressor(self):
         regressor = KernelRidge(alpha=1e-8, kernel="linear")
         regressor.fit(self.X, self.Y)
