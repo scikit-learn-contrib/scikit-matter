@@ -282,9 +282,7 @@ class KernelPCovR(_BasePCA, LinearModel):
         self.pkt_ = P @ U @ np.sqrt(np.diagflat(S_inv))
 
         T = K @ self.pkt_
-        self.pt__ = np.linalg.lstsq(T, np.eye(T.shape[0]), rcond=self.regressor_.alpha)[
-            0
-        ]
+        self.pt__ = np.linalg.lstsq(T, np.eye(T.shape[0]), rcond=self.tol)[0]
 
     def fit(self, X, Y):
         """
@@ -495,8 +493,11 @@ class KernelPCovR(_BasePCA, LinearModel):
         t_n = K_NN @ self.pkt_
         t_v = K_VN @ self.pkt_
 
-        # TODO: change to lstsq
-        w = t_n @ np.linalg.pinv(t_n.T @ t_n, rcond=self.regressor_.alpha) @ t_v.T
+        w = (
+            t_n
+            @ np.linalg.lstsq(t_n.T @ t_n, np.eye(t_n.shape[1]), rcond=self.tol)[0]
+            @ t_v.T
+        )
         Lkpca = np.trace(K_VV - 2 * K_VN @ w + w.T @ K_VV @ w) / np.trace(K_VV)
 
         return sum([Lkpca, Lkrr])
