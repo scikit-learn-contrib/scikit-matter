@@ -126,6 +126,12 @@ class PCovR(_BasePCA, LinearModel):
              If a pre-fitted regressor is provided,
              it is used to compute :math:`{\mathbf{\hat{Y}}}`.
              If None, `sklearn.linear_model.Ridge('alpha':1e-6, 'fit_intercept':False, 'tol':1e-12)` is used as the regressor.
+             Note that any pre-fitting of the regressor will be lost if `PCovR` is
+             within a composite estimator that enforces cloning, e.g.,
+             `sklearn.compose.TransformedTargetRegressor` or
+             `sklearn.pipeline.Pipeline` with model caching.
+             In such cases, the regressor will be re-fitted on the same
+             training data as the composite estimator.
 
     iterated_power : int or 'auto', default='auto'
          Number of iterations for the power method computed by

@@ -3,9 +3,9 @@ import numbers
 import numpy as np
 from scipy import linalg
 from scipy.sparse.linalg import svds
-from sklearn.exceptions import NotFittedError
 from sklearn.decomposition._base import _BasePCA
 from sklearn.decomposition._pca import _infer_dimension
+from sklearn.exceptions import NotFittedError
 from sklearn.kernel_ridge import KernelRidge
 from sklearn.linear_model._base import LinearModel
 from sklearn.metrics.pairwise import pairwise_kernels
@@ -108,6 +108,12 @@ class KernelPCovR(_BasePCA, LinearModel):
         The regularization `alpha` is also set through the regressor
         and is used in all regression operations. If None,
         `KernelRidge(alpha=1.0e-6, kernel="linear")` is used as the regressor.
+        Note that any pre-fitting of the regressor will be lost if `KernelPCovR` is
+        within a composite estimator that enforces cloning, e.g.,
+        `sklearn.compose.TransformedTargetRegressor` or
+        `sklearn.pipeline.Pipeline` with model caching.
+        In such cases, the regressor will be re-fitted on the same
+        training data as the composite estimator.
 
     center: bool, default=False
             Whether to center any computed kernels
@@ -117,7 +123,8 @@ class KernelPCovR(_BasePCA, LinearModel):
         (i.e. learn to find the pre-image of a point)
 
     tol: float, default=1e-12
-        Tolerance for singular values computed by svd_solver == 'arpack'.
+        Tolerance for singular values computed by svd_solver == 'arpack'
+        and for matrix inversions.
         Must be of range [0.0, infinity).
 
     n_jobs: int, default=None
