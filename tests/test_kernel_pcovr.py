@@ -4,7 +4,10 @@ import numpy as np
 from sklearn import exceptions
 from sklearn.datasets import load_boston
 from sklearn.kernel_ridge import KernelRidge
-from sklearn.linear_model import RidgeCV
+from sklearn.linear_model import (
+    Ridge,
+    RidgeCV,
+)
 from sklearn.utils.validation import check_X_y
 
 from skcosmo.decomposition import (
@@ -191,6 +194,106 @@ class KernelPCovRInfrastructureTest(KernelPCovRBaseTest):
         _ = kpcovr.predict(self.X)
         _ = kpcovr.transform(self.X)
         _ = kpcovr.score(self.X, self.Y)
+
+    def test_prefit_regressor(self):
+        regressor = KernelRidge(alpha=1e-8, kernel="rbf", gamma=0.1)
+        regressor.fit(self.X, self.Y)
+        kpcovr = self.model(mixing=0.5, regressor=regressor)
+        kpcovr.fit(self.X, self.Y)
+
+        Yhat_regressor = regressor.predict(self.X).reshape(self.X.shape[0], -1)
+        W_regressor = regressor.dual_coef_.reshape(self.X.shape[0], -1)
+
+        Yhat_kpcovr = kpcovr.regressor_.predict(self.X).reshape(self.X.shape[0], -1)
+        W_kpcovr = kpcovr.regressor_.dual_coef_.reshape(self.X.shape[0], -1)
+
+        self.assertTrue(np.allclose(Yhat_regressor, Yhat_kpcovr))
+        self.assertTrue(np.allclose(W_regressor, W_kpcovr))
+
+    def test_regressor_modifications(self):
+        regressor = KernelRidge(alpha=1e-8, kernel="rbf", gamma=0.1)
+        kpcovr = self.model(mixing=0.5, regressor=regressor)
+
+        # KPCovR regressor matches the original
+        self.assertTrue(regressor.get_params() == kpcovr.regressor.get_params())
+
+        # KPCovR regressor updates its parameters
+        # to match the original regressor
+        regressor.set_params(gamma=0.2)
+        self.assertTrue(regressor.get_params() == kpcovr.regressor.get_params())
+
+        # Fitting regressor outside KPCovR fits the KPCovR regressor
+        regressor.fit(self.X, self.Y)
+        self.assertTrue(hasattr(kpcovr.regressor, "dual_coef_"))
+
+        # KPCovR regressor doesn't change after fitting
+        kpcovr.fit(self.X, self.Y)
+        regressor.set_params(gamma=0.3)
+        self.assertTrue(hasattr(kpcovr.regressor_, "dual_coef_"))
+        self.assertTrue(regressor.get_params() != kpcovr.regressor_.get_params())
+
+    def test_incompatible_regressor(self):
+        regressor = Ridge(alpha=1e-8)
+        regressor.fit(self.X, self.Y)
+        kpcovr = self.model(mixing=0.5, regressor=regressor)
+
+        with self.assertRaises(ValueError) as cm:
+            kpcovr.fit(self.X, self.Y)
+            self.assertTrue(
+                str(cm.message),
+                "Regressor must be an instance of `KernelRidge`",
+            )
+
+    def test_incompatible_coef_shape(self):
+
+        # 1D properties (self.Y is 2D with two targets)
+        # X shape doesn't match
+        regressor = KernelRidge(alpha=1e-8, kernel="linear")
+        regressor.fit(self.X, self.Y[:, 0])
+        kpcovr = self.model(mixing=0.5, regressor=regressor)
+
+        with self.assertRaises(ValueError) as cm:
+            kpcovr.fit(self.X[0:-1], self.Y[0:-1, 0])
+            self.assertTrue(
+                str(cm.message),
+                "The target regressor has a shape incompatible "
+                "with the supplied sample space",
+            )
+
+        # >= 2D properties
+        # Y shape doesn't match
+        regressor = KernelRidge(alpha=1e-8, kernel="linear")
+        regressor.fit(self.X, self.Y[:, 0][:, np.newaxis])
+        kpcovr = self.model(mixing=0.5, regressor=regressor)
+
+        with self.assertRaises(ValueError) as cm:
+            kpcovr.fit(self.X, self.Y[:, 0])
+            self.assertTrue(
+                str(cm.message),
+                "The target regressor has a shape incompatible "
+                "with the supplied target space",
+            )
+
+        with self.assertRaises(ValueError) as cm:
+            kpcovr.fit(self.X, self.Y)
+            self.assertTrue(
+                str(cm.message),
+                "The target regressor has a shape incompatible "
+                "with the supplied target space",
+            )
+
+        # X shape doesn't match
+        regressor = KernelRidge(alpha=1e-8, kernel="linear")
+        regressor.fit(self.X, self.Y)
+        kpcovr = self.model(mixing=0.5, regressor=regressor)
+
+        with self.assertRaises(ValueError) as cm:
+            kpcovr.fit(self.X[0:-1], self.Y[0:-1])
+            self.assertTrue(
+                str(cm.message),
+                "The target regressor has a shape incompatible "
+                "with the supplied sample space",
+            )
 
 
 class KernelTests(KernelPCovRBaseTest):
