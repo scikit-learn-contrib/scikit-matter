@@ -52,13 +52,13 @@ def _check_dual_coefs(fitted_regressor, K, y):
     r"""
     Checks that the dual coefficients of a fitted
     regression model is compatible with the shapes
-    of X and y
+    of K and y
 
     :param regressor: sklearn-style regressor
     :type regressor: object
-    :param X: feature matrix with which to compare the
+    :param K: kernel matrix with which to compare the
         regression coefficients
-    :type X: array
+    :type K: array
     :param y: target values with which to compare the
         regression coefficients
     :type y: array
