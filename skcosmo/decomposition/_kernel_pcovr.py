@@ -341,10 +341,15 @@ class KernelPCovR(_BasePCA, LinearModel):
         self.regressor_ = check_krr_fit(self.regressor, K, Y)
 
         W = self.regressor_.dual_coef_.reshape(X.shape[0], -1)
-        Yhat = self.regressor_.predict(K)
 
-        # Since we fit the regressor with a precomputed K,
-        # we "reset" it so that it will work on the particular X
+        # Use this instead of `self.regressor_.predict(K)`
+        # so that we can handle the case of the pre-fitted regressor
+        Yhat = K @ self.regressor_.dual_coef_
+
+        # When we have an unfitted regressor,
+        # we fit it with a precomputed K so,
+        # we must subsequently "reset" it so that
+        # it will work on the particular X
         # of the KPCovR call. The dual coefficients are kept.
         # Can be bypassed if the regressor is pre-fitted.
         try:
