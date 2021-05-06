@@ -126,7 +126,7 @@ class KernelPCovRErrorTest(KernelPCovRBaseTest):
 
             t = kpcovr.transform(self.X)
 
-            w = t @ np.linalg.pinv(t.T @ t, rcond=kpcovr.regressor_.alpha) @ t.T
+            w = t @ np.linalg.pinv(t.T @ t, rcond=kpcovr.tol) @ t.T
             Lkpca = np.trace(K - K @ w) / np.trace(K)
 
             # this is only true for in-sample data
