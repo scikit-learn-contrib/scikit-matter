@@ -316,6 +316,9 @@ class KernelPCovR(_BasePCA, LinearModel):
 
         """
 
+        if not isinstance(self.regressor, KernelRidge):
+            raise ValueError("Regressor must be an instance of `KernelRidge`")
+
         X, Y = check_X_y(X, Y, y_numeric=True, multi_output=True)
         self.X_fit_ = X.copy()
 
@@ -332,9 +335,6 @@ class KernelPCovR(_BasePCA, LinearModel):
             K = self.centerer_.fit_transform(K)
 
         self.n_samples_ = X.shape[0]
-
-        if not isinstance(self.regressor, KernelRidge):
-            raise ValueError("Regressor must be an instance of KernelRidge")
 
         # Check if regressor is fitted; if not, fit with precomputed K
         # to avoid needing to compute the kernel a second time
