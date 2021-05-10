@@ -247,6 +247,12 @@ class KernelPCovRInfrastructureTest(KernelPCovRBaseTest):
                 "Regressor must be an instance of `KernelRidge`",
             )
 
+    def test_none_regressor(self):
+        kpcovr = KernelPCovR(mixing=0.5, regressor=None)
+        kpcovr.fit(self.X, self.Y)
+        self.assertTrue(kpcovr.regressor is None)
+        self.assertTrue(kpcovr.regressor_ is not None)
+
     def test_incompatible_coef_shape(self):
 
         # 1D properties (self.Y is 2D with two targets)
