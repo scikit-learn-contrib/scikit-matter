@@ -36,12 +36,7 @@ class KernelPCovRBaseTest(unittest.TestCase):
         self.Y = SFS(column_wise=True).fit_transform(self.Y)
 
         self.model = lambda mixing=0.5, regressor=KernelRidge(
-            alpha=1e-8,
-            kernel="linear",
-            gamma=None,
-            degree=3,
-            coef0=1,
-            kernel_params=None,
+            alpha=1e-8
         ), **kwargs: KernelPCovR(
             mixing,
             regressor=regressor,
@@ -118,6 +113,8 @@ class KernelPCovRErrorTest(KernelPCovRBaseTest):
             kpcovr = self.model(
                 mixing=mixing,
                 regressor=KernelRidge(kernel="rbf", gamma=1.0),
+                kernel="rbf",
+                gamma=1.0,
                 center=False,
             )
 
@@ -198,7 +195,7 @@ class KernelPCovRInfrastructureTest(KernelPCovRBaseTest):
     def test_prefit_regressor(self):
         regressor = KernelRidge(alpha=1e-8, kernel="rbf", gamma=0.1)
         regressor.fit(self.X, self.Y)
-        kpcovr = self.model(mixing=0.5, regressor=regressor)
+        kpcovr = self.model(mixing=0.5, regressor=regressor, kernel="rbf", gamma=0.1)
         kpcovr.fit(self.X, self.Y)
 
         Yhat_regressor = regressor.predict(self.X).reshape(self.X.shape[0], -1)
@@ -212,7 +209,7 @@ class KernelPCovRInfrastructureTest(KernelPCovRBaseTest):
 
     def test_regressor_modifications(self):
         regressor = KernelRidge(alpha=1e-8, kernel="rbf", gamma=0.1)
-        kpcovr = self.model(mixing=0.5, regressor=regressor)
+        kpcovr = self.model(mixing=0.5, regressor=regressor, kernel="rbf", gamma=0.1)
 
         # KPCovR regressor matches the original
         self.assertTrue(regressor.get_params() == kpcovr.regressor.get_params())
@@ -226,11 +223,17 @@ class KernelPCovRInfrastructureTest(KernelPCovRBaseTest):
         regressor.fit(self.X, self.Y)
         self.assertTrue(hasattr(kpcovr.regressor, "dual_coef_"))
 
-        # KPCovR regressor doesn't change after fitting
-        kpcovr.fit(self.X, self.Y)
-        regressor.set_params(gamma=0.3)
-        self.assertTrue(hasattr(kpcovr.regressor_, "dual_coef_"))
-        self.assertTrue(regressor.get_params() != kpcovr.regressor_.get_params())
+        # Raise error during KPCovR fit since regressor and KPCovR
+        # kernel parameters now inconsistent
+        with self.assertRaises(ValueError) as cm:
+            kpcovr.fit(self.X, self.Y)
+            self.assertTrue(
+                str(cm.message),
+                "Kernel parameter mismatch: the regressor has kernel parameters "
+                "{kernel: linear, gamma: 0.2, degree: 3, coef0: 1, kernel_params: None}"
+                " and KernelPCovR was initialized with kernel parameters "
+                "{kernel: linear, gamma: 0.1, degree: 3, coef0: 1, kernel_params: None}",
+            )
 
     def test_incompatible_regressor(self):
         regressor = Ridge(alpha=1e-8)
@@ -319,6 +322,8 @@ class KernelTests(KernelPCovRBaseTest):
                     regressor=KernelRidge(
                         kernel=kernel, **kernel_params.get(kernel, {})
                     ),
+                    kernel=kernel,
+                    **kernel_params.get(kernel, {})
                 )
                 kpcovr.fit(self.X, self.Y)
 
@@ -341,6 +346,7 @@ class KernelTests(KernelPCovRBaseTest):
         # and use the alpha from RidgeCV for level regression comparisons
         kpcovr = KernelPCovR(
             regressor=KernelRidge(alpha=ridge.alpha_, kernel="linear"),
+            kernel="linear",
             fit_inverse_transform=True,
             **hypers
         )
