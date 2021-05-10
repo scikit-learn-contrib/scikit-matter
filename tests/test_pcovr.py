@@ -466,6 +466,12 @@ class PCovRInfrastructureTest(PCovRBaseTest):
                 "`LinearRegression`, `Ridge`, or `RidgeCV`",
             )
 
+    def test_none_regressor(self):
+        pcovr = PCovR(mixing=0.5, regressor=None)
+        pcovr.fit(self.X, self.Y)
+        self.assertTrue(pcovr.regressor is None)
+        self.assertTrue(pcovr.regressor_ is not None)
+
     def test_incompatible_coef_shape(self):
 
         # 1D properties (self.Y is 2D with one target)
