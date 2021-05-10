@@ -142,6 +142,9 @@ class PCovR(_BasePCA, LinearModel):
          Used when the 'arpack' or 'randomized' solvers are used. Pass an int
          for reproducible results across multiple function calls.
 
+    **regressor_params: additional keyword arguments to be passed
+        to the regressor. Ignored if `regressor` is not `None`.
+
     Attributes
     ----------
 
@@ -214,6 +217,7 @@ class PCovR(_BasePCA, LinearModel):
         regressor=None,
         iterated_power="auto",
         random_state=None,
+        **regressor_params,
     ):
 
         self.mixing = mixing
@@ -226,10 +230,8 @@ class PCovR(_BasePCA, LinearModel):
         self.iterated_power = iterated_power
         self.random_state = random_state
 
-        if regressor is None:
-            regressor = Ridge(alpha=1e-6, fit_intercept=False, tol=1e-12)
-
         self.regressor = regressor
+        self.regressor_params = regressor_params
 
     def fit(self, X, Y):
         r"""
@@ -281,6 +283,7 @@ class PCovR(_BasePCA, LinearModel):
 
         if not any(
             [
+                self.regressor is None,
                 isinstance(self.regressor, LinearRegression),
                 isinstance(self.regressor, Ridge),
                 isinstance(self.regressor, RidgeCV),
@@ -291,7 +294,15 @@ class PCovR(_BasePCA, LinearModel):
                 "`LinearRegression`, `Ridge`, or `RidgeCV`"
             )
 
-        self.regressor_ = check_lr_fit(self.regressor, X, y=Y)
+        # Assign the default regressor
+        if self.regressor is None:
+            regressor = Ridge(
+                alpha=1e-6, fit_intercept=False, tol=1e-12, **self.regressor_params
+            )
+        else:
+            regressor = self.regressor
+
+        self.regressor_ = check_lr_fit(regressor, X, y=Y)
 
         W = self.regressor_.coef_.T.reshape(X.shape[1], -1)
         Yhat = self.regressor_.predict(X).reshape(X.shape[0], -1)
