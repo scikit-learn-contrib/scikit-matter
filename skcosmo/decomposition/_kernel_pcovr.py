@@ -83,37 +83,28 @@ class KernelPCovR(_BasePCA, LinearModel):
     regressor : instance of `sklearn.kernel_ridge.KernelRidge`, default=None
         The regressor to use for computing
         the property predictions :math:`\\hat{\\mathbf{Y}}`.
-        A pre-fitted regressor may be provided. The kernel parameters
-        for the unsupervised task are inherited from the regressor
-        in order to ensure that they are identical. Consequently,
-        even if you are performing a fully unsupervised analysis,
-        a regressor is required. The relevant kernel parameters are:
-            kernel: "linear" | "poly" | "rbf" | "sigmoid" | "cosine" | "precomputed"
+        A pre-fitted regressor may be provided.
+        If the regressor is not `None`, its kernel parameters
+        (`kernel`, `gamma`, `degree`, `coef0`, and `kernel_params`)
+        must be identical to those passed directly to `KernelPCovR`.
+
+    kernel: "linear" | "poly" | "rbf" | "sigmoid" | "cosine" | "precomputed"
                 Kernel. Default="linear".
 
-            gamma: float, default=None
-                Kernel coefficient for rbf, poly and sigmoid kernels. Ignored by other
-                kernels.
+    gamma: float, default=None
+        Kernel coefficient for rbf, poly and sigmoid kernels. Ignored by other
+        kernels.
 
-            degree: int, default=3
-                Degree for poly kernels. Ignored by other kernels.
+    degree: int, default=3
+        Degree for poly kernels. Ignored by other kernels.
 
-            coef0: float, default=1
-                Independent term in poly and sigmoid kernels.
-                Ignored by other kernels.
+    coef0: float, default=1
+        Independent term in poly and sigmoid kernels.
+        Ignored by other kernels.
 
-            kernel_params: mapping of str to any, default=None
-                Parameters (keyword arguments) and values for kernel passed as
-                callable object. Ignored by other kernels.
-        The regularization `alpha` is also set through the regressor
-        and is used in all regression operations. If None,
-        `KernelRidge(alpha=1.0e-6, kernel="linear")` is used as the regressor.
-        Note that any pre-fitting of the regressor will be lost if `KernelPCovR` is
-        within a composite estimator that enforces cloning, e.g.,
-        `sklearn.compose.TransformedTargetRegressor` or
-        `sklearn.pipeline.Pipeline` with model caching.
-        In such cases, the regressor will be re-fitted on the same
-        training data as the composite estimator.
+    kernel_params: mapping of str to any, default=None
+        Parameters (keyword arguments) and values for kernel passed as
+        callable object. Ignored by other kernels.
 
     center: bool, default=False
             Whether to center any computed kernels
@@ -140,6 +131,9 @@ class KernelPCovR(_BasePCA, LinearModel):
     random_state : int, RandomState instance or None, default=None
         Used when the 'arpack' or 'randomized' solvers are used. Pass an int
         for reproducible results across multiple function calls.
+
+    **regressor_params: additional keyword arguments to be passed
+        to the regressor. Ignored if `regressor` is not `None`.
 
 
     Attributes
@@ -180,9 +174,9 @@ class KernelPCovR(_BasePCA, LinearModel):
     >>> Y = np.array([[ 0, -5], [-1, 1], [1, -5], [-3, 2]])
     >>> Y = SFS(column_wise=True).fit_transform(Y)
     >>>
-    >>> kpcovr = KernelPCovR(mixing=0.1, n_components=2, regressor=KernelRidge(kernel='rbf', gamma=2))
+    >>> kpcovr = KernelPCovR(mixing=0.1, n_components=2, regressor=KernelRidge(kernel='rbf', gamma=2), kernel='rbf', gamma=2)
     >>> kpcovr.fit(X, Y)
-        KernelPCovR(mixing=0.1, n_components=2,
+        KernelPCovR(gamma=2, kernel='rbf', mixing=0.1, n_components=2,
                     regressor=KernelRidge(gamma=2, kernel='rbf'))
     >>> T = kpcovr.transform(X)
         [[-0.55119827, -0.21793572],
@@ -204,12 +198,18 @@ class KernelPCovR(_BasePCA, LinearModel):
         n_components=None,
         svd_solver="auto",
         regressor=None,
+        kernel="linear",
+        gamma=None,
+        degree=3,
+        coef0=1,
+        kernel_params=None,
         center=False,
         fit_inverse_transform=False,
         tol=1e-12,
         n_jobs=None,
         iterated_power="auto",
         random_state=None,
+        **regressor_params
     ):
 
         self.mixing = mixing
@@ -221,47 +221,27 @@ class KernelPCovR(_BasePCA, LinearModel):
         self.random_state = random_state
         self.center = center
 
-        if regressor is None:
-            regressor = KernelRidge(
-                alpha=1e-6,
-                kernel="linear",
-                gamma=None,
-                degree=3,
-                coef0=1,
-                kernel_params=None,
-            )
-
-        self.regressor = regressor
+        self.kernel = kernel
+        self.gamma = gamma
+        self.degree = degree
+        self.coef0 = coef0
+        self.kernel_params = kernel_params
 
         self.n_jobs = n_jobs
         self.n_samples_ = None
 
         self.fit_inverse_transform = fit_inverse_transform
 
+        self.regressor = regressor
+        self.regressor_params = regressor_params
+
     def _get_kernel(self, X, Y=None):
-
-        try:
-            check_is_fitted(self, "regressor_")
-            regressor_params = self.regressor_.get_params()
-
-        except NotFittedError:
-            regressor_params = self.regressor.get_params()
-
-        if callable(regressor_params["kernel"]):
-            params = regressor_params["kernel_params"] or {}
+        if callable(self.kernel):
+            params = self.kernel_params or {}
         else:
-            default_params = {"gamma": None, "degree": 3, "coef0": 1}
-            params = {
-                param: regressor_params.get(param, default)
-                for param, default in default_params.items()
-            }
+            params = {"gamma": self.gamma, "degree": self.degree, "coef0": self.coef0}
         return pairwise_kernels(
-            X,
-            Y,
-            metric=regressor_params.get("kernel", "linear"),
-            filter_params=True,
-            n_jobs=self.n_jobs,
-            **params
+            X, Y, metric=self.kernel, filter_params=True, n_jobs=self.n_jobs, **params
         )
 
     def _fit(self, K, Yhat, W):
@@ -323,7 +303,7 @@ class KernelPCovR(_BasePCA, LinearModel):
 
         """
 
-        if not isinstance(self.regressor, KernelRidge):
+        if not any([self.regressor is None, isinstance(self.regressor, KernelRidge)]):
             raise ValueError("Regressor must be an instance of `KernelRidge`")
 
         X, Y = check_X_y(X, Y, y_numeric=True, multi_output=True)
@@ -343,27 +323,64 @@ class KernelPCovR(_BasePCA, LinearModel):
 
         self.n_samples_ = X.shape[0]
 
+        if self.regressor is None:
+            regressor = KernelRidge(
+                kernel=self.kernel,
+                gamma=self.gamma,
+                degree=self.degree,
+                coef0=self.coef0,
+                kernel_params=self.kernel_params,
+                **self.regressor_params,
+            )
+        else:
+            regressor = self.regressor
+            kernel_attrs = ["kernel", "gamma", "degree", "coef0", "kernel_params"]
+            if not all(
+                [
+                    getattr(self, attr) == getattr(regressor, attr)
+                    for attr in kernel_attrs
+                ]
+            ):
+                raise ValueError(
+                    "Kernel parameter mismatch: the regressor has kernel parameters {%s}"
+                    " and KernelPCovR was initialized with kernel parameters {%s}"
+                    % (
+                        ", ".join(
+                            [
+                                "%s: %r" % (attr, getattr(regressor, attr))
+                                for attr in kernel_attrs
+                            ]
+                        ),
+                        ", ".join(
+                            [
+                                "%s: %r" % (attr, getattr(self, attr))
+                                for attr in kernel_attrs
+                            ]
+                        ),
+                    )
+                )
+
         # Check if regressor is fitted; if not, fit with precomputed K
         # to avoid needing to compute the kernel a second time
-        self.regressor_ = check_krr_fit(self.regressor, K, Y)
+        self.regressor_ = check_krr_fit(regressor, K, Y)
 
         W = self.regressor_.dual_coef_.reshape(X.shape[0], -1)
 
         # Use this instead of `self.regressor_.predict(K)`
         # so that we can handle the case of the pre-fitted regressor
-        Yhat = K @ self.regressor_.dual_coef_
+        Yhat = K @ W
 
         # When we have an unfitted regressor,
-        # we fit it with a precomputed K so,
-        # we must subsequently "reset" it so that
+        # we fit it with a precomputed K
+        # so we must subsequently "reset" it so that
         # it will work on the particular X
         # of the KPCovR call. The dual coefficients are kept.
         # Can be bypassed if the regressor is pre-fitted.
         try:
-            check_is_fitted(self.regressor)
+            check_is_fitted(regressor)
 
         except NotFittedError:
-            self.regressor_.set_params(**self.regressor.get_params())
+            self.regressor_.set_params(**regressor.get_params())
             self.regressor_.X_fit_ = self.X_fit_
             self.regressor_._check_n_features(self.X_fit_, reset=True)
 
