@@ -119,13 +119,19 @@ class PCovR(_BasePCA, LinearModel):
             default=`sample` when :math:`{n_{samples} < n_{features}}` and
             `feature` when :math:`{n_{features} < n_{samples}}`
 
-    regressor:
+    regressor: {`Ridge`, `RidgeCV`, `LinearRegression`}, default=None
              regressor for computing approximated :math:`{\mathbf{\hat{Y}}}`.
              The regressor must be one of `sklearn.linear_model.Ridge`,
              `sklearn.linear_model.RidgeCV`, or `sklearn.linear_model.LinearRegression`.
              If a pre-fitted regressor is provided,
              it is used to compute :math:`{\mathbf{\hat{Y}}}`.
-             The default regressor is `sklearn.linear_model.Ridge('alpha':1e-6, 'fit_intercept':False, 'tol':1e-12`)
+             If None, `sklearn.linear_model.Ridge('alpha':1e-6, 'fit_intercept':False, 'tol':1e-12)` is used as the regressor.
+             Note that any pre-fitting of the regressor will be lost if `PCovR` is
+             within a composite estimator that enforces cloning, e.g.,
+             `sklearn.compose.TransformedTargetRegressor` or
+             `sklearn.pipeline.Pipeline` with model caching.
+             In such cases, the regressor will be re-fitted on the same
+             training data as the composite estimator.
 
     iterated_power : int or 'auto', default='auto'
          Number of iterations for the power method computed by
@@ -136,14 +142,14 @@ class PCovR(_BasePCA, LinearModel):
          Used when the 'arpack' or 'randomized' solvers are used. Pass an int
          for reproducible results across multiple function calls.
 
+    **regressor_params: additional keyword arguments to be passed
+        to the regressor. Ignored if `regressor` is not `None`.
+
     Attributes
     ----------
 
     mixing: float, default=0.5
         mixing parameter, as described in PCovR as :math:`{\alpha}`
-
-    alpha: float, default=1E-6
-            Regularization parameter to use in all regression operations.
 
     tol: float, default=1e-12
         Tolerance for singular values computed by svd_solver == 'arpack'.
@@ -208,9 +214,10 @@ class PCovR(_BasePCA, LinearModel):
         svd_solver="auto",
         tol=1e-12,
         space="auto",
-        regressor=Ridge(alpha=1e-6, fit_intercept=False, tol=1e-12),
+        regressor=None,
         iterated_power="auto",
         random_state=None,
+        **regressor_params,
     ):
 
         self.mixing = mixing
@@ -224,6 +231,7 @@ class PCovR(_BasePCA, LinearModel):
         self.random_state = random_state
 
         self.regressor = regressor
+        self.regressor_params = regressor_params
 
     def fit(self, X, Y):
         r"""
@@ -275,6 +283,7 @@ class PCovR(_BasePCA, LinearModel):
 
         if not any(
             [
+                self.regressor is None,
                 isinstance(self.regressor, LinearRegression),
                 isinstance(self.regressor, Ridge),
                 isinstance(self.regressor, RidgeCV),
@@ -285,7 +294,15 @@ class PCovR(_BasePCA, LinearModel):
                 "`LinearRegression`, `Ridge`, or `RidgeCV`"
             )
 
-        self.regressor_ = check_lr_fit(self.regressor, X, y=Y)
+        # Assign the default regressor
+        if self.regressor is None:
+            regressor = Ridge(
+                alpha=1e-6, fit_intercept=False, tol=1e-12, **self.regressor_params
+            )
+        else:
+            regressor = self.regressor
+
+        self.regressor_ = check_lr_fit(regressor, X, y=Y)
 
         W = self.regressor_.coef_.T.reshape(X.shape[1], -1)
         Yhat = self.regressor_.predict(X).reshape(X.shape[0], -1)

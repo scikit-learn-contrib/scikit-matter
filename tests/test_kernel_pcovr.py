@@ -3,7 +3,11 @@ import unittest
 import numpy as np
 from sklearn import exceptions
 from sklearn.datasets import load_boston
-from sklearn.linear_model import RidgeCV
+from sklearn.kernel_ridge import KernelRidge
+from sklearn.linear_model import (
+    Ridge,
+    RidgeCV,
+)
 from sklearn.utils.validation import check_X_y
 
 from skcosmo.decomposition import (
@@ -31,8 +35,13 @@ class KernelPCovRBaseTest(unittest.TestCase):
         self.X = SFS().fit_transform(self.X)
         self.Y = SFS(column_wise=True).fit_transform(self.Y)
 
-        self.model = lambda mixing=0.5, **kwargs: KernelPCovR(
-            mixing, alpha=1e-8, svd_solver=kwargs.pop("svd_solver", "full"), **kwargs
+        self.model = lambda mixing=0.5, regressor=KernelRidge(
+            alpha=1e-8
+        ), **kwargs: KernelPCovR(
+            mixing,
+            regressor=regressor,
+            svd_solver=kwargs.pop("svd_solver", "full"),
+            **kwargs
         )
 
     def setUp(self):
@@ -101,7 +110,13 @@ class KernelPCovRErrorTest(KernelPCovRBaseTest):
 
     def test_kpcovr_error(self):
         for i, mixing in enumerate(np.linspace(0, 1, 6)):
-            kpcovr = self.model(mixing=mixing, kernel="rbf", gamma=1.0, center=False)
+            kpcovr = self.model(
+                mixing=mixing,
+                regressor=KernelRidge(kernel="rbf", gamma=1.0),
+                kernel="rbf",
+                gamma=1.0,
+                center=False,
+            )
 
             kpcovr.fit(self.X, self.Y)
             K = kpcovr._get_kernel(self.X)
@@ -111,13 +126,13 @@ class KernelPCovRErrorTest(KernelPCovRBaseTest):
 
             t = kpcovr.transform(self.X)
 
-            w = t @ np.linalg.pinv(t.T @ t, rcond=kpcovr.alpha) @ t.T
+            w = t @ np.linalg.pinv(t.T @ t, rcond=kpcovr.tol) @ t.T
             Lkpca = np.trace(K - K @ w) / np.trace(K)
 
             # this is only true for in-sample data
             self.assertTrue(
                 np.isclose(
-                    kpcovr.score(self.X, self.Y), sum([Lkpca, Lkrr]), self.error_tol
+                    kpcovr.score(self.X, self.Y), -sum([Lkpca, Lkrr]), self.error_tol
                 )
             )
 
@@ -177,6 +192,98 @@ class KernelPCovRInfrastructureTest(KernelPCovRBaseTest):
         _ = kpcovr.transform(self.X)
         _ = kpcovr.score(self.X, self.Y)
 
+    def test_prefit_regressor(self):
+        regressor = KernelRidge(alpha=1e-8, kernel="rbf", gamma=0.1)
+        regressor.fit(self.X, self.Y)
+        kpcovr = self.model(mixing=0.5, regressor=regressor, kernel="rbf", gamma=0.1)
+        kpcovr.fit(self.X, self.Y)
+
+        Yhat_regressor = regressor.predict(self.X).reshape(self.X.shape[0], -1)
+        W_regressor = regressor.dual_coef_.reshape(self.X.shape[0], -1)
+
+        Yhat_kpcovr = kpcovr.regressor_.predict(self.X).reshape(self.X.shape[0], -1)
+        W_kpcovr = kpcovr.regressor_.dual_coef_.reshape(self.X.shape[0], -1)
+
+        self.assertTrue(np.allclose(Yhat_regressor, Yhat_kpcovr))
+        self.assertTrue(np.allclose(W_regressor, W_kpcovr))
+
+    def test_regressor_modifications(self):
+        regressor = KernelRidge(alpha=1e-8, kernel="rbf", gamma=0.1)
+        kpcovr = self.model(mixing=0.5, regressor=regressor, kernel="rbf", gamma=0.1)
+
+        # KPCovR regressor matches the original
+        self.assertTrue(regressor.get_params() == kpcovr.regressor.get_params())
+
+        # KPCovR regressor updates its parameters
+        # to match the original regressor
+        regressor.set_params(gamma=0.2)
+        self.assertTrue(regressor.get_params() == kpcovr.regressor.get_params())
+
+        # Fitting regressor outside KPCovR fits the KPCovR regressor
+        regressor.fit(self.X, self.Y)
+        self.assertTrue(hasattr(kpcovr.regressor, "dual_coef_"))
+
+        # Raise error during KPCovR fit since regressor and KPCovR
+        # kernel parameters now inconsistent
+        with self.assertRaises(ValueError) as cm:
+            kpcovr.fit(self.X, self.Y)
+            self.assertTrue(
+                str(cm.message),
+                "Kernel parameter mismatch: the regressor has kernel parameters "
+                "{kernel: linear, gamma: 0.2, degree: 3, coef0: 1, kernel_params: None}"
+                " and KernelPCovR was initialized with kernel parameters "
+                "{kernel: linear, gamma: 0.1, degree: 3, coef0: 1, kernel_params: None}",
+            )
+
+    def test_incompatible_regressor(self):
+        regressor = Ridge(alpha=1e-8)
+        regressor.fit(self.X, self.Y)
+        kpcovr = self.model(mixing=0.5, regressor=regressor)
+
+        with self.assertRaises(ValueError) as cm:
+            kpcovr.fit(self.X, self.Y)
+            self.assertTrue(
+                str(cm.message),
+                "Regressor must be an instance of `KernelRidge`",
+            )
+
+    def test_none_regressor(self):
+        kpcovr = KernelPCovR(mixing=0.5, regressor=None)
+        kpcovr.fit(self.X, self.Y)
+        self.assertTrue(kpcovr.regressor is None)
+        self.assertTrue(kpcovr.regressor_ is not None)
+
+    def test_incompatible_coef_shape(self):
+
+        # self.Y is 2D with two targets
+        # Don't need to test X shape, since this should
+        # be caught by sklearn's _validate_data
+        regressor = KernelRidge(alpha=1e-8, kernel="linear")
+        regressor.fit(self.X, self.Y[:, 0][:, np.newaxis])
+        kpcovr = self.model(mixing=0.5, regressor=regressor)
+
+        # Dimension mismatch
+        with self.assertRaises(ValueError) as cm:
+            kpcovr.fit(self.X, self.Y[:, 0])
+            self.assertTrue(
+                str(cm.message),
+                "The regressor coefficients have a dimension incompatible "
+                "with the supplied target space. "
+                "The coefficients have dimension %d and the targets "
+                "have dimension %d" % (regressor.dual_coef_.ndim, self.Y[:, 0].ndim),
+            )
+
+        # Shape mismatch (number of targets)
+        with self.assertRaises(ValueError) as cm:
+            kpcovr.fit(self.X, self.Y)
+            self.assertTrue(
+                str(cm.message),
+                "The regressor coefficients have a shape incompatible "
+                "with the supplied target space. "
+                "The coefficients have shape %r and the targets "
+                "have shape %r" % (regressor.dual_coef_.shape, self.Y.shape),
+            )
+
 
 class KernelTests(KernelPCovRBaseTest):
     def test_kernel_types(self):
@@ -198,6 +305,9 @@ class KernelTests(KernelPCovRBaseTest):
                 kpcovr = KernelPCovR(
                     mixing=0.5,
                     n_components=2,
+                    regressor=KernelRidge(
+                        kernel=kernel, **kernel_params.get(kernel, {})
+                    ),
                     kernel=kernel,
                     **kernel_params.get(kernel, {})
                 )
@@ -209,22 +319,24 @@ class KernelTests(KernelPCovRBaseTest):
         using a linear kernel
         """
 
-        # making a common Yhat so that the models are working off the same values
         ridge = RidgeCV(fit_intercept=False, alphas=np.logspace(-8, 2))
-        Yhat = ridge.fit(self.X, self.Y).predict(self.X)
+        ridge.fit(self.X, self.Y)
 
         # common instantiation parameters for the two models
         hypers = dict(
             mixing=0.5,
             n_components=1,
         )
-        alpha = 1e-8
 
         # computing projection and predicton loss with linear KernelPCovR
+        # and use the alpha from RidgeCV for level regression comparisons
         kpcovr = KernelPCovR(
-            kernel="linear", fit_inverse_transform=True, alpha=alpha, **hypers
+            regressor=KernelRidge(alpha=ridge.alpha_, kernel="linear"),
+            kernel="linear",
+            fit_inverse_transform=True,
+            **hypers
         )
-        kpcovr.fit(self.X, self.Y, Yhat=Yhat)
+        kpcovr.fit(self.X, self.Y)
         ly = (
             np.linalg.norm(self.Y - kpcovr.predict(self.X)) ** 2.0
             / np.linalg.norm(self.Y) ** 2.0
