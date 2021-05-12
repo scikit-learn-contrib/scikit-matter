@@ -474,53 +474,34 @@ class PCovRInfrastructureTest(PCovRBaseTest):
 
     def test_incompatible_coef_shape(self):
 
-        # 1D properties (self.Y is 2D with one target)
-        # X shape doesn't match
-        regressor = Ridge(alpha=1e-8, fit_intercept=False, tol=1e-12)
-        regressor.fit(self.X, self.Y.squeeze())
-        pcovr = self.model(mixing=0.5, regressor=regressor)
-
-        with self.assertRaises(ValueError) as cm:
-            pcovr.fit(self.X[:, 0:-1], self.Y.squeeze())
-            self.assertTrue(
-                str(cm.message),
-                "The target regressor has a shape incompatible "
-                "with the supplied feature space",
-            )
-
-        # >= 2D properties
-        # Y shape doesn't match
+        # self.Y is 2D with one target
+        # Don't need to test X shape, since this should
+        # be caught by sklearn's _validate_data
         regressor = Ridge(alpha=1e-8, fit_intercept=False, tol=1e-12)
         regressor.fit(self.X, self.Y)
         pcovr = self.model(mixing=0.5, regressor=regressor)
 
+        # Dimension mismatch
         with self.assertRaises(ValueError) as cm:
             pcovr.fit(self.X, self.Y.squeeze())
             self.assertTrue(
                 str(cm.message),
-                "The target regressor has a shape incompatible "
-                "with the supplied target space",
+                "The regressor coefficients have a dimension incompatible "
+                "with the supplied target space. "
+                "The coefficients have dimension %d and the targets "
+                "have dimension %d" % (regressor.coef_.ndim, self.Y.squeeze().ndim),
             )
 
+        # Shape mismatch (number of targets)
         with self.assertRaises(ValueError) as cm:
             pcovr.fit(self.X, np.column_stack((self.Y, self.Y)))
             self.assertTrue(
                 str(cm.message),
-                "The target regressor has a shape incompatible "
-                "with the supplied feature space",
-            )
-
-        # X shape doesn't match
-        regressor = Ridge(alpha=1e-8, fit_intercept=False, tol=1e-12)
-        regressor.fit(self.X, self.Y)
-        pcovr = self.model(mixing=0.5, regressor=regressor)
-
-        with self.assertRaises(ValueError) as cm:
-            pcovr.fit(self.X[:, 0:-1], self.Y)
-            self.assertTrue(
-                str(cm.message),
-                "The target regressor has a shape incompatible "
-                "with the supplied feature space",
+                "The regressor coefficients have a shape incompatible "
+                "with the supplied target space. "
+                "The coefficients have shape %r and the targets "
+                "have shape %r"
+                % (regressor.coef_.shape, np.column_stack((self.Y, self.Y)).shape),
             )
 
 
