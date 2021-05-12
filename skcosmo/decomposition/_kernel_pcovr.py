@@ -304,7 +304,7 @@ class KernelPCovR(_BasePCA, LinearModel):
 
         """
 
-        if not any([self.regressor is None, isinstance(self.regressor, KernelRidge)]):
+        if self.regressor is not None and not isinstance(self.regressor, KernelRidge):
             raise ValueError("Regressor must be an instance of `KernelRidge`")
 
         X, Y = check_X_y(X, Y, y_numeric=True, multi_output=True)
@@ -363,7 +363,7 @@ class KernelPCovR(_BasePCA, LinearModel):
 
         # Check if regressor is fitted; if not, fit with precomputed K
         # to avoid needing to compute the kernel a second time
-        self.regressor_ = check_krr_fit(regressor, K, Y)
+        self.regressor_ = check_krr_fit(regressor, K, X, Y)
 
         W = self.regressor_.dual_coef_.reshape(X.shape[0], -1)
 
