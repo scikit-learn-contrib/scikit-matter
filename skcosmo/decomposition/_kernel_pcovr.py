@@ -476,7 +476,7 @@ class KernelPCovR(_BasePCA, LinearModel):
 
     def score(self, X, Y):
         r"""
-        Computes the loss values for KernelPCovR on the given predictor and
+        Computes the (negative) loss values for KernelPCovR on the given predictor and
         response variables. The loss in :math:`\mathbf{K}`, as explained in
         [Helfrecht2020]_ does not correspond to a traditional Gram loss
         :math:`\mathbf{K} - \mathbf{TT}^T`. Indicating the kernel between set
@@ -492,6 +492,8 @@ class KernelPCovR(_BasePCA, LinearModel):
             \mathbf{K}_{NN} \mathbf{T}_N (\mathbf{T}_N^T \mathbf{T}_N)^{-1}
             \mathbf{T}_V^T\right]}{\operatorname{Tr}(\mathbf{K}_{VV})}
 
+        The negative loss is returned for easier use in sklearn pipelines, e.g., a grid search, where methods named 'score' are meant to be maximized.
+
         Arguments
         ---------
         X:              independent (predictor) variable
@@ -499,8 +501,8 @@ class KernelPCovR(_BasePCA, LinearModel):
 
         Returns
         -------
-        Lk:             KPCA loss, determined by the reconstruction of the kernel
-        Ly:             KR loss
+        L:             Negative sum of the KPCA and KRR losses, with the KPCA loss
+                       determined by the reconstruction of the kernel
 
         """
 
@@ -530,7 +532,7 @@ class KernelPCovR(_BasePCA, LinearModel):
         )
         Lkpca = np.trace(K_VV - 2 * K_VN @ w + w.T @ K_VV @ w) / np.trace(K_VV)
 
-        return sum([Lkpca, Lkrr])
+        return -sum([Lkpca, Lkrr])
 
     def _decompose_truncated(self, mat):
 

@@ -132,7 +132,7 @@ class KernelPCovRErrorTest(KernelPCovRBaseTest):
             # this is only true for in-sample data
             self.assertTrue(
                 np.isclose(
-                    kpcovr.score(self.X, self.Y), sum([Lkpca, Lkrr]), self.error_tol
+                    kpcovr.score(self.X, self.Y), -sum([Lkpca, Lkrr]), self.error_tol
                 )
             )
 
