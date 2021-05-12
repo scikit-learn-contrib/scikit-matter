@@ -89,7 +89,7 @@ class KernelPCovR(_BasePCA, LinearModel):
         must be identical to those passed directly to `KernelPCovR`.
 
     kernel: "linear" | "poly" | "rbf" | "sigmoid" | "cosine" | "precomputed"
-                Kernel. Default="linear".
+        Kernel. Default="linear".
 
     gamma: float, default=None
         Kernel coefficient for rbf, poly and sigmoid kernels. Ignored by other
@@ -168,28 +168,29 @@ class KernelPCovR(_BasePCA, LinearModel):
     >>> import numpy as np
     >>> from skcosmo.decomposition import KernelPCovR
     >>> from skcosmo.preprocessing import StandardFlexibleScaler as SFS
+    >>> from sklearn.kernel_ridge import KernelRidge
     >>>
     >>> X = np.array([[-1, 1, -3, 1], [1, -2, 1, 2], [-2, 0, -2, -2], [1, 0, 2, -1]])
     >>> X = SFS().fit_transform(X)
     >>> Y = np.array([[ 0, -5], [-1, 1], [1, -5], [-3, 2]])
     >>> Y = SFS(column_wise=True).fit_transform(Y)
     >>>
-    >>> kpcovr = KernelPCovR(mixing=0.1, n_components=2, regressor=KernelRidge(kernel='rbf', gamma=2), kernel='rbf', gamma=2)
+    >>> kpcovr = KernelPCovR(mixing=0.1, n_components=2, regressor=KernelRidge(kernel='rbf', gamma=1), kernel='rbf', gamma=1)
     >>> kpcovr.fit(X, Y)
-        KernelPCovR(gamma=2, kernel='rbf', mixing=0.1, n_components=2,
-                    regressor=KernelRidge(gamma=2, kernel='rbf'))
+        KernelPCovR(gamma=1, kernel='rbf', mixing=0.1, n_components=2,
+                    regressor=KernelRidge(gamma=1, kernel='rbf'))
     >>> T = kpcovr.transform(X)
-        [[-0.55119827, -0.21793572],
-         [ 0.3768726 ,  0.31208068],
-         [-0.76898956,  0.08511876],
-         [ 0.92488574, -0.18627707]]
+        [[-0.61261285, -0.18937908],
+         [ 0.45242098,  0.25453465],
+         [-0.77871824,  0.04847559],
+         [ 0.91186937, -0.21211816]]
     >>> Yp = kpcovr.predict(X)
-        [[ 0.51713163, -0.99453229],
-         [-0.16083953,  0.8378709 ],
-         [ 1.18143489, -1.01072628],
-         [-1.52011339,  1.13439986]]
+        [[ 0.5100212 , -0.99488463],
+         [-0.18992219,  0.82064368],
+         [ 1.11923584, -1.04798016],
+         [-1.5635827 ,  1.11078662]]
     >>> kpcovr.score(X, Y)
-        1.0000774522028972
+        -0.520388347837897
     """
 
     def __init__(
