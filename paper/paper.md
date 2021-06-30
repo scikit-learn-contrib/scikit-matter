@@ -44,9 +44,13 @@ learning to collections of atoms, there is a comparatively increased emphasis on
 tunable hyperparameters within each technique, and it becomes necessary to compare featurizations, remove redundant features, or condense them. Currently, `skcosmo` contains algorithms developed by the Laboratory of Computational Science and Modeling (COSMO) to address these specific problems, the open-source implementation of which were all previously-unavailable.
 
 - Feature Reconstruction Measures[@Goscinski2021] - both global and local measures
-of the information density for a given representation. This set of
-unsupervised algorithms is of particular use in the choice of representation
-and hyperparameter optimization.
+to describe the linearly decodable information of one representation by another one.
+This set of unsupervised algorithms is of particular use in quantifying the effect
+of hyperparameters on representations.
+
+    ![Sketch of the feature reconstructions used for the measures](frm.svg)
+    **Fig. 1. A sketch of the different feature reconstruction measures** with two manifolds describing the same dataset for two different set of three features. The reconstruction describe a reconstruction of the curved manifold using the squared manifold. The linear reconstruction scales the feature dimensions in different intensities. The orthogonal reconstruction is used to describe such strong divergent scalings between feature dimensions in the linear mapping. The local reconstruction works similar to local linear embeddings. While the perfect linear reconstruction is not possible in this case, a local linear reconstruction for each datapoint is possible.
+
 - Hybrid Supervised-Unsupervised Dimensionality Reduction and Regression[@deJong1992, @Helfrecht2020] - linear and
 non-linear techniques to combine features into latent-space projections
 (similar to PCA) that also incorporate target information. This is of particular
@@ -54,10 +58,10 @@ use when condensing features prior to property regression or constructing
 structure-property maps, such as those analyzable via[@Fraux2020]. In Kernel Principal Covariates Regression (KPCovR), a mixing parameter `\alpha` interpolates
 between kernel ridge regression (`\alpha=0`) and kernel principal
 components analysis (KPCA, `\alpha=1`). An example of KPCovR on a
-dataset of small molecules and their NMR chemical shieldings is shown in Fig. 1.
+dataset of small molecules and their NMR chemical shieldings is shown in Fig. 2.
 
     ![Kernel PCovR in Action](CSD-1000R_kernelized.gif)
-    **Fig. 1. The evolution of latent-space projections and regressions as the mixing parameter `\alpha` goes from 0 to 1 in Kernel PCovR.** In the left panel, the projection is plotted across the first two kernel principal covariates, with color indicating the property of interest (here NMR Chemical Shieldings from [@Ceriotti2019]). In the right panel, the comparison of the target property with that predicted using the latent space projection (color denotes error from target).
+    **Fig. 2. The evolution of latent-space projections and regressions as the mixing parameter `\alpha` goes from 0 to 1 in Kernel PCovR.** In the left panel, the projection is plotted across the first two kernel principal covariates, with color indicating the property of interest (here NMR Chemical Shieldings from [@Ceriotti2019]). In the right panel, the comparison of the target property with that predicted using the latent space projection (color denotes error from target).
 
 - Feature and Sample Selection[@Imbalzano2018, @Cersonsky2021] - methods focused on determining
 a diverse or information-rich subset of features or samples for machine
