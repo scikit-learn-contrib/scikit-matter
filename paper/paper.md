@@ -49,7 +49,7 @@ This set of unsupervised algorithms is of particular use in quantifying the effe
 of hyperparameters on representations.
 
     ![Sketch of the feature reconstructions used for the measures](frm.svg)
-    **Fig. 1. A sketch of the different feature reconstruction measures** with two manifolds describing the same dataset for two different set of three features. The reconstruction describe a reconstruction of the curved manifold using the squared manifold. The linear reconstruction scales the feature dimensions in different intensities. The orthogonal reconstruction is used to describe such strong divergent scalings between feature dimensions in the linear mapping. The local reconstruction works similar to local linear embeddings. While the perfect linear reconstruction is not possible in this case, a local linear reconstruction for each datapoint is possible.
+    **Fig. 1. A sketch of the different feature reconstruction measures** with two manifolds describing the same dataset for two different sets of three features. The reconstructions describe mappings of the squared manifold onto the curved manifold. The linear reconstruction scales the feature dimensions in different intensities. The orthogonal reconstruction is used to describe such strong divergent scalings between feature dimensions in the linear mapping. The local reconstruction linearly maps the local environment defined by the number of neighbours around each point. While a global linear reconstruction cannot capture the curvatures, a locally linear reconstruction for each datapoint can.
 
 - Hybrid Supervised-Unsupervised Dimensionality Reduction and Regression[@deJong1992, @Helfrecht2020] - linear and
 non-linear techniques to combine features into latent-space projections
