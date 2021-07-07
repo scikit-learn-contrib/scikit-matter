@@ -30,7 +30,7 @@ bibliography: paper.bib
 
 # Summary
 
-`scikit-COSMO` (`skcosmo`) focuses on machine learning methods that are of particular use (but not limited to) the field of materials science and computational chemistry. Currently, many
+`scikit-COSMO` (`skcosmo`) focuses on machine learning methods that are of particular use (but not limited to) the field of computational materials science and chemistry. Currently, many
 machine learning studies employ the foundational `scikit-learn` repository, a
 collection of widely applicable machine learning algorithms and methods.
 Written in the same language (Python), style, and adhering to the same guidelines, we aim to provide
@@ -39,9 +39,7 @@ workflows alongside those from `scikit-learn`.
 
 # Statement of need
 
-The `skcosmo` package provides machine learning algorithms developed to meet the needs of a specific community: those who use machine learning to understand or represent collections of atoms or molecules. The importance of particular subclasses of machine learning algorithms varies wildly between different fields; when applying machine
-learning to collections of atoms, there is a comparatively increased emphasis on the representation of data in a numerical format for machine learning pipelines, known as _featurization_. This stems from both the variety of featurization techniques and a the expanse of
-tunable hyperparameters within each technique, and it becomes necessary to compare featurizations, remove redundant features, or condense them. Currently, `skcosmo` contains algorithms developed by the Laboratory of Computational Science and Modeling (COSMO) to address these specific problems, the open-source implementation of which were all previously-unavailable.
+While machine learning algorithms are fully general and can be applied to a wide variety of fields, the relative importance of different aspects of machine learning workflows can vary wildly between disciplines. The `skcosmo` package thus provides machine learning algorithms developed to meet the specific needs of those who use machine learning to understand or represent collections of atoms or molecules, where there is increased emphasis on the representation of physical entities---namely, atoms, their connectivity, or their relative orientation in space---in a numerical format compatible with machine learning pipelines, known as the _featurization_. This emphasis stems from both the variety of available featurization techniques and from the expanse of tunable hyperparameters within each technique, necessitating methods for comparing featurizations, removing redundant features, or condensing features. Currently, `skcosmo` contains algorithms developed by the Laboratory of Computational Science and Modeling (COSMO) to address these specific problems, the open-source implementation of which were all previously unavailable.
 
 - Feature Reconstruction Measures[@Goscinski2021] - both global and local measures
 to describe the linearly decodable information of one representation by another one.
@@ -67,7 +65,7 @@ dataset of small molecules and their NMR chemical shieldings is shown in Fig. 2.
 a diverse or information-rich subset of features or samples for machine
 learning problems.
 
-scikit-COSMO also contains minimal datasets used to test the implementation, including a small subset of molecules and their NMR chemical shieldings, as reported in [@Ceriotti2019]. As a note, `skcosmo` itself does not compute atomic descriptors directly, and instead takes as input descriptors computed by prominent software such as `librascal` [@Musil2021], QUIP[@quip], and `DScribe`[https://github.com/SINGROUP/dscribe].
+scikit-COSMO also contains minimal datasets used to test the implementation, including a small subset of molecules and their NMR chemical shieldings, as reported in [@Ceriotti2019]. As a note, `skcosmo` itself does not compute atomic descriptors directly, and instead takes as input descriptors computed by prominent software such as `librascal` [@Musil2021], `QUIP`[@quip], and `DScribe`[https://github.com/SINGROUP/dscribe].
 
 # Acknowledgements
 
