@@ -30,7 +30,7 @@ bibliography: paper.bib
 
 # Summary
 
-`scikit-COSMO` (`skcosmo`) focuses on machine learning methods that are of particular use (but not limited to) the field of computational materials science and chemistry. Currently, many
+`scikit-COSMO` (`skcosmo`) focuses on machine learning methods that are actively used, for example, in the field of computational materials science and chemistry. Currently, many
 machine learning studies employ the foundational `scikit-learn` repository, a
 collection of widely applicable machine learning algorithms and methods.
 Written in the same language (Python), style, and adhering to the same guidelines, we aim to provide
