@@ -60,7 +60,10 @@ between kernel ridge regression (`\alpha=0`) and kernel principal
 components analysis (KPCA, `\alpha=1`). An example of KPCovR on a
 dataset of small molecules and their NMR chemical shieldings is shown in Fig. 2.
 
-    ![Kernel PCovR in Action](CSD-1000R_kernelized.gif)
+    <!-- ![Kernel PCovR in Action](CSD-1000R_kernelized.gif) -->
+    ![Kernel PCovR in Action](CSD-1000R_kernelized_0.png)
+    ![Kernel PCovR in Action](CSD-1000R_kernelized_5.png)
+    ![Kernel PCovR in Action](CSD-1000R_kernelized_1.png)
     **Fig. 2. The evolution of latent-space projections and regressions as the mixing parameter `\alpha` goes from 0 to 1 in Kernel PCovR.** In the left panel, the projection is plotted across the first two kernel principal covariates, with color indicating the property of interest (here NMR Chemical Shieldings from [@Ceriotti2019]). In the right panel, the comparison of the target property with that predicted using the latent space projection (color denotes error from target).
 
 - Feature and Sample Selection[@Imbalzano2018, @Cersonsky2021] - methods focused on determining
@@ -74,4 +77,4 @@ scikit-COSMO also contains minimal datasets used to test the implementation, inc
 We acknowledge contributions from the entire COSMO team, particularly
 Giulio Imbalzano and Max Veit.
 
-# References
+# References  
