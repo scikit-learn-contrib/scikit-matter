@@ -53,11 +53,11 @@ of hyperparameters on representations.
 non-linear techniques to combine features into latent-space projections
 (similar to PCA) that also incorporate target information. This is of particular
 use when condensing features prior to property regression or constructing
-structure-property maps, such as those analyzable via[@Fraux2020]. In Kernel Principal Covariates Regression (KPCovR), a mixing parameter `\alpha` interpolates
-between kernel ridge regression (`\alpha=0`) and kernel principal
-components analysis (KPCA, `\alpha=1`). An example of KPCovR performed on a toy dataset is given in \autoref{fig:KPCovR}.
+structure-property maps, such as those analyzable via[@Fraux2020]. In Kernel Principal Covariates Regression (KPCovR), a mixing parameter $\alpha$ interpolates
+between kernel ridge regression ($\alpha=0$) and kernel principal
+components analysis (KPCA, $\alpha=1$). An example of KPCovR performed on a toy dataset is given in \autoref{fig:KPCovR}.
 
-    ![**The evolution of latent-space projections and regressions as the mixing parameter `\alpha` goes from 1 (Kernel PCA) to 0 (Kernel Ridge Regression) in Kernel PCovR.** This procedure transforms the latent space projection in hyperspace to minimize combined KPCA and KRR loss. Typically, a value of $\alpha=0.5$ yields the ideal projection and can be used to construct Structure-property maps for materials databases. \label{fig:KPCovR}](toy_kpcovr.png)
+    ![**The evolution of latent-space projections and regressions as the mixing parameter $\alpha$ goes from 1 (Kernel PCA) to 0 (Kernel Ridge Regression) in Kernel PCovR.** This procedure transforms the latent space projection in hyperspace to minimize combined KPCA and KRR loss. Typically, a value of $\alpha=0.5$ yields the ideal projection and can be used to construct Structure-property maps for materials databases. \label{fig:KPCovR}](toy_kpcovr.png)
 
 
 - Feature and Sample Selection[@Imbalzano2018, @Cersonsky2021] - methods focused on determining
