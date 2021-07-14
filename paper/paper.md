@@ -59,7 +59,7 @@ components analysis (KPCA, `\alpha=1`). An example of KPCovR on a
 dataset of small molecules and their NMR chemical shieldings is shown in \autoref{fig:KPCovR}.
 
     ![**The evolution of latent-space projections and regressions as the mixing parameter `\alpha` goes from 0 to 1 in Kernel PCovR.** In the left panel(s), the projection is plotted across the first two kernel principal covariates, with color indicating the property of interest (here NMR Chemical Shieldings from [@Ceriotti2019]). In the right panel(s), the comparison of the target property with that predicted using the latent space projection (color denotes error from target).
-    \label{fig:KPCovR}](CSD-1000R_kernelized.png)<!--(CSD-1000R_kernelized.gif)-->
+    \label{fig:KPCovR}](CSD-1000R_kernelized.gif)<!--(CSD-1000R_kernelized.png)-->
 
 
 
