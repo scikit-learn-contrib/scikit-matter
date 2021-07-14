@@ -55,10 +55,9 @@ non-linear techniques to combine features into latent-space projections
 use when condensing features prior to property regression or constructing
 structure-property maps, such as those analyzable via[@Fraux2020]. In Kernel Principal Covariates Regression (KPCovR), a mixing parameter `\alpha` interpolates
 between kernel ridge regression (`\alpha=0`) and kernel principal
-components analysis (KPCA, `\alpha=1`). An example of KPCovR on a
-dataset of small molecules and their NMR chemical shieldings is shown in \autoref{fig:KPCovR}.
+components analysis (KPCA, `\alpha=1`). An example of KPCovR performed on a toy dataset is given in \autoref{fig:KPCovR}.
 
-    ![**The evolution of latent-space projections and regressions as the mixing parameter `\alpha` goes from 0 to 1 in Kernel PCovR.** In the left panel(s), the projection is plotted across the first two kernel principal covariates, with color indicating the property of interest (here NMR Chemical Shieldings). In the right panel(s), the comparison of the target property with that predicted using the latent space projection (color denotes error from target).\label{fig:KPCovR}](CSD-1000R_kernelized.png)
+    ![**The evolution of latent-space projections and regressions as the mixing parameter `\alpha` goes from 1 (Kernel PCA) to 0 (Kernel Ridge Regression) in Kernel PCovR.** This procedure transforms the latent space projection in hyperspace to minimize combined KPCA and KRR loss. Typically, a value of $\alpha=0.5$ yields the ideal projection and can be used to construct Structure-property maps for materials databases. \label{fig:KPCovR}](toy_kpcovr.png)
 
 
 - Feature and Sample Selection[@Imbalzano2018, @Cersonsky2021] - methods focused on determining

@@ -1,9 +1,12 @@
+*eps
 *.pyc
 *.ipynb_checkpoints*
 __pycache__
 *.egg-info
 *.swp
 *.swo
+paper/*py
+paper/*gif
 
 .tox/
 build/
