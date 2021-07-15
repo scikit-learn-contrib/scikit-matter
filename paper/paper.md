@@ -57,7 +57,7 @@ structure-property maps, such as those analyzable via[@Fraux2020]. In Kernel Pri
 between kernel ridge regression ($\alpha=0$) and kernel principal
 components analysis (KPCA, $\alpha=1$). An example of KPCovR performed on a toy dataset is given in \autoref{fig:KPCovR}.
 
-    ![**The evolution of latent-space projections and regressions as the mixing parameter $\alpha$ goes from 1 (Kernel PCA) to 0 (Kernel Ridge Regression) in Kernel PCovR.** This procedure transforms the latent space projection in hyperspace to minimize combined KPCA and KRR loss. Typically, a value of $\alpha=0.5$ yields the ideal projection and can be used to construct Structure-property maps for materials databases. \label{fig:KPCovR}](toy_kpcovr.png)
+    ![**The evolution of latent-space projections and regressions as the mixing parameter $\alpha$ goes from 1 (Kernel PCA) to 0 (Kernel Ridge Regression) in Kernel PCovR.** This procedure transforms the latent space projection in hyperspace to minimize combined KPCA and KRR loss. Typically, a value of $\alpha=0.5$ yields the ideal projection and can be used to construct feature-property maps. \label{fig:KPCovR}](toy_kpcovr.png)
 
 
 - Feature and Sample Selection[@Imbalzano2018, @Cersonsky2021] - methods focused on determining
