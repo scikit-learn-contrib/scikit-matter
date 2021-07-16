@@ -1,5 +1,5 @@
 ---
-title: 'scikit-COSMO: A Toolbox of Machine Learning Methods for Materials Science'
+title: '`scikit-COSMO`: A Toolbox of Machine Learning Methods for Materials Science'
 tags:
     - Python
 authors:
@@ -57,12 +57,11 @@ structure-property maps, such as those analyzable via[@Fraux2020]. In Kernel Pri
 between kernel ridge regression ($\alpha=0$) and kernel principal
 components analysis (KPCA, $\alpha=1$). An example of KPCovR performed on a toy dataset is given in \autoref{fig:KPCovR}.
 
-    ![**The evolution of latent-space projections and regressions as the mixing parameter $\alpha$ goes from 1 (Kernel PCA) to 0 (Kernel Ridge Regression) in Kernel PCovR.** This procedure transforms the latent space projection in hyperspace to minimize combined KPCA and KRR loss. Typically, a value of $\alpha=0.5$ yields the ideal projection and can be used to construct Structure-property maps for materials databases. \label{fig:KPCovR}](toy_kpcovr.png)
+    ![**The evolution of latent-space projections and regressions as the mixing parameter $\alpha$ goes from 1 (Kernel PCA) to 0 (Kernel Ridge Regression) in Kernel PCovR.** This procedure transforms the latent space projection in hyperspace to minimize combined KPCA and KRR loss. Typically, a value of $\alpha=0.5$ yields the ideal projection and can be used to construct feature-property maps. \label{fig:KPCovR}](toy_kpcovr.png)
 
 
-- Feature and Sample Selection[@Imbalzano2018, @Cersonsky2021] - methods focused on determining
-a diverse or information-rich subset of features or samples for machine
-learning problems.
+- Feature and Sample Selection [@Imbalzano2018, @Cersonsky2021] - methods focused on determining
+a diverse or information-rich subset of features or samples for machine learning problems. The feature and sample importances are computed based upon their correlation with the principal covariates, such as those plotted in \autoref{fig:KPCovR}.
 
 scikit-COSMO also contains minimal datasets used to test the implementation, including a small subset of molecules and their NMR chemical shieldings, as reported in [@Ceriotti2019]. As a note, `skcosmo` itself does not compute atomic descriptors directly, and instead takes as input descriptors computed by prominent software such as `librascal` [@Musil2021], `QUIP`[@quip], and `DScribe`[@dscribe].
 
