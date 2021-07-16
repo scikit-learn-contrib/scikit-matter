@@ -63,7 +63,7 @@ components analysis (KPCA, $\alpha=1$). An example of KPCovR performed on a toy 
 - Feature and Sample Selection - Methods focused on determining
 a diverse or information-rich subset of features or samples for machine learning problems, originally detailed in [@Imbalzano2018] and [@Cersonsky2021]. The feature and sample importances are computed based upon their correlation with the principal covariates, such as those plotted in \autoref{fig:KPCovR}.
 
-scikit-COSMO also contains minimal datasets used to test the implementation, including a small subset of molecules and their NMR chemical shieldings, as reported in [@Ceriotti2019]. As a note, `skcosmo` itself does not compute atomic descriptors directly, and instead takes as input descriptors computed by prominent software such as `librascal` [@Musil2021], `QUIP`[@quip], and `DScribe`[@dscribe].
+scikit-COSMO also contains minimal datasets used to test the implementation, including a small subset of molecules and their NMR chemical shieldings, as reported in [@Ceriotti2019]. As a note, `skcosmo` itself does not compute atomic descriptors directly, and instead takes as input descriptors computed by prominent software such as `librascal` [@Musil2021], `QUIP` [@quip], and `DScribe` [@dscribe].
 
 # Acknowledgements
 
