@@ -31,9 +31,9 @@ class TestFPS(unittest.TestCase):
         and throws an error otherwise
         """
 
-        for initialize in [self.idx[0], "random"]:
+        for initialize in [self.idx[0], "random", self.idx[:4]]:
             with self.subTest(initialize=initialize):
-                selector = FPS(n_to_select=1, initialize=initialize)
+                selector = FPS(n_to_select=len(self.idx) - 1, initialize=initialize)
                 selector.fit(self.X)
 
         with self.assertRaises(ValueError) as cm:
