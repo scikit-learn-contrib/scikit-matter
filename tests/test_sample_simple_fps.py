@@ -36,6 +36,13 @@ class TestFPS(unittest.TestCase):
                 selector = FPS(n_to_select=1, initialize=initialize)
                 selector.fit(self.X)
 
+        initialize = self.idx[:4]
+        with self.subTest(initialize=initialize):
+            selector = FPS(n_to_select=len(self.idx) - 1, initialize=initialize)
+            selector.fit(self.X)
+            for i in range(4):
+                self.assertEqual(selector.selected_idx_[i], self.idx[i])
+
         with self.assertRaises(ValueError) as cm:
             selector = FPS(n_to_select=1, initialize="bad")
             selector.fit(self.X)
