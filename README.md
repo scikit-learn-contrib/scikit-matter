@@ -9,7 +9,7 @@ developed in the COSMO laboratory
 ## Installation
 
 ```bash
-pip install git+https://github.com/cosmo-epfl/scikit-cosmo
+pip install skcosmo 
 ```
 
 You can then `import skcosmo` in your code!

@@ -40,5 +40,5 @@ References
 .. [Cersonsky2021]
     Rose K Cersonsky, Benjamin A Helfrecht, Edgar A. Engel, Sergei Kliavinek, and Michele Ceriotti,
     "Improving Sample and Feature Selection with Principal Covariates Regression"
-    2021 Mach. Learn.: Sci. Technol. In Press.
-    arXivID:2012.12253. https://arxiv.org/abs/2012.12253.
+    2021 Mach. Learn.: Sci. Technol. 2 035038.
+    https://iopscience.iop.org/article/10.1088/2632-2153/abfe7c.
