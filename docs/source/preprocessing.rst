@@ -1,7 +1,7 @@
 Preprocessing
 =============================
 
-.. automodule:: skcosmo.preprocessing.flexible_scaler
+.. automodule:: skcosmo.preprocessing
    :members:
    :undoc-members:
    :show-inheritance:
