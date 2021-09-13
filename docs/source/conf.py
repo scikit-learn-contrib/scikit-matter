@@ -231,3 +231,7 @@ latex_documents = [
 
 # If false, no module index is generated.
 # latex_domain_indices = True
+
+latex_elements = {
+    "maxlistdepth": "9",
+}
