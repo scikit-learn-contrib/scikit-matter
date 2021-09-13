@@ -24,7 +24,7 @@ def pointwise_global_reconstruction_error(
     to reconstruct the features or samples of target Y based on a minimization
     by linear regression:
 
-    .. math:: GRE^{(i)}(X,Y) = \min_W ||y_i - x_iW|| % # noqa: W605
+    :math:`GRE^{(i)}(X,Y) = \min_W ||y_i - x_iW||` % # noqa: W605
 
     If used with X and Y of shape (n_samples, n_features) it computes the pointwise
     global reconstruction error of the features as defined in Ref. [Goscinski2021]_.
@@ -113,7 +113,7 @@ def global_reconstruction_error(
     to reconstruct the features or samples of target Y based on a minimization
     by linear regression:
 
-        .. math:: GRE(X,Y) = \min_W ||Y - XW|| % # noqa: W605
+    :math:`GRE(X,Y) = \min_W ||Y - XW||`` % # noqa: W605
 
     If used with X and Y of shape (n_samples, n_features) it computes the
     global reconstruction error of the features as defined in Ref. [Goscinski2021]_.
@@ -190,7 +190,7 @@ def pointwise_global_reconstruction_distortion(
     to reconstruct the features or samples of target Y based on a minimization
     by orthogonal regression:
 
-    .. math:: GRD^{(i)}(X,Y) = \min_Q ||y_i - x_iQ\|| \quad\mathrm{subject\ to}\quad Q^TQ=I % # noqa: W605
+    :math:`GRD^{(i)}(X,Y) = \min_Q ||y_i - x_iQ\|| \quad\mathrm{subject\ to}\quad Q^TQ=I` % # noqa: W605
 
     If used with X and Y of shape (n_samples, n_features) it computes the pointwise
     global reconstruction distortion of the features as defined in Ref. [Goscinski2021]_.
@@ -284,7 +284,7 @@ def global_reconstruction_distortion(
     to reconstruct the features or samples of target Y based on a minimization
     by orthogonal regression:
 
-        .. math:: GRD(X,Y) = \min_Q ||y - XQ\|| \quad\mathrm{subject\ to}\quad Q^TQ=I % # noqa: W605
+    :math:`GRD(X,Y) = \min_Q ||y - XQ\|| \quad\mathrm{subject\ to}\quad Q^TQ=I` % # noqa: W605
 
     If used with X and Y of shape (n_samples, n_features) it computes the
     global reconstruction distortion of the features as defined in Ref. [Goscinski2021]_.
@@ -363,8 +363,8 @@ def pointwise_local_reconstruction_error(
     to reconstruct the features or samples of target Y based on a minimization
     by linear regression:
 
-    .. math:: \tilde{\mathbf{x}}'_i = \bar{\mathbf{x}} + (\mathbf{x}_i - \bar{\mathbf{x}})\mathbf{P}^{(i)},% # noqa: W605
-    .. math:: LRE^{(i)}(X,Y) = \|\mathbf{x}'_i - \tilde{\mathbf{x}}'_i\|^2 % # noqa: W605
+    :math:`\tilde{\mathbf{x}}'_i = \bar{\mathbf{x}} + (\mathbf{x}_i - \bar{\mathbf{x}})\mathbf{P}^{(i)}` % # noqa: W605
+    :math:`LRE^{(i)}(X,Y) = \|\mathbf{x}'_i - \tilde{\mathbf{x}}'_i\|^2` % # noqa: W605
 
     If used with X and Y of shape (n_samples, n_features) it computes the pointwise
     local reconstruction error of the features as defined in Ref. [Goscinski2021]_.
@@ -493,7 +493,7 @@ def local_reconstruction_error(
     to reconstruct the features or samples of target Y based on a minimization
     by linear regression:
 
-    .. math:: LRE(X,Y) = \sqrt{\sum_i LRE^{(i)}(X,Y)}/\sqrt{n_\text{test}} % # noqa: W605
+    :math:`LRE(X,Y) = \sqrt{\sum_i LRE^{(i)}(X,Y)}/\sqrt{n_\text{test}}` % # noqa: W605
 
     If used with X and Y of shape (n_samples, n_features) it computes the
     local reconstruction error of the features as defined in Ref. [Goscinski2021]_.

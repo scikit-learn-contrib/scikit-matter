@@ -25,7 +25,7 @@ class StandardFlexibleScaler(TransformerMixin, BaseEstimator):
     Centering and scaling can occur independently for each feature by calculating
     the appropriate statistics for the input or for the
     whole matrix (`column_wise=False`). The mean and standard deviation are then
-    stored for use on later data using :py:meth:`transform'.
+    stored for use on later data using :py:meth:`transform`.
 
     Standardization of a dataset is a common requirement for many
     machine learning estimators: an improperly scaled / centered
@@ -218,7 +218,9 @@ class StandardFlexibleScaler(TransformerMixin, BaseEstimator):
         X_tr : ndarray of shape (n_samples, n_features)
             Transformed matrix
 
-        :return: original matrix X
+        Returns
+        -------
+        X : original matrix
         """
 
         check_is_fitted(self, attributes=["n_samples_seen_", "n_features_"])
@@ -260,8 +262,8 @@ class KernelNormalizer(KernelCenterer):
         Sample weights (if provided during the fit)
 
     scale_ : float
-        Scaling parameter. If 'with_trace'=True, when
-        scale_ = np.trace(K) / K.shape[0], else scale_ = 1
+        Scaling parameter used when 'with_trace'=True
+        Calculated as np.trace(K) / K.shape[0]
 
     Examples
     --------
@@ -463,8 +465,8 @@ class SparseKernelCenterer(TransformerMixin, BaseEstimator):
         Sample weights (if provided during the fit)
 
     scale_ : float
-        Scaling parameter. If 'with_trace'=True, when
-        scale_ = np.trace(K) / K.shape[0], else scale_ = 1
+        Scaling parameter used when 'with_trace'=True
+        Calculated as np.trace(K) / K.shape[0]
 
     n_active_: int
         size of active set

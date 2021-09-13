@@ -14,7 +14,7 @@ class OrthogonalRegression(MultiOutputMixin, RegressorMixin):
     must be an orthogonal matrix/projection. It minimizes the Procrustes
     problem:
 
-    .. math:: \min_\Omega ||y - X\Omega\||_F \quad\mathrm{subject\ to}\quad \Omega^T\Omega=I % # noqa: W605
+    :math:`\min_\Omega ||y - X\Omega\||_F \quad\mathrm{subject\ to}\quad \Omega^T\Omega=I` % # noqa: W605
 
     Parameters
     ----------
