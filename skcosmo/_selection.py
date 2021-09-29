@@ -138,7 +138,7 @@ class GreedySelector(SelectorMixin, MetaEstimatorMixin, BaseEstimator):
                 X,
                 y,
                 accept_sparse="csc",
-                ensure_min_features=2,
+                ensure_min_features=2,#<----------CAUSE ERROR IN CASE OF SAMPLE SELECION FOR DATASET (N, 1)
                 force_all_finite=not tags.get("allow_nan", True),
                 multi_output=True,
             )
