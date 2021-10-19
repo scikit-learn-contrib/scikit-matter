@@ -11,7 +11,7 @@ EPSILON = 1e-6
 class TestPCovCUR(unittest.TestCase):
     def setUp(self):
         self.X, self.y = load_boston(return_X_y=True)
-        self.idx = [488, 283, 183, 380, 41, 438, 368, 374, 123, 353]
+        self.idx = [492, 450, 183, 199, 380, 228, 399, 126, 412, 368]
 
     def test_known(self):
         """
@@ -50,7 +50,7 @@ class TestPCovCUR(unittest.TestCase):
         """
         This test checks that the model can be run non-iteratively
         """
-        self.idx = [488, 492, 491, 374, 398, 373, 386, 400, 383, 382]
+        self.idx = [492, 488, 491, 489, 374, 373, 386, 398, 383, 382]
         selector = PCovCUR(n_to_select=10, iterative=False)
         selector.fit(self.X, self.y)
 

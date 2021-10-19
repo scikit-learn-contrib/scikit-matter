@@ -142,6 +142,11 @@ class GreedySelector(SelectorMixin, MetaEstimatorMixin, BaseEstimator):
                 force_all_finite=not tags.get("allow_nan", True),
                 multi_output=True,
             )
+            if len(y.shape) == 1:
+                # force y to have multi_output 2D format even when it's 1D, since
+                # many functions, most notably PCov routines, assume an array storage
+                # format, most notably to compute (y @ y.T)
+                y = y.reshape((len(y), 1))
         else:
             X = check_array(
                 X,
@@ -761,7 +766,6 @@ class _PCovCUR(GreedySelector):
                 rank=None,
             )
 
-        print(self.k, pcovr_distance[0, 0], pcovr_distance.shape)
         if self.k < pcovr_distance.shape[0] - 1:
             v, U = eigsh(pcovr_distance, k=self.k, tol=1e-12)
         else:

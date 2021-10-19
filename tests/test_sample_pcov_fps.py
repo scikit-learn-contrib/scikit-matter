@@ -8,7 +8,7 @@ from skcosmo.sample_selection import PCovFPS
 class TestPCovFPS(unittest.TestCase):
     def setUp(self):
         self.X, self.y = load_boston(return_X_y=True)
-        self.idx = [39, 410, 492, 102, 54, 413, 34, 346, 126, 134, 433, 380]
+        self.idx = [39, 410, 492, 102, 54, 413, 34, 126, 346, 134, 433, 380]
 
     def test_restart(self):
         """
