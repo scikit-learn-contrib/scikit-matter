@@ -135,9 +135,7 @@ def Y_sample_orthogonalizer(y, X, y_ref, X_ref, tol=1e-12, copy=True):
 
     """
 
-    y_frag = (
-        X @ (np.linalg.pinv(X_ref.T @ X_ref, rcond=tol) @ X_ref.T) @ y_ref
-    ).reshape(y.shape)
+    y_frag = (X @ (np.linalg.lstsq(X_ref, y_ref, rcond=tol)[0])).reshape(y.shape)
 
     if copy:
         return y.copy() - y_frag

@@ -8,8 +8,8 @@ from abc import abstractmethod
 
 import numpy as np
 import scipy
-from scipy.linalg import eig
-from scipy.sparse.linalg import eigs as speig
+from scipy.linalg import eigh
+from scipy.sparse.linalg import eigsh
 from sklearn.base import (
     BaseEstimator,
     MetaEstimatorMixin,
@@ -142,6 +142,11 @@ class GreedySelector(SelectorMixin, MetaEstimatorMixin, BaseEstimator):
                 force_all_finite=not tags.get("allow_nan", True),
                 multi_output=True,
             )
+            if len(y.shape) == 1:
+                # force y to have multi_output 2D format even when it's 1D, since
+                # many functions, most notably PCov routines, assume an array storage
+                # format, most notably to compute (y @ y.T)
+                y = y.reshape((len(y), 1))
         else:
             X = check_array(
                 X,
@@ -659,6 +664,8 @@ class _PCovCUR(GreedySelector):
         features and computes their initial importance score.
         """
 
+        self.X_ref_ = X
+        self.y_ref_ = y
         self.X_current_ = X.copy()
         if y is not None:
             self.y_current_ = y.copy()
@@ -760,15 +767,16 @@ class _PCovCUR(GreedySelector):
             )
 
         if self.k < pcovr_distance.shape[0] - 1:
-            v, U = speig(pcovr_distance, k=self.k, tol=1e-12)
+            v, U = eigsh(pcovr_distance, k=self.k, tol=1e-12)
         else:
-            v, U = eig(pcovr_distance)
+            v, U = eigh(pcovr_distance)
         U = U[:, np.flip(np.argsort(v))]
         pi = (np.real(U)[:, : self.k] ** 2.0).sum(axis=1)
 
         return pi
 
     def _orthogonalize(self, last_selected):
+
         if self._axis == 1:
             self.X_current_ = X_orthogonalizer(
                 x1=self.X_current_, c=last_selected, tol=self.tolerance
@@ -777,7 +785,6 @@ class _PCovCUR(GreedySelector):
             self.X_current_ = X_orthogonalizer(
                 x1=self.X_current_.T, c=last_selected, tol=self.tolerance
             ).T
-
         if self.y_current_ is not None:
             if self._axis == 1:
                 self.y_current_ = Y_feature_orthogonalizer(
@@ -785,10 +792,10 @@ class _PCovCUR(GreedySelector):
                 )
             else:
                 self.y_current_ = Y_sample_orthogonalizer(
-                    self.y_current_,
-                    self.X_current_,
-                    y_ref=self.y_selected_,
-                    X_ref=self.X_selected_,
+                    self.y_ref_,
+                    self.X_ref_,
+                    y_ref=self.y_selected_[: self.n_selected_],
+                    X_ref=self.X_selected_[: self.n_selected_],
                     tol=self.tolerance,
                 )
 
