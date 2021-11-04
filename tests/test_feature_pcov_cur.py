@@ -1,25 +1,25 @@
 import unittest
 
 import numpy as np
-from sklearn.datasets import load_boston
+from sklearn.datasets import load_diabetes as get_dataset
 
 from skcosmo.feature_selection import PCovCUR
 
 
 class TestPCovCUR(unittest.TestCase):
     def setUp(self):
-        self.X, self.y = load_boston(return_X_y=True)
-        self.idx = [9, 11, 6, 1, 12, 0, 5, 2, 8, 10, 7, 3, 4]
+        self.X, self.y = get_dataset(return_X_y=True)
+        self.idx = [2, 8, 3, 4, 1, 7, 5, 9, 6]
 
     def test_known(self):
         """
         This test checks that the model returns a known set of indices
         """
 
-        selector = PCovCUR(n_to_select=12)
+        selector = PCovCUR(n_to_select=9)
         selector.fit(self.X, self.y)
 
-        self.assertTrue(np.allclose(selector.selected_idx_, self.idx[:-1]))
+        self.assertTrue(np.allclose(selector.selected_idx_, self.idx))
 
     def test_restart(self):
         """
@@ -38,11 +38,11 @@ class TestPCovCUR(unittest.TestCase):
         """
         This test checks that the model can be run non-iteratively
         """
-        self.idx = [9, 11, 6, 10, 12, 2, 8, 1, 5, 0, 7, 4, 3]
-        selector = PCovCUR(n_to_select=12, iterative=False)
+        self.idx = [2, 8, 3, 6, 7, 9, 1, 0, 5]
+        selector = PCovCUR(n_to_select=9, iterative=False)
         selector.fit(self.X, self.y)
 
-        self.assertTrue(np.allclose(selector.selected_idx_, self.idx[:-1]))
+        self.assertTrue(np.allclose(selector.selected_idx_, self.idx))
 
 
 if __name__ == "__main__":

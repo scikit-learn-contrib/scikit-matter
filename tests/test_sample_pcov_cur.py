@@ -1,7 +1,7 @@
 import unittest
 
 import numpy as np
-from sklearn.datasets import load_boston
+from sklearn.datasets import load_diabetes as get_dataset
 
 from skcosmo.sample_selection import PCovCUR
 
@@ -10,8 +10,8 @@ EPSILON = 1e-6
 
 class TestPCovCUR(unittest.TestCase):
     def setUp(self):
-        self.X, self.y = load_boston(return_X_y=True)
-        self.idx = [492, 450, 183, 199, 380, 228, 399, 126, 412, 368]
+        self.X, self.y = get_dataset(return_X_y=True)
+        self.idx = [256, 304, 58, 10, 23, 278, 230, 285, 291, 357]
 
     def test_known(self):
         """
@@ -28,7 +28,7 @@ class TestPCovCUR(unittest.TestCase):
         This test checks that the model can be restarted with a new instance
         """
 
-        selector = PCovCUR(n_to_select=1)
+        selector = PCovCUR(n_to_select=1, mixing=0.5)
         selector.fit(self.X, self.y)
 
         for i in range(len(self.idx) - 2):
@@ -50,7 +50,8 @@ class TestPCovCUR(unittest.TestCase):
         """
         This test checks that the model can be run non-iteratively
         """
-        self.idx = [492, 488, 491, 489, 374, 373, 386, 398, 383, 382]
+        selector = PCovCUR(n_to_select=10, iterative=False)
+        self.idx = [256, 32, 138, 290, 362, 141, 359, 254, 428, 9]
         selector = PCovCUR(n_to_select=10, iterative=False)
         selector.fit(self.X, self.y)
 

@@ -2,7 +2,7 @@ import unittest
 
 import numpy as np
 from sklearn import exceptions
-from sklearn.datasets import load_boston
+from sklearn.datasets import load_diabetes as get_dataset
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
 from sklearn.linear_model import Ridge
@@ -21,7 +21,7 @@ class PCovRBaseTest(unittest.TestCase):
         ), **kwargs: PCovR(mixing, regressor=regressor, **kwargs)
         self.error_tol = 1e-5
 
-        self.X, self.Y = load_boston(return_X_y=True)
+        self.X, self.Y = get_dataset(return_X_y=True)
         self.X = StandardScaler().fit_transform(self.X)
         self.Y = StandardScaler().fit_transform(np.vstack(self.Y))
 

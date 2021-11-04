@@ -3,7 +3,6 @@ import unittest
 import numpy as np
 from sklearn import exceptions
 
-# from sklearn.datasets import load_boston as load
 from skcosmo.datasets import load_csd_1000r as load
 from skcosmo.sample_selection import CUR
 
