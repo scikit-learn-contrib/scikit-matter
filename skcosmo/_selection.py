@@ -442,17 +442,29 @@ class _CUR(GreedySelector):
 
     def __init__(
         self,
+        selection_type,
         iterative=True,
         k=1,
         tolerance=1e-12,
-        **kwargs,
+        n_to_select=None,
+        score_threshold=None,
+        progress_bar=False,
+        full=False,
+        random_state=0,
     ):
 
         self.k = k
         self.iterative = iterative
         self.tolerance = tolerance
 
-        super().__init__(**kwargs)
+        super().__init__(
+            selection_type=selection_type,
+            n_to_select=n_to_select,
+            score_threshold=score_threshold,
+            progress_bar=progress_bar,
+            full=full,
+            random_state=random_state,
+        )
 
     def score(self, X, y=None):
         r"""
@@ -620,20 +632,31 @@ class _PCovCUR(GreedySelector):
 
     def __init__(
         self,
+        selection_type,
         mixing=0.5,
         iterative=True,
         k=1,
         tolerance=1e-12,
-        **kwargs,
+        n_to_select=None,
+        score_threshold=None,
+        progress_bar=False,
+        full=False,
+        random_state=0,
     ):
+        self.mixing = mixing
 
         self.k = k
         self.iterative = iterative
         self.tolerance = tolerance
 
-        self.mixing = mixing
-
-        super().__init__(**kwargs)
+        super().__init__(
+            selection_type=selection_type,
+            n_to_select=n_to_select,
+            score_threshold=score_threshold,
+            progress_bar=progress_bar,
+            full=full,
+            random_state=random_state,
+        )
 
     def score(self, X, y=None):
         """
@@ -819,12 +842,25 @@ class _FPS(GreedySelector):
 
     """
 
-    def __init__(self, initialize=0, **kwargs):
-
+    def __init__(
+        self,
+        selection_type,
+        initialize=0,
+        n_to_select=None,
+        score_threshold=None,
+        progress_bar=False,
+        full=False,
+        random_state=0,
+    ):
         self.initialize = initialize
 
         super().__init__(
-            **kwargs,
+            selection_type=selection_type,
+            n_to_select=n_to_select,
+            score_threshold=score_threshold,
+            progress_bar=progress_bar,
+            full=full,
+            random_state=random_state,
         )
 
     def score(self, X, y=None):
@@ -966,8 +1002,17 @@ class _PCovFPS(GreedySelector):
 
     """
 
-    def __init__(self, mixing=0.5, initialize=0, **kwargs):
-
+    def __init__(
+        self,
+        selection_type,
+        mixing=0.5,
+        initialize=0,
+        n_to_select=None,
+        score_threshold=None,
+        progress_bar=False,
+        full=False,
+        random_state=0,
+    ):
         if mixing == 1.0:
             raise ValueError(
                 "Mixing = 1.0 corresponds to traditional FPS."
@@ -978,7 +1023,12 @@ class _PCovFPS(GreedySelector):
         self.initialize = initialize
 
         super().__init__(
-            **kwargs,
+            selection_type=selection_type,
+            n_to_select=n_to_select,
+            score_threshold=score_threshold,
+            progress_bar=progress_bar,
+            full=full,
+            random_state=random_state,
         )
 
     def score(self, X, y=None):

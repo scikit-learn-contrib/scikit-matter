@@ -54,9 +54,24 @@ class FPS(_FPS):
 
     """
 
-    def __init__(self, **kwargs):
-
-        super().__init__(selection_type="sample", **kwargs)
+    def __init__(
+        self,
+        initialize=0,
+        n_to_select=None,
+        score_threshold=None,
+        progress_bar=False,
+        full=False,
+        random_state=0,
+    ):
+        super().__init__(
+            selection_type="sample",
+            initialize=initialize,
+            n_to_select=n_to_select,
+            score_threshold=score_threshold,
+            progress_bar=progress_bar,
+            full=full,
+            random_state=random_state,
+        )
 
 
 class PCovFPS(_PCovFPS):
@@ -108,9 +123,26 @@ class PCovFPS(_PCovFPS):
 
     """
 
-    def __init__(self, **kwargs):
-
-        super().__init__(selection_type="sample", **kwargs)
+    def __init__(
+        self,
+        mixing=0.5,
+        initialize=0,
+        n_to_select=None,
+        score_threshold=None,
+        progress_bar=False,
+        full=False,
+        random_state=0,
+    ):
+        super().__init__(
+            selection_type="sample",
+            mixing=mixing,
+            initialize=initialize,
+            n_to_select=n_to_select,
+            score_threshold=score_threshold,
+            progress_bar=progress_bar,
+            full=full,
+            random_state=random_state,
+        )
 
 
 class CUR(_CUR):
@@ -165,8 +197,28 @@ class CUR(_CUR):
 
     """
 
-    def __init__(self, **kwargs):
-        super().__init__(selection_type="sample", **kwargs)
+    def __init__(
+        self,
+        iterative=True,
+        k=1,
+        tolerance=1e-12,
+        n_to_select=None,
+        score_threshold=None,
+        progress_bar=False,
+        full=False,
+        random_state=0,
+    ):
+        super().__init__(
+            selection_type="sample",
+            iterative=iterative,
+            k=k,
+            tolerance=tolerance,
+            n_to_select=n_to_select,
+            score_threshold=score_threshold,
+            progress_bar=progress_bar,
+            full=full,
+            random_state=random_state,
+        )
 
 
 class PCovCUR(_PCovCUR):
@@ -177,6 +229,11 @@ class PCovCUR(_PCovCUR):
 
     Parameters
     ----------
+
+    mixing: float, default=0.5
+            The PCovR mixing parameter, as described in PCovR as
+            :math:`{\\alpha}`. Stored in :py:attr:`self.mixing`.
+
     iterative : bool
                 whether to orthogonalize after each selection, defaults to `true`
 
@@ -185,10 +242,6 @@ class PCovCUR(_PCovCUR):
 
     tolerance: float
          threshold below which scores will be considered 0, defaults to 1E-12
-
-    mixing: float, default=0.5
-            The PCovR mixing parameter, as described in PCovR as
-            :math:`{\\alpha}`. Stored in :py:attr:`self.mixing`.
 
     n_to_select : int or float, default=None
         The number of selections to make. If `None`, half of the samples are
@@ -230,6 +283,27 @@ class PCovCUR(_PCovCUR):
 
     """
 
-    def __init__(self, **kwargs):
-
-        super().__init__(selection_type="sample", **kwargs)
+    def __init__(
+        self,
+        mixing=0.5,
+        iterative=True,
+        k=1,
+        tolerance=1e-12,
+        n_to_select=None,
+        score_threshold=None,
+        progress_bar=False,
+        full=False,
+        random_state=0,
+    ):
+        super().__init__(
+            selection_type="sample",
+            mixing=mixing,
+            iterative=iterative,
+            k=k,
+            tolerance=tolerance,
+            n_to_select=n_to_select,
+            score_threshold=score_threshold,
+            progress_bar=progress_bar,
+            full=full,
+            random_state=random_state,
+        )
