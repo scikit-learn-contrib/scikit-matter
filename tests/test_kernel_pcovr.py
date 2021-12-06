@@ -27,7 +27,7 @@ class KernelPCovRBaseTest(unittest.TestCase):
         self.X, self.Y = get_dataset(return_X_y=True)
 
         # for the sake of expedience, only use a subset of the dataset
-        idx = np.random.choice(len(self.X), 1000)
+        idx = self.random_state.choice(len(self.X), 1000)
         self.X = self.X[idx]
         self.Y = self.Y[idx]
 
