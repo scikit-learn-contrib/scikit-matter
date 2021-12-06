@@ -113,6 +113,26 @@ class TestGreedy(unittest.TestCase):
         Xr = selector.transform(self.X)
         self.assertEqual(Xr.shape[1], self.X.shape[1] // 2)
 
+    def test_size_input(self):
+        X = np.array([1, 2, 3, 4, 5]).reshape(-1, 1)
+        selector_sample = GreedyTester(selection_type="sample")
+        selector_feature = GreedyTester(selection_type="feature")
+        selector_sample.fit(X)
+        with self.assertRaises(ValueError) as cm:
+            selector_feature.fit(X)
+            self.assertEqual(
+                str(cm.message),
+                "Found array with 1 feature(s) (shape=(5, 1)) while a minimum of 2 is required.",
+            )
+        X = X.reshape(1, -1)
+        selector_feature.fit(X)
+        with self.assertRaises(ValueError) as cm:
+            selector_sample.fit(X)
+            self.assertEqual(
+                str(cm.message),
+                "Found array with 1 sample(s) (shape=(1, 5)) while a minimum of 2 is required.",
+            )
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)
