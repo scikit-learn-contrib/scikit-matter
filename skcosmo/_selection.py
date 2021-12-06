@@ -151,27 +151,26 @@ class GreedySelector(SelectorMixin, MetaEstimatorMixin, BaseEstimator):
         elif self.progress_bar is False:
             self.report_progress = no_progress_bar
 
+        params = dict(
+            accept_sparse="csc",
+            force_all_finite=not tags.get("allow_nan", True),
+        )
+        if self._axis == 1:
+            params["ensure_min_features"] = 2
+        else:
+            params["ensure_min_samples"] = 2
+
         if y is not None:
-            X, y = self._validate_data(
-                X,
-                y,
-                accept_sparse="csc",
-                ensure_min_features=2,
-                force_all_finite=not tags.get("allow_nan", True),
-                multi_output=True,
-            )
+            params["multi_output"] = True
+            X, y = self._validate_data(X, y, **params)
+
             if len(y.shape) == 1:
                 # force y to have multi_output 2D format even when it's 1D, since
                 # many functions, most notably PCov routines, assume an array storage
                 # format, most notably to compute (y @ y.T)
                 y = y.reshape((len(y), 1))
         else:
-            X = check_array(
-                X,
-                accept_sparse="csc",
-                ensure_min_features=2,
-                force_all_finite=not tags.get("allow_nan", True),
-            )
+            X = check_array(X, **params)
 
         n_to_select_from = X.shape[self._axis]
 
