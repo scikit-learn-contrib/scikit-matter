@@ -1,14 +1,14 @@
 import unittest
 
-from sklearn.datasets import load_boston
+from sklearn.datasets import load_diabetes as get_dataset
 
 from skcosmo.sample_selection import PCovFPS
 
 
 class TestPCovFPS(unittest.TestCase):
     def setUp(self):
-        self.X, self.y = load_boston(return_X_y=True)
-        self.idx = [39, 410, 492, 102, 54, 413, 34, 126, 346, 134, 433, 380]
+        self.X, self.y = get_dataset(return_X_y=True)
+        self.idx = [0, 256, 156, 324, 349, 77, 113, 441, 426, 51]
 
     def test_restart(self):
         """

@@ -2,7 +2,7 @@ import unittest
 
 import numpy as np
 from sklearn import exceptions
-from sklearn.datasets import load_boston
+from sklearn.datasets import load_diabetes as get_dataset
 from sklearn.kernel_ridge import KernelRidge
 from sklearn.linear_model import (
     Ridge,
@@ -24,7 +24,12 @@ class KernelPCovRBaseTest(unittest.TestCase):
 
         self.error_tol = 1e-6
 
-        self.X, self.Y = load_boston(return_X_y=True)
+        self.X, self.Y = get_dataset(return_X_y=True)
+
+        # for the sake of expedience, only use a subset of the dataset
+        idx = self.random_state.choice(len(self.X), 1000)
+        self.X = self.X[idx]
+        self.Y = self.Y[idx]
 
         # artificial second property
         self.Y = np.array(

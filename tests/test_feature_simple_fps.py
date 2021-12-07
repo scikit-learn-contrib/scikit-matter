@@ -1,6 +1,6 @@
 import unittest
 
-from sklearn.datasets import load_boston
+from sklearn.datasets import load_diabetes as get_dataset
 from sklearn.utils.validation import NotFittedError
 
 from skcosmo.feature_selection import FPS
@@ -8,15 +8,14 @@ from skcosmo.feature_selection import FPS
 
 class TestFPS(unittest.TestCase):
     def setUp(self):
-        self.X, _ = load_boston(return_X_y=True)
-        self.idx = [9, 3, 11, 6, 1, 10, 8, 0, 12, 2, 5, 7, 4]
+        self.X, _ = get_dataset(return_X_y=True)
+        self.idx = [0, 6, 1, 2, 4, 9, 3]
 
     def test_restart(self):
         """
         This test checks that the model can be restarted with a new number of
         features and `warm_start`
         """
-
         selector = FPS(n_to_select=1, initialize=self.idx[0])
         selector.fit(self.X)
 
@@ -54,7 +53,7 @@ class TestFPS(unittest.TestCase):
         """
         This test checks that the haussdorf distances are returnable after fitting
         """
-        selector = FPS(n_to_select=10)
+        selector = FPS(n_to_select=7)
         selector.fit(self.X)
         d = selector.get_select_distance()
 
@@ -62,7 +61,7 @@ class TestFPS(unittest.TestCase):
         self.assertTrue(all(dist_grad > 0))
 
         with self.assertRaises(NotFittedError):
-            selector = FPS(n_to_select=10)
+            selector = FPS(n_to_select=7)
             _ = selector.get_select_distance()
 
 

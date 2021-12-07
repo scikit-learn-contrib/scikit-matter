@@ -1,6 +1,6 @@
 import unittest
 
-from sklearn.datasets import load_boston
+from sklearn.datasets import load_diabetes as get_dataset
 from sklearn.utils.validation import NotFittedError
 
 from skcosmo.sample_selection import FPS
@@ -8,8 +8,8 @@ from skcosmo.sample_selection import FPS
 
 class TestFPS(unittest.TestCase):
     def setUp(self):
-        self.X, _ = load_boston(return_X_y=True)
-        self.idx = [0, 410, 492, 102, 134, 413, 54, 32, 353, 126]
+        self.X, _ = get_dataset(return_X_y=True)
+        self.idx = [0, 123, 441, 187, 117, 276, 261, 281, 251, 193]
 
     def test_restart(self):
         """

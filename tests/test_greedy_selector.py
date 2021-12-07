@@ -1,7 +1,7 @@
 import unittest
 
 import numpy as np
-from sklearn.datasets import load_boston
+from sklearn.datasets import load_diabetes as get_dataset
 from sklearn.exceptions import NotFittedError
 
 from skcosmo._selection import GreedySelector
@@ -26,7 +26,7 @@ class GreedyTester(GreedySelector):
 
 class TestGreedy(unittest.TestCase):
     def setUp(self):
-        self.X, _ = load_boston(return_X_y=True)
+        self.X, _ = get_dataset(return_X_y=True)
 
     def test_bad_type(self):
         with self.assertRaises(
@@ -35,9 +35,9 @@ class TestGreedy(unittest.TestCase):
             _ = GreedyTester(selection_type="bad").fit(self.X)
 
     def test_score_threshold(self):
-        selector = GreedyTester(score_threshold=20, n_to_select=12)
+        selector = GreedyTester(score_threshold=200, n_to_select=7)
         with self.assertWarns(
-            Warning, msg="Score threshold of 20 reached. Terminating search at 10 / 12."
+            Warning, msg="Score threshold of 200 reached. Terminating search at 6 / 7."
         ):
             selector.fit(self.X)
 
@@ -59,7 +59,7 @@ class TestGreedy(unittest.TestCase):
             )
 
     def test_bad_y(self):
-        self.X, self.Y = load_boston(return_X_y=True)
+        self.X, self.Y = get_dataset(return_X_y=True)
         selector = GreedyTester(n_to_select=2)
         with self.assertRaises(ValueError):
             selector.fit(X=self.X, y=self.Y[:2])

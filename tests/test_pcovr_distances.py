@@ -2,7 +2,7 @@ import unittest
 
 import numpy as np
 import scipy
-from sklearn.datasets import load_boston
+from sklearn.datasets import load_diabetes as get_dataset
 
 from skcosmo.utils import (
     pcovr_covariance,
@@ -13,7 +13,7 @@ from skcosmo.utils import (
 class CovarianceTest(unittest.TestCase):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.X, self.Y = load_boston(return_X_y=True)
+        self.X, self.Y = get_dataset(return_X_y=True)
 
     def test_alphas(self):
         C_X = self.X.T @ self.X
@@ -71,7 +71,7 @@ class CovarianceTest(unittest.TestCase):
 class KernelTest(unittest.TestCase):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.X, self.Y = load_boston(return_X_y=True)
+        self.X, self.Y = get_dataset(return_X_y=True)
 
     def test_alphas(self):
         K_X = self.X @ self.X.T
