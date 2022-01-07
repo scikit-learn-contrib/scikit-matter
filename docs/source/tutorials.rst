@@ -2,7 +2,7 @@ Examples
 ########
 
 For a thorough tutorial of the methods introduced in `scikit-cosmo`, we suggest you
-check out the pedagogic notebooks in our companion project `kernel-tutorials <https://github.com/cosmo-epfl/kernel-tutorials/>`_.
+check out the pedagogic notebooks in our companion project `kernel-tutorials <https://github.com/lab-cosmo/kernel-tutorials/>`_.
 
 .. toctree::
   :glob:

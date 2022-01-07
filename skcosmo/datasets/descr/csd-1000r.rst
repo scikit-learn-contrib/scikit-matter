@@ -46,8 +46,8 @@ Data Set Characteristics
 References
 ----------
 
-   .. [C1] https://github.com/cosmo-epfl/librascal commit e78f1c69
-   .. [C2] https://github.com/cosmo-epfl/scikit-cosmo commit 64e789f
+   .. [C1] https://github.com/lab-cosmo/librascal commit e78f1c69
+   .. [C2] https://github.com/lab-cosmo/scikit-cosmo commit 64e789f
 
 Reference Code
 --------------
