@@ -1,7 +1,7 @@
 # scikit-cosmo
 
-[![Test](https://github.com/cosmo-epfl/scikit-cosmo/workflows/Test/badge.svg)](https://github.com/cosmo-epfl/scikit-cosmo/actions?query=workflow%3ATest)
-[![codecov](https://codecov.io/gh/cosmo-epfl/scikit-cosmo/branch/main/graph/badge.svg?token=UZJPJG34SM)](https://codecov.io/gh/cosmo-epfl/scikit-cosmo/)
+[![Test](https://github.com/lab-cosmo/scikit-cosmo/workflows/Test/badge.svg)](https://github.com/lab-cosmo/scikit-cosmo/actions?query=workflow%3ATest)
+[![codecov](https://codecov.io/gh/lab-cosmo/scikit-cosmo/branch/main/graph/badge.svg?token=UZJPJG34SM)](https://codecov.io/gh/lab-cosmo/scikit-cosmo/)
 
 A collection of scikit-learn compatible utilities that implement methods
 developed in the COSMO laboratory
@@ -25,7 +25,7 @@ pip install tox black flake8
 Then this package itself
 
 ```bash
-git clone https://github.com/cosmo-epfl/scikit-cosmo
+git clone https://github.com/lab-cosmo/scikit-cosmo
 cd scikit-cosmo
 pip install -e .
 ```

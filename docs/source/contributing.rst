@@ -14,7 +14,7 @@ Then this package itself
 
 .. code-block:: bash
 
-  git clone https://github.com/cosmo-epfl/scikit-cosmo
+  git clone https://github.com/lab-cosmo/scikit-cosmo
   cd scikit-cosmo
   pip install -e .
 
