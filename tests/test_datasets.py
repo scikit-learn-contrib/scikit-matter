@@ -29,11 +29,8 @@ class CSDTests(unittest.TestCase):
         cls.csd = load_csd_1000r()
 
     def test_load_csd_1000r_shape(self):
-        # test if representations have correct shape
-        self.assertTrue(self.csd.data.X.shape == (100, 100))
-
-    def test_load_csd_1000r_prop_shape(self):
-        self.assertTrue(self.csd.data.y.shape == (100, 1))
+        # test if representations and properties have commensurate shape
+        self.assertTrue(self.csd.data.X.shape[0] == self.csd.data.y.shape[0])
 
     def test_load_csd_1000r_access_descr(self):
         self.csd.DESCR
