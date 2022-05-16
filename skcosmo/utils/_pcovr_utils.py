@@ -177,8 +177,8 @@ def pcovr_covariance(
                 random_state=random_state,
             )
 
-            UC = UC.T[:, (vC ** 2) > rcond]
-            vC = vC[(vC ** 2) > rcond]
+            UC = UC.T[:, (vC**2) > rcond]
+            vC = vC[(vC**2) > rcond]
 
         C_isqrt = UC @ np.diagflat(1.0 / vC) @ UC.T
 
