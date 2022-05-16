@@ -32,6 +32,13 @@ class FPS(_FPS):
         n_to_select is chosen. Otherwise will stop when the score falls below the threshold.
         Stored in :py:attr:`self.score_threshold`.
 
+    score_threshold_type : str, default="absolute"
+        How to interpret the ``score_threshold``. When "absolute", the score used by
+        the selector is compared to the threshold directly. When "relative", at each iteration,
+        the score used by the selector is compared proportionally to the score of the first
+        selection, i.e. the selector quits when ``current_score / first_score < threshold``.
+        Stored in :py:attr:`self.score_threshold_type`.
+
     progress_bar: bool, default=False
               option to use `tqdm <https://tqdm.github.io/>`_
               progress bar to monitor selections. Stored in :py:attr:`self.report_progress`.
@@ -59,6 +66,7 @@ class FPS(_FPS):
         initialize=0,
         n_to_select=None,
         score_threshold=None,
+        score_threshold_type="absolute",
         progress_bar=False,
         full=False,
         random_state=0,
@@ -68,6 +76,7 @@ class FPS(_FPS):
             initialize=initialize,
             n_to_select=n_to_select,
             score_threshold=score_threshold,
+            score_threshold_type=score_threshold_type,
             progress_bar=progress_bar,
             full=full,
             random_state=random_state,
@@ -100,6 +109,13 @@ class PCovFPS(_PCovFPS):
         n_to_select is chosen. Otherwise will stop when the score falls below the threshold.
         Stored in :py:attr:`self.score_threshold`.
 
+    score_threshold_type : str, default="absolute"
+        How to interpret the ``score_threshold``. When "absolute", the score used by
+        the selector is compared to the threshold directly. When "relative", at each iteration,
+        the score used by the selector is compared proportionally to the score of the first
+        selection, i.e. the selector quits when ``current_score / first_score < threshold``.
+        Stored in :py:attr:`self.score_threshold_type`.
+
     progress_bar: bool, default=False
               option to use `tqdm <https://tqdm.github.io/>`_
               progress bar to monitor selections. Stored in :py:attr:`self.report_progress`.
@@ -129,6 +145,7 @@ class PCovFPS(_PCovFPS):
         initialize=0,
         n_to_select=None,
         score_threshold=None,
+        score_threshold_type="absolute",
         progress_bar=False,
         full=False,
         random_state=0,
@@ -139,6 +156,7 @@ class PCovFPS(_PCovFPS):
             initialize=initialize,
             n_to_select=n_to_select,
             score_threshold=score_threshold,
+            score_threshold_type=score_threshold_type,
             progress_bar=progress_bar,
             full=full,
             random_state=random_state,
@@ -172,6 +190,13 @@ class CUR(_CUR):
          n_to_select is chosen. Otherwise will stop when the score falls below the threshold.
          Stored in :py:attr:`self.score_threshold`.
 
+     score_threshold_type : str, default="absolute"
+         How to interpret the ``score_threshold``. When "absolute", the score used by
+         the selector is compared to the threshold directly. When "relative", at each iteration,
+         the score used by the selector is compared proportionally to the score of the first
+         selection, i.e. the selector quits when ``current_score / first_score < threshold``.
+         Stored in :py:attr:`self.score_threshold_type`.
+
      progress_bar: bool, default=False
                option to use `tqdm <https://tqdm.github.io/>`_
                progress bar to monitor selections. Stored in :py:attr:`self.report_progress`.
@@ -204,6 +229,7 @@ class CUR(_CUR):
         tolerance=1e-12,
         n_to_select=None,
         score_threshold=None,
+        score_threshold_type="absolute",
         progress_bar=False,
         full=False,
         random_state=0,
@@ -215,6 +241,7 @@ class CUR(_CUR):
             tolerance=tolerance,
             n_to_select=n_to_select,
             score_threshold=score_threshold,
+            score_threshold_type=score_threshold_type,
             progress_bar=progress_bar,
             full=full,
             random_state=random_state,
@@ -254,6 +281,13 @@ class PCovCUR(_PCovCUR):
         n_to_select is chosen. Otherwise will stop when the score falls below the threshold.
         Stored in :py:attr:`self.score_threshold`.
 
+    score_threshold_type : str, default="absolute"
+        How to interpret the ``score_threshold``. When "absolute", the score used by
+        the selector is compared to the threshold directly. When "relative", at each iteration,
+        the score used by the selector is compared proportionally to the score of the first
+        selection, i.e. the selector quits when ``current_score / first_score < threshold``.
+        Stored in :py:attr:`self.score_threshold_type`.
+
     progress_bar: bool, default=False
               option to use `tqdm <https://tqdm.github.io/>`_
               progress bar to monitor selections. Stored in :py:attr:`self.report_progress`.
@@ -291,6 +325,7 @@ class PCovCUR(_PCovCUR):
         tolerance=1e-12,
         n_to_select=None,
         score_threshold=None,
+        score_threshold_type="absolute",
         progress_bar=False,
         full=False,
         random_state=0,
@@ -303,6 +338,7 @@ class PCovCUR(_PCovCUR):
             tolerance=tolerance,
             n_to_select=n_to_select,
             score_threshold=score_threshold,
+            score_threshold_type=score_threshold_type,
             progress_bar=progress_bar,
             full=full,
             random_state=random_state,

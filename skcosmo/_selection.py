@@ -59,6 +59,13 @@ class GreedySelector(SelectorMixin, MetaEstimatorMixin, BaseEstimator):
         n_to_select is chosen. Otherwise will stop when the score falls below the threshold.
         Stored in :py:attr:`self.score_threshold`.
 
+    score_threshold_type : str, default="absolute"
+        How to interpret the ``score_threshold``. When "absolute", the score used by
+        the selector is compared to the threshold directly. When "relative", at each iteration,
+        the score used by the selector is compared proportionally to the score of the first
+        selection, i.e. the selector quits when ``current_score / first_score < threshold``.
+        Stored in :py:attr:`self.score_threshold_type`.
+
     progress_bar: bool, default=False
               option to use `tqdm <https://tqdm.github.io/>`_
               progress bar to monitor selections. Stored in :py:attr:`self.report_progress`.
@@ -86,6 +93,7 @@ class GreedySelector(SelectorMixin, MetaEstimatorMixin, BaseEstimator):
         selection_type,
         n_to_select=None,
         score_threshold=None,
+        score_threshold_type="absolute",
         progress_bar=False,
         full=False,
         random_state=0,
@@ -94,6 +102,12 @@ class GreedySelector(SelectorMixin, MetaEstimatorMixin, BaseEstimator):
         self.selection_type = selection_type
         self.n_to_select = n_to_select
         self.score_threshold = score_threshold
+        self.score_threshold_type = score_threshold_type
+        self._first_score = None
+        if self.score_threshold_type not in ["relative", "absolute"]:
+            raise ValueError(
+                "invalid score_threshold_type, expected one of 'relative' or 'absolute'"
+            )
 
         self.full = full
         self.progress_bar = progress_bar
@@ -352,14 +366,22 @@ class GreedySelector(SelectorMixin, MetaEstimatorMixin, BaseEstimator):
         self.selected_idx_[: self.n_selected_] = old_idx
 
     def _get_best_new_selection(self, scorer, X, y):
-
         scores = scorer(X, y)
 
-        amax = np.argmax(scores)
-        if self.score_threshold is not None and scores[amax] < self.score_threshold:
-            return None
-        else:
-            return amax
+        max_score_idx = np.argmax(scores)
+        if self.score_threshold is not None:
+            if self._first_score is None:
+                self._first_score = scores[max_score_idx]
+
+            if self.score_threshold_type == "absolute":
+                if scores[max_score_idx] < self.score_threshold:
+                    return None
+
+            if self.score_threshold_type == "relative":
+                if scores[max_score_idx] / self._first_score < self.score_threshold:
+                    return None
+
+        return max_score_idx
 
     def _update_post_selection(self, X, y, last_selected):
         """
@@ -448,6 +470,7 @@ class _CUR(GreedySelector):
         tolerance=1e-12,
         n_to_select=None,
         score_threshold=None,
+        score_threshold_type="absolute",
         progress_bar=False,
         full=False,
         random_state=0,
@@ -461,6 +484,7 @@ class _CUR(GreedySelector):
             selection_type=selection_type,
             n_to_select=n_to_select,
             score_threshold=score_threshold,
+            score_threshold_type=score_threshold_type,
             progress_bar=progress_bar,
             full=full,
             random_state=random_state,
@@ -639,6 +663,7 @@ class _PCovCUR(GreedySelector):
         tolerance=1e-12,
         n_to_select=None,
         score_threshold=None,
+        score_threshold_type="absolute",
         progress_bar=False,
         full=False,
         random_state=0,
@@ -653,6 +678,7 @@ class _PCovCUR(GreedySelector):
             selection_type=selection_type,
             n_to_select=n_to_select,
             score_threshold=score_threshold,
+            score_threshold_type=score_threshold_type,
             progress_bar=progress_bar,
             full=full,
             random_state=random_state,
@@ -848,6 +874,7 @@ class _FPS(GreedySelector):
         initialize=0,
         n_to_select=None,
         score_threshold=None,
+        score_threshold_type="absolute",
         progress_bar=False,
         full=False,
         random_state=0,
@@ -858,6 +885,7 @@ class _FPS(GreedySelector):
             selection_type=selection_type,
             n_to_select=n_to_select,
             score_threshold=score_threshold,
+            score_threshold_type=score_threshold_type,
             progress_bar=progress_bar,
             full=full,
             random_state=random_state,
@@ -1009,6 +1037,7 @@ class _PCovFPS(GreedySelector):
         initialize=0,
         n_to_select=None,
         score_threshold=None,
+        score_threshold_type="absolute",
         progress_bar=False,
         full=False,
         random_state=0,
@@ -1026,6 +1055,7 @@ class _PCovFPS(GreedySelector):
             selection_type=selection_type,
             n_to_select=n_to_select,
             score_threshold=score_threshold,
+            score_threshold_type=score_threshold_type,
             progress_bar=progress_bar,
             full=full,
             random_state=random_state,
