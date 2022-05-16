@@ -441,8 +441,8 @@ def pointwise_local_reconstruction_error(
     Y_test = scaler.transform(Y_test)
 
     squared_dist = (
-        np.sum(X_train ** 2, axis=1)
-        + np.sum(X_test ** 2, axis=1)[:, np.newaxis]
+        np.sum(X_train**2, axis=1)
+        + np.sum(X_test**2, axis=1)[:, np.newaxis]
         - 2 * X_test @ X_train.T
     )
 

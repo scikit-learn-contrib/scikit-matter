@@ -195,7 +195,7 @@ class VoronoiFPS(GreedySelector):
 
         super()._init_greedy_search(X, y, n_to_select)
 
-        self.norms_ = (X ** 2).sum(axis=abs(self._axis - 1))
+        self.norms_ = (X**2).sum(axis=abs(self._axis - 1))
 
         if self.initialize == "random":
             random_state = check_random_state(self.random_state)
