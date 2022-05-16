@@ -81,8 +81,6 @@ extensions = [
 
 nbsphinx_execute = "never"
 
-source_suffix = [".rst", ".ipynb"]
-
 # If set to False return type and description are put into one paragraph
 napoleon_use_rtype = False
 
