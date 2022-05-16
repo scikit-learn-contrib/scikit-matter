@@ -62,6 +62,25 @@ class TestFPS(unittest.TestCase):
             selector = FPS(n_to_select=1)
             _ = selector.get_select_distance()
 
+    def test_threshold(self):
+        selector = FPS(
+            n_to_select=10,
+            score_threshold=5e-2,
+            score_threshold_type="absolute",
+        )
+        selector.fit(self.X)
+        self.assertEqual(len(selector.selected_idx_), 6)
+        self.assertEqual(selector.selected_idx_.tolist(), self.idx[:6])
+
+        selector = FPS(
+            n_to_select=10,
+            score_threshold=0.4,
+            score_threshold_type="relative",
+        )
+        selector.fit(self.X)
+        self.assertEqual(len(selector.selected_idx_), 5)
+        self.assertEqual(selector.selected_idx_.tolist(), self.idx[:5])
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)
