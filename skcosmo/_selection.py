@@ -571,7 +571,7 @@ class _CUR(GreedySelector):
     def _update_post_selection(self, X, y, last_selected):
         """
         Saves the most recently selected feature, increments the feature counter,
-        and, if the CUR is iterative (recompute_every>0), orthogonalizes the remaining features by
+        and, if the CUR is iterative (if recompute_every>0), orthogonalizes the remaining features by
         the most recently selected.
         """
         super()._update_post_selection(X, y, last_selected)
@@ -724,7 +724,7 @@ class _PCovCUR(GreedySelector):
     def _update_post_selection(self, X, y, last_selected):
         """
         Saves the most recently selected feature, increments the feature counter,
-        and, if the CUR is iterative (recompute_every>0), orthogonalizes the remaining features by
+        and, if the CUR is iterative (if recompute_every>0), orthogonalizes the remaining features by
         the most recently selected.
         """
         super()._update_post_selection(X, y, last_selected)
