@@ -18,7 +18,7 @@ class TestPCovCUR(unittest.TestCase):
         This test checks that the model returns a known set of indices
         """
 
-        selector = PCovCUR(n_to_select=10, mixing=0.5, iterative=True)
+        selector = PCovCUR(n_to_select=10, mixing=0.5)
         selector.fit(self.X, self.y)
 
         self.assertTrue(np.allclose(selector.selected_idx_, self.idx))
@@ -50,9 +50,8 @@ class TestPCovCUR(unittest.TestCase):
         """
         This test checks that the model can be run non-iteratively
         """
-        selector = PCovCUR(n_to_select=10, iterative=False)
         self.idx = [256, 32, 138, 290, 362, 141, 359, 254, 428, 9]
-        selector = PCovCUR(n_to_select=10, iterative=False)
+        selector = PCovCUR(n_to_select=10, recompute_every=0)
         selector.fit(self.X, self.y)
 
         self.assertTrue(np.allclose(selector.selected_idx_, self.idx))

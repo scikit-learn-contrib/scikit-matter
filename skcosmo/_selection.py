@@ -422,8 +422,9 @@ class _CUR(GreedySelector):
 
     Parameters
     ----------
-    iterative : bool
-                whether to orthogonalize after each selection, defaults to `true`
+    recompute_every : int
+                      number of steps after which to recompute the pi score
+                      defaults to 1, if 0 no re-computation is done
 
     k : int
         number of eigenvectors to compute the importance score with, defaults to 1
@@ -443,7 +444,7 @@ class _CUR(GreedySelector):
     def __init__(
         self,
         selection_type,
-        iterative=True,
+        recompute_every=1,
         k=1,
         tolerance=1e-12,
         n_to_select=None,
@@ -454,8 +455,8 @@ class _CUR(GreedySelector):
     ):
 
         self.k = k
-        self.iterative = iterative
         self.tolerance = tolerance
+        self.recompute_every = recompute_every
 
         super().__init__(
             selection_type=selection_type,
@@ -510,7 +511,7 @@ class _CUR(GreedySelector):
 
         for c in self.selected_idx_:
 
-            if (
+            if self.recompute_every != 0 and (
                 np.linalg.norm(np.take(self.X_current_, [c], axis=self._axis))
                 > self.tolerance
             ):
@@ -570,14 +571,16 @@ class _CUR(GreedySelector):
     def _update_post_selection(self, X, y, last_selected):
         """
         Saves the most recently selected feature, increments the feature counter,
-        and, if the CUR is iterative, orthogonalizes the remaining features by
+        and, if the CUR is iterative (recompute_every>0), orthogonalizes the remaining features by
         the most recently selected.
         """
         super()._update_post_selection(X, y, last_selected)
 
-        if self.iterative:
+        if self.recompute_every != 0:
             self._orthogonalize(last_selected)
-            self.pi_ = self._compute_pi(self.X_current_)
+
+            if len(self.selected_idx_) % self.recompute_every == 0:
+                self.pi_ = self._compute_pi(self.X_current_)
 
         self.pi_[last_selected] = 0.0
 
@@ -605,8 +608,9 @@ class _PCovCUR(GreedySelector):
 
     Parameters
     ----------
-    iterative : bool
-                whether to orthogonalize after each selection, defaults to `true`
+    recompute_every : int
+                      number of steps after which to recompute the pi score
+                      defaults to 1, if 0 no re-computation is done
 
     k : int
         number of eigenvectors to compute the importance score with, defaults to 1
@@ -634,7 +638,7 @@ class _PCovCUR(GreedySelector):
         self,
         selection_type,
         mixing=0.5,
-        iterative=True,
+        recompute_every=1,
         k=1,
         tolerance=1e-12,
         n_to_select=None,
@@ -646,7 +650,7 @@ class _PCovCUR(GreedySelector):
         self.mixing = mixing
 
         self.k = k
-        self.iterative = iterative
+        self.recompute_every = recompute_every
         self.tolerance = tolerance
 
         super().__init__(
@@ -707,7 +711,7 @@ class _PCovCUR(GreedySelector):
 
         for c in self.selected_idx_:
 
-            if (
+            if self.recompute_every != 0 and (
                 np.linalg.norm(np.take(self.X_current_, [c], axis=self._axis))
                 > self.tolerance
             ):
@@ -720,14 +724,16 @@ class _PCovCUR(GreedySelector):
     def _update_post_selection(self, X, y, last_selected):
         """
         Saves the most recently selected feature, increments the feature counter,
-        and, if the CUR is iterative, orthogonalizes the remaining features by
+        and, if the CUR is iterative (recompute_every>0), orthogonalizes the remaining features by
         the most recently selected.
         """
         super()._update_post_selection(X, y, last_selected)
 
-        if self.iterative:
+        if self.recompute_every != 0:
             self._orthogonalize(last_selected)
-            self.pi_ = self._compute_pi(self.X_current_, self.y_current_)
+
+            if len(self.selected_idx_) % self.recompute_every == 0:
+                self.pi_ = self._compute_pi(self.X_current_, self.y_current_)
 
         self.pi_[last_selected] = 0.0
 

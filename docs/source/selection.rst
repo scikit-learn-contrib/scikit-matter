@@ -102,8 +102,8 @@ They are instantiated using
                         # int, number of eigenvectors to use in computing pi
                         k = 1,
 
-                        # boolean, whether to orthogonalize after each selection, defaults to true
-                        iterative = True,
+                        # int, number of steps after which to recompute pi
+                        recompute_every = 1,
 
                         # float, threshold below which scores will be considered 0, defaults to 1E-12
                         tolerance=1E-12,
@@ -149,8 +149,8 @@ and are instantiated using
                         # int, number of eigenvectors to use in computing pi
                         k = 1,
 
-                        # boolean, whether to orthogonalize after each selection, defaults to true
-                        iterative = True,
+                        # int, number of steps after which to recompute pi
+                        recompute_every = 1,
 
                         # float, threshold below which scores will be considered 0, defaults to 1E-12
                         tolerance=1E-12,
