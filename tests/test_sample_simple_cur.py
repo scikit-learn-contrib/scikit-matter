@@ -3,14 +3,15 @@ import unittest
 import numpy as np
 from sklearn import exceptions
 
-from skcosmo.datasets import load_csd_1000r as load
+from sklearn.datasets import fetch_california_housing as load
 from skcosmo.sample_selection import CUR
 
 
 class TestCUR(unittest.TestCase):
     def setUp(self):
-        self.X, self.y = load(return_X_y=True)
-        self.n_select = min(self.X.shape) // 2
+        self.X, _ = load(return_X_y=True)
+        self.X = self.X[:1000]
+        self.n_select = min(20, min(self.X.shape) // 2)
 
     def test_bad_transform(self):
         selector = CUR(n_to_select=2)
