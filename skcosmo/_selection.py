@@ -18,6 +18,10 @@ from sklearn.feature_selection._base import SelectorMixin
 from sklearn.utils import (
     check_array,
     check_random_state,
+
+@rosecers
+@hurricane642
+rosecers and hurricane642 Update skcosmo/_selection.py
     safe_mask,
 )
 from sklearn.utils._tags import _safe_tags
@@ -579,7 +583,7 @@ class _CUR(GreedySelector):
         if self.recompute_every != 0:
             self._orthogonalize(last_selected)
 
-            if len(self.selected_idx_) % self.recompute_every == 0:
+            if self.n_selected_ % self.recompute_every == 0:
                 self.pi_ = self._compute_pi(self.X_current_)
 
         self.pi_[last_selected] = 0.0
@@ -732,7 +736,7 @@ class _PCovCUR(GreedySelector):
         if self.recompute_every != 0:
             self._orthogonalize(last_selected)
 
-            if len(self.selected_idx_) % self.recompute_every == 0:
+            if self.n_selected_ % self.recompute_every == 0:
                 self.pi_ = self._compute_pi(self.X_current_, self.y_current_)
 
         self.pi_[last_selected] = 0.0
