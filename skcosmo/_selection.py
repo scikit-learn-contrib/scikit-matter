@@ -18,10 +18,6 @@ from sklearn.feature_selection._base import SelectorMixin
 from sklearn.utils import (
     check_array,
     check_random_state,
-
-@rosecers
-@hurricane642
-rosecers and hurricane642 Update skcosmo/_selection.py
     safe_mask,
 )
 from sklearn.utils._tags import _safe_tags
