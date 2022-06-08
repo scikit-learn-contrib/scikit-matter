@@ -145,7 +145,7 @@ class GreedySelector(SelectorMixin, MetaEstimatorMixin, BaseEstimator):
             raise ValueError(
                 "You cannot specify both `score_threshold` and `full=True`."
             )
-        
+
         if self.progress_bar == True:
             self.report_progress = get_progress_bar()
         elif self.progress_bar == False:
