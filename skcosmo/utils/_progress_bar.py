@@ -13,3 +13,8 @@ def get_progress_bar():
             "Either install tqdm or re-run with"
             "progress_bar = False"
         )
+def no_progress_bar(x):
+    """
+    This is the identity function, same as lambda x:x. It returns x.
+    """
+    return x

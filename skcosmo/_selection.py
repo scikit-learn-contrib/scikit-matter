@@ -28,6 +28,7 @@ from .utils import (
     Y_feature_orthogonalizer,
     Y_sample_orthogonalizer,
     get_progress_bar,
+    no_progress_bar,
     pcovr_covariance,
     pcovr_kernel,
 )
@@ -144,8 +145,11 @@ class GreedySelector(SelectorMixin, MetaEstimatorMixin, BaseEstimator):
             raise ValueError(
                 "You cannot specify both `score_threshold` and `full=True`."
             )
-
-        self.report_progress = get_progress_bar()
+        
+        if self.progress_bar == True:
+            self.report_progress = get_progress_bar()
+        elif self.progress_bar == False:
+            self.report_progress = no_progress_bar
 
         if y is not None:
             X, y = self._validate_data(
@@ -205,9 +209,7 @@ class GreedySelector(SelectorMixin, MetaEstimatorMixin, BaseEstimator):
 
         n_iterations -= self.n_selected_
 
-        for n in self.report_progress(
-            range(n_iterations), disable=not self.progress_bar
-        ):
+        for n in self.report_progress(range(n_iterations)):
 
             new_idx = self._get_best_new_selection(self.score, X, y)
             if new_idx is not None:
