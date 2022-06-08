@@ -205,7 +205,9 @@ class GreedySelector(SelectorMixin, MetaEstimatorMixin, BaseEstimator):
 
         n_iterations -= self.n_selected_
 
-        for n in self.report_progress(range(n_iterations), disable = not self.progress_bar):
+        for n in self.report_progress(
+            range(n_iterations), disable=not self.progress_bar
+        ):
 
             new_idx = self._get_best_new_selection(self.score, X, y)
             if new_idx is not None:
