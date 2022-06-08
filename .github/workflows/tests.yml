@@ -23,6 +23,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install tox
+          pip install tqdm
       - name: Run tests
         run: |
           tox -e tests,examples
