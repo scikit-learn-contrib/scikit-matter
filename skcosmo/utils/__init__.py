@@ -18,7 +18,8 @@ from ._progress_bar import get_progress_bar, no_progress_bar
 
 __all__ = [
     "get_progress_bar",
-    "no_progress_bar" "pcovr_covariance",
+    "no_progress_bar",
+    "pcovr_covariance",
     "pcovr_kernel",
     "check_krr_fit",
     "check_lr_fit",
