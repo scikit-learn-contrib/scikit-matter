@@ -15,8 +15,8 @@ from ._pcovr_utils import (
     pcovr_kernel,
 )
 from ._progress_bar import (
-        get_progress_bar, 
-        no_progress_bar,
+    get_progress_bar,
+    no_progress_bar,
 )
 
 __all__ = [
