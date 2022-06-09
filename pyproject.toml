@@ -11,9 +11,7 @@ legacy_tox_ini = """
 
 [testenv:tests]
 changedir = tests
-deps =
-    coverage[toml]
-    parameterized
+deps = -rtests/requirements.txt
 
 commands =
     coverage run -m unittest discover -p "*.py"
