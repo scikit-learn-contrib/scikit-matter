@@ -431,6 +431,22 @@ class PCovRInfrastructureTest(PCovRBaseTest):
         self.assertTrue(np.allclose(Yhat_regressor, Yhat_pcovr))
         self.assertTrue(np.allclose(W_regressor, W_pcovr))
 
+    def test_prefit_regression(self):
+        regressor = Ridge(alpha=1e-8, fit_intercept=False, tol=1e-12)
+        regressor.fit(self.X, self.Y)
+        Yhat = regressor.predict(self.X)
+        W = regressor.coef_.reshape(self.X.shape[1], -1)
+
+        pcovr1 = self.model(mixing=0.5, regressor="precomputed", n_components=1)
+        pcovr1.fit(self.X, Yhat, W)
+        t1 = pcovr1.transform(self.X)
+
+        pcovr2 = self.model(mixing=0.5, regressor=regressor, n_components=1)
+        pcovr2.fit(self.X, self.Y)
+        t2 = pcovr2.transform(self.X)
+
+        self.assertTrue(np.linalg.norm(t1 - t2) < self.error_tol)
+
     def test_regressor_modifications(self):
         regressor = Ridge(alpha=1e-8)
         pcovr = self.model(mixing=0.5, regressor=regressor)
