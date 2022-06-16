@@ -40,7 +40,7 @@ class TestCUR(unittest.TestCase):
         _, UC = np.linalg.eigh(C)
         ref_idx = np.argsort(-(UC[:, -1] ** 2.0))[:-1]
 
-        selector = CUR(n_to_select=self.X.shape[-1] - 1, iterative=False)
+        selector = CUR(n_to_select=self.X.shape[-1] - 1, recompute_every=0)
         selector.fit(self.X)
 
         self.assertTrue(np.allclose(selector.selected_idx_, ref_idx))

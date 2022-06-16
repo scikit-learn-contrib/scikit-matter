@@ -170,8 +170,9 @@ class CUR(_CUR):
 
     Parameters
      ----------
-     iterative : bool
-                 whether to orthogonalize after each selection, defaults to `true`
+     recompute_every : int
+                       number of steps after which to recompute the pi score
+                       defaults to 1, if 0 no re-computation is done
 
      k : int
          number of eigenvectors to compute the importance score with, defaults to 1
@@ -224,7 +225,7 @@ class CUR(_CUR):
 
     def __init__(
         self,
-        iterative=True,
+        recompute_every=1,
         k=1,
         tolerance=1e-12,
         n_to_select=None,
@@ -236,7 +237,7 @@ class CUR(_CUR):
     ):
         super().__init__(
             selection_type="sample",
-            iterative=iterative,
+            recompute_every=recompute_every,
             k=k,
             tolerance=tolerance,
             n_to_select=n_to_select,
@@ -261,8 +262,10 @@ class PCovCUR(_PCovCUR):
             The PCovR mixing parameter, as described in PCovR as
             :math:`{\\alpha}`. Stored in :py:attr:`self.mixing`.
 
-    iterative : bool
-                whether to orthogonalize after each selection, defaults to `true`
+    recompute_every : int
+                      number of steps after which to recompute the pi score
+                      defaults to 1, if 0 no re-computation is done
+
 
     k : int
         number of eigenvectors to compute the importance score with, defaults to 1
@@ -320,7 +323,7 @@ class PCovCUR(_PCovCUR):
     def __init__(
         self,
         mixing=0.5,
-        iterative=True,
+        recompute_every=1,
         k=1,
         tolerance=1e-12,
         n_to_select=None,
@@ -333,7 +336,7 @@ class PCovCUR(_PCovCUR):
         super().__init__(
             selection_type="sample",
             mixing=mixing,
-            iterative=iterative,
+            recompute_every=recompute_every,
             k=k,
             tolerance=tolerance,
             n_to_select=n_to_select,

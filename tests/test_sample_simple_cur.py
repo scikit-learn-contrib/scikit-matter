@@ -43,7 +43,7 @@ class TestCUR(unittest.TestCase):
         _, UK = np.linalg.eigh(K)
         ref_idx = np.argsort(-(UK[:, -1] ** 2.0))[: self.n_select]
 
-        selector = CUR(n_to_select=len(ref_idx), iterative=False)
+        selector = CUR(n_to_select=len(ref_idx), recompute_every=0)
         selector.fit(self.X)
 
         self.assertTrue(np.allclose(selector.selected_idx_, ref_idx))
