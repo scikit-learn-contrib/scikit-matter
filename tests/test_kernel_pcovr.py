@@ -42,9 +42,10 @@ class KernelPCovRBaseTest(unittest.TestCase):
 
         self.model = lambda mixing=0.5, regressor=KernelRidge(
             alpha=1e-8
-        ), **kwargs: KernelPCovR(
+        ), n_components=4, **kwargs: KernelPCovR(
             mixing,
             regressor=regressor,
+            n_components=n_components,
             svd_solver=kwargs.pop("svd_solver", "full"),
             **kwargs
         )
@@ -289,6 +290,26 @@ class KernelPCovRInfrastructureTest(KernelPCovRBaseTest):
                 "have shape %r" % (regressor.dual_coef_.shape, self.Y.shape),
             )
 
+    def test_precomputed_regression(self):
+        regressor = KernelRidge(alpha=1e-8, kernel="rbf", gamma=0.1)
+        regressor.fit(self.X, self.Y)
+        Yhat = regressor.predict(self.X)
+        W = regressor.dual_coef_.reshape(self.X.shape[0], -1)
+
+        kpcovr1 = self.model(
+            mixing=0.5, regressor="precomputed", kernel="rbf", gamma=0.1, n_components=1
+        )
+        kpcovr1.fit(self.X, Yhat, W)
+        t1 = kpcovr1.transform(self.X)
+
+        kpcovr2 = self.model(
+            mixing=0.5, regressor=regressor, kernel="rbf", gamma=0.1, n_components=1
+        )
+        kpcovr2.fit(self.X, self.Y)
+        t2 = kpcovr2.transform(self.X)
+
+        self.assertTrue(np.linalg.norm(t1 - t2) < self.error_tol)
+
 
 class KernelTests(KernelPCovRBaseTest):
     def test_kernel_types(self):
@@ -386,7 +407,7 @@ class KernelPCovRTestSVDSolvers(KernelPCovRBaseTest):
         """
         for solver in ["arpack", "full", "randomized", "auto"]:
             with self.subTest(solver=solver):
-                kpcovr = self.model(tol=1e-12, svd_solver=solver)
+                kpcovr = self.model(tol=1e-12, n_components=None, svd_solver=solver)
                 kpcovr.fit(self.X, self.Y)
 
                 if solver == "arpack":

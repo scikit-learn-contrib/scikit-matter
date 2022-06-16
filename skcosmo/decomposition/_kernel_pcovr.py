@@ -80,13 +80,17 @@ class KernelPCovR(_BasePCA, LinearModel):
         If randomized :
             run randomized SVD by the method of Halko et al.
 
-    regressor : instance of `sklearn.kernel_ridge.KernelRidge`, default=None
+    regressor : {instance of `sklearn.kernel_ridge.KernelRidge`, `precomputed`, None}, default=None
         The regressor to use for computing
         the property predictions :math:`\\hat{\\mathbf{Y}}`.
         A pre-fitted regressor may be provided.
         If the regressor is not `None`, its kernel parameters
         (`kernel`, `gamma`, `degree`, `coef0`, and `kernel_params`)
         must be identical to those passed directly to `KernelPCovR`.
+
+        If `precomputed`, we assume that the `y` passed to the `fit` function
+        is the regressed form of the targets :math:`{\mathbf{\hat{Y}}}`.
+
 
     kernel: "linear" | "poly" | "rbf" | "sigmoid" | "cosine" | "precomputed"
         Kernel. Default="linear".
@@ -131,10 +135,6 @@ class KernelPCovR(_BasePCA, LinearModel):
     random_state : int, RandomState instance or None, default=None
         Used when the 'arpack' or 'randomized' solvers are used. Pass an int
         for reproducible results across multiple function calls.
-
-    **regressor_params: additional keyword arguments to be passed
-        to the regressor. Ignored if `regressor` is not `None`.
-
 
     Attributes
     ----------
@@ -210,7 +210,6 @@ class KernelPCovR(_BasePCA, LinearModel):
         n_jobs=None,
         iterated_power="auto",
         random_state=None,
-        **regressor_params
     ):
 
         self.mixing = mixing
@@ -234,7 +233,6 @@ class KernelPCovR(_BasePCA, LinearModel):
         self.fit_inverse_transform = fit_inverse_transform
 
         self.regressor = regressor
-        self.regressor_params = regressor_params
 
     def _get_kernel(self, X, Y=None):
         if callable(self.kernel):
@@ -272,7 +270,7 @@ class KernelPCovR(_BasePCA, LinearModel):
         T = K @ self.pkt_
         self.pt__ = np.linalg.lstsq(T, np.eye(T.shape[0]), rcond=self.tol)[0]
 
-    def fit(self, X, Y):
+    def fit(self, X, Y, W=None):
         """
 
         Fit the model with X and Y.
@@ -297,6 +295,10 @@ class KernelPCovR(_BasePCA, LinearModel):
             to have unit variance, otherwise :math:`\\mathbf{Y}` should be
             scaled so that each feature has a variance of 1 / n_features.
 
+        W : ndarray, shape (n_samples, n_properties)
+            Regression weights, optional when regressor=`precomputed`. If not
+            passed, it is assumed that `W = np.linalg.lstsq(K, Y, self.tol)[0]`
+
         Returns
         -------
         self: object
@@ -304,7 +306,9 @@ class KernelPCovR(_BasePCA, LinearModel):
 
         """
 
-        if self.regressor is not None and not isinstance(self.regressor, KernelRidge):
+        if self.regressor not in ["precomputed", None] and not isinstance(
+            self.regressor, KernelRidge
+        ):
             raise ValueError("Regressor must be an instance of `KernelRidge`")
 
         X, Y = check_X_y(X, Y, y_numeric=True, multi_output=True)
@@ -324,66 +328,69 @@ class KernelPCovR(_BasePCA, LinearModel):
 
         self.n_samples_ = X.shape[0]
 
-        if self.regressor is None:
-            regressor = KernelRidge(
-                kernel=self.kernel,
-                gamma=self.gamma,
-                degree=self.degree,
-                coef0=self.coef0,
-                kernel_params=self.kernel_params,
-                **self.regressor_params,
-            )
-        else:
-            regressor = self.regressor
-            kernel_attrs = ["kernel", "gamma", "degree", "coef0", "kernel_params"]
-            if not all(
-                [
-                    getattr(self, attr) == getattr(regressor, attr)
-                    for attr in kernel_attrs
-                ]
-            ):
-                raise ValueError(
-                    "Kernel parameter mismatch: the regressor has kernel parameters {%s}"
-                    " and KernelPCovR was initialized with kernel parameters {%s}"
-                    % (
-                        ", ".join(
-                            [
-                                "%s: %r" % (attr, getattr(regressor, attr))
-                                for attr in kernel_attrs
-                            ]
-                        ),
-                        ", ".join(
-                            [
-                                "%s: %r" % (attr, getattr(self, attr))
-                                for attr in kernel_attrs
-                            ]
-                        ),
-                    )
+        if self.regressor != "precomputed":
+            if self.regressor is None:
+                regressor = KernelRidge(
+                    kernel=self.kernel,
+                    gamma=self.gamma,
+                    degree=self.degree,
+                    coef0=self.coef0,
+                    kernel_params=self.kernel_params,
                 )
+            else:
+                regressor = self.regressor
+                kernel_attrs = ["kernel", "gamma", "degree", "coef0", "kernel_params"]
+                if not all(
+                    [
+                        getattr(self, attr) == getattr(regressor, attr)
+                        for attr in kernel_attrs
+                    ]
+                ):
+                    raise ValueError(
+                        "Kernel parameter mismatch: the regressor has kernel parameters {%s}"
+                        " and KernelPCovR was initialized with kernel parameters {%s}"
+                        % (
+                            ", ".join(
+                                [
+                                    "%s: %r" % (attr, getattr(regressor, attr))
+                                    for attr in kernel_attrs
+                                ]
+                            ),
+                            ", ".join(
+                                [
+                                    "%s: %r" % (attr, getattr(self, attr))
+                                    for attr in kernel_attrs
+                                ]
+                            ),
+                        )
+                    )
 
-        # Check if regressor is fitted; if not, fit with precomputed K
-        # to avoid needing to compute the kernel a second time
-        self.regressor_ = check_krr_fit(regressor, K, X, Y)
+            # Check if regressor is fitted; if not, fit with precomputed K
+            # to avoid needing to compute the kernel a second time
+            self.regressor_ = check_krr_fit(regressor, K, X, Y)
 
-        W = self.regressor_.dual_coef_.reshape(X.shape[0], -1)
+            W = self.regressor_.dual_coef_.reshape(X.shape[0], -1)
 
-        # Use this instead of `self.regressor_.predict(K)`
-        # so that we can handle the case of the pre-fitted regressor
-        Yhat = K @ W
+            # Use this instead of `self.regressor_.predict(K)`
+            # so that we can handle the case of the pre-fitted regressor
+            Yhat = K @ W
+            # When we have an unfitted regressor,
+            # we fit it with a precomputed K
+            # so we must subsequently "reset" it so that
+            # it will work on the particular X
+            # of the KPCovR call. The dual coefficients are kept.
+            # Can be bypassed if the regressor is pre-fitted.
+            try:
+                check_is_fitted(regressor)
 
-        # When we have an unfitted regressor,
-        # we fit it with a precomputed K
-        # so we must subsequently "reset" it so that
-        # it will work on the particular X
-        # of the KPCovR call. The dual coefficients are kept.
-        # Can be bypassed if the regressor is pre-fitted.
-        try:
-            check_is_fitted(regressor)
-
-        except NotFittedError:
-            self.regressor_.set_params(**regressor.get_params())
-            self.regressor_.X_fit_ = self.X_fit_
-            self.regressor_._check_n_features(self.X_fit_, reset=True)
+            except NotFittedError:
+                self.regressor_.set_params(**regressor.get_params())
+                self.regressor_.X_fit_ = self.X_fit_
+                self.regressor_._check_n_features(self.X_fit_, reset=True)
+        else:
+            Yhat = Y.copy()
+            if W is None:
+                W = np.linalg.lstsq(K, Yhat, self.tol)[0]
 
         # Handle svd_solver
         self._fit_svd_solver = self.svd_solver
@@ -596,7 +603,7 @@ class KernelPCovR(_BasePCA, LinearModel):
     def _decompose_full(self, mat):
 
         if self.n_components != "mle":
-            if not 0 <= self.n_components <= self.n_samples_:
+            if not (0 <= self.n_components <= self.n_samples_):
                 raise ValueError(
                     "n_components=%r must be between 1 and "
                     "n_samples=%r with "
