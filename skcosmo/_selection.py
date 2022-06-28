@@ -176,7 +176,7 @@ class GreedySelector(SelectorMixin, MetaEstimatorMixin, BaseEstimator):
 
         error_msg = (
             "n_to_select must be either None, an "
-            f"integer in [1, n_{self.selection_type}s - 1] "
+            f"integer in [1, n_{self.selection_type}s] "
             "representing the absolute "
             f"number of {self.selection_type}s, or a float in (0, 1] "
             f"representing a percentage of {self.selection_type}s to "
@@ -187,7 +187,7 @@ class GreedySelector(SelectorMixin, MetaEstimatorMixin, BaseEstimator):
         if self.n_to_select is None:
             n_iterations = n_to_select_from // 2
         elif isinstance(self.n_to_select, numbers.Integral):
-            if not 0 < self.n_to_select < n_to_select_from:
+            if not 0 < self.n_to_select <= n_to_select_from:
                 raise ValueError(error_msg)
             n_iterations = self.n_to_select
         elif isinstance(self.n_to_select, numbers.Real):
