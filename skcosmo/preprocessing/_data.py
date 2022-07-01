@@ -121,7 +121,7 @@ class StandardFlexibleScaler(TransformerMixin, BaseEstimator):
         self.rtol = rtol
         self.atol = atol
         self.n_samples_seen_ = 0
-        self.copy = False
+        self.copy = copy
 
     def fit(self, X, y=None, sample_weight=None):
         """Compute mean and scaling to be applied for subsequent normalization.
