@@ -26,7 +26,7 @@ def load_nice_dataset():
         X=raw_data['structural_features'],
         y=raw_data['energies'],
     )
-    with open(join(module_path, "descr", "my-dataset.rst")) as rst_file:
+    with open(join(module_path, "descr", "nice_dataset.rst")) as rst_file:
         fdescr = rst_file.read()
     return Bunch(data=data, DESCR=fdescr)
 
