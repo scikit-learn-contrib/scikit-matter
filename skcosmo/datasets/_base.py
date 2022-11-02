@@ -6,6 +6,7 @@ from os.path import (
 import numpy as np
 from sklearn.utils import Bunch
 
+
 def load_nice_dataset():
     """Load and returns NICE dataset.
     Returns
@@ -18,13 +19,13 @@ def load_nice_dataset():
       DESCR: `str` --
         The full description of the dataset.
     """
-    
+
     module_path = dirname(__file__)
     target_filename = join(module_path, "data", "nice_dataset.npz")
     raw_data = np.load(target_filename)
     data = Bunch(
-        X=raw_data['structural_features'],
-        y=raw_data['energies'],
+        X=raw_data["structural_features"],
+        y=raw_data["energies"],
     )
     with open(join(module_path, "descr", "nice_dataset.rst")) as rst_file:
         fdescr = rst_file.read()

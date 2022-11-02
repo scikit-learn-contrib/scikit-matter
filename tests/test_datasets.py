@@ -1,23 +1,30 @@
 import unittest
 
-from skcosmo.datasets import load_degenerate_CH4_manifold, load_csd_1000r, load_nice_dataset
+from skcosmo.datasets import (
+    load_degenerate_CH4_manifold,
+    load_csd_1000r,
+    load_nice_dataset,
+)
+
 
 class NICEDatasetTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.nice_data = load_nice_dataset()
-        
+
     def test_load_nice_data(self):
         # test if representations and properties have commensurate shape
-        self.assertTrue(self.nice_data.data.X.shape[0] == self.nice_data.data.y.shape[0])
+        self.assertTrue(
+            self.nice_data.data.X.shape[0] == self.nice_data.data.y.shape[0]
+        )
         self.assertTrue(self.nice_data.data.X.shape[0] == 500)
         self.assertTrue(self.nice_data.data.X.shape[1] == 160)
         self.assertTrue(len(self.nice_data.data.X.shape) == 2)
-        
+
     def test_load_nice_data_descr(self):
         self.nice_data.DESCR
-        
-        
+
+
 class DegenerateCH4Tests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
