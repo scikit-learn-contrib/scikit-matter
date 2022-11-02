@@ -4,6 +4,7 @@ from os.path import (
 )
 
 import numpy as np
+
 from sklearn.utils import Bunch
 
 
