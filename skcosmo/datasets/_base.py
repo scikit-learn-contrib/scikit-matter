@@ -6,6 +6,30 @@ from os.path import (
 import numpy as np
 from sklearn.utils import Bunch
 
+def load_nice_dataset():
+    """Load and returns NICE dataset.
+    Returns
+    -------
+    nice_data : sklearn.utils.Bunch
+      Dictionary-like object, with the following attributes:
+      data : `sklearn.utils.Bunch` --
+      contains the keys ``X`` and ``y``.
+      Structural NICE features and energies, respectively.
+      DESCR: `str` --
+        The full description of the dataset.
+    """
+    
+    module_path = dirname(__file__)
+    target_filename = join(module_path, "data", "nice_dataset.npz")
+    raw_data = np.load(target_filename)
+    data = Bunch(
+        X=raw_data['structural_features'],
+        y=raw_data['energies'],
+    )
+    with open(join(module_path, "descr", "my-dataset.rst")) as rst_file:
+        fdescr = rst_file.read()
+    return Bunch(data=data, DESCR=fdescr)
+
 
 def load_degenerate_CH4_manifold():
     """Load and return the degenerate manifold dataset.
