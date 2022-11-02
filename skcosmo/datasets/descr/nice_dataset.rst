@@ -1,19 +1,21 @@
-.. code-block::
-  .. _nice-dataset:
-  NICE dataset
-  ##########
-  This is a toy dataset containing NICE[1, 4] features for first 500 configurations of the dataset[2, 3] with randomly displaced methane configurations. 
-  Function Call
-  -------------
-  .. function:: skcosmo.datasets.load_nice_dataset
-  Data Set Characteristics
-  ------------------------
-  :Number of Instances: 500
-  :Number of Features: 160
-  The representations were computed using the NICE package[4] using the following definition of the NICE calculator:
-  
-  .. code::: python
-  
+.. _nice-dataset:
+
+NICE dataset
+##########
+This is a toy dataset containing NICE[1, 4] features for first 500 configurations of the dataset[2, 3] with randomly displaced methane configurations. 
+
+Function Call
+-------------
+.. function:: skcosmo.datasets.load_nice_dataset
+
+Data Set Characteristics
+------------------------
+:Number of Instances: 500
+:Number of Features: 160
+The representations were computed using the NICE package[4] using the following definition of the NICE calculator:
+
+.. code-block:: python
+
     StandardSequence(
         [
             StandardBlock(
@@ -44,13 +46,16 @@
         initial_scaler=InitialScaler(mode="signal integral", individually=True),
     )
 
-  
-  References
-  ----------
-  [1] Jigyasa Nigam, Sergey Pozdnyakov, and Michele Ceriotti. "Recursive evaluation and iterative contraction of N-body equivariant features." The Journal of Chemical Physics 153.12 (2020): 121101.
-  [2] Incompleteness of Atomic Structure Representations
+
+References
+----------
+[1] Jigyasa Nigam, Sergey Pozdnyakov, and Michele Ceriotti. "Recursive evaluation and iterative contraction of N-body equivariant features." The Journal of Chemical Physics 153.12 (2020): 121101.
+
+[2] Incompleteness of Atomic Structure Representations
 Sergey N. Pozdnyakov, Michael J. Willatt, Albert P. Bartók, Christoph Ortner, Gábor Csányi, and Michele Ceriotti
-  [3] https://archive.materialscloud.org/record/2020.110
-  Reference Code
-  --------------
-  [4] https://github.com/lab-cosmo/nice
+
+[3] https://archive.materialscloud.org/record/2020.110
+
+Reference Code
+--------------
+[4] https://github.com/lab-cosmo/nice
