@@ -82,11 +82,11 @@ class StandardFlexibleScaler(TransformerMixin, BaseEstimator):
 
     Examples
     --------
-    >>> import numpy
+    >>> import numpy as np
     >>> from skcosmo.preprocessing import StandardFlexibleScaler
     >>> X = np.array([[ 1., -2.,  2.],
-    ...      [ -2.,  1.,  3.],
-    ...      [ 4.,  1., -2.]])
+    ...               [-2.,  1.,  3.],
+    ...               [ 4.,  1., -2.]])
     >>> transformer = StandardFlexibleScaler().fit(X)
     >>> transformer
     StandardFlexibleScaler()
@@ -102,7 +102,6 @@ class StandardFlexibleScaler(TransformerMixin, BaseEstimator):
         array([[ 1., -2.,  2.],
                [-2.,  1.,  3.],
                [ 4.,  1., -2.]])
-    >>>
     """
 
     def __init__(
