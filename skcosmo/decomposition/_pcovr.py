@@ -119,19 +119,20 @@ class PCovR(_BasePCA, LinearModel):
             default=`sample` when :math:`{n_{samples} < n_{features}}` and
             `feature` when :math:`{n_{features} < n_{samples}}`
 
-    regressor: {`Ridge`, `RidgeCV`, `LinearRegression`}, default=None
+    regressor: {`Ridge`, `RidgeCV`, `LinearRegression`, `precomputed`}, default=None
              regressor for computing approximated :math:`{\mathbf{\hat{Y}}}`.
-             The regressor must be one of `sklearn.linear_model.Ridge`,
+             The regressor should be one `sklearn.linear_model.Ridge`,
              `sklearn.linear_model.RidgeCV`, or `sklearn.linear_model.LinearRegression`.
-             If a pre-fitted regressor is provided,
-             it is used to compute :math:`{\mathbf{\hat{Y}}}`.
-             If None, `sklearn.linear_model.Ridge('alpha':1e-6, 'fit_intercept':False, 'tol':1e-12)` is used as the regressor.
+             If a pre-fitted regressor is provided, it is used to compute :math:`{\mathbf{\hat{Y}}}`.
              Note that any pre-fitting of the regressor will be lost if `PCovR` is
              within a composite estimator that enforces cloning, e.g.,
              `sklearn.compose.TransformedTargetRegressor` or
              `sklearn.pipeline.Pipeline` with model caching.
              In such cases, the regressor will be re-fitted on the same
              training data as the composite estimator.
+             If `precomputed`, we assume that the `y` passed to the `fit` function
+             is the regressed form of the targets :math:`{\mathbf{\hat{Y}}}`.
+             If None, `sklearn.linear_model.Ridge('alpha':1e-6, 'fit_intercept':False, 'tol':1e-12)` is used as the regressor.
 
     iterated_power : int or 'auto', default='auto'
          Number of iterations for the power method computed by
@@ -141,9 +142,6 @@ class PCovR(_BasePCA, LinearModel):
     random_state : int, RandomState instance or None, default=None
          Used when the 'arpack' or 'randomized' solvers are used. Pass an int
          for reproducible results across multiple function calls.
-
-    **regressor_params: additional keyword arguments to be passed
-        to the regressor. Ignored if `regressor` is not `None`.
 
     Attributes
     ----------
@@ -217,7 +215,6 @@ class PCovR(_BasePCA, LinearModel):
         regressor=None,
         iterated_power="auto",
         random_state=None,
-        **regressor_params,
     ):
 
         self.mixing = mixing
@@ -231,9 +228,8 @@ class PCovR(_BasePCA, LinearModel):
         self.random_state = random_state
 
         self.regressor = regressor
-        self.regressor_params = regressor_params
 
-    def fit(self, X, Y):
+    def fit(self, X, Y, W=None):
         r"""
 
         Fit the model with X and Y. Depending on the dimensions of X,
@@ -258,6 +254,13 @@ class PCovR(_BasePCA, LinearModel):
             means and scaled. If features are related, the matrix should be scaled
             to have unit variance, otherwise :math:`\mathbf{Y}` should be
             scaled so that each feature has a variance of 1 / n_features.
+
+            If the passed regressor = `precomputed`, it is assumed that Y is the
+            regressed form of the properties, :math:`{\mathbf{\hat{Y}}}`.
+
+        W : ndarray, shape (n_features, n_properties)
+            Regression weights, optional when regressor=`precomputed`. If not
+            passed, it is assumed that `W = np.linalg.lstsq(X, Y, self.tol)[0]`
 
         """
 
@@ -284,6 +287,7 @@ class PCovR(_BasePCA, LinearModel):
         if not any(
             [
                 self.regressor is None,
+                self.regressor == "precomputed",
                 isinstance(self.regressor, LinearRegression),
                 isinstance(self.regressor, Ridge),
                 isinstance(self.regressor, RidgeCV),
@@ -291,21 +295,28 @@ class PCovR(_BasePCA, LinearModel):
         ):
             raise ValueError(
                 "Regressor must be an instance of "
-                "`LinearRegression`, `Ridge`, or `RidgeCV`"
+                "`LinearRegression`, `Ridge`, `RidgeCV`, or `precomputed`"
             )
 
         # Assign the default regressor
-        if self.regressor is None:
-            regressor = Ridge(
-                alpha=1e-6, fit_intercept=False, tol=1e-12, **self.regressor_params
-            )
+        if self.regressor != "precomputed":
+            if self.regressor is None:
+                regressor = Ridge(
+                    alpha=1e-6,
+                    fit_intercept=False,
+                    tol=1e-12,
+                )
+            else:
+                regressor = self.regressor
+
+            self.regressor_ = check_lr_fit(regressor, X, y=Y)
+
+            W = self.regressor_.coef_.T.reshape(X.shape[1], -1)
+            Yhat = self.regressor_.predict(X).reshape(X.shape[0], -1)
         else:
-            regressor = self.regressor
-
-        self.regressor_ = check_lr_fit(regressor, X, y=Y)
-
-        W = self.regressor_.coef_.T.reshape(X.shape[1], -1)
-        Yhat = self.regressor_.predict(X).reshape(X.shape[0], -1)
+            Yhat = Y.copy()
+            if W is None:
+                W = np.linalg.lstsq(X, Yhat, self.tol)[0]
 
         # Handle svd_solver
         self._fit_svd_solver = self.svd_solver
