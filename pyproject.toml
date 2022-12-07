@@ -19,7 +19,7 @@ commands =
 
 [testenv:examples]
 changedir = examples
-allowlist_externals = /bin/bash
+allowlist_externals = bash
 
 deps = -rexamples/requirements.txt
 
