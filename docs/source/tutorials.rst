@@ -29,4 +29,5 @@ check out the pedagogic notebooks in our companion project `kernel-tutorials <ht
   :Caption: Feature Reconstruction Measures
 
   read-only-examples/PlotGFRE
+  read-only-examples/PlotPointwiseGFRE.ipynb
   read-only-examples/PlotLFRE

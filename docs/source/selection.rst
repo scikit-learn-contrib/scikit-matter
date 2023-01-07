@@ -112,6 +112,7 @@ They are instantiated using
 
     Xr = selector.transform(X)
 
+.. _PCov-CUR-api:
 
 PCov-CUR
 ########
@@ -204,6 +205,8 @@ These selectors can be instantiated using
 
     Xr = selector.transform(X)
 
+.. _PCov-FPS-api:
+
 PCov-FPS
 ########
 PCov-FPS extends upon FPS much like PCov-CUR does to CUR. Instead of using the
@@ -246,6 +249,8 @@ be instantiated using
     selector.fit(X, y)
 
     Xr = selector.transform(X)
+
+.. _Voronoi-FPS-api:
 
 Voronoi FPS
 ###########

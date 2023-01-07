@@ -26,9 +26,8 @@ class RidgeRegression2FoldCV(MultiOutputMixin, RegressorMixin):
     and in general more accurate, see issue #40. However, it is constraint to a svd
     solver for the matrix inversion.
     It offers additional functionalities in comparison to :obj:`sklearn.linear_model.Ridge`:
-    The regularaization parameters can be chosen to be relative to the largest eigenvalue
-    of the inverted matrix, and a cutoff regularization method is offered which is explained
-    in the `Parameters` in detail.
+    The regularaization parameters can be chosen relative to the largest eigenvalue of the feature matrix
+    as well as regularization method. Details are explained in the `Parameters` section.
 
     Parameters
     ----------
