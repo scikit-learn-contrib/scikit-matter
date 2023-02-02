@@ -216,7 +216,6 @@ class PCovR(_BasePCA, LinearModel):
         iterated_power="auto",
         random_state=None,
     ):
-
         self.mixing = mixing
         self.n_components = n_components
         self.space = space
@@ -481,7 +480,6 @@ class PCovR(_BasePCA, LinearModel):
         self.ptx_ = T.T @ X
 
     def _decompose_truncated(self, mat):
-
         if not 1 <= self.n_components <= min(self.n_samples_, self.n_features_):
             raise ValueError(
                 "n_components=%r must be between 1 and "

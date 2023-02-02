@@ -157,7 +157,6 @@ def pcovr_covariance(
     C = np.zeros((X.shape[1], X.shape[1]), dtype=np.float64)
 
     if mixing < 1 or return_isqrt:
-
         if rank is None:
             rank = min(X.shape)
 

@@ -63,7 +63,6 @@ class KernelPCovRErrorTest(KernelPCovRBaseTest):
         prev_error = -1.0
 
         for i, mixing in enumerate(np.linspace(0, 1, 6)):
-
             kpcovr = KernelPCovR(mixing=mixing, n_components=2, tol=1e-12)
             kpcovr.fit(self.X, self.Y)
 
@@ -260,7 +259,6 @@ class KernelPCovRInfrastructureTest(KernelPCovRBaseTest):
         self.assertTrue(kpcovr.regressor_ is not None)
 
     def test_incompatible_coef_shape(self):
-
         # self.Y is 2D with two targets
         # Don't need to test X shape, since this should
         # be caught by sklearn's _validate_data
@@ -437,7 +435,6 @@ class KernelPCovRTestSVDSolvers(KernelPCovRBaseTest):
         kpcovr.fit(self.X, self.Y)
 
         for svd_solver in ["auto", "full"]:
-
             # this one should pass
             kpcovr = self.model(n_components=2, svd_solver=svd_solver)
             kpcovr.fit(self.X, self.Y)

@@ -59,7 +59,6 @@ class VoronoiFPS(GreedySelector):
     def __init__(
         self, n_trial_calculation=4, full_fraction=None, initialize=0, **kwargs
     ):
-
         self.n_trial_calculation = n_trial_calculation
         self.full_fraction = full_fraction
         self.initialize = initialize
