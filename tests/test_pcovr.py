@@ -97,7 +97,6 @@ class PCovRErrorTest(PCovRBaseTest):
         prev_error = -1.0
 
         for i, mixing in enumerate(np.linspace(0, 1, 11)):
-
             pcovr = self.model(mixing=mixing, n_components=2, tol=1e-12)
             pcovr.fit(self.X, self.Y)
 
@@ -206,7 +205,6 @@ class PCovRSpaceTest(PCovRBaseTest):
         are equivalent.
         """
         for alpha in np.linspace(0.01, 0.99, 11):
-
             with self.subTest(alpha=alpha, type="prediction"):
                 pcovr_ss = self.model(
                     n_components=2, mixing=alpha, tol=1e-12, space="sample"
@@ -285,7 +283,6 @@ class PCovRTestSVDSolvers(PCovRBaseTest):
         pcovr.fit(self.X, self.Y)
 
         for svd_solver in ["auto", "full"]:
-
             # this one should pass
             pcovr = self.model(n_components=2, svd_solver=svd_solver)
             pcovr.fit(self.X, self.Y)
@@ -489,7 +486,6 @@ class PCovRInfrastructureTest(PCovRBaseTest):
         self.assertTrue(pcovr.regressor_ is not None)
 
     def test_incompatible_coef_shape(self):
-
         # self.Y is 2D with one target
         # Don't need to test X shape, since this should
         # be caught by sklearn's _validate_data

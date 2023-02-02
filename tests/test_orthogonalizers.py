@@ -19,7 +19,6 @@ class TestXOrth(unittest.TestCase):
         self.random_state = np.random.RandomState(0)
 
     def setUp(self):
-
         self.n_samples = 100
         self.n_features = 100
 

@@ -99,7 +99,6 @@ class GreedySelector(SelectorMixin, MetaEstimatorMixin, BaseEstimator):
         full=False,
         random_state=0,
     ):
-
         self.selection_type = selection_type
         self.n_to_select = n_to_select
         self.score_threshold = score_threshold
@@ -209,7 +208,6 @@ class GreedySelector(SelectorMixin, MetaEstimatorMixin, BaseEstimator):
         n_iterations -= self.n_selected_
 
         for n in self.report_progress(range(n_iterations)):
-
             new_idx = self._get_best_new_selection(self.score, X, y)
             if new_idx is not None:
                 self._update_post_selection(X, y, new_idx)
@@ -479,7 +477,6 @@ class _CUR(GreedySelector):
         full=False,
         random_state=0,
     ):
-
         self.k = k
         self.tolerance = tolerance
         self.recompute_every = recompute_every
@@ -537,7 +534,6 @@ class _CUR(GreedySelector):
         """
 
         for c in self.selected_idx_:
-
             if self.recompute_every != 0 and (
                 np.linalg.norm(np.take(self.X_current_, [c], axis=self._axis))
                 > self.tolerance
@@ -612,7 +608,6 @@ class _CUR(GreedySelector):
         self.pi_[last_selected] = 0.0
 
     def _orthogonalize(self, last_selected):
-
         if self._axis == 1:
             self.X_current_ = X_orthogonalizer(
                 x1=self.X_current_, c=last_selected, tol=self.tolerance
@@ -739,7 +734,6 @@ class _PCovCUR(GreedySelector):
         """
 
         for c in self.selected_idx_:
-
             if self.recompute_every != 0 and (
                 np.linalg.norm(np.take(self.X_current_, [c], axis=self._axis))
                 > self.tolerance
@@ -834,7 +828,6 @@ class _PCovCUR(GreedySelector):
         return pi
 
     def _orthogonalize(self, last_selected):
-
         if self._axis == 1:
             self.X_current_ = X_orthogonalizer(
                 x1=self.X_current_, c=last_selected, tol=self.tolerance
@@ -992,7 +985,6 @@ class _FPS(GreedySelector):
             raise ValueError("Invalid value of the initialize parameter")
 
     def _update_haussdorf(self, X, y, last_selected):
-
         self.haussdorf_at_select_[last_selected] = self.haussdorf_[last_selected]
 
         # distances of all points to the new point
@@ -1147,7 +1139,6 @@ class _PCovFPS(GreedySelector):
         self._update_post_selection(X, y, self.selected_idx_[0])
 
     def _update_haussdorf(self, X, y, last_selected):
-
         self.haussdorf_at_select_[last_selected] = self.haussdorf_[last_selected]
 
         # distances of all points to the new point

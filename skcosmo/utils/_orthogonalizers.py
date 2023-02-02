@@ -50,7 +50,6 @@ def X_orthogonalizer(x1, c=None, x2=None, tol=1e-12, copy=False):
         xnew = x1
 
     for i in range(cols.shape[-1]):
-
         col = cols[:, [i]]
 
         if np.linalg.norm(col) < tol:

@@ -211,7 +211,6 @@ class KernelPCovR(_BasePCA, LinearModel):
         iterated_power="auto",
         random_state=None,
     ):
-
         self.mixing = mixing
         self.n_components = n_components
 
@@ -542,7 +541,6 @@ class KernelPCovR(_BasePCA, LinearModel):
         return -sum([Lkpca, Lkrr])
 
     def _decompose_truncated(self, mat):
-
         if not 1 <= self.n_components <= self.n_samples_:
             raise ValueError(
                 "n_components=%r must be between 1 and "
@@ -601,7 +599,6 @@ class KernelPCovR(_BasePCA, LinearModel):
         return U, S, Vt
 
     def _decompose_full(self, mat):
-
         if self.n_components != "mle":
             if not (0 <= self.n_components <= self.n_samples_):
                 raise ValueError(

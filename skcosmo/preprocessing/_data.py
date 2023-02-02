@@ -344,7 +344,6 @@ class KernelNormalizer(KernelCenterer):
             K_pred_cols = np.zeros((Kc.shape[0], 1))
 
         if self.with_trace:
-
             Kc -= self.K_fit_rows_
             Kc -= K_pred_cols
             Kc += self.K_fit_all_

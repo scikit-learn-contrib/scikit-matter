@@ -138,7 +138,6 @@ class TestVoronoiFPS(TestFPS):
         )
 
     def test_calculate_dSL(self):
-
         selector = VoronoiFPS(n_to_select=3)
         selector.fit(self.X)
 
