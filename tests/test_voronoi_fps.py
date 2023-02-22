@@ -42,9 +42,9 @@ class TestVoronoiFPS(TestFPS):
         with self.assertRaises(ValueError) as cm:
             selector = VoronoiFPS(n_to_select=1, initialize="bad")
             selector.fit(self.X)
-            self.assertEquals(
-                str(cm.message), "Invalid value of the initialize parameter"
-            )
+        self.assertEquals(
+            str(cm.exception), "Invalid value of the initialize parameter"
+        )
 
     def test_switching_point(self):
         """
@@ -63,36 +63,38 @@ class TestVoronoiFPS(TestFPS):
             with self.assertRaises(ValueError) as cm:
                 selector = VoronoiFPS(n_to_select=1, n_trial_calculation=0)
                 selector.fit(self.X)
-                self.assertEquals(
-                    str(cm.message),
-                    "Number of trial calculation should be more or equal to 1",
-                )
+            self.assertEqual(
+                str(cm.exception),
+                "Number of trial calculation should be more or equal to 1",
+            )
 
         with self.subTest(name="float_ntrial"):
             with self.assertRaises(TypeError) as cm:
                 selector = VoronoiFPS(n_to_select=1, n_trial_calculation=0.3)
                 selector.fit(self.X)
-                self.assertEquals(
-                    str(cm.message), "Number of trial calculation should be integer"
-                )
+            self.assertEqual(
+                str(cm.exception), "Number of trial calculation should be integer"
+            )
 
         with self.subTest(name="large_ff"):
             with self.assertRaises(ValueError) as cm:
                 selector = VoronoiFPS(n_to_select=1, full_fraction=1.1)
                 selector.fit(self.X)
-                self.assertEquals(
-                    str(cm.message),
-                    f"Switching point should be real and more than 0 and less than 1 received {selector.full_fraction}",
-                )
+            self.assertEqual(
+                str(cm.exception),
+                "Switching point should be real and more than 0 and less than 1. "
+                f"Received {selector.full_fraction}",
+            )
 
         with self.subTest(name="string_ff"):
             with self.assertRaises(ValueError) as cm:
                 selector = VoronoiFPS(n_to_select=1, full_fraction="STRING")
                 selector.fit(self.X)
-                self.assertEquals(
-                    str(cm.message),
-                    f"Switching point should be real and more than 0 and less than 1 received {selector.full_fraction}",
-                )
+            self.assertEqual(
+                str(cm.exception),
+                "Switching point should be real and more than 0 and less than 1. "
+                f"Received {selector.full_fraction}",
+            )
 
     def test_get_distances(self):
         """

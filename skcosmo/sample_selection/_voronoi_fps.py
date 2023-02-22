@@ -183,13 +183,13 @@ class VoronoiFPS(GreedySelector):
             if isinstance(self.full_fraction, numbers.Real):
                 if not 0 < self.full_fraction <= 1:
                     raise ValueError(
-                        "Switching point should be real and more than 0 and less than 1",
-                        f"received {self.full_fraction}",
+                        "Switching point should be real and more than 0 and less than 1. "
+                        f"Received {self.full_fraction}"
                     )
             else:
                 raise ValueError(
-                    "Switching point should be real and more than 0 and less than 1",
-                    f"received {self.full_fraction}",
+                    "Switching point should be real and more than 0 and less than 1. "
+                    f"Received {self.full_fraction}"
                 )
 
         super()._init_greedy_search(X, y, n_to_select)

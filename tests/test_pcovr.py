@@ -270,7 +270,7 @@ class PCovRTestSVDSolvers(PCovRBaseTest):
                 pcovr = self.model(svd_solver="bad", space=space)
                 pcovr.fit(self.X, self.Y)
 
-                self.assertTrue(str(cm.message), "Unrecognized svd_solver='bad'" "")
+            self.assertEqual(str(cm.exception), "Unrecognized svd_solver='bad'" "")
 
     def test_good_n_components(self):
         """
@@ -300,71 +300,70 @@ class PCovRTestSVDSolvers(PCovRBaseTest):
         with self.assertRaises(ValueError) as cm:
             pcovr = self.model(n_components="mle", svd_solver="full")
             pcovr.fit(self.X[:2], self.Y[:2])
-            self.assertEqual(
-                str(cm.message),
-                "self.n_components='mle' is only supported "
-                "if n_samples >= n_features",
-            )
+        self.assertEqual(
+            str(cm.exception),
+            "n_components='mle' is only supported " "if n_samples >= n_features",
+        )
 
         with self.subTest(type="negative_ncomponents"):
             with self.assertRaises(ValueError) as cm:
                 pcovr = self.model(n_components=-1, svd_solver="auto")
                 pcovr.fit(self.X, self.Y)
 
-                self.assertTrue(
-                    str(cm.message),
-                    "self.n_components=%r must be between 0 and "
-                    "min(n_samples, n_features)=%r with "
-                    "svd_solver='%s'"
-                    % (
-                        pcovr.n_components,
-                        min(self.X.shape),
-                        pcovr.svd_solver,
-                    ),
-                )
+            self.assertEqual(
+                str(cm.exception),
+                "n_components=%r must be between 1 and "
+                "min(n_samples, n_features)=%r with "
+                "svd_solver='%s'"
+                % (
+                    pcovr.n_components,
+                    min(self.X.shape),
+                    pcovr.svd_solver,
+                ),
+            )
         with self.subTest(type="0_ncomponents"):
             with self.assertRaises(ValueError) as cm:
                 pcovr = self.model(n_components=0, svd_solver="randomized")
                 pcovr.fit(self.X, self.Y)
 
-                self.assertTrue(
-                    str(cm.message),
-                    "self.n_components=%r must be between 1 and "
-                    "min(n_samples, n_features)=%r with "
-                    "svd_solver='%s'"
-                    % (
-                        pcovr.n_components,
-                        min(self.X.shape),
-                        pcovr.svd_solver,
-                    ),
-                )
+            self.assertEqual(
+                str(cm.exception),
+                "n_components=%r must be between 1 and "
+                "min(n_samples, n_features)=%r with "
+                "svd_solver='%s'"
+                % (
+                    pcovr.n_components,
+                    min(self.X.shape),
+                    pcovr.svd_solver,
+                ),
+            )
         with self.subTest(type="arpack_X_ncomponents"):
             with self.assertRaises(ValueError) as cm:
                 pcovr = self.model(n_components=min(self.X.shape), svd_solver="arpack")
                 pcovr.fit(self.X, self.Y)
-                self.assertTrue(
-                    str(cm.message),
-                    "self.n_components=%r must be strictly less than "
-                    "min(n_samples, n_features)=%r with "
-                    "svd_solver='%s'"
-                    % (
-                        pcovr.n_components,
-                        min(self.X.shape),
-                        pcovr.svd_solver,
-                    ),
-                )
+            self.assertEqual(
+                str(cm.exception),
+                "n_components=%r must be strictly less than "
+                "min(n_samples, n_features)=%r with "
+                "svd_solver='%s'"
+                % (
+                    pcovr.n_components,
+                    min(self.X.shape),
+                    pcovr.svd_solver,
+                ),
+            )
 
         for svd_solver in ["auto", "full"]:
             with self.subTest(type="pi_ncomponents"):
                 with self.assertRaises(ValueError) as cm:
                     pcovr = self.model(n_components=np.pi, svd_solver=svd_solver)
                     pcovr.fit(self.X, self.Y)
-                    self.assertTrue(
-                        str(cm.message),
-                        "self.n_components=%r must be of type int "
-                        "when greater than or equal to 1, was of type=%r"
-                        % (pcovr.n_components, type(pcovr.n_components)),
-                    )
+                self.assertEqual(
+                    str(cm.exception),
+                    "n_components=%r must be of type int "
+                    "when greater than or equal to 1, was of type=%r"
+                    % (pcovr.n_components, type(pcovr.n_components)),
+                )
 
 
 class PCovRInfrastructureTest(PCovRBaseTest):
@@ -473,11 +472,12 @@ class PCovRInfrastructureTest(PCovRBaseTest):
 
         with self.assertRaises(ValueError) as cm:
             pcovr.fit(self.X, self.Y)
-            self.assertTrue(
-                str(cm.message),
-                "Regressor must be an instance of "
-                "`LinearRegression`, `Ridge`, or `RidgeCV`",
-            )
+        self.assertEqual(
+            str(cm.exception),
+            "Regressor must be an instance of "
+            "`LinearRegression`, `Ridge`, `RidgeCV`, "
+            "or `precomputed`",
+        )
 
     def test_none_regressor(self):
         pcovr = PCovR(mixing=0.5, regressor=None)
@@ -496,25 +496,25 @@ class PCovRInfrastructureTest(PCovRBaseTest):
         # Dimension mismatch
         with self.assertRaises(ValueError) as cm:
             pcovr.fit(self.X, self.Y.squeeze())
-            self.assertTrue(
-                str(cm.message),
-                "The regressor coefficients have a dimension incompatible "
-                "with the supplied target space. "
-                "The coefficients have dimension %d and the targets "
-                "have dimension %d" % (regressor.coef_.ndim, self.Y.squeeze().ndim),
-            )
+        self.assertEqual(
+            str(cm.exception),
+            "The regressor coefficients have a dimension incompatible "
+            "with the supplied target space. "
+            "The coefficients have dimension %d and the targets "
+            "have dimension %d" % (regressor.coef_.ndim, self.Y.squeeze().ndim),
+        )
 
         # Shape mismatch (number of targets)
         with self.assertRaises(ValueError) as cm:
             pcovr.fit(self.X, np.column_stack((self.Y, self.Y)))
-            self.assertTrue(
-                str(cm.message),
-                "The regressor coefficients have a shape incompatible "
-                "with the supplied target space. "
-                "The coefficients have shape %r and the targets "
-                "have shape %r"
-                % (regressor.coef_.shape, np.column_stack((self.Y, self.Y)).shape),
-            )
+        self.assertEqual(
+            str(cm.exception),
+            "The regressor coefficients have a shape incompatible "
+            "with the supplied target space. "
+            "The coefficients have shape %r and the targets "
+            "have shape %r"
+            % (regressor.coef_.shape, np.column_stack((self.Y, self.Y)).shape),
+        )
 
 
 if __name__ == "__main__":

@@ -232,13 +232,13 @@ class KernelPCovRInfrastructureTest(KernelPCovRBaseTest):
         # kernel parameters now inconsistent
         with self.assertRaises(ValueError) as cm:
             kpcovr.fit(self.X, self.Y)
-            self.assertTrue(
-                str(cm.message),
-                "Kernel parameter mismatch: the regressor has kernel parameters "
-                "{kernel: linear, gamma: 0.2, degree: 3, coef0: 1, kernel_params: None}"
-                " and KernelPCovR was initialized with kernel parameters "
-                "{kernel: linear, gamma: 0.1, degree: 3, coef0: 1, kernel_params: None}",
-            )
+        self.assertTrue(
+            str(cm.exception),
+            "Kernel parameter mismatch: the regressor has kernel parameters "
+            "{kernel: linear, gamma: 0.2, degree: 3, coef0: 1, kernel_params: None}"
+            " and KernelPCovR was initialized with kernel parameters "
+            "{kernel: linear, gamma: 0.1, degree: 3, coef0: 1, kernel_params: None}",
+        )
 
     def test_incompatible_regressor(self):
         regressor = Ridge(alpha=1e-8)
@@ -247,10 +247,10 @@ class KernelPCovRInfrastructureTest(KernelPCovRBaseTest):
 
         with self.assertRaises(ValueError) as cm:
             kpcovr.fit(self.X, self.Y)
-            self.assertTrue(
-                str(cm.message),
-                "Regressor must be an instance of `KernelRidge`",
-            )
+        self.assertTrue(
+            str(cm.exception),
+            "Regressor must be an instance of `KernelRidge`",
+        )
 
     def test_none_regressor(self):
         kpcovr = KernelPCovR(mixing=0.5, regressor=None)
@@ -269,24 +269,24 @@ class KernelPCovRInfrastructureTest(KernelPCovRBaseTest):
         # Dimension mismatch
         with self.assertRaises(ValueError) as cm:
             kpcovr.fit(self.X, self.Y[:, 0])
-            self.assertTrue(
-                str(cm.message),
-                "The regressor coefficients have a dimension incompatible "
-                "with the supplied target space. "
-                "The coefficients have dimension %d and the targets "
-                "have dimension %d" % (regressor.dual_coef_.ndim, self.Y[:, 0].ndim),
-            )
+        self.assertTrue(
+            str(cm.exception),
+            "The regressor coefficients have a dimension incompatible "
+            "with the supplied target space. "
+            "The coefficients have dimension %d and the targets "
+            "have dimension %d" % (regressor.dual_coef_.ndim, self.Y[:, 0].ndim),
+        )
 
         # Shape mismatch (number of targets)
         with self.assertRaises(ValueError) as cm:
             kpcovr.fit(self.X, self.Y)
-            self.assertTrue(
-                str(cm.message),
-                "The regressor coefficients have a shape incompatible "
-                "with the supplied target space. "
-                "The coefficients have shape %r and the targets "
-                "have shape %r" % (regressor.dual_coef_.shape, self.Y.shape),
-            )
+        self.assertTrue(
+            str(cm.exception),
+            "The regressor coefficients have a shape incompatible "
+            "with the supplied target space. "
+            "The coefficients have shape %r and the targets "
+            "have shape %r" % (regressor.dual_coef_.shape, self.Y.shape),
+        )
 
     def test_precomputed_regression(self):
         regressor = KernelRidge(alpha=1e-8, kernel="rbf", gamma=0.1)
@@ -422,7 +422,7 @@ class KernelPCovRTestSVDSolvers(KernelPCovRBaseTest):
             kpcovr = self.model(svd_solver="bad")
             kpcovr.fit(self.X, self.Y)
 
-            self.assertTrue(str(cm.message), "Unrecognized svd_solver='bad'" "")
+        self.assertTrue(str(cm.exception), "Unrecognized svd_solver='bad'" "")
 
     def test_good_n_components(self):
         """
@@ -454,60 +454,60 @@ class KernelPCovRTestSVDSolvers(KernelPCovRBaseTest):
                 kpcovr = self.model(n_components=-1, svd_solver="auto")
                 kpcovr.fit(self.X, self.Y)
 
-                self.assertTrue(
-                    str(cm.message),
-                    "self.n_components=%r must be between 0 and "
-                    "min(n_samples, n_features)=%r with "
-                    "svd_solver='%s'"
-                    % (
-                        kpcovr.n_components,
-                        self.X.shape[0],
-                        kpcovr.svd_solver,
-                    ),
-                )
+            self.assertTrue(
+                str(cm.exception),
+                "self.n_components=%r must be between 0 and "
+                "min(n_samples, n_features)=%r with "
+                "svd_solver='%s'"
+                % (
+                    kpcovr.n_components,
+                    self.X.shape[0],
+                    kpcovr.svd_solver,
+                ),
+            )
         with self.subTest(type="0_ncomponents"):
             with self.assertRaises(ValueError) as cm:
                 kpcovr = self.model(n_components=0, svd_solver="randomized")
                 kpcovr.fit(self.X, self.Y)
 
-                self.assertTrue(
-                    str(cm.message),
-                    "self.n_components=%r must be between 1 and "
-                    "min(n_samples, n_features)=%r with "
-                    "svd_solver='%s'"
-                    % (
-                        kpcovr.n_components,
-                        self.X.shape[0],
-                        kpcovr.svd_solver,
-                    ),
-                )
+            self.assertTrue(
+                str(cm.exception),
+                "self.n_components=%r must be between 1 and "
+                "min(n_samples, n_features)=%r with "
+                "svd_solver='%s'"
+                % (
+                    kpcovr.n_components,
+                    self.X.shape[0],
+                    kpcovr.svd_solver,
+                ),
+            )
         with self.subTest(type="arpack_X_ncomponents"):
             with self.assertRaises(ValueError) as cm:
                 kpcovr = self.model(n_components=self.X.shape[0], svd_solver="arpack")
                 kpcovr.fit(self.X, self.Y)
-                self.assertTrue(
-                    str(cm.message),
-                    "self.n_components=%r must be strictly less than "
-                    "min(n_samples, n_features)=%r with "
-                    "svd_solver='%s'"
-                    % (
-                        kpcovr.n_components,
-                        self.X.shape[0],
-                        kpcovr.svd_solver,
-                    ),
-                )
+            self.assertTrue(
+                str(cm.exception),
+                "self.n_components=%r must be strictly less than "
+                "min(n_samples, n_features)=%r with "
+                "svd_solver='%s'"
+                % (
+                    kpcovr.n_components,
+                    self.X.shape[0],
+                    kpcovr.svd_solver,
+                ),
+            )
 
         for svd_solver in ["auto", "full"]:
             with self.subTest(type="pi_ncomponents"):
                 with self.assertRaises(ValueError) as cm:
                     kpcovr = self.model(n_components=np.pi, svd_solver=svd_solver)
                     kpcovr.fit(self.X, self.Y)
-                    self.assertTrue(
-                        str(cm.message),
-                        "self.n_components=%r must be of type int "
-                        "when greater than or equal to 1, was of type=%r"
-                        % (kpcovr.n_components, type(kpcovr.n_components)),
-                    )
+                self.assertTrue(
+                    str(cm.exception),
+                    "self.n_components=%r must be of type int "
+                    "when greater than or equal to 1, was of type=%r"
+                    % (kpcovr.n_components, type(kpcovr.n_components)),
+                )
 
 
 if __name__ == "__main__":
