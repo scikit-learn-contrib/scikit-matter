@@ -131,11 +131,11 @@ class TestXOrth(unittest.TestCase):
                     -3, 3, size=(self.n_samples + 4, self.n_features)
                 ),
             )
-            self.assertEqual(
-                str(cm.exception),
-                "You can only orthogonalize a matrix using a vector with the same number of rows."
-                f"Matrix X has {self.n_samples} rows, whereas the orthogonalizing matrix has {self.n_samples+4} rows.",
-            )
+        self.assertEqual(
+            str(cm.exception),
+            "You can only orthogonalize a matrix using a vector with the same number of rows."
+            f"Matrix X has {self.n_samples} rows, whereas the orthogonalizing matrix has {self.n_samples+4} rows.",
+        )
 
     def test_warning(self):
         # checks that a warning is raised when trying to orthogonalize by
