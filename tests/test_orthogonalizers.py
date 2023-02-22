@@ -132,7 +132,7 @@ class TestXOrth(unittest.TestCase):
                 ),
             )
             self.assertEqual(
-                str(cm.message),
+                str(cm.exception),
                 "You can only orthogonalize a matrix using a vector with the same number of rows."
                 f"Matrix X has {self.n_samples} rows, whereas the orthogonalizing matrix has {self.n_samples+4} rows.",
             )

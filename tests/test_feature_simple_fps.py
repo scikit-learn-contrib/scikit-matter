@@ -46,7 +46,7 @@ class TestFPS(unittest.TestCase):
             selector = FPS(n_to_select=1, initialize="bad")
             selector.fit(self.X)
             self.assertEquals(
-                str(cm.message), "Invalid value of the initialize parameter"
+                str(cm.exception), "Invalid value of the initialize parameter"
             )
 
     def test_get_distances(self):

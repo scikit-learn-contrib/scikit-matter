@@ -44,19 +44,19 @@ class TestGreedy(unittest.TestCase):
     def test_score_threshold_and_full(self):
         with self.assertRaises(ValueError) as cm:
             _ = GreedyTester(score_threshold=20, full=True, n_to_select=12).fit(self.X)
-            self.assertEqual(
-                str(cm.message),
-                "You cannot specify both `score_threshold` and `full=True`.",
-            )
+        self.assertEqual(
+            str(cm.exception),
+            "You cannot specify both `score_threshold` and `full=True`.",
+        )
 
     def test_bad_warm_start(self):
         selector = GreedyTester()
         with self.assertRaises(ValueError) as cm:
             selector.fit(self.X, warm_start=True)
-            self.assertTrue(
-                str(cm.message),
-                "Cannot fit with warm_start=True without having been previously initialized",
-            )
+        self.assertTrue(
+            str(cm.exception),
+            "Cannot fit with warm_start=True without having been previously initialized",
+        )
 
     def test_bad_y(self):
         self.X, self.Y = get_dataset(return_X_y=True)
@@ -66,11 +66,12 @@ class TestGreedy(unittest.TestCase):
 
     def test_bad_transform(self):
         selector = GreedyTester(n_to_select=2)
+        selector.fit(self.X)
         with self.assertRaises(ValueError) as cm:
             _ = selector.transform(self.X[:, :3])
-            self.assertEqual(
-                str(cm.message), "X has a different shape than during fitting."
-            )
+        self.assertEqual(
+            str(cm.exception), "X has a different shape than during fitting."
+        )
 
     def test_no_nfeatures(self):
         selector = GreedyTester()
@@ -88,17 +89,16 @@ class TestGreedy(unittest.TestCase):
                 selector = GreedyTester(n_to_select=nf)
                 with self.assertRaises(ValueError) as cm:
                     selector.fit(self.X)
-                    self.assertEqual(
-                        str(cm.message),
-                        (
-                            "n_to_select must be either None, an "
-                            "integer in [1, n_features - 1] "
-                            "representing the absolute "
-                            "number of features, or a float in (0, 1] "
-                            "representing a percentage of features to "
-                            f"select. Got {nf}"
-                        ),
-                    )
+                self.assertEqual(
+                    str(cm.exception),
+                    (
+                        "n_to_select must be either None, an integer in "
+                        "[1, n_features] representing the absolute number "
+                        "of features, or a float in (0, 1] representing a "
+                        f"percentage of features to select. Got {nf} "
+                        f"features and an input with {self.X.shape[1]} feature."
+                    ),
+                )
 
     def test_not_fitted(self):
         with self.assertRaises(NotFittedError):
@@ -120,18 +120,18 @@ class TestGreedy(unittest.TestCase):
         selector_sample.fit(X)
         with self.assertRaises(ValueError) as cm:
             selector_feature.fit(X)
-            self.assertEqual(
-                str(cm.message),
-                "Found array with 1 feature(s) (shape=(5, 1)) while a minimum of 2 is required.",
-            )
+        self.assertEqual(
+            str(cm.exception),
+            "Found array with 1 feature(s) (shape=(5, 1)) while a minimum of 2 is required.",
+        )
         X = X.reshape(1, -1)
         selector_feature.fit(X)
         with self.assertRaises(ValueError) as cm:
             selector_sample.fit(X)
-            self.assertEqual(
-                str(cm.message),
-                "Found array with 1 sample(s) (shape=(1, 5)) while a minimum of 2 is required.",
-            )
+        self.assertEqual(
+            str(cm.exception),
+            "Found array with 1 sample(s) (shape=(1, 5)) while a minimum of 2 is required.",
+        )
 
 
 if __name__ == "__main__":

@@ -15,12 +15,12 @@ class PBarTest(unittest.TestCase):
 
         with self.assertRaises(ImportError) as cm:
             _ = get_progress_bar()
-            self.assertEqual(
-                str(cm.exception),
-                "tqdm must be installed to use a progress bar."
-                "Either install tqdm or re-run with"
-                "progress_bar = False",
-            )
+        self.assertEqual(
+            str(cm.exception),
+            "tqdm must be installed to use a progress bar."
+            "Either install tqdm or re-run with"
+            "progress_bar = False",
+        )
 
 
 if __name__ == "__main__":

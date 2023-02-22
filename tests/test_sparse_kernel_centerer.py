@@ -65,7 +65,7 @@ class SparseKernelTests(unittest.TestCase):
         model = SparseKernelCenterer()
         with self.assertRaises(ValueError) as cm:
             model.fit(Knm, Kmm)
-            self.assertEqual(str(cm.exception), "The active kernel is not square.")
+        self.assertEqual(str(cm.exception), "The active kernel is not square.")
 
     def test_LatterDim(self):
         """Checks that a matrix must have the same latter dimension as its active counterpart cannot be normalized."""
@@ -79,11 +79,10 @@ class SparseKernelTests(unittest.TestCase):
         model = SparseKernelCenterer()
         with self.assertRaises(ValueError) as cm:
             model.fit(Knm, Kmm)
-            self.assertEqual(
-                str(cm.exception),
-                "The reference kernel is not "
-                "commensurate shape with the active kernel.",
-            )
+        self.assertEqual(
+            str(cm.exception),
+            "The reference kernel is not " "commensurate shape with the active kernel.",
+        )
 
     def test_new_kernel(self):
         """Checks that it is impossible to normalize
@@ -99,10 +98,10 @@ class SparseKernelTests(unittest.TestCase):
         model = model.fit(Knm, Kmm)
         with self.assertRaises(ValueError) as cm:
             model.transform(Knm2)
-            self.assertEquals(
-                str(cm.exception),
-                "The reference kernel and received kernel have different shape",
-            )
+        self.assertEquals(
+            str(cm.exception),
+            "The reference kernel and received kernel have different shape",
+        )
 
     def test_NotFittedError_transform(self):
         """Checks that an error is returned when
