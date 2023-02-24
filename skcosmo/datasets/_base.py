@@ -4,7 +4,10 @@ from os.path import (
 )
 
 import numpy as np
-from sklearn.utils import Bunch
+from sklearn.utils import (
+    Bunch,
+    check_pandas_support,
+)
 
 
 def load_nice_dataset():
@@ -91,3 +94,23 @@ def load_csd_1000r(return_X_y=False):
         return Bunch(data=data, DESCR=fdescr)
     else:
         return raw_data["X"], raw_data["Y"]
+
+
+def load_who_dataset():
+    """Load and returns WHO dataset.
+    Returns
+    -------
+    who_dataset : sklearn.utils.Bunch
+      Dictionary-like object, with the following attributes:
+          data : `pandas.core.frame.DataFrame` -- the WHO dataset
+                  as a Pandas dataframe.
+          DESCR: `str` -- The full description of the dataset.
+    """
+
+    module_path = dirname(__file__)
+    target_filename = join(module_path, "data", "who_dataset.csv")
+    pd = check_pandas_support("load_who_dataset")
+    raw_data = pd.read_csv(target_filename)
+    with open(join(module_path, "descr", "who_dataset.rst")) as rst_file:
+        fdescr = rst_file.read()
+    return Bunch(data=raw_data, DESCR=fdescr)

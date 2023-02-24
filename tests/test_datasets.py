@@ -1,9 +1,11 @@
 import unittest
+import numpy as np
 
 from skcosmo.datasets import (
     load_degenerate_CH4_manifold,
     load_csd_1000r,
     load_nice_dataset,
+    load_who_dataset,
 )
 
 
@@ -56,6 +58,50 @@ class CSDTests(unittest.TestCase):
 
     def test_load_csd_1000r_access_descr(self):
         self.csd.DESCR
+
+
+class WHOTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.size = 24240
+        cls.shape = (2020, 12)
+        cls.value = 5.00977993011475
+        try:
+            import pandas as pd  # noqa F401
+
+            cls.has_pandas = True
+            cls.who = load_who_dataset()
+        except ImportError:
+            cls.has_pandas = False
+
+    def test_load_dataset_without_pandas(self):
+        """
+        Check if the correct exception occurs when pandas isn't present.
+        """
+        if self.has_pandas is False:
+            with self.assertRaises(ImportError) as cm:
+                _ = load_who_dataset()
+            self.assertEqual(str(cm.exception), "load_who_dataset requires pandas.")
+
+    def test_dataset_size_and_shape(self):
+        """
+        Check if the correct number of datapoints are present in the dataset.
+        Also check if the size of the dataset is correct.
+        """
+        if self.has_pandas is True:
+            self.assertEqual(self.who["data"].size, self.size)
+            self.assertEqual(self.who["data"].shape, self.shape)
+
+    def test_datapoint_value(self):
+        """
+        Check if the value of a datapoint at a certain location is correct.
+        """
+        if self.has_pandas is True:
+            self.assertTrue(
+                np.allclose(
+                    self.who["data"]["SE.XPD.TOTL.GD.ZS"][1924], self.value, rtol=1e-6
+                )
+            )
 
 
 if __name__ == "__main__":
