@@ -6,6 +6,15 @@
 A collection of scikit-learn compatible utilities that implement methods
 developed in the COSMO laboratory
 
+## Deprecation Warning
+__IMPORTANT:__ This package has been renamed to scikit-matter (skmatter). This package will no longer be maintained and updated.
+
+Please install the new package, skmatter, using:
+
+```bash
+pip install skmatter
+```
+
 ## Installation
 
 ```bash
