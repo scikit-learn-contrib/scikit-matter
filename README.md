@@ -1,16 +1,10 @@
-# scikit-cosmo
+# scikit-matter
 
-[![Test](https://github.com/lab-cosmo/scikit-cosmo/workflows/Test/badge.svg)](https://github.com/lab-cosmo/scikit-cosmo/actions?query=workflow%3ATest)
-[![codecov](https://codecov.io/gh/lab-cosmo/scikit-cosmo/branch/main/graph/badge.svg?token=UZJPJG34SM)](https://codecov.io/gh/lab-cosmo/scikit-cosmo/)
+[![Test](https://github.com/lab-cosmo/scikit-matter/workflows/Test/badge.svg)](https://github.com/lab-cosmo/scikit-matter/actions?query=workflow%3ATest)
+[![codecov](https://codecov.io/gh/lab-cosmo/scikit-matter/branch/main/graph/badge.svg?token=UZJPJG34SM)](https://codecov.io/gh/lab-cosmo/scikit-matter/)
 
 A collection of scikit-learn compatible utilities that implement methods
-developed in the COSMO laboratory
-
-
-## Deprecation Warning
-__IMPORTANT:__ This package has been renamed to scikit-matter ([skmatter](https://github.com/lab-cosmo/scikit-matter)). This package will no longer be maintained and updated.
-
-Please install the new package, skmatter, using:
+born out of the materials science and chemistry communities.
 
 ```bash
 pip install skmatter
@@ -19,10 +13,10 @@ pip install skmatter
 ## Installation
 
 ```bash
-pip install skcosmo 
+pip install skmatter 
 ```
 
-You can then `import skcosmo` in your code!
+You can then `import skmatter` in your code!
 
 ## Developing the package
 
@@ -35,8 +29,8 @@ pip install tox black flake8
 Then this package itself
 
 ```bash
-git clone https://github.com/lab-cosmo/scikit-cosmo
-cd scikit-cosmo
+git clone https://github.com/lab-cosmo/scikit-matter
+cd scikit-matter
 pip install -e .
 ```
 
@@ -46,7 +40,7 @@ and allowing you to edit the code and directly use the updated version.
 ### Running the tests
 
 ```bash
-cd <scikit-cosmo PATH>
+cd <scikit-matter PATH>
 # run unit tests
 tox
 # run the code formatter

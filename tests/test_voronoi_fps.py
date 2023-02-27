@@ -3,7 +3,7 @@ import unittest
 import numpy as np
 from sklearn.exceptions import NotFittedError
 
-from skcosmo.sample_selection import (
+from skmatter.sample_selection import (
     FPS,
     VoronoiFPS,
 )

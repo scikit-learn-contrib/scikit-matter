@@ -8,7 +8,7 @@ from sklearn.datasets import load_diabetes
 from sklearn.decomposition import PCA
 from sklearn.utils.validation import NotFittedError
 
-from skcosmo.sample_selection import DirectionalConvexHull
+from skmatter.sample_selection import DirectionalConvexHull
 
 
 class TestDirectionalConvexHull(unittest.TestCase):

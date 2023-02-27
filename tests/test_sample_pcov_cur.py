@@ -3,7 +3,7 @@ import unittest
 import numpy as np
 from sklearn.datasets import load_diabetes as get_dataset
 
-from skcosmo.sample_selection import PCovCUR
+from skmatter.sample_selection import PCovCUR
 
 EPSILON = 1e-6
 

@@ -6,7 +6,7 @@ This is a toy dataset containing NICE[1, 4](N-body Iterative Contraction of Equi
 
 Function Call
 -------------
-.. function:: skcosmo.datasets.load_nice_dataset
+.. function:: skmatter.datasets.load_nice_dataset
 
 Data Set Characteristics
 ------------------------

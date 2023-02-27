@@ -8,7 +8,7 @@ from sklearn.utils import (
     extmath,
 )
 
-from skcosmo.linear_model import (
+from skmatter.linear_model import (
     OrthogonalRegression,
     RidgeRegression2FoldCV,
 )

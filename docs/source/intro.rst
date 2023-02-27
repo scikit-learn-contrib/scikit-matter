@@ -1,14 +1,15 @@
-What's in scikit-COSMO?
+What's in scikit-matter?
 =======================
 
-``scikit-cosmo`` is a collection of `scikit-learn <https://scikit.org>`_ (sklearn)
-compatible utilities that implement methods developed in the `COSMO laboratory <https://cosmo.epfl.ch>`_.
+``scikit-matter`` is a collection of `scikit-learn <https://scikit.org/>`_
+compatible utilities that implement methods born out of the materials science
+and chemistry communities.
 
 This package serves two purposes: 1) as a development ground for models and patches that may ultimately be suitable for inclusion
 in sklearn, and 2) to coalesce field-specific sklearn-like routines and models in
 a well-documented and standardized repository.
 
-Currently, scikit-COSMO contains models described in [Imbalzano2018]_, [Helfrecht2020]_, [Goscinski2021]_ and [Cersonsky2021]_, as well
+Currently, scikit-matter contains models described in [Imbalzano2018]_, [Helfrecht2020]_, [Goscinski2021]_ and [Cersonsky2021]_, as well
 as some modifications to sklearn functionalities and minimal datasets that are useful within the field
 of computational materials science and chemistry.
 
@@ -39,4 +40,4 @@ of computational materials science and chemistry.
    * PCovR: the standard Principal Covariates Regression [deJong1992]_. Utilises a combination between a PCA-like and an LR-like loss, and therefore attempts to find a low-dimensional projection of the feature vectors that simultaneously minimises information loss and error in predicting the target properties using only the latent space vectors $\mathbf{T}$ :ref:`PCovR-api`.
    * Kernel Principal Covariates Regression (KPCovR) a kernel-based variation on the original PCovR method, proposed in [Helfrecht2020]_ :ref:`KPCovR-api`.
   
-If you would like to contribute to scikit-COSMO, check out our :ref:`contributing` page!
+If you would like to contribute to scikit-matter, check out our :ref:`contributing` page!

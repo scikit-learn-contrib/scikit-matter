@@ -439,8 +439,8 @@ class _CUR(GreedySelector):
     classic CUR matrix decomposition.
 
     **WARNING**: This base class should never be directly instantiated.
-    Instead, use :py:class:`skcosmo.feature_selection.CUR` and
-    :py:class:`skcosmo.sample_selection.CUR`,
+    Instead, use :py:class:`skmatter.feature_selection.CUR` and
+    :py:class:`skmatter.sample_selection.CUR`,
     which have the same constructor signature.
 
     Parameters
@@ -624,8 +624,8 @@ class _PCovCUR(GreedySelector):
     This is done by employing the augmented kernel and covariance matrices,
 
     **WARNING**: This base class should never be directly instantiated.
-    Instead, use :py:class:`skcosmo.feature_selection.PCovCUR` and
-    :py:class:`skcosmo.sample_selection.PCovCUR`,
+    Instead, use :py:class:`skmatter.feature_selection.PCovCUR` and
+    :py:class:`skmatter.sample_selection.PCovCUR`,
     which have the same constructor signature.
 
     Parameters
@@ -856,8 +856,8 @@ class _FPS(GreedySelector):
     Transformer that performs Greedy Selection using Farthest Point Sampling.
 
     **WARNING**: This base class should never be directly instantiated.
-    Instead, use :py:class:`skcosmo.feature_selection.FPS` and
-    :py:class:`skcosmo.sample_selection.FPS`,
+    Instead, use :py:class:`skmatter.feature_selection.FPS` and
+    :py:class:`skmatter.sample_selection.FPS`,
     which have the same constructor signature.
 
     Parameters

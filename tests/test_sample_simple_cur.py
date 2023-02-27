@@ -4,7 +4,7 @@ import numpy as np
 from sklearn import exceptions
 
 from sklearn.datasets import fetch_california_housing as load
-from skcosmo.sample_selection import CUR
+from skmatter.sample_selection import CUR
 
 
 class TestCUR(unittest.TestCase):

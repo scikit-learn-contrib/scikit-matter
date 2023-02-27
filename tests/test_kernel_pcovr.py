@@ -10,11 +10,11 @@ from sklearn.linear_model import (
 )
 from sklearn.utils.validation import check_X_y
 
-from skcosmo.decomposition import (
+from skmatter.decomposition import (
     KernelPCovR,
     PCovR,
 )
-from skcosmo.preprocessing import StandardFlexibleScaler as SFS
+from skmatter.preprocessing import StandardFlexibleScaler as SFS
 
 
 class KernelPCovRBaseTest(unittest.TestCase):

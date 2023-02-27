@@ -2,7 +2,7 @@ import unittest
 
 from sklearn.datasets import load_diabetes as get_dataset
 
-from skcosmo.feature_selection import PCovFPS
+from skmatter.feature_selection import PCovFPS
 
 
 class TestPCovFPS(unittest.TestCase):

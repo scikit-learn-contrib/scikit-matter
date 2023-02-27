@@ -1,6 +1,6 @@
 import unittest
 
-from skcosmo.utils import get_progress_bar
+from skmatter.utils import get_progress_bar
 
 
 class PBarTest(unittest.TestCase):

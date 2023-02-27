@@ -2,9 +2,9 @@ import numpy as np
 from ase.io import read
 from rascal.representations import SphericalInvariants as SOAP
 
-from skcosmo.feature_selection import CUR
-from skcosmo.preprocessing import StandardFlexibleScaler
-from skcosmo.sample_selection import FPS
+from skmatter.feature_selection import CUR
+from skmatter.preprocessing import StandardFlexibleScaler
+from skmatter.sample_selection import FPS
 
 # read all of the frames and book-keep the centers and species
 filename = "/path/to/CSD-1000R.xyz"
@@ -77,4 +77,4 @@ data = dict(
     Y=Y_select,
     original_mapping=[(fi, ci) for fi, ci in zip(f_selected, ci_selected)],
 )
-np.savez("./skcosmo/datasets/data/csd-1000r.npz", **data, size=(n_samples, n_select))
+np.savez("./skmatter/datasets/data/csd-1000r.npz", **data, size=(n_samples, n_select))

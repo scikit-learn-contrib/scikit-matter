@@ -2,7 +2,7 @@
 Feature and Sample Selection
 ============================
 
-`scikit-COSMO` contains multiple data sub-selection modules,
+`scikit-matter` contains multiple data sub-selection modules,
 primarily corresponding to methods derived from CUR matrix decomposition
 and Farthest Point Sampling. In their classical form, CUR and FPS determine
 a data subset that maximizes the
@@ -44,7 +44,7 @@ where `Selector` is one of the classes below that overwrites the method :py:func
 
 From :py:class:`GreedySelector`, selectors inherit these public methods:
 
-.. currentmodule:: skcosmo._selection
+.. currentmodule:: skmatter._selection
 
 .. class:: GreedySelector
 
@@ -80,19 +80,19 @@ The feature and sample selection versions of CUR differ only in the computation
 of :math:`\pi`. In sample selection :math:`\pi` is computed using the left
 singular vectors, versus in feature selection, :math:`\pi` is computed using the
 right singular vectors. In addition to :py:class:`GreedySelector`, both instances
-of CUR selection build off of :py:class:`skcosmo._selection._cur._CUR`, and inherit
+of CUR selection build off of :py:class:`skmatter._selection._cur._CUR`, and inherit
 
-.. currentmodule:: skcosmo._selection
+.. currentmodule:: skmatter._selection
 
 .. automethod:: _CUR.score
 .. automethod:: _CUR._compute_pi
 
 They are instantiated using
-:py:class:`skcosmo.feature_selection.CUR` and :py:class:`skcosmo.sample_selection.CUR`, e.g.
+:py:class:`skmatter.feature_selection.CUR` and :py:class:`skmatter.sample_selection.CUR`, e.g.
 
 .. code-block:: python
 
-    from skcosmo.feature_selection import CUR
+    from skmatter.feature_selection import CUR
     selector = CUR(
                         n_to_select=4,
                         progress_bar=True,
@@ -124,19 +124,19 @@ and available via the Utility Classes.
 
 Again, the feature and sample selection versions of PCov-CUR differ only in the computation
 of :math:`\pi`. So, in addition to :py:class:`GreedySelector`, both instances
-of PCov-CUR selection build off of :py:class:`skcosmo._selection._cur._PCovCUR`, inheriting
+of PCov-CUR selection build off of :py:class:`skmatter._selection._cur._PCovCUR`, inheriting
 
-.. currentmodule:: skcosmo._selection
+.. currentmodule:: skmatter._selection
 
 .. automethod:: _PCovCUR.score
 .. automethod:: _PCovCUR._compute_pi
 
 and are instantiated using
-:py:class:`skcosmo.feature_selection.PCovCUR` and :py:class:`skcosmo.sample_selection.PCovCUR`.
+:py:class:`skmatter.feature_selection.PCovCUR` and :py:class:`skmatter.sample_selection.PCovCUR`.
 
 .. code-block:: python
 
-    from skcosmo.feature_selection import PCovCUR
+    from skmatter.feature_selection import PCovCUR
     selector = PCovCUR(
                         n_to_select=4,
                         progress_bar=True,
@@ -175,21 +175,21 @@ It is common to use the Euclidean distance, however other distance metrics may b
 
 Similar to CUR, the feature and selection versions of FPS differ only in the way
 distance is computed (feature selection does so column-wise, sample selection does
-so row-wise), and are built off of the same base class, :py:class:`skcosmo._selection._fps._FPS`,
+so row-wise), and are built off of the same base class, :py:class:`skmatter._selection._fps._FPS`,
 in addition to GreedySelector, and inherit
 
-.. currentmodule:: skcosmo._selection
+.. currentmodule:: skmatter._selection
 
 .. automethod:: _FPS.score
 .. automethod:: _FPS.get_distance
 .. automethod:: _FPS.get_select_distance
 
 These selectors can be instantiated using
-:py:class:`skcosmo.feature_selection.FPS` and :py:class:`skcosmo.sample_selection.FPS`.
+:py:class:`skmatter.feature_selection.FPS` and :py:class:`skmatter.sample_selection.FPS`.
 
 .. code-block:: python
 
-    from skcosmo.feature_selection import FPS
+    from skmatter.feature_selection import FPS
     selector = FPS(
                         n_to_select=4,
                         progress_bar=True,
@@ -215,9 +215,9 @@ distance in terms of :math:`\mathbf{X}` and :math:`\mathbf{y}`.
 
 Again, the feature and sample selection versions of PCov-FPS differ only in
 computing the distances. So, in addition to :py:class:`GreedySelector`, both instances
-of PCov-FPS selection build off of :py:class:`skcosmo._selection._fps._PCovFPS`, and inherit
+of PCov-FPS selection build off of :py:class:`skmatter._selection._fps._PCovFPS`, and inherit
 
-.. currentmodule:: skcosmo._selection
+.. currentmodule:: skmatter._selection
 
 .. automethod:: _PCovFPS.score
 .. automethod:: _PCovFPS.get_distance
@@ -226,11 +226,11 @@ of PCov-FPS selection build off of :py:class:`skcosmo._selection._fps._PCovFPS`,
 
 and can
 be instantiated using
-:py:class:`skcosmo.feature_selection.PCovFPS` and :py:class:`skcosmo.sample_selection.PCovFPS`.
+:py:class:`skmatter.feature_selection.PCovFPS` and :py:class:`skmatter.sample_selection.PCovFPS`.
 
 .. code-block:: python
 
-    from skcosmo.feature_selection import PCovFPS
+    from skmatter.feature_selection import PCovFPS
     selector = PCovFPS(
                         n_to_select=4,
                         progress_bar=True,
@@ -255,15 +255,15 @@ be instantiated using
 Voronoi FPS
 ###########
 
-.. currentmodule:: skcosmo.sample_selection._voronoi_fps
+.. currentmodule:: skmatter.sample_selection._voronoi_fps
 
 .. autoclass :: VoronoiFPS
 
-These selectors can be instantiated using :py:class:`skcosmo.sample_selection.VoronoiFPS`.
+These selectors can be instantiated using :py:class:`skmatter.sample_selection.VoronoiFPS`.
 
 .. code-block:: python
 
-    from skcosmo.feature_selection import VoronoiFPS
+    from skmatter.feature_selection import VoronoiFPS
     selector = VoronoiFPS(
                         n_to_select=4,
                         progress_bar=True,

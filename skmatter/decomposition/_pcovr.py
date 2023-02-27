@@ -71,7 +71,7 @@ class PCovR(_BasePCA, LinearModel):
     results will change drastically near :math:`\alpha \to 0` and :math:`\alpha \to 0`.
     This can be done with the companion preprocessing classes, where
 
-    >>> from skcosmo.preprocessing import StandardFlexibleScaler as SFS
+    >>> from skmatter.preprocessing import StandardFlexibleScaler as SFS
     >>>
     >>> # Set column_wise to True when the columns are relative to one another,
     >>> # False otherwise.
@@ -187,7 +187,7 @@ class PCovR(_BasePCA, LinearModel):
     Examples
     --------
     >>> import numpy as np
-    >>> from skcosmo.decomposition import PCovR
+    >>> from skmatter.decomposition import PCovR
     >>> X = np.array([[-1, 1, -3, 1], [1, -2, 1, 2], [-2, 0, -2, -2], [1, 0, 2, -1]])
     >>> Y = np.array([[ 0, -5], [-1, 1], [1, -5], [-3, 2]])
     >>> pcovr = PCovR(mixing=0.1, n_components=2)

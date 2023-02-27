@@ -10,7 +10,7 @@ from CSD-1000r, originally published in [Ceriotti2019]_.
 Function Call
 -------------
 
-.. function:: skcosmo.datasets.load_csd_1000r
+.. function:: skmatter.datasets.load_csd_1000r
 
 Data Set Characteristics
 ------------------------
@@ -47,9 +47,9 @@ References
 ----------
 
    .. [C1] https://github.com/lab-cosmo/librascal commit ade202a6
-   .. [C2] https://github.com/lab-cosmo/scikit-cosmo commit 4ed1d92
+   .. [C2] https://github.com/lab-cosmo/scikit-matter commit 4ed1d92
 
 Reference Code
 --------------
 
-.. literalinclude:: /../../skcosmo/datasets/make_csd_1000r.py
+.. literalinclude:: /../../skmatter/datasets/make_csd_1000r.py

@@ -3,8 +3,8 @@ import unittest
 import numpy as np
 from sklearn.preprocessing import StandardScaler
 
-from skcosmo.datasets import load_csd_1000r
-from skcosmo.utils import (
+from skmatter.datasets import load_csd_1000r
+from skmatter.utils import (
     X_orthogonalizer,
     Y_feature_orthogonalizer,
     Y_sample_orthogonalizer,

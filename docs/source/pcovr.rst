@@ -6,7 +6,7 @@ Principal Covariates Regression (PCovR)
 PCovR
 #####
 
-.. currentmodule:: skcosmo.decomposition
+.. currentmodule:: skmatter.decomposition
 
 .. autoclass:: PCovR
     :show-inheritance:
@@ -27,7 +27,7 @@ PCovR
 Kernel PCovR
 ############
 
-.. currentmodule:: skcosmo.decomposition
+.. currentmodule:: skmatter.decomposition
 
 .. autoclass:: KernelPCovR
     :show-inheritance:

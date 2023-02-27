@@ -4,7 +4,7 @@ import numpy as np
 from sklearn.datasets import load_diabetes as get_dataset
 from sklearn.exceptions import NotFittedError
 
-from skcosmo._selection import GreedySelector
+from skmatter._selection import GreedySelector
 
 
 class GreedyTester(GreedySelector):

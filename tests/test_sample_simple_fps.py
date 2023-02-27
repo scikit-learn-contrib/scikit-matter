@@ -3,7 +3,7 @@ import unittest
 from sklearn.datasets import load_diabetes as get_dataset
 from sklearn.utils.validation import NotFittedError
 
-from skcosmo.sample_selection import FPS
+from skmatter.sample_selection import FPS
 
 
 class TestFPS(unittest.TestCase):
