@@ -4,7 +4,7 @@ import numpy as np
 import sklearn
 from sklearn.preprocessing import StandardScaler
 
-from skcosmo.preprocessing import StandardFlexibleScaler
+from skmatter.preprocessing import StandardFlexibleScaler
 
 
 class ScalerTests(unittest.TestCase):
@@ -46,10 +46,10 @@ class ScalerTests(unittest.TestCase):
         """
         X = self.random_state.uniform(0, 100, size=(3, 3))
         model = StandardFlexibleScaler(column_wise=True)
-        transformed_skcosmo = model.fit_transform(X)
+        transformed_skmatter = model.fit_transform(X)
         transformed_sklearn = StandardScaler().fit_transform(X)
         self.assertTrue(
-            (np.isclose(transformed_sklearn, transformed_skcosmo, atol=1e-12)).all()
+            (np.isclose(transformed_sklearn, transformed_skmatter, atol=1e-12)).all()
         )
 
     def test_fit_transform_npf(self):

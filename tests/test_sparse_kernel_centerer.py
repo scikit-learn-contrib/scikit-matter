@@ -3,7 +3,7 @@ import unittest
 import numpy as np
 import sklearn
 
-from skcosmo.preprocessing import SparseKernelCenterer
+from skmatter.preprocessing import SparseKernelCenterer
 
 
 class SparseKernelTests(unittest.TestCase):

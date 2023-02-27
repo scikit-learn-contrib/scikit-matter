@@ -3,7 +3,7 @@ import unittest
 import numpy as np
 import sklearn
 
-from skcosmo.preprocessing import KernelNormalizer
+from skmatter.preprocessing import KernelNormalizer
 
 
 class KernelTests(unittest.TestCase):

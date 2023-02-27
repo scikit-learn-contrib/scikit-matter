@@ -3,8 +3,8 @@ import unittest
 import numpy as np
 from sklearn import exceptions
 
-from skcosmo.datasets import load_csd_1000r as load
-from skcosmo.feature_selection import CUR
+from skmatter.datasets import load_csd_1000r as load
+from skmatter.feature_selection import CUR
 
 
 class TestCUR(unittest.TestCase):

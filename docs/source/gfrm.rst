@@ -3,7 +3,7 @@
 Reconstruction Measures
 ======================================
 
-.. currentmodule:: skcosmo.metrics
+.. currentmodule:: skmatter.metrics
 
 
 .. _GRE-api:

@@ -3,7 +3,7 @@ import unittest
 import numpy as np
 from sklearn.datasets import load_diabetes as get_dataset
 
-from skcosmo.feature_selection import PCovCUR
+from skmatter.feature_selection import PCovCUR
 
 
 class TestPCovCUR(unittest.TestCase):

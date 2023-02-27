@@ -1,14 +1,14 @@
 Linear Models
 =============
 
-.. currentmodule:: skcosmo.linear_model._base
+.. currentmodule:: skmatter.linear_model._base
 
 Orthogonal Regression
 #####################
 
 .. autoclass:: OrthogonalRegression 
 
-.. currentmodule:: skcosmo.linear_model._ridge
+.. currentmodule:: skmatter.linear_model._ridge
 
 Ridge Regression with Two-fold Cross Validation
 ###############################################

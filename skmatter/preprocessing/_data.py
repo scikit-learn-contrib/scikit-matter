@@ -83,7 +83,7 @@ class StandardFlexibleScaler(TransformerMixin, BaseEstimator):
     Examples
     --------
     >>> import numpy as np
-    >>> from skcosmo.preprocessing import StandardFlexibleScaler
+    >>> from skmatter.preprocessing import StandardFlexibleScaler
     >>> X = np.array([[ 1., -2.,  2.],
     ...               [-2.,  1.,  3.],
     ...               [ 4.,  1., -2.]])
@@ -266,7 +266,7 @@ class KernelNormalizer(KernelCenterer):
 
     Examples
     --------
-    >>> from skcosmo.preprocessing import KernelNormalizer
+    >>> from skmatter.preprocessing import KernelNormalizer
     >>> from sklearn.metrics.pairwise import pairwise_kernels
     >>> X = [[ 1., -2.,  2.],
     ...      [ -2.,  1.,  3.],

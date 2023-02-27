@@ -1,7 +1,7 @@
 Preprocessing
 =============================
 
-.. automodule:: skcosmo.preprocessing
+.. automodule:: skmatter.preprocessing
    :members:
    :undoc-members:
    :show-inheritance:

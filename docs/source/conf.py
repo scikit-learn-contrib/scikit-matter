@@ -53,19 +53,19 @@ for nb in os.listdir(os.path.join(ROOT, "examples")):
                 converted = exporter.from_filename(nb_in)[0]
                 out_stream.write(converted)
 
-import skcosmo  # noqa
+import skmatter  # noqa
 
 # -- Project information -----------------------------------------------------
 
 # The master toctree document.
 master_doc = "index"
 
-project = "scikit-COSMO"
+project = "scikit-matter"
 author = ", ".join(open(os.path.join(ROOT, "contributors.txt")))
 copyright = "2020, " + author
 
 # The full version, including alpha/beta/rc tags
-release = skcosmo.__version__
+release = skmatter.__version__
 
 
 # -- General configuration ---------------------------------------------------
@@ -188,7 +188,7 @@ html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
 # html_search_scorer = 'scorer.js'
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = "skcosmodoc"
+htmlhelp_basename = "skmatterdoc"
 
 # -- Options for LaTeX output ---------------------------------------------
 
@@ -207,7 +207,7 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-    (master_doc, "skcosmo.tex", "scikit-COSMO Documentation", author, "manual"),
+    (master_doc, "skmatter.tex", "scikit-matter Documentation", author, "manual"),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of

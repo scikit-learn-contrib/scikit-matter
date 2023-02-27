@@ -9,7 +9,7 @@ from sklearn.linear_model import Ridge
 from sklearn.kernel_ridge import KernelRidge
 from sklearn.utils.validation import check_X_y
 
-from skcosmo.decomposition import PCovR
+from skmatter.decomposition import PCovR
 
 
 class PCovRBaseTest(unittest.TestCase):

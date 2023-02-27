@@ -14,8 +14,8 @@ Then this package itself
 
 .. code-block:: bash
 
-  git clone https://github.com/lab-cosmo/scikit-cosmo
-  cd scikit-cosmo
+  git clone https://github.com/lab-cosmo/scikit-matter
+  cd scikit-matter
   pip install -e .
 
 This install the package in development mode, making it importable globally
@@ -26,7 +26,7 @@ Running the tests
 
 .. code-block:: bash
 
-  cd <scikit-cosmo PATH>
+  cd <scikit-matter PATH>
   # run unit tests
   tox
   # run the code formatter
@@ -43,20 +43,20 @@ editors <https://black.readthedocs.io/en/stable/editor_integration.html>`_.
 Issues and Pull Requests
 ########################
 
-Having a problem with scikit-COSMO? Please let us know by `submitting an issue <https://github.com/lab-cosmo/scikit-cosmo/issues>`_.
+Having a problem with scikit-matter? Please let us know by `submitting an issue <https://github.com/lab-cosmo/scikit-matter/issues>`_.
 
-Submit new features or bug fixes through a `pull request <https://github.com/lab-cosmo/scikit-cosmo/pulls>`_.
+Submit new features or bug fixes through a `pull request <https://github.com/lab-cosmo/scikit-matter/pulls>`_.
 
 
 Contributing Datasets
 #####################
 
-Have an example dataset that would fit into scikit-COSMO?
+Have an example dataset that would fit into scikit-matter?
 
 Contributing a dataset is easy. First, copy your numpy file into
-``skcosmo/datasets/data/`` with an informative name. Here, we'll call it ``my-dataset.npz``.
+``skmatter/datasets/data/`` with an informative name. Here, we'll call it ``my-dataset.npz``.
 
-Next, create a documentation file in ``skcosmo/datasets/data/my-dataset.rst``.
+Next, create a documentation file in ``skmatter/datasets/data/my-dataset.rst``.
 This file should look like this:
 
 .. code-block::
@@ -71,7 +71,7 @@ This file should look like this:
   Function Call
   -------------
 
-  .. function:: skcosmo.datasets.load_my_dataset
+  .. function:: skmatter.datasets.load_my_dataset
 
   Data Set Characteristics
   ------------------------
@@ -100,8 +100,8 @@ This file should look like this:
   --------------
 
 
-Then, show ``scikit-cosmo`` how to load your data by adding a loader function to
-``skcosmo/datasets/_base.py``. It should look like this:
+Then, show ``scikit-matter`` how to load your data by adding a loader function to
+``skmatter/datasets/_base.py``. It should look like this:
 
 .. code-block:: python
 
@@ -132,9 +132,9 @@ Then, show ``scikit-cosmo`` how to load your data by adding a loader function to
 
       return Bunch(data=data, DESCR=fdescr)
 
-Add this function to ``skcosmo/datasets/__init__.py``.
+Add this function to ``skmatter/datasets/__init__.py``.
 
-Finally, add a test to ``skcosmo/tests/test_datasets.py`` to see that your dataset
+Finally, add a test to ``skmatter/tests/test_datasets.py`` to see that your dataset
 loads properly. It should look something like this:
 
 .. code-block:: python
@@ -152,7 +152,7 @@ loads properly. It should look something like this:
         self.my_data.DESCR
 
 
-You're good to go! Time to submit a `pull request. <https://github.com/lab-cosmo/scikit-cosmo/pulls>`_
+You're good to go! Time to submit a `pull request. <https://github.com/lab-cosmo/scikit-matter/pulls>`_
 
 
 License

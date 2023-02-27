@@ -11,7 +11,7 @@ Following the naming convention of [Pozdnyakov2020]_ for each representation the
 Function Call
 -------------
 
-.. function:: skcosmo.datasets.load_degenerate_CH4_manifold
+.. function:: skmatter.datasets.load_degenerate_CH4_manifold
 
 Data Set Characteristics
 ------------------------

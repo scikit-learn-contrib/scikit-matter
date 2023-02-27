@@ -1,7 +1,7 @@
 import unittest
 import numpy as np
 
-from skcosmo.datasets import (
+from skmatter.datasets import (
     load_degenerate_CH4_manifold,
     load_csd_1000r,
     load_nice_dataset,

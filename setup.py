@@ -3,7 +3,7 @@ from setuptools import setup
 import re
 
 __version__ = re.search(
-    r'__version__\s*=\s*[\'"]([^\'"]*)[\'"]', open("skcosmo/__init__.py").read()
+    r'__version__\s*=\s*[\'"]([^\'"]*)[\'"]', open("skmatter/__init__.py").read()
 ).group(1)
 
 if __name__ == "__main__":

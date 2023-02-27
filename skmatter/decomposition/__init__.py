@@ -1,5 +1,5 @@
 """
-The :mod:`skcosmo.decomposition` module includes the two distance
+The :mod:`skmatter.decomposition` module includes the two distance
 measures, as defined by Principal Covariates Regression (PCovR)
 """
 

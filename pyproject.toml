@@ -25,12 +25,12 @@ deps = -rexamples/requirements.txt
 
 commands =
     bash -ec "\
-        SKCOSMO_EXAMPLES=$PWD; \
+        SKMATTER_EXAMPLES=$PWD; \
         for file in $(find . -name '*.ipynb' -not -path '*/\\.*'); do \
             filename=$(basename $file); \
             jupyter nbconvert \
                 --to notebook \
-                --output "$SKCOSMO_EXAMPLES/../.tox/examples/$filename" \
+                --output "$SKMATTER_EXAMPLES/../.tox/examples/$filename" \
                 --execute "$file"; \
     done"
 """
@@ -41,7 +41,7 @@ data_file = 'tests/.coverage'
 
 [tool.coverage.report]
 include = [
-    "skcosmo/*"
+    "skmatter/*"
 ]
 
 [tool.coverage.xml]

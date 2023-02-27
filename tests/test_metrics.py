@@ -7,7 +7,7 @@ from sklearn.utils import (
     extmath,
 )
 
-from skcosmo.metrics import (
+from skmatter.metrics import (
     global_reconstruction_distortion,
     global_reconstruction_error,
     local_reconstruction_error,

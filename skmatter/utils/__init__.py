@@ -1,5 +1,5 @@
 """
-The :mod:`skcosmo.utils` module includes functions which are
+The :mod:`skmatter.utils` module includes functions which are
 used by multiple packages
 """
 

@@ -166,8 +166,8 @@ class KernelPCovR(_BasePCA, LinearModel):
     Examples
     --------
     >>> import numpy as np
-    >>> from skcosmo.decomposition import KernelPCovR
-    >>> from skcosmo.preprocessing import StandardFlexibleScaler as SFS
+    >>> from skmatter.decomposition import KernelPCovR
+    >>> from skmatter.preprocessing import StandardFlexibleScaler as SFS
     >>> from sklearn.kernel_ridge import KernelRidge
     >>>
     >>> X = np.array([[-1, 1, -3, 1], [1, -2, 1, 2], [-2, 0, -2, -2], [1, 0, 2, -1]])
