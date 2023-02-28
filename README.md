@@ -6,10 +6,6 @@
 A collection of scikit-learn compatible utilities that implement methods
 born out of the materials science and chemistry communities.
 
-```bash
-pip install skmatter
-```
-
 ## Installation
 
 ```bash
