@@ -616,7 +616,13 @@ class PCovR(_BasePCA, LinearModel):
         X_original ndarray, shape (n_samples, n_features)
         """
 
-        return T @ self.ptx_ + self.mean_
+        if np.max(np.abs(self.mean_)) > self.tol:
+            warnings.warn(
+                "This class does not automatically un-center data, and your data mean is greater than the supplied tolerance,"
+                "so the inverse transformation will be off by the original data mean."
+            )
+
+        return T @ self.ptx_
 
     def predict(self, X=None, T=None):
         """Predicts the property values using regression on X or T"""
