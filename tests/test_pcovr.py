@@ -1,4 +1,5 @@
 import unittest
+import warnings
 
 import numpy as np
 from sklearn import exceptions
@@ -385,6 +386,20 @@ class PCovRInfrastructureTest(PCovRBaseTest):
         pcovr.fit(self.X, self.Y)
         with self.assertRaises(ValueError):
             _ = pcovr.predict()
+
+    def test_centering(self):
+        """
+        This test checks that PCovR raises a warning if
+        given uncentered data.
+        """
+        pcovr = self.model(n_components=2, tol=1e-12)
+        X = self.X.copy() + np.random.uniform(-1, 1, self.X.shape[1])
+        with warnings.catch_warnings(record=True) as w:
+            pcovr.fit(X, self.Y)
+            self.assertEquals(
+                str(w[0].message),
+                "This class does not automatically center data, and your data mean is greater than the supplied tolerance.",
+            )
 
     def test_T_shape(self):
         """
