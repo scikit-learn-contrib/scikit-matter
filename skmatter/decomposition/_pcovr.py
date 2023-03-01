@@ -1,4 +1,5 @@
 import numbers
+import warnings
 
 import numpy as np
 from numpy.linalg import LinAlgError
@@ -268,6 +269,11 @@ class PCovR(_BasePCA, LinearModel):
         # saved for inverse transformations from the latent space,
         # should be zero in the case that the features have been properly centered
         self.mean_ = np.mean(X, axis=0)
+
+        if np.max(np.abs(self.mean_)) > self.tol:
+            warnings.warn(
+                "This class does not automatically center data, and your data mean is greater than the supplied tolerance."
+            )
 
         if self.space is not None and self.space not in [
             "feature",
