@@ -8,13 +8,15 @@ from sklearn.linear_model import LinearRegression
 
 
 class OrthogonalRegression(MultiOutputMixin, RegressorMixin):
-    """Orthogonal regression by solving the Procrustes problem
+    r"""Orthogonal regression by solving the Procrustes problem
 
     Linear regression with the additional constraint that the weight matrix
     must be an orthogonal matrix/projection. It minimizes the Procrustes
     problem:
 
-    :math:`\min_\Omega ||y - X\Omega\||_F \quad\mathrm{subject\ to}\quad \Omega^T\Omega=I` % # noqa: W605
+    .. math::
+
+        \min_\Omega ||y - X\Omega\||_F \quad\mathrm{subject\ to}\quad \Omega^T\Omega=I
 
     Parameters
     ----------
