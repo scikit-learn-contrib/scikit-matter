@@ -23,6 +23,7 @@ of computational materials science and chemistry.
    * :ref:`FPS-api`: a common selection technique intended to exploit the diversity of the input space. The selection of the first point is made at random or by a separate metric.
    * :ref:`PCov-FPS-api` extends upon FPS much like PCov-CUR does to CUR.
    * :ref:`Voronoi-FPS-api`: conduct FPS selection, taking advantage of Voronoi tessellations to accelerate selection.
+   * :ref:`DCH-api`: selects samples by constructing a directional convex hull and determining which samples lie on the bounding surface.
 
 - Reconstruction Measures:
    A set of easily-interpretable error measures of the relative information capacity of feature space `F` with respect to feature space `F'`.
