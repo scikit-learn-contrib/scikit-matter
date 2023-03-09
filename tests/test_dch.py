@@ -101,6 +101,7 @@ class TestDirectionalConvexHull(unittest.TestCase):
         distance = selector.score_samples(
             self.below_hull_point[:, 1:], self.below_hull_point[:, 0]
         )[0]
+        print("distance", distance)
         self.assertTrue(distance < 0.0)
 
     def test_positive_score(self):
@@ -109,34 +110,54 @@ class TestDirectionalConvexHull(unittest.TestCase):
         In an old implementation we observed this bug for the dataset we use in this test
         (see issue #162)
         """
-        X = [[1.88421449, 0.86675162],
-             [1.88652863, 0.86577001],
-             [1.89200182, 0.86573224],
-             [1.89664107, 0.86937211],
-             [1.90181908, 0.85964603],
-             [1.90313135, 0.85695238],
-             [1.90063025, 0.84948309],
-             [1.90929015, 0.87526563],
-             [1.90924666, 0.85509754],
-             [1.91139146, 0.86115512],
-             [1.91199225, 0.8681867 ],
-             [1.90681563, 0.85036791],
-             [1.90193881, 0.84168907],
-             [1.90544262, 0.84451744],
-             [1.91498802, 0.86010812],
-             [1.91305204, 0.85333203],
-             [1.89779902, 0.83731807],
-             [1.91725967, 0.86630218],
-             [1.91309514, 0.85046796],
-             [1.89822103, 0.83522425]]
-        y = [-2.69180967, -2.72443825, -2.77293913, -2.797828  , -2.12097652, -2.69428482,
-             -2.70275134, -2.80617667, -2.79199375, -2.01707974, -2.74203922, -2.24217962,
-             -2.03472   , -2.72612763, -2.7071123 , -2.75706683, -2.68925596, -2.77160335,
-             -2.69528665, -2.70911598]
+        X = [
+            [1.88421449, 0.86675162],
+            [1.88652863, 0.86577001],
+            [1.89200182, 0.86573224],
+            [1.89664107, 0.86937211],
+            [1.90181908, 0.85964603],
+            [1.90313135, 0.85695238],
+            [1.90063025, 0.84948309],
+            [1.90929015, 0.87526563],
+            [1.90924666, 0.85509754],
+            [1.91139146, 0.86115512],
+            [1.91199225, 0.8681867],
+            [1.90681563, 0.85036791],
+            [1.90193881, 0.84168907],
+            [1.90544262, 0.84451744],
+            [1.91498802, 0.86010812],
+            [1.91305204, 0.85333203],
+            [1.89779902, 0.83731807],
+            [1.91725967, 0.86630218],
+            [1.91309514, 0.85046796],
+            [1.89822103, 0.83522425],
+        ]
+        y = [
+            -2.69180967,
+            -2.72443825,
+            -2.77293913,
+            -2.797828,
+            -2.12097652,
+            -2.69428482,
+            -2.70275134,
+            -2.80617667,
+            -2.79199375,
+            -2.01707974,
+            -2.74203922,
+            -2.24217962,
+            -2.03472,
+            -2.72612763,
+            -2.7071123,
+            -2.75706683,
+            -2.68925596,
+            -2.77160335,
+            -2.69528665,
+            -2.70911598,
+        ]
         selector = DirectionalConvexHull(low_dim_idx=[0, 1])
         selector.fit(X, y)
         distances = selector.score_samples(X, y)
-        self.assertTrue(np.all(distances >= -1e-12))
+        self.assertTrue(np.all(distances >= -selector.tolerance))
 
     def test_score_function_warnings(self):
         """
@@ -152,20 +173,6 @@ class TestDirectionalConvexHull(unittest.TestCase):
         # dummy y data, not important for the test
         y = [1.0, 2.0, 3.0]
         selector.fit(X, y)
-
-        # check for score_samples
-        with warnings.catch_warnings(record=True) as warning:
-            # Cause all warnings to always be triggered.
-            warnings.simplefilter("always")
-            # Trigger a warning because it is outsite of range [0, 3]
-            selector.score_samples([[4.0, 1.0]], [1.0])
-            # Verify some things
-            self.assertTrue(len(warning) == 1)
-            self.assertTrue(issubclass(warning[0].category, UserWarning))
-            self.assertTrue(
-                "There are samples in X with a low-dimensional part that is outside of the range of the convex surface.  Distance will contain nans."
-                == str(warning[0].message)
-            )
 
         # check for score_feature_matrix
         with warnings.catch_warnings(record=True) as warning:

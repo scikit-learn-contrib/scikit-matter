@@ -399,6 +399,29 @@ class PCovCUR(_PCovCUR):
         )
 
 
+def _directional_distance(equations, points):
+    """
+    Computes the distance of the points to the planes defined by the equations
+    with respect to the direction of the first dimension.
+
+    equations : ndarray of shape (n_facets, n_dim)
+                each row contains the coefficienst for the plane equation of the form
+                equations[i, 0]*x_1 + ...
+                    + equations[i, -2]*x_{n_dim} = equations[i, -1]
+                -equations[i, -1] is the offset
+    points    : ndarray of shape (n_samples, n_dim)
+                points to compute the directional distance from
+
+    Returns
+    -------
+    directional_distance : ndarray of shape (nsamples, nequations)
+                closest distance wrt. the first dimension of the point to the planes
+                defined by the equations
+    """
+    orthogonal_distances = -(points @ equations[:, :-1].T) - equations[:, -1:].T
+    return -orthogonal_distances / equations[:, :1].T
+
+
 class DirectionalConvexHull:
     """
     Performs Sample Selection by constructing a Directional Convex Hull and determining the distance to the hull as outlined in the reference
@@ -410,6 +433,14 @@ class DirectionalConvexHull:
                    Indices of columns of X containing features to be used for the
                    directional convex hull construction (also known as the low-
                    dimensional (LD) hull). By default [0] is used.
+
+    tolerance      : float, default=1.0E-12
+                   Tolerance for the negative distances to the directional
+                   convex hull to consider a point below the convex hull. Depending
+                   if a point is below or above the convex hull the distance is
+                   differently computed. A very low value can result in a completely
+                   wrong distances. Distances cannot be distinguished from zero  up
+                   to tolerance. It is recommended to leave the default setting.
 
     Attributes
     ----------
@@ -426,22 +457,20 @@ class DirectionalConvexHull:
                     Interpolater for the features in the high-
                     dimensional space
 
-    interpolator_y_  : scipy.interpolate.interpnd.LinearNDInterpolator
-                    Interpolater for the targets y
-
     References
     ----------
     .. [dch] A. Anelli, E. A. Engel, C. J. Pickard and M. Ceriotti,
              Physical Review Materials, 2018.
     """
 
-    def __init__(self, low_dim_idx=None):
+    def __init__(self, low_dim_idx=None, tolerance=1e-12):
         self.low_dim_idx = low_dim_idx
 
         if low_dim_idx is None:
             self.low_dim_idx = [0]
         else:
             self.low_dim_idx = low_dim_idx
+        self.tolerance = tolerance
 
     def fit(self, X, y):
         """
@@ -490,14 +519,21 @@ class DirectionalConvexHull:
         # create high-dimensional feature matrix
         high_dim_feats = X[:, self.high_dim_idx_]
         # get scipy convex hull
-        convex_hull = ConvexHull(convex_hull_data)
+        self.convex_hull_ = ConvexHull(convex_hull_data, incremental=True)
         # get normal equations to the hull simplices
-        y_normal = convex_hull.equations[:, 0]
+        y_normal = self.convex_hull_.equations[:, 0]
 
         # get vertices_idx of the convex hull
-        self.selected_idx_ = np.unique(
-            convex_hull.simplices[np.where(y_normal < 0)[0]].flatten()
-        )
+        directional_facets_idx = np.where(y_normal < 0)[0]
+        self.directional_simplices_ = self.convex_hull_.simplices[
+            directional_facets_idx
+        ]
+        self._directional_equations_ = self.convex_hull_.equations[
+            directional_facets_idx
+        ]
+
+        self.selected_idx_ = np.unique(self.directional_simplices_.flatten())
+        self._directional_points_ = convex_hull_data[self.selected_idx_]
 
         # required for the score_feature_matrix function
         self.interpolator_high_dim_ = _linear_interpolator(
@@ -505,16 +541,14 @@ class DirectionalConvexHull:
             values=high_dim_feats[self.selected_idx_],
         )
 
-        # required to compute the distance of the low-dimensional feature to the convex hull
-        self.interpolator_y_ = _linear_interpolator(
-            points=convex_hull_data[self.selected_idx_, 1:],
-            values=convex_hull_data[self.selected_idx_, 0],
-        )
-
         return self
 
+    @property
+    def directional_vertices_(self):
+        return self.selected_idx_
+
     def _check_X_y(self, X, y):
-        return check_X_y(X, y, ensure_min_features=2, multi_output=False)
+        return check_X_y(X, y, ensure_min_features=1, multi_output=False)
 
     def _check_is_fitted(self, X):
         check_is_fitted(
@@ -522,7 +556,6 @@ class DirectionalConvexHull:
             [
                 "high_dim_idx_",
                 "interpolator_high_dim_",
-                "interpolator_y_",
                 "selected_idx_",
             ],
         )
@@ -556,7 +589,7 @@ class DirectionalConvexHull:
 
         Returns
         -------
-        dch_distance : numpy.array of shape (n_samples, len(high_dim_idx_))
+        dch_distance : ndarray of shape (n_samples, len(high_dim_idx_))
             The distance (residuals)  of samples to the convex hull in
             the higher-dimensional space.
         """
@@ -565,17 +598,46 @@ class DirectionalConvexHull:
 
         # features used for the convex hull construction
         low_dim_feats = X[:, self.low_dim_idx]
+        hull_space_data = np.hstack((y.reshape(-1, 1), low_dim_feats))
 
         # the X points projected on the convex surface
-        interpolated_y = self.interpolator_y_(low_dim_feats).reshape(y.shape)
+        return self._directional_convex_hull_distance(hull_space_data).reshape(y.shape)
 
-        if np.any(np.isnan(interpolated_y)):
-            warnings.warn(
-                "There are samples in X with a low-dimensional part that is outside of the range of the convex surface. Distance will contain nans.",
-                UserWarning,
-            )
+    def _directional_convex_hull_distance(self, points):
+        """
+        Get the distance to the fitted directional convex hull in the target dimension y.
 
-        return y - interpolated_y
+        If a point lies above the convex hull, it will have a positive distance.
+        If a point lies below the convex hull, it will have a negative distance - this should only
+        occur if you pass a point that the convex hull has not been fitted on in the `fit` function.
+        If a point lies on the convex hull, it will have a distance of zero.
+
+        Parameters
+        ----------
+        points : The points for which you would like to calculate the distance to the
+                 fitted directional convex hull.
+        """
+        # directional distances to all plane equations
+        all_directional_distances = _directional_distance(
+            self._directional_equations_, points
+        )
+        print(all_directional_distances)
+        # we get negative distances for each plane to check if any distance is below the threshold
+        below_directional_convex_hull = np.any(
+            all_directional_distances < -self.tolerance, axis=1
+        )
+        # directional distances to corresponding plane equation
+        directional_distances = np.zeros(len(points))
+        directional_distances[~below_directional_convex_hull] = np.min(
+            all_directional_distances[~below_directional_convex_hull], axis=1
+        )
+        # some distances can be positive, so we take the max of all negative distances
+        negative_directional_distances = all_directional_distances.copy()
+        negative_directional_distances[all_directional_distances > 0] = -np.inf
+        directional_distances[below_directional_convex_hull] = np.max(
+            negative_directional_distances[below_directional_convex_hull], axis=1
+        )
+        return directional_distances
 
     def score_feature_matrix(self, X):
         """
