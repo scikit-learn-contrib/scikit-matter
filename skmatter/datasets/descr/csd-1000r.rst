@@ -52,4 +52,4 @@ References
 Reference Code
 --------------
 
-.. literalinclude:: /../../skmatter/datasets/make_csd_1000r.py
+.. literalinclude:: ../make_csd_1000r.py
