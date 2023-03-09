@@ -378,7 +378,7 @@ def pointwise_local_reconstruction_error(
 
     .. math::
 
-        LRE^{(i)}(X,Y) = \|\mathbf{x}'_i - \tilde{\mathbf{x}}'_i\|^2`
+        LRE^{(i)}(X,Y) = \|\mathbf{x}'_i - \tilde{\mathbf{x}}'_i\|^2
 
     If used with X and Y of shape (n_samples, n_features) it computes the pointwise
     local reconstruction error of the features as defined in Ref. [Goscinski2021]_.
