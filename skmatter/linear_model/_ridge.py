@@ -15,7 +15,9 @@ class RidgeRegression2FoldCV(MultiOutputMixin, RegressorMixin):
     r"""Ridge regression with an efficient 2-fold cross-validation method using the SVD solver.
     Minimizes the objective function:
 
-    :math: \|y - Xw\|^2_2 + \alpha \|w\|^2_2, % # noqa: W605
+    .. math::
+
+        \|y - Xw\|^2_2 + \alpha \|w\|^2_2,
 
     while the alpha value is determined with a 2-fold cross-validation from a list of
     alpha values. It is more efficient than doing a 2-fold cross-validation using
