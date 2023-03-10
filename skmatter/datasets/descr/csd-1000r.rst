@@ -46,8 +46,8 @@ Data Set Characteristics
 References
 ----------
 
-   .. [C1] https://github.com/lab-cosmo/librascal commit ade202a6
-   .. [C2] https://github.com/lab-cosmo/scikit-matter commit 4ed1d92
+.. [C1] https://github.com/lab-cosmo/librascal commit ade202a6
+.. [C2] https://github.com/lab-cosmo/scikit-matter commit 4ed1d92
 
 Reference Code
 --------------
