@@ -1,7 +1,7 @@
 .. _who:
 
-who_data
-#########
+WHO dataset
+###########
 
 `who_dataset.csv` is a compilation of multiple publically-available datasets
 through data.worldbank.org. Specifically, the following versioned datasets are used:

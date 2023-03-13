@@ -292,3 +292,29 @@ spot for Voronoi FPS is when the number of selectable samples is already enough
 to divide the space with Voronoi polyhedrons, but not yet comparable to the total
 number of samples, when the cost of bookkeeping significantly degrades the speed
 of work compared to FPS.
+
+.. _DCH-api:
+
+Directional Convex Hull (DCH)
+#############################
+.. currentmodule:: skmatter.sample_selection._base
+
+.. autoclass :: DirectionalConvexHull
+
+This selector can be instantiated using `skmatter.sample_selection.DirectionalConvexHull`.
+
+.. code-block:: python
+
+    from skmatter.sample_selection import DirectionalConvexHull
+    selector = DirectionalConvexHull(
+                        # Indices of columns of X to use for fitting
+                        # the convex hull
+                        low_dim_idx=[0,1],
+                        )
+    selector.fit(X,y)
+
+    # Get the distance to the convex hull for samples used to fit the
+    # convex hull. This can also be called using other samples (X_new)
+    # and corresponding properties (y_new) that were not used to fit
+    # the hull.
+    Xr = selector.score_samples(X,y)
