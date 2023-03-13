@@ -52,3 +52,4 @@ References
 .. [D1] https://github.com/lab-cosmo/librascal commit 8d9ad7a
 .. [D2] https://scikit-learn.org/stable/modules/generated/sklearn.decomposition.PCA.html
 
+=======
