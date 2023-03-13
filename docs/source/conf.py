@@ -52,9 +52,6 @@ for nb in os.listdir(os.path.join(ROOT, "examples")):
             with open(nb_out, "w") as out_stream:
                 converted = exporter.from_filename(nb_in)[0]
                 out_stream.write(converted)
-            print("converted")
-            print(converted)
-        break
 
 import skmatter  # noqa
 
