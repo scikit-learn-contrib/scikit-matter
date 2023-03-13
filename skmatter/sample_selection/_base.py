@@ -621,7 +621,6 @@ class DirectionalConvexHull:
         all_directional_distances = _directional_distance(
             self._directional_equations_, points
         )
-        print(all_directional_distances)
         # we get negative distances for each plane to check if any distance is below the threshold
         below_directional_convex_hull = np.any(
             all_directional_distances < -self.tolerance, axis=1
