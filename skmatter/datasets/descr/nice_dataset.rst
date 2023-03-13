@@ -1,7 +1,7 @@
 .. _nice-dataset:
 
 NICE dataset
-##########
+############
 This is a toy dataset containing NICE[1, 4](N-body Iterative Contraction of Equivariants) features for first 500 configurations of the dataset[2, 3] with randomly displaced methane configurations. 
 
 Function Call
