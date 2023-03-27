@@ -8,4 +8,4 @@ __pycache__
 .tox/
 build/
 dist/
-docs/source/read-only-examples
+docs/src/read-only-examples

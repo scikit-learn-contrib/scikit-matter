@@ -2,8 +2,8 @@ import unittest
 
 import numpy as np
 from sklearn import exceptions
-
 from sklearn.datasets import fetch_california_housing as load
+
 from skmatter.sample_selection import CUR
 
 

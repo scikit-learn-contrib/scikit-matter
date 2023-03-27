@@ -1,9 +1,7 @@
+import unittest
 import warnings
 
-import unittest
-
 import numpy as np
-
 from sklearn.datasets import load_diabetes
 from sklearn.decomposition import PCA
 from sklearn.utils.validation import NotFittedError
@@ -24,25 +22,33 @@ class TestDirectionalConvexHull(unittest.TestCase):
 
     def test_selected_idx_and_scores(self):
         """
-        This test is a regression test that checks that DCH selects correct vertices and gets correct
-        distances from the `score_feature_matrix` and `score_samples` functions.
+        This test is a regression test that checks that DCH selects correct vertices and
+        gets correct distances from the `score_feature_matrix` and `score_samples`
+        functions.
         """
         selector = DirectionalConvexHull()
         selector.fit(self.T, self.y)
         self.assertTrue(np.allclose(selector.selected_idx_, self.idx))
 
         feature_residuals = selector.score_feature_matrix(self.T)
+        val = np.max(
+            np.abs(
+                (self.feature_residuals_100 - feature_residuals[100])
+                / self.feature_residuals_100
+            )
+        )
         self.assertTrue(
             np.allclose(self.feature_residuals_100, feature_residuals[100], rtol=1e-6),
-            f"Maximum relative error 1e-6 <"
-            f"{np.max(np.abs((self.feature_residuals_100-feature_residuals[100])/self.feature_residuals_100))}",
+            f"Maximum relative error 1e-6 < {val}",
         )
 
         y_distances = selector.score_samples(self.T, self.y)
+        val = np.max(
+            np.abs((self.y_distance_100 - y_distances[100]) / self.y_distance_100)
+        )
         self.assertTrue(
             np.allclose(self.y_distance_100, y_distances[100], rtol=1e-6),
-            f"Maximum relative error 1e-6 <"
-            f"{np.max(np.abs((self.y_distance_100-y_distances[100])/self.y_distance_100))}",
+            f"Maximum relative error 1e-6 < {val}",
         )
 
     def test_cols(self):
@@ -85,9 +91,10 @@ class TestDirectionalConvexHull(unittest.TestCase):
         selector.fit(self.T, self.y)
         with self.assertRaises(ValueError) as cm:
             selector.score_feature_matrix(self.X)
-        self.assertTrue(
-            str(cm.exception)
-            == "X has 10 features, but DirectionalConvexHull is expecting 4 features as input."
+        self.assertEqual(
+            str(cm.exception),
+            "X has 10 features, but DirectionalConvexHull is expecting 4 features as "
+            "input.",
         )
 
     def test_negative_score(self):
@@ -106,9 +113,11 @@ class TestDirectionalConvexHull(unittest.TestCase):
 
     def test_positive_score(self):
         """
-        Ensure that when we score on the points we fitted that we obtain only >= 0 distances
-        In an old implementation we observed this bug for the dataset we use in this test
-        (see issue #162)
+        Ensure that when we score on the points we fitted that we obtain only >= 0
+        distances.
+
+        In an old implementation we observed this bug for the dataset we use in this
+        test (see issue #162).
         """
         X = [
             [1.88421449, 0.86675162],
@@ -161,7 +170,8 @@ class TestDirectionalConvexHull(unittest.TestCase):
 
     def test_score_function_warnings(self):
         """
-        Ensure that calling `score_samples` with points outside the range causes an error
+        Ensure that calling `score_samples` with points outside the range causes an
+        error.
         """
 
         selector = DirectionalConvexHull(low_dim_idx=[0])
@@ -184,7 +194,8 @@ class TestDirectionalConvexHull(unittest.TestCase):
             self.assertTrue(len(warning) == 1)
             self.assertTrue(issubclass(warning[0].category, UserWarning))
             self.assertTrue(
-                "There are samples in X with a low-dimensional part that is outside of the range of the convex surface. Distance will contain nans."
+                "There are samples in X with a low-dimensional part that is outside "
+                "of the range of the convex surface. Distance will contain nans."
                 == str(warning[0].message)
             )
 

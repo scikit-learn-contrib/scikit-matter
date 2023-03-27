@@ -55,7 +55,8 @@ class TestGreedy(unittest.TestCase):
             selector.fit(self.X, warm_start=True)
         self.assertTrue(
             str(cm.exception),
-            "Cannot fit with warm_start=True without having been previously initialized",
+            "Cannot fit with warm_start=True without having been previously "
+            "initialized",
         )
 
     def test_bad_y(self):
@@ -122,7 +123,8 @@ class TestGreedy(unittest.TestCase):
             selector_feature.fit(X)
         self.assertEqual(
             str(cm.exception),
-            "Found array with 1 feature(s) (shape=(5, 1)) while a minimum of 2 is required.",
+            "Found array with 1 feature(s) (shape=(5, 1)) while a minimum of 2 is "
+            "required.",
         )
         X = X.reshape(1, -1)
         selector_feature.fit(X)
@@ -130,7 +132,8 @@ class TestGreedy(unittest.TestCase):
             selector_sample.fit(X)
         self.assertEqual(
             str(cm.exception),
-            "Found array with 1 sample(s) (shape=(1, 5)) while a minimum of 2 is required.",
+            "Found array with 1 sample(s) (shape=(1, 5)) while a minimum of 2 is "
+            "required.",
         )
 
 

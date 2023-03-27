@@ -3,4 +3,5 @@ Guillaume Fraux
 Sergei Kliavinek
 Alexander Goscinski
 Benjamin A. Helfrecht
+Victor P. Principe
 Michele Ceriotti

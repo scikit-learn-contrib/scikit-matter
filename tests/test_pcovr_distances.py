@@ -4,10 +4,7 @@ import numpy as np
 import scipy
 from sklearn.datasets import load_diabetes as get_dataset
 
-from skmatter.utils import (
-    pcovr_covariance,
-    pcovr_kernel,
-)
+from skmatter.utils import pcovr_covariance, pcovr_kernel
 
 
 class CovarianceTest(unittest.TestCase):

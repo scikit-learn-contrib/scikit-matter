@@ -4,16 +4,10 @@ import numpy as np
 from sklearn import exceptions
 from sklearn.datasets import load_diabetes as get_dataset
 from sklearn.kernel_ridge import KernelRidge
-from sklearn.linear_model import (
-    Ridge,
-    RidgeCV,
-)
+from sklearn.linear_model import Ridge, RidgeCV
 from sklearn.utils.validation import check_X_y
 
-from skmatter.decomposition import (
-    KernelPCovR,
-    PCovR,
-)
+from skmatter.decomposition import KernelPCovR, PCovR
 from skmatter.preprocessing import StandardFlexibleScaler as SFS
 
 
@@ -47,7 +41,7 @@ class KernelPCovRBaseTest(unittest.TestCase):
             regressor=regressor,
             n_components=n_components,
             svd_solver=kwargs.pop("svd_solver", "full"),
-            **kwargs
+            **kwargs,
         )
 
     def setUp(self):
@@ -333,7 +327,7 @@ class KernelTests(KernelPCovRBaseTest):
                         kernel=kernel, **kernel_params.get(kernel, {})
                     ),
                     kernel=kernel,
-                    **kernel_params.get(kernel, {})
+                    **kernel_params.get(kernel, {}),
                 )
                 kpcovr.fit(self.X, self.Y)
 
@@ -358,7 +352,7 @@ class KernelTests(KernelPCovRBaseTest):
             regressor=KernelRidge(alpha=ridge.alpha_, kernel="linear"),
             kernel="linear",
             fit_inverse_transform=True,
-            **hypers
+            **hypers,
         )
         kpcovr.fit(self.X, self.Y)
         ly = (

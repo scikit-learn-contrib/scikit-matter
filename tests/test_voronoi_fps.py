@@ -2,12 +2,9 @@ import unittest
 
 import numpy as np
 from sklearn.exceptions import NotFittedError
-
-from skmatter.sample_selection import (
-    FPS,
-    VoronoiFPS,
-)
 from test_sample_simple_fps import TestFPS
+
+from skmatter.sample_selection import FPS, VoronoiFPS
 
 
 class TestVoronoiFPS(TestFPS):

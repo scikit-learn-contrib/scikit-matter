@@ -1,9 +1,10 @@
 import unittest
+
 import numpy as np
 
 from skmatter.datasets import (
-    load_degenerate_CH4_manifold,
     load_csd_1000r,
+    load_degenerate_CH4_manifold,
     load_nice_dataset,
     load_who_dataset,
 )
@@ -67,7 +68,7 @@ class WHOTests(unittest.TestCase):
         cls.shape = (2020, 12)
         cls.value = 5.00977993011475
         try:
-            import pandas as pd  # noqa F401
+            import pandas as pd  # NoQa: F401
 
             cls.has_pandas = True
             cls.who = load_who_dataset()

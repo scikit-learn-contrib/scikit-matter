@@ -1,8 +1,9 @@
 import unittest
 
-from sklearn.datasets import load_iris
-import skmatter.model_selection
 import sklearn.model_selection
+from sklearn.datasets import load_iris
+
+import skmatter.model_selection
 
 
 class SplitTests(unittest.TestCase):
@@ -23,7 +24,8 @@ class SplitTests(unittest.TestCase):
             self.assertTrue((sklearn_outputs[i] == skmatter_outputs[i]).all())
 
     def test_train_test_splits_train_test_overlap(self):
-        # tests that a test/train split which necessitates overlap returns the right number of points in each set
+        # tests that a test/train split which necessitates overlap returns the right
+        # number of points in each set
         X_train, X_test = skmatter.model_selection.train_test_split(
             self.X,
             train_size=0.8,
