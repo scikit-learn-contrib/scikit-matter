@@ -73,6 +73,8 @@ manually).
     # on macOS:
     open docs/build/html/index.html
 
+.. _`sphinx` : https://www.sphinx-doc.org
+
 Issues and Pull Requests
 ########################
 
