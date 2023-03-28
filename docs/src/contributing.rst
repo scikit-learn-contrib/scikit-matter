@@ -24,18 +24,54 @@ and allowing you to edit the code and directly use the updated version.
 Running the tests
 #################
 
+The testsuite is implemented using Python's `unittest`_ framework and should be set-up and
+run in an isolated virtual environment with `tox`_. All tests can be run with
+
 .. code-block:: bash
 
-  cd <scikit-matter PATH>
-  tox -e tests         # unit tests
-  tox -e lint          # code style
-  tox -e format        # format all files
+  tox                  # all tests
 
-You may want to setup your editor to automatically apply the
+If you wish to test only specific functionalities, for example:
+
+.. code-block:: bash
+
+  tox -e lint          # code style
+  tox -e tests         # unit tests
+  tox -e examples      # test the examples
+
+
+You can also use ``tox -e format`` to use tox to do actual formatting instead
+of just testing it. Also, you may want to setup your editor to automatically apply the
 `black <https://black.readthedocs.io/en/stable/>`_ code formatter when saving your
 files, there are plugins to do this with `all major
 editors <https://black.readthedocs.io/en/stable/editor_integration.html>`_.
 
+.. _unittest: https://docs.python.org/3/library/unittest.html
+.. _tox: https://tox.readthedocs.io/en/latest
+
+Contributing to the documentation
+#################################
+
+The documentation is written in reStructuredText (rst) and uses `sphinx`_ documentation
+generator. In order to modify the documentation, first create a local version on your
+machine as described above. Then, build the documentation with
+
+.. code-block:: bash
+
+    tox -e docs
+
+You can then visualize the local documentation with your favorite browser using
+the following command (or open the :file:`docs/build/html/index.html` file
+manually).
+
+.. code-block:: bash
+
+    # on linux, depending on what package you have installed:
+    xdg-open docs/build/html/index.html
+    firefox docs/build/html/index.html
+
+    # on macOS:
+    open docs/build/html/index.html
 
 Issues and Pull Requests
 ########################

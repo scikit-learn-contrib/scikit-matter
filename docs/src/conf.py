@@ -12,10 +12,14 @@
 
 import os
 import sys
+from datetime import datetime
+
 import sphinx_rtd_theme
 from nbconvert import NotebookExporter
 from traitlets.config import Config
-from datetime import datetime
+
+import skmatter
+
 
 ROOT = os.path.abspath(os.path.join("..", ".."))
 sys.path.insert(0, ROOT)
@@ -53,8 +57,6 @@ for nb in os.listdir(os.path.join(ROOT, "examples")):
             with open(nb_out, "w") as out_stream:
                 converted = exporter.from_filename(nb_in)[0]
                 out_stream.write(converted)
-
-import skmatter  # NoQa
 
 # -- Project information -----------------------------------------------------
 

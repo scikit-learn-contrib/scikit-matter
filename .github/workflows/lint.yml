@@ -16,5 +16,5 @@ jobs:
         python-version: "3.10"
     - run: pip install tox
 
-    - name: Test Lint
+    - name: Lint the code
       run: tox -e lint
