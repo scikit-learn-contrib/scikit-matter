@@ -210,7 +210,7 @@ regression_error_for_xy_plane_projected_cube_zero_padded = np.linalg.norm(
 # projection the orthogonal condition does not allow the same reconstruction
 
 
-fig, (ax_xy) = plt.subplots(1, 1, figsize=(5, 4))
+fig, ax_xy = plt.subplots(figsize=(7.5, 4))
 
 ax_xy.scatter(
     xy_plane_projected_cube[:, 0],
@@ -236,7 +236,7 @@ ax_xy.scatter(
 
 ax_xy.set_title("xy plane")
 
-ax_xy.legend(bbox_to_anchor=(1, 1), loc="upper left")
+ax_xy.legend(loc="upper left", bbox_to_anchor=(1, 1))
 
 fig.tight_layout()
 fig.show()
@@ -246,17 +246,15 @@ fig.show()
 # The three dimensional cubic structure can be seen when no projector is used
 # (``use_orthogonal_projector`` is :py:obj:`False`). Now we plot the prediction error.
 
-fig, (ax_with_orth, ax_wo_orth) = plt.subplots(1, 2, figsize=(10, 3.8), sharey=True)
+fig, (ax_with_orth, ax_wo_orth) = plt.subplots(ncols=2, figsize=(10, 4.5), sharey=True)
 
 ax_with_orth.scatter(
     z_scalings,
     regression_errors_for_z_scaled_square_prism_using_orthogonal_projector,
-    label="Regression error for z-scaled cube",
 )
 ax_with_orth.scatter(
     0,
     regression_error_for_xy_plane_projected_cube_using_orthogonal_projector,
-    label="Regression error for xy_plane_projected_cube",
 )
 ax_with_orth.set_title(
     "Orthogonal regression error for\n features using orthogonal projector\n (use_orthogonal_projector=True)",
@@ -268,20 +266,21 @@ ax_with_orth.set_ylabel("orthogonal regression error", fontsize=14)
 ax_wo_orth.scatter(
     z_scalings,
     regression_errors_for_z_scaled_square_prism_zero_padded,
-    label="Regression error for z-scaled square prism",
+    label="z-scaled square prism",
 )
 ax_wo_orth.scatter(
     0,
     regression_error_for_xy_plane_projected_cube_zero_padded,
-    label="Regression error for xy_plane_projected_cube",
+    label="xy_plane_projected_cube",
 )
 ax_wo_orth.set_title(
     "Orthogonal regression error for\n zero padded features\n (use_orthogonal_projector=False) ",
+    fontsize=14,
 )
 ax_wo_orth.set_xlabel("scaling in z direction")
-ax_wo_orth.legend(loc="upper right", bbox_to_anchor=(0.7, -0.2))
-
 fig.tight_layout()
+ax_wo_orth.legend(loc="lower left", title="Regression error", fontsize=12)
+
 fig.show()
 
 # %%
@@ -292,3 +291,5 @@ fig.show()
 # non-analytic behavior is not present, since it uses the padding solution.
 # Both methods have valid reasons to be applied and have their advantages and
 # disadvantages depending on the use case.
+
+# %%

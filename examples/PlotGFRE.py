@@ -35,10 +35,7 @@ from skmatter.metrics import (
 
 mpl.rc("font", size=20)
 
-# %%
-#
 # load features
-
 degenerate_manifold = load_degenerate_CH4_manifold()
 power_spectrum_features = degenerate_manifold.data.SOAP_power_spectrum
 bispectrum_features = degenerate_manifold.data.SOAP_bispectrum
@@ -49,34 +46,24 @@ bispectrum_features = degenerate_manifold.data.SOAP_bispectrum
 gfre_matrix = np.zeros((2, 2))
 print("Computing GFRE...")
 
-# %%
-#
-# reconstruction error of power spectrum features using power spectrum features
 
+# reconstruction error of power spectrum features using power spectrum features
 gfre_matrix[0, 0] = global_reconstruction_error(
     power_spectrum_features, power_spectrum_features
 )
 
-# %%
-#
 # reconstruction error of bispectrum features using power spectrum features
-
 gfre_matrix[0, 1] = global_reconstruction_error(
     power_spectrum_features, bispectrum_features
 )
 
-# %%
-#
-# reconstruction error of power spectrum features using bispectrum features
 
+# reconstruction error of power spectrum features using bispectrum features
 gfre_matrix[1, 0] = global_reconstruction_error(
     bispectrum_features, power_spectrum_features
 )
 
-# %%
-#
 # reconstruction error of bispectrum features using bispectrum features
-
 gfre_matrix[1, 1] = global_reconstruction_error(
     bispectrum_features, bispectrum_features
 )
@@ -91,34 +78,24 @@ print("Computing GFRE finished.")
 gfrd_matrix = np.zeros((2, 2))
 print("Computing GFRD...")
 
-# %%
-#
-# reconstruction distortion of power spectrum features using power spectrum features
 
+# reconstruction distortion of power spectrum features using power spectrum features
 gfrd_matrix[0, 0] = global_reconstruction_distortion(
     power_spectrum_features, power_spectrum_features
 )
 
-# %%
-#
 # reconstruction distortion of power spectrum features using bispectrum features
-
 gfrd_matrix[0, 1] = global_reconstruction_distortion(
     power_spectrum_features, bispectrum_features
 )
 
-# %%
-#
 # reconstruction distortion of bispectrum features using power spectrum features
-
 gfrd_matrix[1, 0] = global_reconstruction_distortion(
     bispectrum_features, power_spectrum_features
 )
 
-# %%
-#
-# reconstruction distortion of bipsectrum features using bispectrum features
 
+# reconstruction distortion of bipsectrum features using bispectrum features
 gfrd_matrix[1, 1] = global_reconstruction_distortion(
     bispectrum_features, bispectrum_features
 )

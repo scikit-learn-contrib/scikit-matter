@@ -33,8 +33,6 @@ from skmatter.preprocessing import StandardFlexibleScaler
 
 mpl.rc("font", size=20)
 
-# %%
-#
 # load features
 degenerate_manifold = load_degenerate_CH4_manifold()
 power_spectrum_features = degenerate_manifold.data.SOAP_power_spectrum
@@ -97,14 +95,14 @@ rbf_power_spectrum_features = compute_standardized_rbf_rkhs_features(
 
 # %%
 #
+
 # some split into train and test idx
 idx = np.arange(len(power_spectrum_features))
 
 train_idx, test_idx = train_test_split(idx, random_state=42)
 
 print("Computing pointwise GFRE...")
-# %%
-#
+
 # pointwise global reconstruction error of bispectrum features using power spectrum features
 power_spectrum_to_bispectrum_pointwise_gfre = pointwise_global_reconstruction_error(
     power_spectrum_features, bispectrum_features, train_idx=train_idx, test_idx=test_idx
@@ -121,14 +119,12 @@ power_spectrum_rbf_to_bispectrum_pointwise_gfre = pointwise_global_reconstructio
 print("Computing pointwise GFRE finished.")
 
 print("Computing GFRE...")
-# %%
-#
+
 # global reconstruction error of bispectrum features using power spectrum features
 power_spectrum_to_bispectrum_gfre = global_reconstruction_error(
     power_spectrum_features, bispectrum_features, train_idx=train_idx, test_idx=test_idx
 )
-# %%
-#
+
 # global reconstruction error of bispectrum features using power spectrum features mapped to the RKHS
 power_spectrum_rbf_to_bispectrum_gfre = global_reconstruction_error(
     rbf_power_spectrum_features,
@@ -142,7 +138,6 @@ print("Computing GFRE finished.")
 
 # %%
 #
-
 
 fig, axes = plt.subplots(1, 1, figsize=(12, 7))
 

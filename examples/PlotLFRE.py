@@ -30,18 +30,11 @@ from skmatter.metrics import pointwise_local_reconstruction_error
 
 mpl.rc("font", size=20)
 
-# %%
-#
-# load features
 
+# load features
 degenerate_manifold = load_degenerate_CH4_manifold()
 power_spectrum_features = degenerate_manifold.data.SOAP_power_spectrum
 bispectrum_features = degenerate_manifold.data.SOAP_bispectrum
-
-
-# %%
-#
-
 
 print(degenerate_manifold.DESCR)
 
@@ -55,7 +48,7 @@ n_local_points = 20
 print("Computing pointwise LFRE...")
 
 # %%
-#
+
 # local reconstruction error of power spectrum features using bispectrum features
 power_spectrum_to_bispectrum_pointwise_lfre = pointwise_local_reconstruction_error(
     power_spectrum_features,
@@ -66,8 +59,7 @@ power_spectrum_to_bispectrum_pointwise_lfre = pointwise_local_reconstruction_err
     estimator=None,
     n_jobs=4,
 )
-# %%
-#
+
 # local reconstruction error of bispectrum features using power spectrum features
 bispectrum_to_power_spectrum_pointwise_lfre = pointwise_local_reconstruction_error(
     bispectrum_features,
