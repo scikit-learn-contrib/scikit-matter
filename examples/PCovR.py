@@ -164,5 +164,5 @@ fig.tight_layout()
 # it's important to consider the nature of the property you are learning and the samples
 # you are comparing before constructing a kernel, for example, whether the analysis is
 # to be based on whole structures or individual atomic environments. For more detail,
-# see Appendix C of [Helfrecht 2020](https://iopscience.iop.org/article/10.1088/2632-2153/aba9ef)
-# or regarding kernels involving gradients [Musil 2021](https://arxiv.org/pdf/2101.08814.pdf).
+# see Appendix C of `Helfrecht 2020 <https://iopscience.iop.org/article/10.1088/2632-2153/aba9ef>`_
+# or regarding kernels involving gradients `Musil 2021 <https://arxiv.org/pdf/2101.08814.pdf>`_.

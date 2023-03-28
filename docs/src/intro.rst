@@ -1,5 +1,5 @@
 What's in scikit-matter?
-========================
+=======================
 
 ``scikit-matter`` is a collection of `scikit-learn <https://scikit.org/>`_
 compatible utilities that implement methods born out of the materials science

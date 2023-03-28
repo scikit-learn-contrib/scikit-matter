@@ -236,9 +236,10 @@ ax_xy.scatter(
 
 ax_xy.set_title("xy plane")
 
-plt.legend(bbox_to_anchor=(1, 1), loc="upper left")
+ax_xy.legend(bbox_to_anchor=(1, 1), loc="upper left")
 
-plt.show()
+fig.tight_layout()
+fig.show()
 
 # %%
 #
@@ -279,7 +280,9 @@ ax_wo_orth.set_title(
 )
 ax_wo_orth.set_xlabel("scaling in z direction")
 ax_wo_orth.legend(loc="upper right", bbox_to_anchor=(0.7, -0.2))
-plt.show()
+
+fig.tight_layout()
+fig.show()
 
 # %%
 #

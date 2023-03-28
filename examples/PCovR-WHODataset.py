@@ -7,7 +7,6 @@ The Benefits of Kernel PCovR for the WHO Dataset
 # %%
 #
 
-
 import numpy as np
 from matplotlib import pyplot as plt
 from scipy.stats import pearsonr
@@ -23,7 +22,7 @@ from skmatter.preprocessing import StandardFlexibleScaler
 # %%
 #
 # Load the Dataset
-# ================
+# ----------------
 
 
 df = load_who_dataset()["data"]
@@ -55,14 +54,14 @@ for ls in log_scaled:
     print(X_raw[:, columns.index(ls)].min(), X_raw[:, columns.index(ls)].max())
     if ls in columns:
         X_raw[:, columns.index(ls)] = np.log10(X_raw[:, columns.index(ls)])
-y_raw = np.array(df["SP.DYN.LE00.IN"])  # [np.where(df['Year']==2000)[0]])
+y_raw = np.array(df["SP.DYN.LE00.IN"])
 y_raw = y_raw.reshape(-1, 1)
 X_raw.shape
 
 # %%
 #
 # Scale and Center the Features and Targets
-# -----------------------------------------
+# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 x_scaler = StandardFlexibleScaler(column_wise=True)
 X = x_scaler.fit_transform(X_raw)
@@ -79,7 +78,7 @@ X_train, X_test, y_train, y_test = train_test_split(
 # %%
 #
 # Train the Different Linear DR Techniques
-# ========================================
+# ----------------------------------------
 #
 # Best Error for Linear Regression
 
@@ -90,7 +89,7 @@ RidgeCV(cv=5, alphas=np.logspace(-8, 2, 20), fit_intercept=False).fit(
 # %%
 #
 # PCovR
-# -----
+# ^^^^^
 
 pcovr = PCovR(
     n_components=n_components,
@@ -113,7 +112,7 @@ r_pcovr.score(T_test_pcovr, y_test)
 # %%
 #
 # PCA
-# ---
+# ^^^
 
 pca = PCA(
     n_components=n_components,
@@ -140,10 +139,10 @@ for c, x in zip(columns, X.T):
 # %%
 #
 # Train the Different Kernel DR Techniques
-# ========================================
+# ----------------------------------------
 #
 # Select Kernel Hyperparameters
-# -----------------------------
+# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 param_grid = {"gamma": np.logspace(-8, 3, 20), "alpha": np.logspace(-8, 3, 20)}
 clf = KernelRidge(kernel="rbf")
@@ -168,7 +167,7 @@ kernel_params = {"kernel": "rbf", "gamma": gs.best_estimator_.gamma}
 # %%
 #
 # KPCovR
-# ------
+# ^^^^^^
 
 
 kpcovr = KernelPCovR(
@@ -191,7 +190,7 @@ r_kpcovr.score(T_test_kpcovr, y_test)
 # %%
 #
 # KPCA
-# ----
+# ^^^^
 
 kpca = KernelPCA(n_components=n_components, **kernel_params, random_state=0).fit(
     X_train, y_train
@@ -210,7 +209,7 @@ r_kpca.score(T_test_kpca, y_test)
 # %%
 #
 # Correlation of the different variables with the KPCovR axes
-# -----------------------------------------------------------
+# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 for c, x in zip(columns, X.T):
     print(c, pearsonr(x, T_kpcovr[:, 0])[0], pearsonr(x, T_kpcovr[:, 1])[0])
@@ -218,7 +217,7 @@ for c, x in zip(columns, X.T):
 # %%
 #
 # Plot Our Results
-# ================
+# ----------------
 
 fig, axes = plt.subplot_mosaic(
     """

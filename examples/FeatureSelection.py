@@ -67,7 +67,7 @@ plt.show()
 # %%
 #
 # Non-iterative feature selection with CUR + PCovR
-# ------------------------------------------------
+# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 #
 # Computing a non-iterative CUR is more efficient, although can resultin poorer
 # performance for larger datasets. you can also use a greater number of

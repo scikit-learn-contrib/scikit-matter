@@ -63,10 +63,7 @@ intersphinx_mapping = {
     "matplotlib": ("https://matplotlib.org/stable/", None),
     "numpy": ("https://numpy.org/doc/stable/", None),
     "python": ("https://docs.python.org/3/", None),
-    "sklearn": (
-        "http://scikit-learn.org/stable",
-        (None, "./_intersphinx/sklearn-objects.inv"),
-    ),
+    "sklearn": ("https://scikit-learn.org/stable", None),
     "pandas": ("https://pandas.pydata.org/docs/", None),
 }
 

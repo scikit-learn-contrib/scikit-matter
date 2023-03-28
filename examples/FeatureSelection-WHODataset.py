@@ -16,7 +16,8 @@ from skmatter.datasets import load_who_dataset
 from skmatter.feature_selection import CUR, FPS, PCovCUR, PCovFPS
 from skmatter.preprocessing import StandardFlexibleScaler
 
-
+# %%
+#
 # Load the Dataset
 # ----------------
 
@@ -78,7 +79,7 @@ X_raw.shape
 # %%
 #
 # Scale and Center the Features and Targets
-# -----------------------------------------
+# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 x_scaler = StandardFlexibleScaler(column_wise=True)
 X = x_scaler.fit_transform(X_raw)
@@ -95,7 +96,7 @@ X_train, X_test, y_train, y_test = train_test_split(
 # %%
 #
 # Provide an estimated target for the feature selector
-# ----------------------------------------------------
+# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
 kernel_params = {"kernel": "rbf", "gamma": 0.08858667904100832}
@@ -112,7 +113,7 @@ n_select = X.shape[1]
 
 # %%
 # PCov-CUR
-# --------
+# ^^^^^^^^
 
 
 pcur = PCovCUR(n_to_select=n_select, progress_bar=True, mixing=0.0)
@@ -121,7 +122,7 @@ pcur.fit(X_train, yp_train)
 # %%
 #
 # PCov-FPS
-# --------
+# ^^^^^^^^
 
 pfps = PCovFPS(
     n_to_select=n_select,
@@ -134,7 +135,7 @@ pfps.fit(X_train, yp_train)
 # %%
 #
 # CUR
-# ---
+# ^^^
 
 cur = CUR(n_to_select=n_select, progress_bar=True)
 cur.fit(X_train, y_train)
@@ -143,15 +144,15 @@ cur.fit(X_train, y_train)
 # %%
 #
 # FPS
-# ---
+# ^^^
 
 fps = FPS(n_to_select=n_select, progress_bar=True, initialize=cur.selected_idx_[0])
 fps.fit(X_train, y_train)
 
 # %%
 #
-# (For Comparison) Recurisive Feature Addition
-# --------------------------------------------
+# (For Comparison) Recursive Feature Addition
+# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
 class RecursiveFeatureAddition:
@@ -180,7 +181,7 @@ rfa = RecursiveFeatureAddition(n_select).fit(X_train, y_train)
 # %%
 #
 # Plot our Results
-# ================
+# ----------------
 
 
 fig, axes = plt.subplots(

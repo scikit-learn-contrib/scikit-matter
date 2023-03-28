@@ -33,7 +33,7 @@ y_scaled = y_scaler.fit_transform(y)
 # %%
 #
 # Use the default regressor in PCovR
-# ==================================
+# ----------------------------------
 #
 # When there is no regressor supplied, PCovR uses
 # ``sklearn.linear_model.Ridge('alpha':1e-6, 'fit_intercept':False, 'tol':1e-12)``.
@@ -50,7 +50,7 @@ print(f"Regressor is {pcovr1.regressor_} and fit took {1e3 * (t1 - t0):0.2} ms."
 # %%
 #
 # Use a fitted regressor
-# ======================
+# ----------------------
 #
 # You can pass a fitted regressor to PCovR to rely on the predetermined
 # regression parameters. Currently, scikit-matter supports ``scikit-learn``
@@ -80,7 +80,7 @@ print(f"Regressor is {pcovr2.regressor_} and fit took {1e3 * (t1 - t0):0.2} ms."
 # %%
 #
 # Use a pre-predicted y
-# =====================
+# ---------------------
 #
 # With ``regressor='precomputed'``, you can pass a regression output :math:`\hat{Y}` and
 # optional regression weights :math:`W` to PCovR. If ``W=None``, then PCovR will determine
@@ -110,7 +110,7 @@ print(f"Fit took {1e3 * (t1 - t0):0.2} ms.")
 # %%
 #
 # Comparing Results
-# =================
+# -----------------
 #
 # Because we used the same regressor in all three models, they will yield the same result.
 

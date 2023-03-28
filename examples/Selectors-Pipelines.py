@@ -23,7 +23,7 @@ from skmatter.feature_selection import CUR, FPS
 # %%
 #
 # Simple integration of scikit-matter selectors
-# =============================================
+# ---------------------------------------------
 #
 # This example shows how to use FPS to subselect features before training a RidgeCV.
 
@@ -50,7 +50,7 @@ plt.show()
 # %%
 #
 # Stacking selectors one after another
-# ====================================
+# ------------------------------------
 #
 # This example shows how to use an FPS, then CUR selector
 # to subselect features before training a RidgeCV.

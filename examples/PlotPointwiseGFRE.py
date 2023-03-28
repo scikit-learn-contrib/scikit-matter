@@ -50,7 +50,7 @@ bispectrum_features = degenerate_manifold.data.SOAP_bispectrum
 #       \exp(-\gamma \|\mathbf{x}-\mathbf{x}'\|^2),\quad \gamma\in\mathbb{R}_+
 #
 # The projected RKHS features are computed using the eigendecomposition of the
-# positive-definite kernel matrix :math:`K``
+# positive-definite kernel matrix :math:`K`
 #
 # .. math::
 #   K = ADA^T = AD^{\frac12}(AD^{\frac12})^T = \Phi\Phi^T

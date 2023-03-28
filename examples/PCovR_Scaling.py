@@ -143,6 +143,6 @@ fig.show()
 
 # %%
 #
-# **Note: when the relative magnitude of the features or targets is important, such as
-# in load_csd_1000r, one should use the `StandardFlexibleScaler` provided by
-# ``scikit-matter``.**
+# **Note**: When the relative magnitude of the features or targets is important, such
+# as in :func:`skmatter.datasets.load_csd_1000r`, one should use the
+# :class:`skmatter.preprocessing.StandardFlexibleScaler`.
