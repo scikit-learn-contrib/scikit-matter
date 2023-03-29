@@ -11,7 +11,14 @@ Install from source
 
   git clone https://github.com/lab-cosmo/scikit-matter
   cd scikit-matter
-  python setup.py install --user
+  pip install .
+
+Alternatively, if you don't have special privileges, install
+the package using the ``--user`` flag:
+
+.. code-block:: bash
+
+  pip install . --user
 
 You're ready to import skmatter from your code! Have a look at the :ref:`api-reference`
 for how to use the code.
