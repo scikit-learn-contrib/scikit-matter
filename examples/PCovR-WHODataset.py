@@ -15,9 +15,11 @@ from sklearn.kernel_ridge import KernelRidge
 from sklearn.linear_model import Ridge, RidgeCV
 from sklearn.metrics import r2_score
 from sklearn.model_selection import GridSearchCV, train_test_split
+
 from skmatter.datasets import load_who_dataset
 from skmatter.decomposition import KernelPCovR, PCovR
 from skmatter.preprocessing import StandardFlexibleScaler
+
 
 # %%
 #

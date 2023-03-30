@@ -11,7 +11,9 @@ import numpy as np
 from matplotlib import pyplot as plt
 from sklearn.datasets import load_diabetes
 from sklearn.preprocessing import StandardScaler
+
 from skmatter.decomposition import PCovR
+
 
 # %%
 #
@@ -93,9 +95,9 @@ fig.subplots_adjust(hspace=0.5, wspace=0.3)
 # (and vice-versa for the loss in reconstructing the original features). When the
 # inputs are not scaled, however, only in the case of ``mixing`` = 0 or 1 will the
 # losses drastically change, depending on which component is dominating the model.
-# Here, because the features dominate the model, this jump occurs as ``mixing`` goes to 0.
-# With the scaled inputs, there is still a jump when ``mixing>0`` due to the change in
-# matrix rank.
+# Here, because the features dominate the model, this jump occurs as ``mixing`` goes to
+# 0. With the scaled inputs, there is still a jump when ``mixing>0`` due to the change
+# in matrix rank.
 
 mixings = np.linspace(0, 1, 21)
 losses_unscaled = np.zeros((2, len(mixings)))

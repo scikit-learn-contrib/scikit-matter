@@ -4,18 +4,21 @@ r"""
 Regression with orthogonal projector/matrices
 =============================================
 
-In this example, we explain how when using :class:`skmatter.linear_model.OrthogonalRegression`
-the option ``use_orthogonal_projector`` can result in non-analytic behavior.
-In :class:`skmatter.linear_model.OrthogonalRegression`, we solve the linear
-regression problem assuming an orthogonal weighting matrix :math:`\Omega` to project from
-the feature space :math:`X` to the target space :math:`y`.
+In this example, we explain how when using
+:class:`skmatter.linear_model.OrthogonalRegression` the option
+``use_orthogonal_projector`` can result in non-analytic behavior. In
+:class:`skmatter.linear_model.OrthogonalRegression`, we solve the linear regression
+problem assuming an orthogonal weighting matrix :math:`\Omega` to project from the
+feature space :math:`X` to the target space :math:`y`.
 
 .. math::
     \min_\Omega ||y - X\Omega\||_F
 
-This assumes that :math:`X` and :math:`y` contain the same number of features.
-If ``use_orthogonal_projector=False``, the smaller of :math:`X` and :math:`y` is padded with null features, i.e. columns of zeros.
-However, when ``use_orthogonal_projector=True``, we begin with the weights :math:`W` determined by the linear regression problem
+This assumes that :math:`X` and :math:`y` contain the same number of features. If
+``use_orthogonal_projector=False``, the smaller of :math:`X` and :math:`y` is padded
+with null features, i.e. columns of zeros. However, when
+``use_orthogonal_projector=True``, we begin with the weights :math:`W` determined by the
+linear regression problem
 
 .. math::
     \min_W ||y - XW\||F \,,
@@ -25,9 +28,10 @@ and solve the orthogonal Procrustes problem for
 .. math::
     \min\Omega' ||yV - XU\Omega'\||_F\quad \Omega'^T\Omega'=I \,,
 
-where the SVD of :math:`W = USV^T`. The final orthogonal projector is then :math:`\Omega = U\Omega' V^T`.
-In this notebook, we demonstrate a problem that may arise with this solution, as changing the
-number of features can result in non-analytic behavior of the reconstruction matrix and therefore also in the predictions.
+where the SVD of :math:`W = USV^T`. The final orthogonal projector is then :math:`\Omega
+= U\Omega' V^T`. In this notebook, we demonstrate a problem that may arise with this
+solution, as changing the number of features can result in non-analytic behavior of the
+reconstruction matrix and therefore also in the predictions.
 """
 # %%
 #
@@ -36,14 +40,16 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
 from mpl_toolkits.axes_grid1 import make_axes_locatable
+
 from skmatter.linear_model import OrthogonalRegression
+
 
 mpl.rc("font", size=16)
 
 # %%
 #
-# Below are coordinates of a 3-dimensional cube. We treat the points of the cube as samples
-# and the 3 dimensions as features x, y, and z.
+# Below are coordinates of a 3-dimensional cube. We treat the points of the cube as
+# samples and the 3 dimensions as features x, y, and z.
 
 cube = np.array(
     [
@@ -88,14 +94,15 @@ def z_scaled_square_prism(z_scaling):
 
 # %%
 #
-# In terms of information retrievable by regression analysis ``xy_plane_projected_cube`` is equivalent
-# to ``z_scaled_square_prism`` with z_scaling = 0, since adding features containing only zero values
-# to your dataset should not change the prediction quality of the regression analysis.
+# In terms of information retrievable by regression analysis ``xy_plane_projected_cube``
+# is equivalent to ``z_scaled_square_prism`` with z_scaling = 0, since adding features
+# containing only zero values to your dataset should not change the prediction quality
+# of the regression analysis.
 #
-# We now compute the orthogonal regression error fitting on the square prism to predict the cube.
-# In the case of a zero z-scaling, the error is computed once with a third dimension and
-# once without it (using ``xy_plane_projected_cube``). The regression is done with
-# :class:`skmatter.linear_model.OrthogonalRegression` with
+# We now compute the orthogonal regression error fitting on the square prism to predict
+# the cube. In the case of a zero z-scaling, the error is computed once with a third
+# dimension and once without it (using ``xy_plane_projected_cube``). The regression is
+# done with :class:`skmatter.linear_model.OrthogonalRegression` with
 # ``use_orthogonal_projector`` set to :py:obj:`True`.
 
 z_scalings = np.linspace(0, 1, 11)
@@ -188,9 +195,9 @@ for i, z in enumerate(z_scalings):
 # %%
 #
 # Setting the ``use_orthogonal_projector`` option to False pads automatically input and\
-# output data to the same dimension with zeros. Therefore we pad ``xy_plane_projected_cube``
-# to three dimensions with zeros to compute the error. If we ignore the third dimension,
-# the regression error will also not change smoothly.
+# output data to the same dimension with zeros. Therefore we pad
+# ``xy_plane_projected_cube`` to three dimensions with zeros to compute the error. If
+# we ignore the third dimension, the regression error will also not change smoothly.
 
 
 orth_reg.fit(cube, xy_plane_projected_cube)
@@ -257,7 +264,8 @@ ax_with_orth.scatter(
     regression_error_for_xy_plane_projected_cube_using_orthogonal_projector,
 )
 ax_with_orth.set_title(
-    "Orthogonal regression error for\n features using orthogonal projector\n (use_orthogonal_projector=True)",
+    "Orthogonal regression error for\n features using orthogonal projector\n "
+    "(use_orthogonal_projector=True)",
     fontsize=14,
 )
 ax_with_orth.set_xlabel("scaling in z direction", fontsize=16)
@@ -274,7 +282,8 @@ ax_wo_orth.scatter(
     label="xy_plane_projected_cube",
 )
 ax_wo_orth.set_title(
-    "Orthogonal regression error for\n zero padded features\n (use_orthogonal_projector=False) ",
+    "Orthogonal regression error for\n zero padded features\n "
+    "(use_orthogonal_projector=False) ",
     fontsize=14,
 )
 ax_wo_orth.set_xlabel("scaling in z direction")
@@ -285,11 +294,9 @@ fig.show()
 
 # %%
 #
-# It can be seen that if ``use_orthogonal_projector`` is set to True, the regression error
-# of ``xy_plane_projected_cube`` has an abrupt jump in contrast to retaining the third
-# dimension with 0 values. When ``use_orthogonal_projector`` is set to False this
-# non-analytic behavior is not present, since it uses the padding solution.
-# Both methods have valid reasons to be applied and have their advantages and
-# disadvantages depending on the use case.
-
-# %%
+# It can be seen that if ``use_orthogonal_projector`` is set to True, the regression
+# error of ``xy_plane_projected_cube`` has an abrupt jump in contrast to retaining the
+# third dimension with 0 values. When ``use_orthogonal_projector`` is set to False this
+# non-analytic behavior is not present, since it uses the padding solution. Both methods
+# have valid reasons to be applied and have their advantages and disadvantages depending
+# on the use case.

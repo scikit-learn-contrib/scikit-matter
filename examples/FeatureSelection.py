@@ -11,9 +11,11 @@ from matplotlib import cm
 from matplotlib import pyplot as plt
 from sklearn.linear_model import RidgeCV
 from sklearn.preprocessing import StandardScaler
+
 from skmatter.datasets import load_csd_1000r
 from skmatter.feature_selection import CUR, FPS, PCovCUR, PCovFPS
 from skmatter.preprocessing import StandardFlexibleScaler
+
 
 cmap = cm.brg
 

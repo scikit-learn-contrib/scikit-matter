@@ -5,13 +5,13 @@
 Pointwise GFRE applied on RKHS features
 ================================================================
 
-Example for the usage of the :class:`skmatter.metrics.pointwise_global_reconstruction_error`
-as the pointwise global feature reconstruction error (pointwise GFRE). We apply the
-pointwise global feature reconstruction error on the degenerate CH4 manifold dataset
-containing 3 and 4-body features computed with
-`librascal <https://github.com/lab-cosmo/librascal>`_. We will show that using reproducing
-kernel Hilbert space (RKHS) features can improve the quality of the reconstruction with
-the downside of being less general.
+Example for the usage of the
+:class:`skmatter.metrics.pointwise_global_reconstruction_error` as the pointwise global
+feature reconstruction error (pointwise GFRE). We apply the pointwise global feature
+reconstruction error on the degenerate CH4 manifold dataset containing 3 and 4-body
+features computed with `librascal <https://github.com/lab-cosmo/librascal>`_. We will
+show that using reproducing kernel Hilbert space (RKHS) features can improve the quality
+of the reconstruction with the downside of being less general.
 """
 
 # %%
@@ -21,15 +21,16 @@ the downside of being less general.
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
-
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing._data import KernelCenterer
+
 from skmatter.datasets import load_degenerate_CH4_manifold
 from skmatter.metrics import (
     global_reconstruction_error,
     pointwise_global_reconstruction_error,
 )
 from skmatter.preprocessing import StandardFlexibleScaler
+
 
 mpl.rc("font", size=20)
 
@@ -41,7 +42,8 @@ bispectrum_features = degenerate_manifold.data.SOAP_bispectrum
 # %%
 #
 # We compare 3-body features with their mapping to the reproducing kernel Hilbert space
-# (RKHS) projected to the sample space using the nonlinear radial basis function (RBF) kernel
+# (RKHS) projected to the sample space using the nonlinear radial basis function (RBF)
+# kernel
 #
 # .. math::
 #   k^{\textrm{RBF}}(\mathbf{x},\mathbf{x}') =
@@ -81,7 +83,8 @@ def compute_standardized_rbf_rkhs_features(features, gamma):
     rbf_rkhs_features = A[:, select_idx] @ np.diag(np.sqrt(D[select_idx]))
 
     # standardize rkhs features,
-    # this step could be omitted since it is done by the reconstruction measure by default
+    # this step could be omitted since it is done by the reconstruction measure by
+    # default
     standardized_rbf_rkhs_features = StandardFlexibleScaler().fit_transform(
         rbf_rkhs_features
     )
@@ -103,12 +106,14 @@ train_idx, test_idx = train_test_split(idx, random_state=42)
 
 print("Computing pointwise GFRE...")
 
-# pointwise global reconstruction error of bispectrum features using power spectrum features
+# pointwise global reconstruction error of bispectrum features using power spectrum
+# features
 power_spectrum_to_bispectrum_pointwise_gfre = pointwise_global_reconstruction_error(
     power_spectrum_features, bispectrum_features, train_idx=train_idx, test_idx=test_idx
 )
 
-# pointwise global reconstruction error of bispectrum features using power spectrum features mapped to the RKHS
+# pointwise global reconstruction error of bispectrum features using power spectrum
+# features mapped to the RKHS
 power_spectrum_rbf_to_bispectrum_pointwise_gfre = pointwise_global_reconstruction_error(
     rbf_power_spectrum_features,
     bispectrum_features,
@@ -125,7 +130,8 @@ power_spectrum_to_bispectrum_gfre = global_reconstruction_error(
     power_spectrum_features, bispectrum_features, train_idx=train_idx, test_idx=test_idx
 )
 
-# global reconstruction error of bispectrum features using power spectrum features mapped to the RKHS
+# global reconstruction error of bispectrum features using power spectrum features
+# mapped to the RKHS
 power_spectrum_rbf_to_bispectrum_gfre = global_reconstruction_error(
     rbf_power_spectrum_features,
     bispectrum_features,

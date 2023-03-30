@@ -16,14 +16,17 @@ from sklearn.datasets import load_diabetes
 from sklearn.kernel_ridge import KernelRidge
 from sklearn.linear_model import Ridge
 from sklearn.preprocessing import StandardScaler
-from skmatter.decomposition import PCovR, KernelPCovR
+
+from skmatter.decomposition import KernelPCovR, PCovR
+
 
 cmapX = cm.plasma
 cmapy = cm.Greys
 
 # %%
 #
-# For this, we will use the :func:`sklearn.datasets.load_diabetes` dataset from ``sklearn``.
+# For this, we will use the :func:`sklearn.datasets.load_diabetes` dataset from
+# ``sklearn``.
 
 X, y = load_diabetes(return_X_y=True)
 y = y.reshape(X.shape[0], -1)
@@ -114,9 +117,9 @@ plt.show()
 # Construct a Kernel PCovR Map
 # ============================
 #
-# Moving from PCovR to KernelPCovR is much like moving from PCA to KernelPCA in ``sklearn``.
-# Like KernelPCA, KernelPCovR can compute any pairwise kernel supported by ``sklearn`` or
-# operate on a precomputed kernel.
+# Moving from PCovR to KernelPCovR is much like moving from PCA to KernelPCA in
+# ``sklearn``. Like KernelPCA, KernelPCovR can compute any pairwise kernel supported by
+# ``sklearn`` or operate on a precomputed kernel.
 
 
 mixing = 0.5
@@ -157,7 +160,8 @@ fig.tight_layout()
 # %%
 #
 # As you can see, the regression error has decreased considerably from the linear case,
-# meaning that the map on the left can, and will, better correlate with the target values.
+# meaning that the map on the left can, and will, better correlate with the target
+# values.
 #
 # Note on KernelPCovR for Atoms, Molecules, and Structures
 # --------------------------------------------------------
@@ -166,5 +170,7 @@ fig.tight_layout()
 # it's important to consider the nature of the property you are learning and the samples
 # you are comparing before constructing a kernel, for example, whether the analysis is
 # to be based on whole structures or individual atomic environments. For more detail,
-# see Appendix C of `Helfrecht 2020 <https://iopscience.iop.org/article/10.1088/2632-2153/aba9ef>`_
-# or, regarding kernels involving gradients, `Musil 2021 <https://arxiv.org/pdf/2101.08814.pdf>`_.
+# see Appendix C of
+# `Helfrecht 2020 <https://iopscience.iop.org/article/10.1088/2632-2153/aba9ef>`_ or,
+# regarding kernels involving gradients,
+# `Musil 2021 <https://arxiv.org/pdf/2101.08814.pdf>`_.

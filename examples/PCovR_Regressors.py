@@ -12,11 +12,14 @@ from matplotlib import pyplot as plt
 from sklearn.datasets import load_diabetes
 from sklearn.linear_model import Ridge
 from sklearn.preprocessing import StandardScaler
+
 from skmatter.decomposition import PCovR
+
 
 # %%
 #
-# For this, we will use the :func:`sklearn.datasets.load_diabetes` dataset from ``sklearn``.
+# For this, we will use the :func:`sklearn.datasets.load_diabetes` dataset from
+# ``sklearn``.
 
 mixing = 0.5
 
@@ -83,8 +86,9 @@ print(f"Regressor is {pcovr2.regressor_} and fit took {1e3 * (t1 - t0):0.2} ms."
 # ---------------------
 #
 # With ``regressor='precomputed'``, you can pass a regression output :math:`\hat{Y}` and
-# optional regression weights :math:`W` to PCovR. If ``W=None``, then PCovR will determine
-# :math:`W` as the least-squares solution between :math:`X` and :math:`\hat{Y}`.
+# optional regression weights :math:`W` to PCovR. If ``W=None``, then PCovR will
+# determine :math:`W` as the least-squares solution between :math:`X` and
+# :math:`\hat{Y}`.
 
 regressor = Ridge(alpha=1e-6, fit_intercept=False, tol=1e-12)
 
@@ -112,7 +116,8 @@ print(f"Fit took {1e3 * (t1 - t0):0.2} ms.")
 # Comparing Results
 # -----------------
 #
-# Because we used the same regressor in all three models, they will yield the same result.
+# Because we used the same regressor in all three models, they will yield the same
+# result.
 
 fig, (ax1, ax2, ax3) = plt.subplots(1, 3, figsize=(12, 4), sharex=True, sharey=True)
 

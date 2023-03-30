@@ -4,18 +4,19 @@
 Pointwise Local Reconstruction Error
 ====================================
 
-Example for the usage of the :class:`skmatter.metrics.pointwise_local_reconstruction_error`
-as pointwise local reconstruction error (LFRE) on the degenerate CH4 manifold. We apply
-the local reconstruction measure on the degenerate CH4 manifold dataset. This dataset
-was specifically constructed to be representable by a 4-body features (bispectrum) but
-not by a 3-body features (power spectrum). In other words the dataset contains
-environments which are different, but have the same 3-body features. For more details
-about the dataset please refer to
-`Pozdnyakov 2020 <https://doi.org/10.1103/PhysRevLett.125.166001>`_.
+Example for the usage of the
+:class:`skmatter.metrics.pointwise_local_reconstruction_error` as pointwise local
+reconstruction error (LFRE) on the degenerate CH4 manifold. We apply the local
+reconstruction measure on the degenerate CH4 manifold dataset. This dataset was
+specifically constructed to be representable by a 4-body features (bispectrum) but not
+by a 3-body features (power spectrum). In other words the dataset contains environments
+which are different, but have the same 3-body features. For more details about the
+dataset please refer to `Pozdnyakov 2020
+<https://doi.org/10.1103/PhysRevLett.125.166001>`_.
 
 The skmatter dataset already contains the 3 and 4-body features computed with
-`librascal <https://github.com/lab-cosmo/librascal>`_ so we can load it and compare
-it with the LFRE.
+`librascal <https://github.com/lab-cosmo/librascal>`_ so we can load it and compare it
+with the LFRE.
 """
 # %%
 #
@@ -27,6 +28,7 @@ import numpy as np
 
 from skmatter.datasets import load_degenerate_CH4_manifold
 from skmatter.metrics import pointwise_local_reconstruction_error
+
 
 mpl.rc("font", size=20)
 
@@ -128,10 +130,11 @@ plt.show()
 
 # %%
 #
-# The environments span a manifold which is described by the coordinates :math:`v/\pi` and
-# :math:`u/\pi` (please refer to `Pozdnyakov 2020 <https://doi.org/10.1103/PhysRevLett.125.166001>`_
-# for a concrete understanding of the manifold). The LFRE is presented for each environment
-# in the manifold in the two contour plots. It can be seen that the reconstruction error
+# The environments span a manifold which is described by the coordinates :math:`v/\pi`
+# and :math:`u/\pi` (please refer to
+# `Pozdnyakov 2020 <https://doi.org/10.1103/PhysRevLett.125.166001>`_ for a concrete
+# understanding of the manifold). The LFRE is presented for each environment in the
+# manifold in the two contour plots. It can be seen that the reconstruction error
 # of 4-body features using 3-body features (the left plot) is most significant along the
 # degenerate line (the horizontal red line). This agrees with the fact that the 3-body
 # features remain the same on the degenerate line and can therefore not reconstruct the

@@ -146,7 +146,7 @@ plt.show()
 # this purpose (for more information please read
 # `Pozdnyakov 2020 <https://doi.org/10.1103/PhysRevLett.125.166001>`_). On the other
 # hand the 3-body features can be perfectly reconstructed from the 4-body features
-# as seen in the left plot in the lower left corner. However, this reconstruction distorts
-# the 4-body features significantly as seen in the right plot in the lower left corner
-# which is a typical behaviour of higher order features and can be also observed for
-# polynomial kernel features.
+# as seen in the left plot in the lower left corner. However, this reconstruction
+# distorts the 4-body features significantly as seen in the right plot in the lower left
+# corner which is a typical behaviour of higher order features and can be also observe
+# for polynomial kernel features.

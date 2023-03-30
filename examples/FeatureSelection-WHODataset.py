@@ -12,9 +12,11 @@ import numpy as np
 from matplotlib import pyplot as plt
 from sklearn.kernel_ridge import KernelRidge
 from sklearn.model_selection import train_test_split
+
 from skmatter.datasets import load_who_dataset
 from skmatter.feature_selection import CUR, FPS, PCovCUR, PCovFPS
 from skmatter.preprocessing import StandardFlexibleScaler
+
 
 # %%
 #
