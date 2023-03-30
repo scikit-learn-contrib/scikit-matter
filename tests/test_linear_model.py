@@ -3,15 +3,9 @@ import unittest
 import numpy as np
 from parameterized import parameterized
 from sklearn.datasets import load_iris
-from sklearn.utils import (
-    check_random_state,
-    extmath,
-)
+from sklearn.utils import check_random_state, extmath
 
-from skmatter.linear_model import (
-    OrthogonalRegression,
-    RidgeRegression2FoldCV,
-)
+from skmatter.linear_model import OrthogonalRegression, RidgeRegression2FoldCV
 
 
 class BaseTests(unittest.TestCase):
@@ -32,7 +26,8 @@ class BaseTests(unittest.TestCase):
         cls.features_rotated_small = cls.features_small @ random_orthonormal_mat
 
     def test_orthogonal_regression_small_to_rotated_small(self):
-        # tests if OrthogonalRegression can predict rotated small features using small features with use_orthogonal_projector False
+        # tests if OrthogonalRegression can predict rotated small features using small
+        # features with use_orthogonal_projector False
         err = np.linalg.norm(
             self.features_rotated_small
             - OrthogonalRegression(use_orthogonal_projector=False)
@@ -53,13 +48,15 @@ class BaseTests(unittest.TestCase):
         )
         self.assertTrue(
             n_features == self.features_large.shape[1],
-            f"n_features {n_features} does not match larger feature size {self.features_large.shape[1]}",
+            f"n_features {n_features} does not match larger feature size "
+            f"{self.features_large.shape[1]}",
         )
 
     def test_orthogonal_regression_use_orthogonal_projector_small_to_rotated_small(
         self,
     ):
-        # tests if OrthogonalRegression can predict rotated small features using small features with use_orthogonal_projector True
+        # tests if OrthogonalRegression can predict rotated small features using small
+        # features with use_orthogonal_projector True
         err = np.linalg.norm(
             self.features_rotated_small
             - OrthogonalRegression(use_orthogonal_projector=True)
@@ -80,7 +77,8 @@ class BaseTests(unittest.TestCase):
         )
         self.assertTrue(
             n_features == self.features_large.shape[1],
-            f"n_features {n_features} does not match projection feature size {self.features_large.shape[1]}",
+            f"n_features {n_features} does not match projection feature size "
+            f"{self.features_large.shape[1]}",
         )
 
     def test_orthogonal_regression_use_orthogonal_projector_large_to_small(self):
@@ -93,7 +91,8 @@ class BaseTests(unittest.TestCase):
         )
         self.assertTrue(
             n_features == self.features_small.shape[1],
-            f"n_features {n_features} does not match projection feature size {self.features_small.shape[1]}",
+            f"n_features {n_features} does not match projection feature size "
+            f"{self.features_small.shape[1]}",
         )
 
 
@@ -145,7 +144,8 @@ class RidgeTests(unittest.TestCase):
     def test_ridge_regression_2fold_cv_small_to_small(
         self, name, alpha_type, regularization_method
     ):
-        # tests if RidgeRegression2FoldCV can predict small features using small features with use_orthogonal_projector False
+        # tests if RidgeRegression2FoldCV can predict small features using small
+        # features with use_orthogonal_projector False
         err = np.linalg.norm(
             self.features_small
             - RidgeRegression2FoldCV(
@@ -162,7 +162,8 @@ class RidgeTests(unittest.TestCase):
 
     @parameterized.expand(ridge_parameters)
     def test_ridge_regression_2fold_cv_small_to_large(
-        # tests if RidgeRegression2FoldCV can predict large features using small features with use_orthogonal_projector False
+        # tests if RidgeRegression2FoldCV can predict large features using small
+        # features with use_orthogonal_projector False
         self,
         name,
         alpha_type,

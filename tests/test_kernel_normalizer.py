@@ -12,7 +12,8 @@ class KernelTests(unittest.TestCase):
         self.random_state = np.random.RandomState(0)
 
     def test_sample_weights(self):
-        """Checks that sample weights of one are equal to the unweighted case and that nonuniform weights are different from the unweighted case"""
+        """Checks that sample weights of one are equal to the unweighted case and
+        that nonuniform weights are different from the unweighted case"""
         K = self.random_state.uniform(0, 100, size=(3, 3))
         equal_wts = np.ones(len(K))
         nonequal_wts = self.random_state.uniform(0, 100, size=(len(K),))
@@ -29,7 +30,8 @@ class KernelTests(unittest.TestCase):
         )
 
     def test_invalid_sample_weights(self):
-        """Checks that weights must be 1D array with the same length as the number of samples"""
+        """Checks that weights must be 1D array with the same length as the number of
+        samples"""
         K = self.random_state.uniform(0, 100, size=(3, 3))
         wts_len = np.ones(len(K) + 1)
         wts_dim = np.ones((len(K), 2))

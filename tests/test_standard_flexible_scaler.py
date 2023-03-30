@@ -13,7 +13,9 @@ class ScalerTests(unittest.TestCase):
         self.random_state = np.random.RandomState(0)
 
     def test_sample_weights(self):
-        """Checks that sample weights of one are equal to the unweighted case and that the nonuniform weights are different from the unweighted case"""
+        """Checks that sample weights of one are equal to the unweighted case.
+
+        Also, that the nonuniform weights are different from the unweighted case"""
         X = self.random_state.uniform(0, 100, size=(3, 3))
         equal_wts = np.ones(len(X))
         nonequal_wts = self.random_state.uniform(0, 100, size=(len(X),))
@@ -30,7 +32,8 @@ class ScalerTests(unittest.TestCase):
         )
 
     def test_invalid_sample_weights(self):
-        """Checks that weights must be 1D array with the same length as the number of samples"""
+        """Checks that weights must be 1D array with the same length as the number of
+        samples"""
         X = self.random_state.uniform(0, 100, size=(3, 3))
         wts_len = np.ones(len(X) + 1)
         wts_dim = np.ones((len(X), 2))

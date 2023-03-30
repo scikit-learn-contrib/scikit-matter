@@ -5,6 +5,7 @@ from sklearn.datasets import load_diabetes as get_dataset
 
 from skmatter.sample_selection import PCovCUR
 
+
 EPSILON = 1e-6
 
 

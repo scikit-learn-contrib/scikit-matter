@@ -5,35 +5,46 @@ requires = [
 ]
 build-backend = "setuptools.build_meta"
 
-[tool.tox]
-legacy_tox_ini = """
-[tox]
+[project]
+name = "skmatter"
+description = "A collection of scikit-learn compatible utilities that implement methods born out of the materials science and chemistry communities."
+authors = [
+    {name = "Rose K. Cersonsky", email="rose.cersonsky@wisc.edu"},
+    {name = "Guillaume Fraux"},
+    {name = "Sergei Kliavinek"},
+    {name = "Alexander Goscinski"},
+    {name = "Benjamin A. Helfrecht"},
+    {name = "Victor P. Principe"},
+    {name = "Michele Ceriotti"}
+]
+readme = "README.md"
+requires-python = ">=3.8"
+license = {text = "BSD-3-Clause"}
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Environment :: Console",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: BSD License",
+    "Natural Language :: English",
+    "Programming Language :: Python",
+    "Topic :: Scientific/Engineering",
+]
+dependencies = [
+    "scikit-learn>=1.1.0",
+]
+dynamic = ["version"]
 
-[testenv:tests]
-changedir = tests
-deps = -rtests/requirements.txt
+[project.urls]
+homepage = "http://scikit-matter.readthedocs.io"
+documentation = "http://scikit-matter.readthedocs.io"
+repository = "https://github.com/lab-cosmo/scikit-matter"
+issues = "https://github.com/lab-cosmo/scikit-matter/issues"
 
-commands =
-    coverage run -m unittest discover -p "*.py"
-    coverage xml
+[tool.setuptools.packages.find]
+where = ["src"]
 
-[testenv:examples]
-changedir = examples
-allowlist_externals = bash
-
-deps = -rexamples/requirements.txt
-
-commands =
-    bash -ec "\
-        SKMATTER_EXAMPLES=$PWD; \
-        for file in $(find . -name '*.ipynb' -not -path '*/\\.*'); do \
-            filename=$(basename $file); \
-            jupyter nbconvert \
-                --to notebook \
-                --output "$SKMATTER_EXAMPLES/../.tox/examples/$filename" \
-                --execute "$file"; \
-    done"
-"""
+[tool.setuptools.dynamic]
+version = {attr = "skmatter.__version__"}
 
 [tool.coverage.run]
 branch = true
@@ -41,8 +52,17 @@ data_file = 'tests/.coverage'
 
 [tool.coverage.report]
 include = [
-    "skmatter/*"
+    "src/skmatter/*"
 ]
 
 [tool.coverage.xml]
 output = 'tests/coverage.xml'
+
+[tool.isort]
+skip = "__init__.py"
+profile = "black"
+line_length = 88
+indent = 4
+include_trailing_comma = true
+lines_after_imports = 2
+known_first_party = "skmatter"

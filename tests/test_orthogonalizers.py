@@ -10,6 +10,7 @@ from skmatter.utils import (
     Y_sample_orthogonalizer,
 )
 
+
 EPSILON = 1e-8
 
 
@@ -132,8 +133,9 @@ class TestXOrth(unittest.TestCase):
             )
         self.assertEqual(
             str(cm.exception),
-            "You can only orthogonalize a matrix using a vector with the same number of rows."
-            f"Matrix X has {self.n_samples} rows, whereas the orthogonalizing matrix has {self.n_samples+4} rows.",
+            "You can only orthogonalize a matrix using a vector with the same number "
+            f"of rows. Matrix X has {self.n_samples} rows, whereas the "
+            f"orthogonalizing matrix has {self.n_samples+4} rows.",
         )
 
     def test_warning(self):

@@ -5,9 +5,9 @@ import numpy as np
 from sklearn import exceptions
 from sklearn.datasets import load_diabetes as get_dataset
 from sklearn.decomposition import PCA
-from sklearn.preprocessing import StandardScaler
-from sklearn.linear_model import Ridge
 from sklearn.kernel_ridge import KernelRidge
+from sklearn.linear_model import Ridge
+from sklearn.preprocessing import StandardScaler
 from sklearn.utils.validation import check_X_y
 
 from skmatter.decomposition import PCovR
@@ -398,7 +398,8 @@ class PCovRInfrastructureTest(PCovRBaseTest):
             pcovr.fit(X, self.Y)
             self.assertEquals(
                 str(w[0].message),
-                "This class does not automatically center data, and your data mean is greater than the supplied tolerance.",
+                "This class does not automatically center data, and your data mean is"
+                " greater than the supplied tolerance.",
             )
 
     def test_T_shape(self):
