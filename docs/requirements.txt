@@ -1,12 +1,6 @@
-ipykernel
-jinja2 < 3.1
 matplotlib
-nbconvert
-nbsphinx==0.8.12
-numpy
 pandas
-scikit-learn >=0.24.0
-sphinx >=3.3
+sphinx
 sphinx_rtd_theme
+sphinx-gallery
 tqdm
-traitlets>=5.0

@@ -26,6 +26,6 @@ decomposition, and selection of features and samples.
   intro
   installation
   reference
-  tutorials
+  examples/index
   contributing
   bibliography
