@@ -111,7 +111,7 @@ class KernelPCovR(_BasePCA, LinearModel):
 
     n_jobs: int, default=None
         The number of parallel jobs to run.
-        ``None`` means 1 unless in a :obj:`joblib.parallel_backend` context.
+        :obj:`None` means 1 unless in a :obj:`joblib.parallel_backend` context.
         ``-1`` means using all processors.
 
     iterated_power : int or 'auto', default='auto'

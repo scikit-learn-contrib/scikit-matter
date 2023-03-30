@@ -56,7 +56,7 @@ class KernelPCovRErrorTest(KernelPCovRBaseTest):
         """
         prev_error = -1.0
 
-        for i, mixing in enumerate(np.linspace(0, 1, 6)):
+        for mixing in np.linspace(0, 1, 6):
             kpcovr = KernelPCovR(mixing=mixing, n_components=2, tol=1e-12)
             kpcovr.fit(self.X, self.Y)
 
@@ -81,7 +81,7 @@ class KernelPCovRErrorTest(KernelPCovRBaseTest):
         prev_error = 10.0
         prev_x_error = 10.0
 
-        for i, mixing in enumerate(np.linspace(0, 1, 6)):
+        for mixing in np.linspace(0, 1, 6):
             kpcovr = KernelPCovR(
                 mixing=mixing, n_components=2, fit_inverse_transform=True, tol=1e-12
             )
@@ -108,7 +108,7 @@ class KernelPCovRErrorTest(KernelPCovRBaseTest):
             prev_x_error = x_error
 
     def test_kpcovr_error(self):
-        for i, mixing in enumerate(np.linspace(0, 1, 6)):
+        for mixing in np.linspace(0, 1, 6):
             kpcovr = self.model(
                 mixing=mixing,
                 regressor=KernelRidge(kernel="rbf", gamma=1.0),
@@ -176,7 +176,7 @@ class KernelPCovRInfrastructureTest(KernelPCovRBaseTest):
         kpcovr.fit(self.X, self.Y)
 
         with self.assertRaises(AttributeError):
-            _ = getattr(kpcovr, "centerer_")
+            kpcovr.centerer_
 
     def test_centerer(self):
         """

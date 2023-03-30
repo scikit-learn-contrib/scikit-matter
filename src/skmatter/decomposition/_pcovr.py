@@ -257,7 +257,8 @@ class PCovR(_BasePCA, LinearModel):
         if np.max(np.abs(self.mean_)) > self.tol:
             warnings.warn(
                 "This class does not automatically center data, and your data mean is"
-                " greater than the supplied tolerance."
+                " greater than the supplied tolerance.",
+                stacklevel=1,
             )
 
         if self.space is not None and self.space not in [
@@ -605,7 +606,8 @@ class PCovR(_BasePCA, LinearModel):
             warnings.warn(
                 "This class does not automatically un-center data, and your data mean "
                 "is greater than the supplied tolerance, so the inverse transformation "
-                "will be off by the original data mean."
+                "will be off by the original data mean.",
+                stacklevel=1,
             )
 
         return T @ self.ptx_
