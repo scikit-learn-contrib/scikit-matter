@@ -97,7 +97,7 @@ class PCovRErrorTest(PCovRBaseTest):
         """
         prev_error = -1.0
 
-        for i, mixing in enumerate(np.linspace(0, 1, 11)):
+        for mixing in np.linspace(0, 1, 11):
             pcovr = self.model(mixing=mixing, n_components=2, tol=1e-12)
             pcovr.fit(self.X, self.Y)
 
@@ -120,7 +120,7 @@ class PCovRErrorTest(PCovRBaseTest):
 
         prev_error = -1.0
 
-        for i, mixing in enumerate(np.linspace(0, 1, 11)):
+        for mixing in np.linspace(0, 1, 11):
             pcovr = self.model(mixing=mixing, n_components=2, tol=1e-12)
             pcovr.fit(self.X, self.Y)
 
@@ -143,7 +143,7 @@ class PCovRErrorTest(PCovRBaseTest):
 
         prev_error = 1.0
 
-        for i, mixing in enumerate(np.linspace(0, 1, 11)):
+        for mixing in np.linspace(0, 1, 11):
             pcovr = self.model(mixing=mixing, n_components=2, tol=1e-12)
             pcovr.fit(self.X, self.Y)
 

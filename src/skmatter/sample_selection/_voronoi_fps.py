@@ -153,8 +153,8 @@ class VoronoiFPS(GreedySelector):
                 raise ValueError(
                     "Number of trial calculation should be more or equal to 1"
                 )
-            for i in range(self.n_trial_calculation):
-                _ = X @ X[[0]].T
+            for _ in range(self.n_trial_calculation):
+                X @ X[[0]].T
             simple_fps_timing += time()
             simple_fps_timing /= self.n_trial_calculation
 

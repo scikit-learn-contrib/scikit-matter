@@ -62,7 +62,7 @@ class RidgeRegression2FoldCV(MultiOutputMixin, RegressorMixin):
         If None, the negative mean squared error is used.
     n_jobs : int, default=None
         The number of CPUs to use to do the computation.
-        ``None`` means 1 unless in a :obj:`joblib.parallel_backend` context.
+        :obj:`None` means 1 unless in a :obj:`joblib.parallel_backend` context.
         ``-1`` means using all processors. See
         `n_jobs glossary from sklearn (external link) <https://scikit-learn.org/stable/glossary.html#term-n-jobs>`_
         for more details.
