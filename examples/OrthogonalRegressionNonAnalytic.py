@@ -42,8 +42,8 @@ mpl.rc("font", size=16)
 
 # %%
 #
-# These are coordinates of a 3-dimensional cube. We treat the points of the cube as samples
-# and the 3 dimensions as features x y z
+# Below are coordinates of a 3-dimensional cube. We treat the points of the cube as samples
+# and the 3 dimensions as features x, y, and z.
 
 cube = np.array(
     [
@@ -61,13 +61,13 @@ cube = np.array(
 
 # %%
 #
-# the x y coordinates of the cube
+# The x y coordinates of the cube are obtained as follows:
 
 xy_plane_projected_cube = cube[:, [0, 1]]
 
 # %%
 #
-# a square prism with a scaling applied on the z axis
+# A square prism, with scaling applied on the z axis, can be defined as such:
 
 
 def z_scaled_square_prism(z_scaling):
@@ -207,7 +207,7 @@ regression_error_for_xy_plane_projected_cube_zero_padded = np.linalg.norm(
 # %%
 #
 # The projection allows an optimal reconstruction of the cube while when not using a
-# projection the orthogonal condition does not allow the same reconstruction
+# projection the orthogonal condition does not allow the same reconstruction.
 
 
 fig, ax_xy = plt.subplots(figsize=(7.5, 4))

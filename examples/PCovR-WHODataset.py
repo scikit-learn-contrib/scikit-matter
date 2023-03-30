@@ -22,7 +22,7 @@ from skmatter.preprocessing import StandardFlexibleScaler
 # %%
 #
 # Load the Dataset
-# ----------------
+# ^^^^^^^^^^^^^^^^
 
 
 df = load_who_dataset()["data"]
@@ -47,7 +47,7 @@ X_raw = np.array(df[columns])
 
 # %%
 #
-# We are taking the logarithm of the population  and GDP to avoid extreme distributions
+# Below, we take the logarithm of the population and GDP to avoid extreme distributions
 
 log_scaled = ["SP.POP.TOTL", "NY.GDP.PCAP.CD"]
 for ls in log_scaled:
@@ -80,7 +80,10 @@ X_train, X_test, y_train, y_test = train_test_split(
 # Train the Different Linear DR Techniques
 # ----------------------------------------
 #
-# Best Error for Linear Regression
+# Below, we obtain the regression errors using a variety of linear DR techniques.
+#
+# Linear Regression
+# ^^^^^^^^^^^^^^^^^
 
 RidgeCV(cv=5, alphas=np.logspace(-8, 2, 20), fit_intercept=False).fit(
     X_train, y_train
@@ -153,8 +156,10 @@ gs.best_estimator_
 
 
 # %%
+# Below, we obtain the regression errors using a variety of kernel DR techniques.
 #
-# Best Error for Kernel Regression
+# Kernel Regression
+# ^^^^^^^^^^^^^^^^^
 
 gs.best_score_
 

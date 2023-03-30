@@ -19,7 +19,7 @@ cmap = cm.brg
 
 # %%
 #
-# For this, we will use the provided csd dataset, which has 100 features to select from.
+# For this, we will use the provided CSD dataset, which has 100 features to select from.
 
 X, y = load_csd_1000r(return_X_y=True)
 X = StandardFlexibleScaler(column_wise=False).fit_transform(X)
@@ -69,7 +69,7 @@ plt.show()
 # Non-iterative feature selection with CUR + PCovR
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 #
-# Computing a non-iterative CUR is more efficient, although can resultin poorer
+# Computing a non-iterative CUR is more efficient, although can result in poorer
 # performance for larger datasets. you can also use a greater number of
 # eigenvectors to compute the feature importance by varying ``k``, but ``k`` should
 # not exceed the number of targets, for optimal results.

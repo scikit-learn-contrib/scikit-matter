@@ -23,7 +23,7 @@ cmapy = cm.Greys
 
 # %%
 #
-# For this, we will use the :func:`sklearn.datasets.load_diabetes` dataset from sklearn.
+# For this, we will use the :func:`sklearn.datasets.load_diabetes` dataset from ``sklearn``.
 
 X, y = load_diabetes(return_X_y=True)
 y = y.reshape(X.shape[0], -1)
@@ -37,6 +37,7 @@ y_scaled = y_scaler.fit_transform(y)
 # %%
 #
 # Computing a simple PCovR and making a fancy plot of the results
+# ---------------------------------------------------------------
 
 mixing = 0.5
 pcovr = PCovR(
@@ -71,7 +72,8 @@ fig.tight_layout()
 
 # %%
 #
-# Surveying Many Mixing Parameters
+# Surveying many Mixing Parameters
+# --------------------------------
 
 n_alpha = 5
 
@@ -165,4 +167,4 @@ fig.tight_layout()
 # you are comparing before constructing a kernel, for example, whether the analysis is
 # to be based on whole structures or individual atomic environments. For more detail,
 # see Appendix C of `Helfrecht 2020 <https://iopscience.iop.org/article/10.1088/2632-2153/aba9ef>`_
-# or regarding kernels involving gradients `Musil 2021 <https://arxiv.org/pdf/2101.08814.pdf>`_.
+# or, regarding kernels involving gradients, `Musil 2021 <https://arxiv.org/pdf/2101.08814.pdf>`_.

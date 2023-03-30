@@ -128,7 +128,7 @@ plt.show()
 
 # %%
 #
-# The environments span a manifold which is described by the coordinates :math`v/\pi` and
+# The environments span a manifold which is described by the coordinates :math:`v/\pi` and
 # :math:`u/\pi` (please refer to `Pozdnyakov 2020 <https://doi.org/10.1103/PhysRevLett.125.166001>`_
 # for a concrete understanding of the manifold). The LFRE is presented for each environment
 # in the manifold in the two contour plots. It can be seen that the reconstruction error

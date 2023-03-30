@@ -9,7 +9,6 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-<<<<<<< HEAD
     - uses: actions/checkout@v3
     - name: Set up Python
       uses: actions/setup-python@v4
@@ -19,27 +18,3 @@ jobs:
 
     - name: Lint the code
       run: tox -e lint
-=======
-      - uses: actions/checkout@v2
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v2
-        with:
-          python-version: ${{ matrix.python-version }}
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install flake8 black isort
-      - name: Lint with flake8
-        run: |
-          # ignore formatting, it will be checked by black
-          export FORMATTING_RULES="E101,E111,E114,E115,E116,E117,E12,E13,E2,E3,E401,E5,E70,W1,W2,W3,W5"
-          # D205 and D400 are incompatible with the requirements of sphinx-gallery
-          export PER_FILE_IGNORES="examples/*:D205,D400"
-          flake8 --ignore=$FORMATTING_RULES --per-file-ignores=$PER_FILE_IGNORES .
-      - name: Lint with black
-        run: |
-          black --check .
-      - name: Check imports
-        run: |
-          isort skmatter/*/*py -m 3 --tc --fgw --up -e -l 88 --check
->>>>>>> 5a5ad37 (Port examples to sphinx_gallery)

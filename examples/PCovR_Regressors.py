@@ -16,7 +16,7 @@ from skmatter.decomposition import PCovR
 
 # %%
 #
-# For this, we will use the :func:`sklearn.datasets.load_diabetes` dataset from sklearn.
+# For this, we will use the :func:`sklearn.datasets.load_diabetes` dataset from ``sklearn``.
 
 mixing = 0.5
 

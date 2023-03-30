@@ -2,6 +2,7 @@
 
 NICE dataset
 ############
+
 This is a toy dataset containing NICE[1, 4](N-body Iterative Contraction of Equivariants) features for first 500 configurations of the dataset[2, 3] with randomly displaced methane configurations. 
 
 Function Call
@@ -10,8 +11,10 @@ Function Call
 
 Data Set Characteristics
 ------------------------
+
 :Number of Instances: 500
 :Number of Features: 160
+
 The representations were computed using the NICE package[4] using the following definition of the NICE calculator:
 
 .. code-block:: python
