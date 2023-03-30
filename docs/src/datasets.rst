@@ -7,5 +7,4 @@ Datasets
 
 .. include:: ../../src/skmatter/datasets/descr/nice_dataset.rst
 
-.. include:: ../../src/skmatter/datasets/descr/who_dataset.rst 
-
+.. include:: ../../src/skmatter/datasets/descr/who_dataset.rst

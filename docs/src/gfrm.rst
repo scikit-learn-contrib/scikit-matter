@@ -11,12 +11,12 @@ Reconstruction Measures
 Global Reconstruction Error
 ###########################
 
-.. autofunction:: pointwise_global_reconstruction_error 
-.. autofunction:: global_reconstruction_error 
+.. autofunction:: pointwise_global_reconstruction_error
+.. autofunction:: global_reconstruction_error
 
 .. _GRD-api:
 
-Global Reconstruction Distortion 
+Global Reconstruction Distortion
 ################################
 
 .. autofunction:: pointwise_global_reconstruction_distortion
