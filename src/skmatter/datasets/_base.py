@@ -1,6 +1,7 @@
 from os.path import dirname, join
 
 import numpy as np
+import bz2
 from sklearn.utils import Bunch, check_pandas_support
 
 
@@ -108,3 +109,36 @@ def load_who_dataset():
     with open(join(module_path, "descr", "who_dataset.rst")) as rst_file:
         fdescr = rst_file.read()
     return Bunch(data=raw_data, DESCR=fdescr)
+
+
+def load_roy_dataset():
+    """Load and returns the ROY dataset, which contains structures,
+    energies and SOAP-derived descriptors for 264 polymorphs of ROY,
+    from [Beran et Al, Chemical Science (2022)](https://doi.org/10.1039/D1SC06074K)
+
+    Returns
+    -------
+    roy_dataset : sklearn.utils.Bunch
+      Dictionary-like object, with the following attributes:
+          structures : `ase.Atoms` -- the roy structures as ASE objects
+          features: `np.array` -- SOAP-derived descriptors for the structures
+          energies: `np.array` -- energies of the structures
+    """
+    try:
+        from ase.io import read
+    except:
+        ImportError(
+            """Parsing the ROY dataset depends on ASE. Please install it with 
+`pip install ase` or an equivalent command for your Python environment"""
+        )
+
+    module_path = dirname(__file__)
+    target_structures = join(module_path, "data", "beran_roy_structures.xyz.bz2")
+
+    structures = read(bz2.open(target_structures, "rt"), ":", format="extxyz")
+    energies = np.array([f.info["energy"] for f in structures])
+
+    target_features = join(module_path, "data", "beran_roy_features.npz")
+    features = np.load(target_features)["feats"]
+
+    return Bunch(structures=structures, features=features, energies=energies)
