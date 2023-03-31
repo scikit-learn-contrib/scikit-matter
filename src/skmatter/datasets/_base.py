@@ -1,7 +1,6 @@
 from os.path import dirname, join
 
 import numpy as np
-import bz2
 from sklearn.utils import Bunch, check_pandas_support
 
 
@@ -124,16 +123,16 @@ def load_roy_dataset():
           features: `np.array` -- SOAP-derived descriptors for the structures
           energies: `np.array` -- energies of the structures
     """
-    try:
-        from ase.io import read
-    except:
-        ImportError(
-            """Parsing the ROY dataset depends on ASE. Please install it with 
-`pip install ase` or an equivalent command for your Python environment"""
-        )
 
     module_path = dirname(__file__)
     target_structures = join(module_path, "data", "beran_roy_structures.xyz.bz2")
+
+    try:
+        from ase.io import read
+    except ImportError:
+        raise ImportError("load_roy_dataset requires the ASE package.")
+
+    import bz2
 
     structures = read(bz2.open(target_structures, "rt"), ":", format="extxyz")
     energies = np.array([f.info["energy"] for f in structures])
