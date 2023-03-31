@@ -80,7 +80,7 @@ class WHOTests(unittest.TestCase):
         """
         Check if the correct exception occurs when pandas isn't present.
         """
-        if self.has_pandas is False:
+        with unittest.mock.patch.dict("sys.modules", {"pandas": None}):
             with self.assertRaises(ImportError) as cm:
                 _ = load_who_dataset()
             self.assertEqual(str(cm.exception), "load_who_dataset requires pandas.")
@@ -123,7 +123,7 @@ class ROYTests(unittest.TestCase):
         """
         Check if the correct exception occurs when ase isn't present.
         """
-        if self.has_ase is False:
+        with unittest.mock.patch.dict("sys.modules", {"ase.io": None}):
             with self.assertRaises(ImportError) as cm:
                 _ = load_roy_dataset()
             self.assertEqual(
