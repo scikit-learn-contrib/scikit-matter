@@ -6,3 +6,4 @@ tqdm
 numpy
 scikit-learn
 ase
+chemiscope
