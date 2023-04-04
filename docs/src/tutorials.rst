@@ -2,7 +2,8 @@ Examples
 ########
 
 For a thorough tutorial of the methods introduced in `scikit-matter`, we suggest you
-check out the pedagogic notebooks in our companion project `kernel-tutorials <https://github.com/lab-cosmo/kernel-tutorials/>`_.
+check out the pedagogic notebooks in our companion project `kernel-tutorials
+<https://github.com/lab-cosmo/kernel-tutorials/>`_.
 
 .. toctree::
   :glob:

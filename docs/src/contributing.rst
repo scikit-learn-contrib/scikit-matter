@@ -18,14 +18,14 @@ Then this package itself
   cd scikit-matter
   pip install -e .
 
-This install the package in development mode, making it importable globally
-and allowing you to edit the code and directly use the updated version.
+This install the package in development mode, making it importable globally and allowing
+you to edit the code and directly use the updated version.
 
 Running the tests
 #################
 
-The testsuite is implemented using Python's `unittest`_ framework and should be set-up and
-run in an isolated virtual environment with `tox`_. All tests can be run with
+The testsuite is implemented using Python's `unittest`_ framework and should be set-up
+and run in an isolated virtual environment with `tox`_. All tests can be run with
 
 .. code-block:: bash
 
@@ -40,11 +40,11 @@ If you wish to test only specific functionalities, for example:
   tox -e examples      # test the examples
 
 
-You can also use ``tox -e format`` to use tox to do actual formatting instead
-of just testing it. Also, you may want to setup your editor to automatically apply the
-`black <https://black.readthedocs.io/en/stable/>`_ code formatter when saving your
-files, there are plugins to do this with `all major
-editors <https://black.readthedocs.io/en/stable/editor_integration.html>`_.
+You can also use ``tox -e format`` to use tox to do actual formatting instead of just
+testing it. Also, you may want to setup your editor to automatically apply the `black
+<https://black.readthedocs.io/en/stable/>`_ code formatter when saving your files, there
+are plugins to do this with `all major editors
+<https://black.readthedocs.io/en/stable/editor_integration.html>`_.
 
 .. _unittest: https://docs.python.org/3/library/unittest.html
 .. _tox: https://tox.readthedocs.io/en/latest
@@ -60,9 +60,8 @@ machine as described above. Then, build the documentation with
 
     tox -e docs
 
-You can then visualize the local documentation with your favorite browser using
-the following command (or open the :file:`docs/build/html/index.html` file
-manually).
+You can then visualize the local documentation with your favorite browser using the
+following command (or open the :file:`docs/build/html/index.html` file manually).
 
 .. code-block:: bash
 
@@ -172,8 +171,8 @@ Then, show ``scikit-matter`` how to load your data by adding a loader function t
 
 Add this function to ``src/skmatter/datasets/__init__.py``.
 
-Finally, add a test to ``tests/test_datasets.py`` to see that your dataset
-loads properly. It should look something like this:
+Finally, add a test to ``tests/test_datasets.py`` to see that your dataset loads
+properly. It should look something like this:
 
 .. code-block:: python
 
@@ -190,7 +189,8 @@ loads properly. It should look something like this:
         self.my_data.DESCR
 
 
-You're good to go! Time to submit a `pull request. <https://github.com/lab-cosmo/scikit-matter/pulls>`_
+You're good to go! Time to submit a `pull request.
+<https://github.com/lab-cosmo/scikit-matter/pulls>`_
 
 
 License

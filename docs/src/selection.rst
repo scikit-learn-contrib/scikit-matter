@@ -40,7 +40,8 @@ This can be executed using:
 
     Xr = selector.transform(X)
 
-where `Selector` is one of the classes below that overwrites the method :py:func:`score`.
+where `Selector` is one of the classes below that overwrites the method
+:py:func:`score`.
 
 From :py:class:`GreedySelector`, selectors inherit these public methods:
 
@@ -58,29 +59,30 @@ CUR
 ###
 
 
-CUR decomposition begins by approximating a matrix :math:`{\mathbf{X}}` using a subset of columns and rows
+CUR decomposition begins by approximating a matrix :math:`{\mathbf{X}}` using a subset
+of columns and rows
 
 .. math::
-    \mathbf{\hat{X}} \approx \mathbf{X}_\mathbf{c} \left(\mathbf{X}_\mathbf{c}^- \mathbf{X} \mathbf{X}_\mathbf{r}^-\right) \mathbf{X}_\mathbf{r}.
+    \mathbf{\hat{X}} \approx \mathbf{X}_\mathbf{c} \left(\mathbf{X}_\mathbf{c}^-
+    \mathbf{X} \mathbf{X}_\mathbf{r}^-\right) \mathbf{X}_\mathbf{r}.
 
 These subsets of rows and columns, denoted :math:`\mathbf{X}_\mathbf{r}` and
-:math:`\mathbf{X}_\mathbf{c}`, respectively, can be determined by iterative
-maximization of a leverage score :math:`\pi`, representative of the relative
-importance of each column or row. From hereon, we will call selection methods
-which are derived off of the CUR decomposition "CUR" as a shorthand for
-"CUR-derived selection". In each iteration of CUR, we select the column or row
-that maximizes :math:`\pi` and orthogonalize the remaining columns or rows.
-These steps are iterated until a sufficient number of features has been selected.
-This iterative approach, albeit comparatively time consuming, is the most
-deterministic and efficient route in reducing the number of features needed to
-approximate :math:`\mathbf{X}` when compared to selecting all features in a
-single iteration based upon the relative :math:`\pi` importance.
+:math:`\mathbf{X}_\mathbf{c}`, respectively, can be determined by iterative maximization
+of a leverage score :math:`\pi`, representative of the relative importance of each
+column or row. From hereon, we will call selection methods which are derived off of the
+CUR decomposition "CUR" as a shorthand for "CUR-derived selection". In each iteration of
+CUR, we select the column or row that maximizes :math:`\pi` and orthogonalize the
+remaining columns or rows. These steps are iterated until a sufficient number of
+features has been selected. This iterative approach, albeit comparatively time
+consuming, is the most deterministic and efficient route in reducing the number of
+features needed to approximate :math:`\mathbf{X}` when compared to selecting all
+features in a single iteration based upon the relative :math:`\pi` importance.
 
-The feature and sample selection versions of CUR differ only in the computation
-of :math:`\pi`. In sample selection :math:`\pi` is computed using the left
-singular vectors, versus in feature selection, :math:`\pi` is computed using the
-right singular vectors. In addition to :py:class:`GreedySelector`, both instances
-of CUR selection build off of :py:class:`skmatter._selection._cur._CUR`, and inherit
+The feature and sample selection versions of CUR differ only in the computation of
+:math:`\pi`. In sample selection :math:`\pi` is computed using the left singular
+vectors, versus in feature selection, :math:`\pi` is computed using the right singular
+vectors. In addition to :py:class:`GreedySelector`, both instances of CUR selection
+build off of :py:class:`skmatter._selection._cur._CUR`, and inherit
 
 .. currentmodule:: skmatter._selection
 
@@ -88,7 +90,8 @@ of CUR selection build off of :py:class:`skmatter._selection._cur._CUR`, and inh
 .. automethod:: _CUR._compute_pi
 
 They are instantiated using
-:py:class:`skmatter.feature_selection.CUR` and :py:class:`skmatter.sample_selection.CUR`, e.g.
+:py:class:`skmatter.feature_selection.CUR` and
+:py:class:`skmatter.sample_selection.CUR`, e.g.
 
 .. code-block:: python
 
@@ -117,14 +120,15 @@ They are instantiated using
 PCov-CUR
 ########
 
-PCov-CUR extends upon CUR by using augmented right or left singular vectors
-inspired by Principal Covariates Regression, as demonstrated in [Cersonsky2021]_.
-These methods employ the modified kernel and covariance matrices introduced in :ref:`PCovR-api`
-and available via the Utility Classes.
+PCov-CUR extends upon CUR by using augmented right or left singular vectors inspired by
+Principal Covariates Regression, as demonstrated in [Cersonsky2021]_. These methods
+employ the modified kernel and covariance matrices introduced in :ref:`PCovR-api` and
+available via the Utility Classes.
 
-Again, the feature and sample selection versions of PCov-CUR differ only in the computation
-of :math:`\pi`. So, in addition to :py:class:`GreedySelector`, both instances
-of PCov-CUR selection build off of :py:class:`skmatter._selection._cur._PCovCUR`, inheriting
+Again, the feature and sample selection versions of PCov-CUR differ only in the
+computation of :math:`\pi`. So, in addition to :py:class:`GreedySelector`, both
+instances of PCov-CUR selection build off of
+:py:class:`skmatter._selection._cur._PCovCUR`, inheriting
 
 .. currentmodule:: skmatter._selection
 
@@ -168,15 +172,15 @@ Farthest Point-Sampling (FPS)
 Farthest Point Sampling is a common selection technique intended to exploit the
 diversity of the input space.
 
-In FPS, the selection of the first point is made at random or by a separate metric.
-Each subsequent selection is made to maximize the Haussdorf distance,
-i.e. the minimum distance between a point and all previous selections.
-It is common to use the Euclidean distance, however other distance metrics may be employed.
+In FPS, the selection of the first point is made at random or by a separate metric. Each
+subsequent selection is made to maximize the Haussdorf distance, i.e. the minimum
+distance between a point and all previous selections. It is common to use the Euclidean
+distance, however other distance metrics may be employed.
 
 Similar to CUR, the feature and selection versions of FPS differ only in the way
-distance is computed (feature selection does so column-wise, sample selection does
-so row-wise), and are built off of the same base class, :py:class:`skmatter._selection._fps._FPS`,
-in addition to GreedySelector, and inherit
+distance is computed (feature selection does so column-wise, sample selection does so
+row-wise), and are built off of the same base class,
+:py:class:`skmatter._selection._fps._FPS`, in addition to GreedySelector, and inherit
 
 .. currentmodule:: skmatter._selection
 
@@ -184,8 +188,8 @@ in addition to GreedySelector, and inherit
 .. automethod:: _FPS.get_distance
 .. automethod:: _FPS.get_select_distance
 
-These selectors can be instantiated using
-:py:class:`skmatter.feature_selection.FPS` and :py:class:`skmatter.sample_selection.FPS`.
+These selectors can be instantiated using :py:class:`skmatter.feature_selection.FPS` and
+:py:class:`skmatter.sample_selection.FPS`.
 
 .. code-block:: python
 
@@ -209,13 +213,14 @@ These selectors can be instantiated using
 
 PCov-FPS
 ########
-PCov-FPS extends upon FPS much like PCov-CUR does to CUR. Instead of using the
-Euclidean distance solely in the space of :math:`\mathbf{X}`, we use a combined
-distance in terms of :math:`\mathbf{X}` and :math:`\mathbf{y}`.
 
-Again, the feature and sample selection versions of PCov-FPS differ only in
-computing the distances. So, in addition to :py:class:`GreedySelector`, both instances
-of PCov-FPS selection build off of :py:class:`skmatter._selection._fps._PCovFPS`, and inherit
+PCov-FPS extends upon FPS much like PCov-CUR does to CUR. Instead of using the Euclidean
+distance solely in the space of :math:`\mathbf{X}`, we use a combined distance in terms
+of :math:`\mathbf{X}` and :math:`\mathbf{y}`.
+
+Again, the feature and sample selection versions of PCov-FPS differ only in computing
+the distances. So, in addition to :py:class:`GreedySelector`, both instances of PCov-FPS
+selection build off of :py:class:`skmatter._selection._fps._PCovFPS`, and inherit
 
 .. currentmodule:: skmatter._selection
 
@@ -259,7 +264,8 @@ Voronoi FPS
 
 .. autoclass :: VoronoiFPS
 
-These selectors can be instantiated using :py:class:`skmatter.sample_selection.VoronoiFPS`.
+These selectors can be instantiated using
+:py:class:`skmatter.sample_selection.VoronoiFPS`.
 
 .. code-block:: python
 
@@ -285,13 +291,12 @@ These selectors can be instantiated using :py:class:`skmatter.sample_selection.V
 When *Not* to Use Voronoi FPS
 -----------------------------
 
-In many cases, this algorithm may not increase upon the efficiency. For example,
-for simple metrics (such as Euclidean distance), Voronoi FPS will likely not
-accelerate, and may decelerate, computations when compared to FPS.  The sweet
-spot for Voronoi FPS is when the number of selectable samples is already enough
-to divide the space with Voronoi polyhedrons, but not yet comparable to the total
-number of samples, when the cost of bookkeeping significantly degrades the speed
-of work compared to FPS.
+In many cases, this algorithm may not increase upon the efficiency. For example, for
+simple metrics (such as Euclidean distance), Voronoi FPS will likely not accelerate, and
+may decelerate, computations when compared to FPS.  The sweet spot for Voronoi FPS is
+when the number of selectable samples is already enough to divide the space with Voronoi
+polyhedrons, but not yet comparable to the total number of samples, when the cost of
+bookkeeping significantly degrades the speed of work compared to FPS.
 
 .. _DCH-api:
 
@@ -301,7 +306,8 @@ Directional Convex Hull (DCH)
 
 .. autoclass :: DirectionalConvexHull
 
-This selector can be instantiated using `skmatter.sample_selection.DirectionalConvexHull`.
+This selector can be instantiated using
+:class:`skmatter.sample_selection.DirectionalConvexHull`.
 
 .. code-block:: python
 
