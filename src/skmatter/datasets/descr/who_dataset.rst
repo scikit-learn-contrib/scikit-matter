@@ -42,12 +42,13 @@ References
    .. [8] https://data.worldbank.org/indicator/SN.ITK.DEFC.ZS
    .. [9] https://data.worldbank.org/indicator/SP.DYN.LE00.IN
    .. [10] https://data.worldbank.org/indicator/SP.POP.TOTL
-   
+
 
 Reference Code
 --------------
 
-and compiled through the following script, where the datasets have been placed in a folder named `who_data`:
+and compiled through the following script, where the datasets have been placed in a
+folder named ``who_data``:
 
 .. code-block:: python
 
@@ -68,7 +69,7 @@ and compiled through the following script, where the datasets have been placed i
             sheet_name="Data",
             index_col=0,
         )
-    
+
         indicator = data["Indicator Code"].values[0]
         indicator_codes[indicator] = data["Indicator Name"].values[0]
 

@@ -28,7 +28,7 @@ sys.path.insert(0, ROOT)
 master_doc = "index"
 
 project = "scikit-matter"
-author = ", ".join(open(os.path.join(ROOT, "contributors.txt")))
+author = ", ".join(open(os.path.join(ROOT, "contributors.txt")).read().splitlines())
 copyright = f"{datetime.now().date().year}, {author}"
 
 # The full version, including alpha/beta/rc tags

@@ -21,7 +21,9 @@ Orthogonalizers for CUR
 
 .. currentmodule:: skmatter.utils._orthogonalizers
 
-When computing non-iterative CUR, it is necessary to orthogonalize the input matrices after each selection. For this, we have supplied a feature and a sample orthogonalizer for feature and sample selection.
+When computing non-iterative CUR, it is necessary to orthogonalize the input matrices
+after each selection. For this, we have supplied a feature and a sample orthogonalizer
+for feature and sample selection.
 
 .. autofunction:: X_orthogonalizer
 .. autofunction:: Y_feature_orthogonalizer

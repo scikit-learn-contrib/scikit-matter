@@ -17,7 +17,7 @@ authors = [
     {name = "Victor P. Principe"},
     {name = "Michele Ceriotti"}
 ]
-readme = "README.md"
+readme = "README.rst"
 requires-python = ">=3.8"
 license = {text = "BSD-3-Clause"}
 classifiers = [

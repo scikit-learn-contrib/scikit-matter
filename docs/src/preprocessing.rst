@@ -1,5 +1,5 @@
 Preprocessing
-=============================
+=============
 
 .. automodule:: skmatter.preprocessing
    :members:

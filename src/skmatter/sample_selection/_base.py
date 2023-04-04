@@ -680,6 +680,7 @@ class DirectionalConvexHull:
                 "There are samples in X with a low-dimensional part that is outside "
                 "of the range of the convex surface. Distance will contain nans.",
                 UserWarning,
+                stacklevel=1,
             )
 
         # determine the distance between the original high-dimensional data and

@@ -6,7 +6,7 @@ Linear Models
 Orthogonal Regression
 #####################
 
-.. autoclass:: OrthogonalRegression 
+.. autoclass:: OrthogonalRegression
 
 .. currentmodule:: skmatter.linear_model._ridge
 

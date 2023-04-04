@@ -192,7 +192,7 @@ class GreedySelector(SelectorMixin, MetaEstimatorMixin, BaseEstimator):
             raise ValueError(error_msg)
 
         if warm_start:
-            if not hasattr(self, "n_selected_") or getattr(self, "n_selected_") == 0:
+            if not hasattr(self, "n_selected_") or self.n_selected_ == 0:
                 raise ValueError(
                     "Cannot fit with warm_start=True without having been previously"
                     " initialized."
@@ -210,7 +210,8 @@ class GreedySelector(SelectorMixin, MetaEstimatorMixin, BaseEstimator):
             else:
                 warnings.warn(
                     f"Score threshold of {self.score_threshold} reached."
-                    f"Terminating search at {self.n_selected_} / {self.n_to_select}."
+                    f"Terminating search at {self.n_selected_} / {self.n_to_select}.",
+                    stacklevel=1,
                 )
                 self.X_selected_ = np.take(
                     self.X_selected_, np.arange(self.n_selected_), axis=self._axis
