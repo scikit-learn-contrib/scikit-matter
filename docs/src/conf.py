@@ -47,10 +47,11 @@ extensions = [
     "sphinx.ext.intersphinx",
 ]
 
+example_subdirs = ["pcovr", "selection", "regression", "reconstruction"]
 sphinx_gallery_conf = {
     "filename_pattern": "/*",
-    "examples_dirs": ["../../examples"],
-    "gallery_dirs": ["examples"],
+    "examples_dirs": [f"../../examples/{p}" for p in example_subdirs],
+    "gallery_dirs": [f"examples/{p}" for p in example_subdirs],
     "min_reported_time": 60,
     # Make the code snippet for own functions clickable
     "reference_url": {"skmatter": None},
