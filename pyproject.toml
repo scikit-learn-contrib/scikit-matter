@@ -34,6 +34,13 @@ dependencies = [
 ]
 dynamic = ["version"]
 
+[project.optional-dependencies]
+examples = [
+    "matplotlib",
+    "pandas",
+    "tqdm",
+]
+
 [project.urls]
 homepage = "http://scikit-matter.readthedocs.io"
 documentation = "http://scikit-matter.readthedocs.io"
