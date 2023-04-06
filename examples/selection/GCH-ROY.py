@@ -106,7 +106,7 @@ chemiscope.show(
         "structure": [{"unitCell": True, "supercell": {"0": 2, "1": 2, "2": 2}}],
     },
 )
-""";
+"""
 
 
 # %%
@@ -151,7 +151,7 @@ rho2i=rho2i.keys_to_samples(['species_center']).keys_to_properties(
 rho2i_structure = mean_over_samples(rho2i,
                         sample_names=["center", "species_center"])
 np.savez("roy_features.npz", feats=rho2i_structure.block(0).values)
-""";
+"""
 
 
 features = roy_data["features"]
@@ -246,4 +246,4 @@ chemiscope.show(
         ],
     },
 )
-""";
+"""
