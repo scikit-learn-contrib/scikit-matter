@@ -11,13 +11,14 @@ conventional density-energy convex hull with a Generalized Convex Hull
 
 """
 
-import numpy as np
-from sklearn.decomposition import PCA
-from skmatter.sample_selection import DirectionalConvexHull
-from skmatter.datasets import load_roy_dataset
-from matplotlib import pyplot as plt
-import matplotlib.tri as mtri
 import chemiscope
+import matplotlib.tri as mtri
+import numpy as np
+from matplotlib import pyplot as plt
+from sklearn.decomposition import PCA
+
+from skmatter.datasets import load_roy_dataset
+from skmatter.sample_selection import DirectionalConvexHull
 
 
 ######################################################################
