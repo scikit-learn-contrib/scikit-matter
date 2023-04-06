@@ -3,4 +3,5 @@ pandas
 sphinx
 sphinx_rtd_theme
 sphinx-gallery
+ase
 tqdm

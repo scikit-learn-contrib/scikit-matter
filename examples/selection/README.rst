@@ -1,2 +1,2 @@
-Feature Reconstruction Measures
-===============================
+Feature and Sample Selection
+============================

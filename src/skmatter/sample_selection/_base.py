@@ -15,7 +15,7 @@ from .._selection import _CUR, _FPS, _PCovCUR, _PCovFPS
 
 def _linear_interpolator(points, values):
     """
-    Returns linear interpolater for unstructured D-D data. Tessellate the input point
+    Returns linear interpolator for unstructured D-D data. Tessellate the input point
     set to N-D simplices, and interpolate linearly on each simplex. See
     ``LinearNDInterpolator`` for more details.
 
@@ -452,7 +452,7 @@ class DirectionalConvexHull:
                     Indices of datapoints that form the vertices of the
                     convex hull
     interpolator_high_dim_  : scipy.interpolate.interpnd.LinearNDInterpolator
-                    Interpolater for the features in the high-
+                    Interpolator for the features in the high-
                     dimensional space
 
     References

@@ -14,7 +14,7 @@ Currently, scikit-matter contains models described in [Imbalzano2018]_,
 to sklearn functionalities and minimal datasets that are useful within the field of
 computational materials science and chemistry.
 
-- Fingerprint Selection:
+- Features and Samples Selection:
    Multiple data sub-selection modules, for selecting the most relevant features and
    samples out of a large set of candidates [Imbalzano2018]_, [Helfrecht2020]_ and
    [Cersonsky2021]_.
