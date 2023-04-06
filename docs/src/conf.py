@@ -15,48 +15,12 @@ import sys
 from datetime import datetime
 
 import sphinx_rtd_theme
-from nbconvert import NotebookExporter
-from traitlets.config import Config
 
 import skmatter
 
 
 ROOT = os.path.abspath(os.path.join("..", ".."))
 sys.path.insert(0, ROOT)
-
-# Copying and Compiling of Examples
-if not os.path.exists(os.path.join(ROOT, "docs/src/read-only-examples")):
-    os.mkdir(os.path.join(ROOT, "docs/src/read-only-examples"))
-
-# Set up nbconvert configuration to strip empty cells and tables of contents
-c = Config()
-c.NotebookExporter.preprocessors = [
-    "nbconvert.preprocessors.RegexRemovePreprocessor",
-    "nbconvert.preprocessors.ExecutePreprocessor",
-]
-
-# Remove any cells containing lines with the phrase "Table of Contents" or
-# consist solely of whitespace
-c.RegexRemovePreprocessor.enabled = True
-c.RegexRemovePreprocessor.patterns = [".*Table of Contents.*", "\\s*\\Z"]
-
-# Execute each notebook in a python3 kernel to make sure the content is there
-c.ExecutePreprocessor.enabled = True
-c.ExecutePreprocessor.kernel = "python3"
-
-exporter = NotebookExporter(config=c)
-
-for nb in os.listdir(os.path.join(ROOT, "examples")):
-    # Skip any non-notebooks
-    if nb.endswith("ipynb") and "no-doc" not in nb:
-        nb_in = os.path.join(ROOT, "examples", nb)
-        nb_out = os.path.join(ROOT, "docs/src/read-only-examples", nb)
-
-        # Skip any notebooks which already exist
-        if not os.path.exists(nb_out):
-            with open(nb_out, "w") as out_stream:
-                converted = exporter.from_filename(nb_in)[0]
-                out_stream.write(converted)
 
 # -- Project information -----------------------------------------------------
 
@@ -79,10 +43,31 @@ release = skmatter.__version__
 extensions = [
     "sphinx.ext.autodoc",
     "sphinx.ext.napoleon",
-    "nbsphinx",
+    "sphinx_gallery.gen_gallery",
+    "sphinx.ext.intersphinx",
 ]
 
-nbsphinx_execute = "never"
+example_subdirs = ["pcovr", "selection", "regression", "reconstruction"]
+sphinx_gallery_conf = {
+    "filename_pattern": "/*",
+    "examples_dirs": [f"../../examples/{p}" for p in example_subdirs],
+    "gallery_dirs": [f"examples/{p}" for p in example_subdirs],
+    "min_reported_time": 60,
+    # Make the code snippet for own functions clickable
+    "reference_url": {"skmatter": None},
+}
+
+# Configuration for intersphinx: refer to the Python standard library
+# and other packages
+intersphinx_mapping = {
+    "scipy": ("https://docs.scipy.org/doc/scipy/", None),
+    "matplotlib": ("https://matplotlib.org/stable/", None),
+    "numpy": ("https://numpy.org/doc/stable/", None),
+    "python": ("https://docs.python.org/3/", None),
+    "sklearn": ("https://scikit-learn.org/stable", None),
+    "pandas": ("https://pandas.pydata.org/docs/", None),
+}
+
 
 # If set to False return type and description are put into one paragraph
 napoleon_use_rtype = False
