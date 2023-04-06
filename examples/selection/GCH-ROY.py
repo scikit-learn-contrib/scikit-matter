@@ -91,7 +91,7 @@ print(f"Mean hull energy for 'other' structures {dch_dist[iothers].mean()} kJ/mo
 #    chemiscope.show(
 #        structures,
 #        dict(
-#            energy=energy, density=density, 
+#            energy=energy, density=density,
 #            hull_energy=dch_dist, structure_type=structype
 #        ),
 #        settings={
@@ -229,7 +229,7 @@ print(f"Mean hull energy for 'other' structures {dch_dist[iothers].mean()} kJ/mo
 #                "symbol": "type",
 #                "symbol": "type",
 #                "color": {"property": "hull_energy"},
-#                "size": {"factor": 35, "mode": "linear", 
+#                "size": {"factor": 35, "mode": "linear",
 #                         "property": "", "reverse": True},
 #            },
 #            "structure": [
