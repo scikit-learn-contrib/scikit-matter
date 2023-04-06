@@ -17,7 +17,6 @@ from skmatter.sample_selection import DirectionalConvexHull
 from skmatter.datasets import load_roy_dataset
 from matplotlib import pyplot as plt
 import matplotlib.tri as mtri
-from mpl_toolkits.mplot3d import Axes3D
 import chemiscope
 
 
@@ -86,7 +85,7 @@ print(f"Mean hull energy for 'other' structures {dch_dist[iothers].mean()} kJ/mo
 # You can also visualize the hull with ``chemiscope``
 #
 
-cs = chemiscope.show(
+chemiscope.show(
     structures,
     dict(
         energy=energy, density=density, hull_energy=dch_dist, structure_type=structype
@@ -102,8 +101,6 @@ cs = chemiscope.show(
         "structure": [{"unitCell": True, "supercell": {"0": 2, "1": 2, "2": 2}}],
     },
 )
-display(cs)
-
 
 ######################################################################
 # Generalized Convex Hull
@@ -142,8 +139,10 @@ display(cs)
 #    }
 #    calculator = SoapPowerSpectrum(**hypers)
 #    rho2i = calculator.compute(structures)
-#    rho2i=rho2i.keys_to_samples(['species_center']).keys_to_properties(['species_neighbor_1', 'species_neighbor_2'])
-#    rho2i_structure = mean_over_samples(rho2i, sample_names=["center", "species_center"])
+#    rho2i=rho2i.keys_to_samples(['species_center']).keys_to_properties(
+#                       ['species_neighbor_1', 'species_neighbor_2'])
+#    rho2i_structure = mean_over_samples(rho2i,
+#                            sample_names=["center", "species_center"])
 #    np.savez("roy_features.npz", feats=rho2i_structure.block(0).values)
 #
 
@@ -214,7 +213,7 @@ for i, f in enumerate(structures):
         f.info["pca_" + str(j + 1)] = pca_features[i, j]
 structure_properties = chemiscope.extract_properties(structures)
 structure_properties.update({"per_atom_energy": energy, "hull_energy": dch_dist})
-cs = chemiscope.show(
+chemiscope.show(
     frames=structures,
     properties=structure_properties,
     settings={
@@ -236,4 +235,3 @@ cs = chemiscope.show(
         ],
     },
 )
-display(cs)
