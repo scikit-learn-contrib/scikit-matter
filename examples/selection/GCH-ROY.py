@@ -11,7 +11,6 @@ conventional density-energy convex hull with a Generalized Convex Hull
 
 """
 
-import chemiscope
 import matplotlib.tri as mtri
 import numpy as np
 from matplotlib import pyplot as plt
@@ -83,25 +82,30 @@ print(f"Mean hull energy for 'other' structures {dch_dist[iothers].mean()} kJ/mo
 
 
 ######################################################################
-# You can also visualize the hull with ``chemiscope``
+# You can also visualize the hull with ``chemiscope``.
+# This runs only in a notebook, and
+# requires having the ``chemiscope`` package installed.
 #
+# .. code:: python
+#
+#    chemiscope.show(
+#        structures,
+#        dict(
+#            energy=energy, density=density, 
+#            hull_energy=dch_dist, structure_type=structype
+#        ),
+#        settings={
+#            "map": {
+#                "x": {"property": "density"},
+#                "y": {"property": "energy"},
+#                "color": {"property": "hull_energy"},
+#                "symbol": "structure_type",
+#                "size": {"factor": 35},
+#            },
+#            "structure": [{"unitCell": True, "supercell": {"0": 2, "1": 2, "2": 2}}],
+#        },
+#    )
 
-chemiscope.show(
-    structures,
-    dict(
-        energy=energy, density=density, hull_energy=dch_dist, structure_type=structype
-    ),
-    settings={
-        "map": {
-            "x": {"property": "density"},
-            "y": {"property": "energy"},
-            "color": {"property": "hull_energy"},
-            "symbol": "structure_type",
-            "size": {"factor": 35},
-        },
-        "structure": [{"unitCell": True, "supercell": {"0": 2, "1": 2, "2": 2}}],
-    },
-)
 
 ######################################################################
 # Generalized Convex Hull
@@ -118,7 +122,6 @@ chemiscope.show(
 #
 
 
-######################################################################
 # A first step is to computes suitable ML descriptors. Here we have used
 # ``rascaline`` to evaluate average SOAP features for the structures. We
 # will load pre-computed features to reduce the dependencies of these
@@ -205,34 +208,36 @@ print(f"Mean hull energy for 'other' structures {dch_dist[iothers].mean()} kJ/mo
 
 
 ######################################################################
-# Visualize in ``chemiscope``.
+# Visualize in ``chemiscope``. This runs only in a notebook, and
+# requires having the ``chemiscope`` package installed.
 #
-
-# adds PCA features to info fields
-for i, f in enumerate(structures):
-    for j in range(len(pca_features[i])):
-        f.info["pca_" + str(j + 1)] = pca_features[i, j]
-structure_properties = chemiscope.extract_properties(structures)
-structure_properties.update({"per_atom_energy": energy, "hull_energy": dch_dist})
-chemiscope.show(
-    frames=structures,
-    properties=structure_properties,
-    settings={
-        "map": {
-            "x": {"property": "pca_1"},
-            "y": {"property": "pca_2"},
-            "z": {"property": "energy"},
-            "symbol": "type",
-            "symbol": "type",
-            "color": {"property": "hull_energy"},
-            "size": {"factor": 35, "mode": "linear", "property": "", "reverse": True},
-        },
-        "structure": [
-            {
-                "bonds": True,
-                "unitCell": True,
-                "keepOrientation": True,
-            }
-        ],
-    },
-)
+# .. code:: python
+#
+#    for i, f in enumerate(structures):
+#        for j in range(len(pca_features[i])):
+#            f.info["pca_" + str(j + 1)] = pca_features[i, j]
+#    structure_properties = chemiscope.extract_properties(structures)
+#    structure_properties.update({"per_atom_energy": energy, "hull_energy": dch_dist})
+#    chemiscope.show(
+#        frames=structures,
+#        properties=structure_properties,
+#        settings={
+#            "map": {
+#                "x": {"property": "pca_1"},
+#                "y": {"property": "pca_2"},
+#                "z": {"property": "energy"},
+#                "symbol": "type",
+#                "symbol": "type",
+#                "color": {"property": "hull_energy"},
+#                "size": {"factor": 35, "mode": "linear", 
+#                         "property": "", "reverse": True},
+#            },
+#            "structure": [
+#                {
+#                    "bonds": True,
+#                    "unitCell": True,
+#                    "keepOrientation": True,
+#                }
+#            ],
+#        },
+#    )
