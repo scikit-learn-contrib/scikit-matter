@@ -4,5 +4,4 @@ sphinx
 sphinx_rtd_theme
 sphinx-gallery
 ase
-chemiscope
 tqdm
