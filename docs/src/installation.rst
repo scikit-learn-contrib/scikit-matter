@@ -1,6 +1,6 @@
 .. include:: ../../README.rst
    :start-after: installation
-   :end-before: contributing
+   :end-before: contributors
 
 Install from source
 -------------------

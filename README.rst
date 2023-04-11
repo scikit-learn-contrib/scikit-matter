@@ -27,9 +27,9 @@ or conda
 
 You can then `import skmatter` and use scikit-matter in your projects!
 
-.. contributing
+.. contributors
 
-Contributing
+Contributors
 ------------
 
 Thanks goes to all people that make scikit-matter possible:
