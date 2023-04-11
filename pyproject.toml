@@ -36,6 +36,7 @@ dynamic = ["version"]
 
 [project.optional-dependencies]
 examples = [
+    "ase",
     "matplotlib",
     "pandas",
     "tqdm",
