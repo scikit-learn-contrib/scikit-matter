@@ -159,25 +159,31 @@ class KernelPCovR(_BasePCA, LinearModel):
     >>>
     >>> X = np.array([[-1, 1, -3, 1], [1, -2, 1, 2], [-2, 0, -2, -2], [1, 0, 2, -1]])
     >>> X = SFS().fit_transform(X)
-    >>> Y = np.array([[ 0, -5], [-1, 1], [1, -5], [-3, 2]])
+    >>> Y = np.array([[0, -5], [-1, 1], [1, -5], [-3, 2]])
     >>> Y = SFS(column_wise=True).fit_transform(Y)
     >>>
-    >>> kpcovr = KernelPCovR(mixing=0.1, n_components=2, regressor=KernelRidge(kernel='rbf', gamma=1), kernel='rbf', gamma=1)
+    >>> kpcovr = KernelPCovR(
+    ...     mixing=0.1,
+    ...     n_components=2,
+    ...     regressor=KernelRidge(kernel="rbf", gamma=1),
+    ...     kernel="rbf",
+    ...     gamma=1,
+    ... )
     >>> kpcovr.fit(X, Y)
-        KernelPCovR(gamma=1, kernel='rbf', mixing=0.1, n_components=2,
-                    regressor=KernelRidge(gamma=1, kernel='rbf'))
-    >>> T = kpcovr.transform(X)
-        [[-0.61261285, -0.18937908],
-         [ 0.45242098,  0.25453465],
-         [-0.77871824,  0.04847559],
-         [ 0.91186937, -0.21211816]]
-    >>> Yp = kpcovr.predict(X)
-        [[ 0.5100212 , -0.99488463],
-         [-0.18992219,  0.82064368],
-         [ 1.11923584, -1.04798016],
-         [-1.5635827 ,  1.11078662]]
-    >>> kpcovr.score(X, Y)
-        -0.520388347837897
+    KernelPCovR(gamma=1, kernel='rbf', mixing=0.1, n_components=2,
+                regressor=KernelRidge(gamma=1, kernel='rbf'))
+    >>> kpcovr.transform(X)
+    array([[-0.61261285, -0.18937908],
+           [ 0.45242098,  0.25453465],
+           [-0.77871824,  0.04847559],
+           [ 0.91186937, -0.21211816]])
+    >>> kpcovr.predict(X)
+    array([[ 0.5100212 , -0.99488463],
+           [-0.18992219,  0.82064368],
+           [ 1.11923584, -1.04798016],
+           [-1.5635827 ,  1.11078662]])
+    >>> round(kpcovr.score(X, Y), 5)
+    -0.52039
     """  # NoQa: E501
 
     def __init__(

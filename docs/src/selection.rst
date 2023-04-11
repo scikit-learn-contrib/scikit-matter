@@ -21,21 +21,18 @@ This can be executed using:
 .. code-block:: python
 
     selector = Selector(
-                        # the number of selections to make
-                        # if None, set to half the samples or features
-                        # if float, fraction of the total dataset to select
-                        # if int, absolute number of selections to make
-                        n_to_select=4,
-
-                        # option to use `tqdm <https://tqdm.github.io/>`_ progress bar
-                        progress_bar=True,
-
-                        # float, cutoff score to stop selecting
-                        score_threshold=1E-12
-
-                        # boolean, whether to select randomly after non-redundant selections are exhausted
-                        full=False,
-                        )
+        # the number of selections to make
+        # if None, set to half the samples or features
+        # if float, fraction of the total dataset to select
+        # if int, absolute number of selections to make
+        n_to_select=4,
+        # option to use `tqdm <https://tqdm.github.io/>`_ progress bar
+        progress_bar=True,
+        # float, cutoff score to stop selecting
+        score_threshold=1e-12,
+        # boolean, whether to select randomly after non-redundant selections are exhausted
+        full=False,
+    )
     selector.fit(X, y)
 
     Xr = selector.transform(X)
@@ -96,21 +93,19 @@ They are instantiated using
 .. code-block:: python
 
     from skmatter.feature_selection import CUR
+
     selector = CUR(
-                        n_to_select=4,
-                        progress_bar=True,
-                        score_threshold=1E-12
-                        full=False,
-
-                        # int, number of eigenvectors to use in computing pi
-                        k = 1,
-
-                        # int, number of steps after which to recompute pi
-                        recompute_every = 1,
-
-                        # float, threshold below which scores will be considered 0, defaults to 1E-12
-                        tolerance=1E-12,
-                        )
+        n_to_select=4,
+        progress_bar=True,
+        score_threshold=1e-12,
+        full=False,
+        # int, number of eigenvectors to use in computing pi
+        k=1,
+        # int, number of steps after which to recompute pi
+        recompute_every=1,
+        # float, threshold below which scores will be considered 0, defaults to 1E-12
+        tolerance=1e-12,
+    )
     selector.fit(X)
 
     Xr = selector.transform(X)
@@ -141,25 +136,22 @@ and are instantiated using
 .. code-block:: python
 
     from skmatter.feature_selection import PCovCUR
+
     selector = PCovCUR(
-                        n_to_select=4,
-                        progress_bar=True,
-                        score_threshold=1E-12
-                        full=False,
-
-                        # float, default=0.5
-                        # The PCovR mixing parameter, as described in PCovR as alpha
-                        mixing = 0.5,
-
-                        # int, number of eigenvectors to use in computing pi
-                        k = 1,
-
-                        # int, number of steps after which to recompute pi
-                        recompute_every = 1,
-
-                        # float, threshold below which scores will be considered 0, defaults to 1E-12
-                        tolerance=1E-12,
-                        )
+        n_to_select=4,
+        progress_bar=True,
+        score_threshold=1e-12,
+        full=False,
+        # float, default=0.5
+        # The PCovR mixing parameter, as described in PCovR as alpha
+        mixing=0.5,
+        # int, number of eigenvectors to use in computing pi
+        k=1,
+        # int, number of steps after which to recompute pi
+        recompute_every=1,
+        # float, threshold below which scores will be considered 0, defaults to 1E-12
+        tolerance=1e-12,
+    )
     selector.fit(X, y)
 
     Xr = selector.transform(X)
@@ -194,17 +186,17 @@ These selectors can be instantiated using :py:class:`skmatter.feature_selection.
 .. code-block:: python
 
     from skmatter.feature_selection import FPS
-    selector = FPS(
-                        n_to_select=4,
-                        progress_bar=True,
-                        score_threshold=1E-12
-                        full=False,
 
-                        # int or 'random', default=0
-                        # Index of the first selection.
-                        # If ‘random’, picks a random value when fit starts.
-                        initialize = 0,
-                        )
+    selector = FPS(
+        n_to_select=4,
+        progress_bar=True,
+        score_threshold=1e-12,
+        full=False,
+        # int or 'random', default=0
+        # Index of the first selection.
+        # If ‘random’, picks a random value when fit starts.
+        initialize=0,
+    )
     selector.fit(X)
 
     Xr = selector.transform(X)
@@ -236,21 +228,20 @@ be instantiated using
 .. code-block:: python
 
     from skmatter.feature_selection import PCovFPS
+
     selector = PCovFPS(
-                        n_to_select=4,
-                        progress_bar=True,
-                        score_threshold=1E-12
-                        full=False,
-
-                        # float, default=0.5
-                        # The PCovR mixing parameter, as described in PCovR as alpha
-                        mixing = 0.5,
-
-                        # int or 'random', default=0
-                        # Index of the first selection.
-                        # If ‘random’, picks a random value when fit starts.
-                        initialize = 0,
-                        )
+        n_to_select=4,
+        progress_bar=True,
+        score_threshold=1e-12,
+        full=False,
+        # float, default=0.5
+        # The PCovR mixing parameter, as described in PCovR as alpha
+        mixing=0.5,
+        # int or 'random', default=0
+        # Index of the first selection.
+        # If ‘random’, picks a random value when fit starts.
+        initialize=0,
+    )
     selector.fit(X, y)
 
     Xr = selector.transform(X)
@@ -270,20 +261,21 @@ These selectors can be instantiated using
 .. code-block:: python
 
     from skmatter.feature_selection import VoronoiFPS
+
     selector = VoronoiFPS(
-                        n_to_select=4,
-                        progress_bar=True,
-                        score_threshold=1E-12
-                        full=False,
-                        #n_trial_calculation used for calculation of full_fraction,
-                        #so you need to determine only one parameter
-                        n_trial_calculation = 4,
-                        full_fraction = None,
-                        # int or 'random', default=0
-                        # Index of the first selection.
-                        # If ‘random’, picks a random value when fit starts.
-                        initialize = 0,
-                        )
+        n_to_select=4,
+        progress_bar=True,
+        score_threshold=1e-12,
+        full=False,
+        # n_trial_calculation used for calculation of full_fraction,
+        # so you need to determine only one parameter
+        n_trial_calculation=4,
+        full_fraction=None,
+        # int or 'random', default=0
+        # Index of the first selection.
+        # If ‘random’, picks a random value when fit starts.
+        initialize=0,
+    )
     selector.fit(X)
 
     Xr = selector.transform(X)
@@ -312,15 +304,16 @@ This selector can be instantiated using
 .. code-block:: python
 
     from skmatter.sample_selection import DirectionalConvexHull
+
     selector = DirectionalConvexHull(
-                        # Indices of columns of X to use for fitting
-                        # the convex hull
-                        low_dim_idx=[0,1],
-                        )
-    selector.fit(X,y)
+        # Indices of columns of X to use for fitting
+        # the convex hull
+        low_dim_idx=[0, 1],
+    )
+    selector.fit(X, y)
 
     # Get the distance to the convex hull for samples used to fit the
     # convex hull. This can also be called using other samples (X_new)
     # and corresponding properties (y_new) that were not used to fit
     # the hull.
-    Xr = selector.score_samples(X,y)
+    Xr = selector.score_samples(X, y)

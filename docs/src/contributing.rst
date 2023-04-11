@@ -96,7 +96,7 @@ Contributing a dataset is easy. First, copy your numpy file into
 Next, create a documentation file in ``src/skmatter/datasets/data/my-dataset.rst``.
 This file should look like this:
 
-.. code-block::
+.. code-block:: rst
 
   .. _my-dataset:
 
@@ -142,32 +142,32 @@ Then, show ``scikit-matter`` how to load your data by adding a loader function t
 
 .. code-block:: python
 
-  def load_my_dataset():
-      """Load and returns my dataset.
+    def load_my_dataset():
+        """Load and returns my dataset.
 
-      Returns
-      -------
-      my_data : sklearn.utils.Bunch
-          Dictionary-like object, with the following attributes:
+        Returns
+        -------
+        my_data : sklearn.utils.Bunch
+            Dictionary-like object, with the following attributes:
 
-          data : `sklearn.utils.Bunch` --
-          contains the keys ``X`` and ``y``.
-          My input vectors and properties, respectively.
+            data : `sklearn.utils.Bunch` --
+            contains the keys ``X`` and ``y``.
+            My input vectors and properties, respectively.
 
-          DESCR: `str` --
-          The full description of the dataset.
-      """
-      module_path = dirname(__file__)
-      target_filename = join(module_path, "data", "my-dataset.npz")
-      raw_data = np.load(target_filename)
-      data = Bunch(
-          X=raw_data["X"],
-          y=raw_data["y"],
-      )
-      with open(join(module_path, "descr", "my-dataset.rst")) as rst_file:
-          fdescr = rst_file.read()
+            DESCR: `str` --
+            The full description of the dataset.
+        """
+        module_path = dirname(__file__)
+        target_filename = join(module_path, "data", "my-dataset.npz")
+        raw_data = np.load(target_filename)
+        data = Bunch(
+            X=raw_data["X"],
+            y=raw_data["y"],
+        )
+        with open(join(module_path, "descr", "my-dataset.rst")) as rst_file:
+            fdescr = rst_file.read()
 
-      return Bunch(data=data, DESCR=fdescr)
+        return Bunch(data=data, DESCR=fdescr)
 
 Add this function to ``src/skmatter/datasets/__init__.py``.
 
@@ -176,17 +176,19 @@ properly. It should look something like this:
 
 .. code-block:: python
 
-  class MyDatasetTests(unittest.TestCase):
-    @classmethod
-    def setUpClass(cls):
-        cls.my_data = load_my_data()
+    class MyDatasetTests(unittest.TestCase):
+        @classmethod
+        def setUpClass(cls):
+            cls.my_data = load_my_data()
 
-    def test_load_my_data(self):
-        # test if representations and properties have commensurate shape
-        self.assertTrue(self.my_data.data.X.shape[0] == self.my_data.data.y.shape[0])
+        def test_load_my_data(self):
+            # test if representations and properties have commensurate shape
+            self.assertTrue(
+                self.my_data.data.X.shape[0] == self.my_data.data.y.shape[0]
+            )
 
-    def test_load_my_data_descr(self):
-        self.my_data.DESCR
+        def test_load_my_data_descr(self):
+            self.my_data.DESCR
 
 
 You're good to go! Time to submit a `pull request.
