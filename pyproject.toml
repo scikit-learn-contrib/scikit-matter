@@ -66,6 +66,9 @@ include = [
 [tool.coverage.xml]
 output = 'tests/coverage.xml'
 
+[tool.pytest.ini_options]
+testpaths = "tests"
+
 [tool.isort]
 skip = "__init__.py"
 profile = "black"
