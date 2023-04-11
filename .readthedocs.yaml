@@ -25,4 +25,5 @@ python:
     - method: pip
       path: .
       extra_requirements:
+        # The documentation runs "examples" to produce outputs via sphinx-gallery.
         - examples
