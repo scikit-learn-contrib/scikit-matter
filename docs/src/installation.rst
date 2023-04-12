@@ -1,6 +1,6 @@
 .. include:: ../../README.rst
-   :start-after: installation
-   :end-before: contributors
+   :start-after: marker-installation
+   :end-before: marker-issues
 
 Install from source
 -------------------

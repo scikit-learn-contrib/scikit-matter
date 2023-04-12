@@ -3,11 +3,18 @@
 Contributing
 ============
 
-Start by installing the development dependencies:
+.. include:: ../../README.rst
+   :start-after: marker-contributing
+   :end-before: marker-contributors
+
+Getting started
+---------------
+
+To help with developing start by installing the development dependencies:
 
 .. code-block:: bash
 
-  pip install tox black flake8
+  pip install tox
 
 
 Then this package itself
@@ -22,7 +29,7 @@ This install the package in development mode, making it importable globally and 
 you to edit the code and directly use the updated version.
 
 Running the tests
-#################
+-----------------
 
 The testsuite is implemented using Python's `unittest`_ framework and should be set-up
 and run in an isolated virtual environment with `tox`_. All tests can be run with
@@ -50,7 +57,7 @@ are plugins to do this with `all major editors
 .. _tox: https://tox.readthedocs.io/en/latest
 
 Contributing to the documentation
-#################################
+---------------------------------
 
 The documentation is written in reStructuredText (rst) and uses `sphinx`_ documentation
 generator. In order to modify the documentation, first create a local version on your
@@ -74,18 +81,25 @@ following command (or open the :file:`docs/build/html/index.html` file manually)
 
 .. _`sphinx` : https://www.sphinx-doc.org
 
-Issues and Pull Requests
-########################
+Contributing new examples
+-------------------------
 
-Having a problem with scikit-matter? Please let us know by
-`submitting an issue <https://github.com/lab-cosmo/scikit-matter/issues>`_.
+The examples and tutorials are written as plain Python files and will be converted and
+rendered for the documentation using `Sphinx-Gallery
+<https://sphinx-gallery.github.io/stable/index.html>`.
 
-Submit new features or bug fixes through a `pull request
-<https://github.com/lab-cosmo/scikit-matter/pulls>`_.
+All examples are located in the ``examples`` directory in the root of the repository. To
+contribute a new example create a new ``.py`` file in one of the subdirectories. For
+writing the example/tutorial you can use another file for inspiration. Details on how to
+structure a Python script for Sphinx-Gallery are given in the `Sphinx-Gallery
+documentation <https://sphinx-gallery.github.io/stable/syntax.html>`.
+
+We encourage yoy to at least add one plot to your example to provide a nice image for
+the gallery on the website.
 
 
 Contributing Datasets
-#####################
+---------------------
 
 Have an example dataset that would fit into scikit-matter?
 
@@ -193,10 +207,3 @@ properly. It should look something like this:
 
 You're good to go! Time to submit a `pull request.
 <https://github.com/lab-cosmo/scikit-matter/pulls>`_
-
-
-License
-#######
-
-This project is distributed under the BSD-3-Clauses license. By contributing to it you
-agree to distribute your changes under the same license.
