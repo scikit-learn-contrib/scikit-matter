@@ -1,12 +1,16 @@
 scikit-matter
 =============
 
-|tests| |codecov| |docs| |pypi| |conda| |docs|
+|tests| |codecov| |pypi| |conda| |docs|
 
 A collection of scikit-learn compatible utilities that implement methods born out of the
 materials science and chemistry communities.
 
-.. installation
+For details, tutorials, and examples, please have a look at our `documentation`_.
+
+.. _`documentation`: https://scikit-matter.readthedocs.io
+
+.. marker-installation
 
 Installation
 ------------
@@ -27,7 +31,43 @@ or conda
 
 You can then `import skmatter` and use scikit-matter in your projects!
 
-.. contributors
+.. marker-issues
+
+Having problems or ideas?
+-------------------------
+
+Having a problem with scikit-matter? Please let us know by `submitting an issue
+<https://github.com/lab-cosmo/scikit-matter/issues>`_.
+
+Submit new features or bug fixes through a `pull request
+<https://github.com/lab-cosmo/scikit-matter/pulls>`_.
+
+.. marker-contributing
+
+Call for Contributions
+----------------------
+
+We always welcome new contributors. If you want to help us take a look at our
+`contribution guidelines`_ and afterwards you may start with an open issue marked as
+`good first issue`_.
+
+Writing code is not the only way to contribute to the project. You can also:
+
+* review `pull requests`_
+* help us stay on top of new and old `issues`_
+* develop `examples and tutorials`_
+* maintain and `improve our documentation`_
+* contribute `new datasets`_
+
+.. _`contribution guidelines`: https://scikit-matter.readthedocs.io/en/latest/contributing.html
+.. _`good first issue`: https://github.com/lab-cosmo/scikit-matter/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22
+.. _`pull requests`: https://github.com/lab-cosmo/scikit-matter/pulls
+.. _`issues`: https://github.com/lab-cosmo/scikit-matter/issues
+.. _`improve our documentation`: https://scikit-matter.readthedocs.io/en/latest/contributing.html#contributing-to-the-documentation
+.. _`examples and tutorials`: https://scikit-matter.readthedocs.io/en/latest/contributing.html#contributing-new-examples
+.. _`new datasets`: https://scikit-matter.readthedocs.io/en/latest/contributing.html#contributing-datasets
+
+.. marker-contributors
 
 Contributors
 ------------
@@ -35,14 +75,7 @@ Contributors
 Thanks goes to all people that make scikit-matter possible:
 
 .. image:: https://contrib.rocks/image?repo=lab-cosmo/scikit-matter
-   :target: https://github.com/lab-cosmo/equistore/graphs/contributors
-
-We always welcome new contributors. If you want to help us take a look at
-our `contribution guidelines`_ and afterwards you may start with an open issue
-marked as `good first issue`_.
-
-.. _`contribution guidelines`: docs/src/contributing.rst
-.. _`good first issue`: https://github.com/lab-cosmo/scikit-matter/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22
+   :target: https://github.com/lab-cosmo/scikit-matter/graphs/contributors
 
 .. |tests| image:: https://github.com/lab-cosmo/scikit-matter/workflows/Test/badge.svg
    :alt: Github Actions Tests Job Status

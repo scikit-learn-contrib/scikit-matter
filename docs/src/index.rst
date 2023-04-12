@@ -19,6 +19,10 @@ scikit-matter contains a toolbox of methods for unsupervised and supervised anal
 ML datasets, including the comparison, decomposition, and selection of features and
 samples.
 
+.. include:: ../../README.rst
+   :start-after: marker-issues
+   :end-before: marker-contributing
+
 .. toctree::
   :maxdepth: 1
   :caption: Contents:
