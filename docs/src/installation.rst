@@ -1,11 +1,12 @@
-Installation
-============
-
-scikit-matter is, by design, relatively lightweight, and only requires the most recent
-release of `scikit-learn <scikit-learn.org>`_ be installed.
+.. include:: ../../README.rst
+   :start-after: installation
+   :end-before: contributors
 
 Install from source
-###################
+-------------------
+
+For development purposes you should clone the repository and install the current
+development version from the source code
 
 .. code-block:: bash
 
