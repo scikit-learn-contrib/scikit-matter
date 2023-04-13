@@ -45,6 +45,7 @@ extensions = [
     "sphinx.ext.napoleon",
     "sphinx_gallery.gen_gallery",
     "sphinx.ext.intersphinx",
+    "sphinx_toggleprompt",
 ]
 
 example_subdirs = ["pcovr", "selection", "regression", "reconstruction"]

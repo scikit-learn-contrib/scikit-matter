@@ -60,7 +60,9 @@ class PCovR(_BasePCA, LinearModel):
     >>> # False otherwise.
     >>> scaler = SFS(column_wise=True)
     >>>
-    >>> scaler.fit(A) # replace with your matrix
+    >>> A = np.array([[1, 2], [2, 1]])  # replace with your matrix
+    >>> scaler.fit(A)
+    StandardFlexibleScaler(column_wise=True)
     >>> A = scaler.transform(A)
 
     Parameters
@@ -174,20 +176,20 @@ class PCovR(_BasePCA, LinearModel):
     >>> import numpy as np
     >>> from skmatter.decomposition import PCovR
     >>> X = np.array([[-1, 1, -3, 1], [1, -2, 1, 2], [-2, 0, -2, -2], [1, 0, 2, -1]])
-    >>> Y = np.array([[ 0, -5], [-1, 1], [1, -5], [-3, 2]])
+    >>> Y = np.array([[0, -5], [-1, 1], [1, -5], [-3, 2]])
     >>> pcovr = PCovR(mixing=0.1, n_components=2)
     >>> pcovr.fit(X, Y)
     PCovR(mixing=0.1, n_components=2, space='sample')
-    >>> T = pcovr.transform(X)
-        [[ 3.2630561 ,  0.06663787],
-         [-2.69395511, -0.41582771],
-         [ 3.48683147, -0.83164387],
-         [-4.05593245,  1.18083371]]
-    >>> Yp = pcovr.predict(X)
-        [[ 0.01374656, -5.00943466],
-         [-1.02804032,  1.06737777],
-         [ 0.98167556, -4.9830631 ],
-         [-2.99627428,  1.98241962]]
+    >>> pcovr.transform(X)
+    array([[ 3.2630561 ,  0.06663787],
+           [-2.69395511, -0.41582771],
+           [ 3.48683147, -0.83164387],
+           [-4.05593245,  1.18083371]])
+    >>> pcovr.predict(X)
+    array([[ 0.01371776, -5.00945512],
+           [-1.02805338,  1.06736871],
+           [ 0.98166504, -4.98307078],
+           [-2.9963189 ,  1.98238856]])
     """  # NoQa: E501
 
     def __init__(

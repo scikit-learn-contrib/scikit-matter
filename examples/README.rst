@@ -8,6 +8,6 @@ suggest you check out the pedagogic notebooks in our companion project
 For running the examples locally install `scikit-matter` with the ``examples``
 optional dependencies.
 
-.. code-block:: python
+.. code-block:: bash
 
     pip install skmatter[examples]

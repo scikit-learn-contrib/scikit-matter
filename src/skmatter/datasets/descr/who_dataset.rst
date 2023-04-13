@@ -56,8 +56,8 @@ folder named ``who_data``:
     import pandas as pd
     import numpy as np
 
-    files = os.listdir('who_data/')
-    indicators = [f[4:f[4:].index('_')+4] for f in files]
+    files = os.listdir("who_data/")
+    indicators = [f[4 : f[4:].index("_") + 4] for f in files]
     indicator_codes = {}
     data_dict = {}
     entries = []
@@ -80,10 +80,20 @@ folder named ``who_data``:
                 ):
                     if (index, year) not in data_dict:
                         data_dict[(index, year)] = np.nan * np.ones(len(indicators))
-                    data_dict[(index, year)][indicators.index(indicator)] = data.loc[index].loc[str(year)]
+                    data_dict[(index, year)][indicators.index(indicator)] = data.loc[
+                        index
+                    ].loc[str(year)]
 
-    with open('who_data.csv','w') as outf:
-        outf.write('Country,Year,'+','.join(indicators)+'\n')
+    with open("who_data.csv", "w") as outf:
+        outf.write("Country,Year," + ",".join(indicators) + "\n")
         for key, data in data_dict.items():
-            if np.count_nonzero(~np.isnan(np.array(data, dtype=float))) == len(indicators):
-                outf.write('{},{},{}\n'.format(key[0].replace(',',' '), key[1], ','.join([str(d) for d in data])))
+            if np.count_nonzero(~np.isnan(np.array(data, dtype=float))) == len(
+                indicators
+            ):
+                outf.write(
+                    "{},{},{}\n".format(
+                        key[0].replace(",", " "),
+                        key[1],
+                        ",".join([str(d) for d in data]),
+                    )
+                )

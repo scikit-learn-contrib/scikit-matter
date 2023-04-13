@@ -77,9 +77,7 @@ class StandardFlexibleScaler(TransformerMixin, BaseEstimator):
     --------
     >>> import numpy as np
     >>> from skmatter.preprocessing import StandardFlexibleScaler
-    >>> X = np.array([[ 1., -2.,  2.],
-    ...               [-2.,  1.,  3.],
-    ...               [ 4.,  1., -2.]])
+    >>> X = np.array([[1.0, -2.0, 2.0], [-2.0, 1.0, 3.0], [4.0, 1.0, -2.0]])
     >>> transformer = StandardFlexibleScaler().fit(X)
     >>> transformer
     StandardFlexibleScaler()
@@ -92,9 +90,9 @@ class StandardFlexibleScaler(TransformerMixin, BaseEstimator):
            [-3.,  1.,  2.],
            [ 3.,  1., -3.]])
     >>> transformer.scale_ * transformer.transform(X) + transformer.mean_
-        array([[ 1., -2.,  2.],
-               [-2.,  1.,  3.],
-               [ 4.,  1., -2.]])
+    array([[ 1., -2.,  2.],
+           [-2.,  1.,  3.],
+           [ 4.,  1., -2.]])
     """
 
     def __init__(
@@ -261,10 +259,8 @@ class KernelNormalizer(KernelCenterer):
     --------
     >>> from skmatter.preprocessing import KernelNormalizer
     >>> from sklearn.metrics.pairwise import pairwise_kernels
-    >>> X = [[ 1., -2.,  2.],
-    ...      [ -2.,  1.,  3.],
-    ...      [ 4.,  1., -2.]]
-    >>> K = pairwise_kernels(X, metric='linear')
+    >>> X = [[1.0, -2.0, 2.0], [-2.0, 1.0, 3.0], [4.0, 1.0, -2.0]]
+    >>> K = pairwise_kernels(X, metric="linear")
     >>> K
     array([[  9.,   2.,  -2.],
            [  2.,  14., -13.],
