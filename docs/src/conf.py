@@ -42,9 +42,9 @@ release = skmatter.__version__
 # ones.
 extensions = [
     "sphinx.ext.autodoc",
+    "sphinx.ext.intersphinx",
     "sphinx.ext.napoleon",
     "sphinx_gallery.gen_gallery",
-    "sphinx.ext.intersphinx",
     "sphinx_toggleprompt",
 ]
 
@@ -61,12 +61,12 @@ sphinx_gallery_conf = {
 # Configuration for intersphinx: refer to the Python standard library
 # and other packages
 intersphinx_mapping = {
-    "scipy": ("https://docs.scipy.org/doc/scipy/", None),
     "matplotlib": ("https://matplotlib.org/stable/", None),
     "numpy": ("https://numpy.org/doc/stable/", None),
-    "python": ("https://docs.python.org/3/", None),
-    "sklearn": ("https://scikit-learn.org/stable", None),
     "pandas": ("https://pandas.pydata.org/docs/", None),
+    "python": ("https://docs.python.org/3/", None),
+    "scipy": ("https://docs.scipy.org/doc/scipy/", None),
+    "sklearn": ("https://scikit-learn.org/stable", None),
 }
 
 
