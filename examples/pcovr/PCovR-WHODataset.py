@@ -14,7 +14,7 @@ from sklearn.decomposition import PCA, KernelPCA
 from sklearn.kernel_ridge import KernelRidge
 from sklearn.linear_model import Ridge, RidgeCV
 from sklearn.metrics import r2_score
-from sklearn.model_selection import GridSearchCV, train_test_split
+from sklearn.model_selection import train_test_split
 
 from skmatter.datasets import load_who_dataset
 from skmatter.decomposition import KernelPCovR, PCovR
@@ -157,6 +157,7 @@ for c, x in zip(columns, X.T):
 # from using the following parameters.
 #
 
+# from sklearn.model_selection import GridSearchCV
 # param_grid = {"gamma": np.logspace(-8, 3, 20), "alpha": np.logspace(-8, 3, 20)}
 # clf = KernelRidge(kernel="rbf")
 #
