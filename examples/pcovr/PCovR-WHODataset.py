@@ -145,30 +145,35 @@ for c, x in zip(columns, X.T):
 #
 # Train the Different Kernel DR Techniques
 # ----------------------------------------
-#
+# Below, we obtain the regression errors using a variety of kernel DR techniques.
+
+# %%
 # Select Kernel Hyperparameters
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+#
+# In the original publication, we used the following code to determine
+# the best hyperparameters for the kernel ridge regression via a cross-
+# validated grid-search, which determined that the best results came
+# from using the following parameters.
+#
 
-param_grid = {"gamma": np.logspace(-8, 3, 20), "alpha": np.logspace(-8, 3, 20)}
-clf = KernelRidge(kernel="rbf")
+# param_grid = {"gamma": np.logspace(-8, 3, 20), "alpha": np.logspace(-8, 3, 20)}
+# clf = KernelRidge(kernel="rbf")
+#
+# gs = GridSearchCV(estimator=clf, param_grid=param_grid)
+# gs.fit(X_train, y_train)
 
-gs = GridSearchCV(estimator=clf, param_grid=param_grid)
-gs.fit(X_train, y_train)
-gs.best_estimator_
+gamma = 0.08858667904100832
+alpha = 0.0016237767391887243
+kernel_params = {"kernel": "rbf", "gamma": gamma}
 
 
 # %%
-# Below, we obtain the regression errors using a variety of kernel DR techniques.
 #
 # Kernel Regression
 # ^^^^^^^^^^^^^^^^^
-
-gs.best_score_
-
-# %%
 #
-
-kernel_params = {"kernel": "rbf", "gamma": gs.best_estimator_.gamma}
+KernelRidge(**kernel_params, alpha=alpha).fit(X_train, y_train).score(X_test, y_test)
 
 
 # %%
@@ -179,7 +184,7 @@ kernel_params = {"kernel": "rbf", "gamma": gs.best_estimator_.gamma}
 
 kpcovr = KernelPCovR(
     n_components=n_components,
-    regressor=KernelRidge(alpha=gs.best_estimator_.alpha, **kernel_params),
+    regressor=KernelRidge(alpha=alpha, **kernel_params),
     mixing=0.5,
     **kernel_params,
 ).fit(X_train, y_train)
