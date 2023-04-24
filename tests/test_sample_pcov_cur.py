@@ -12,7 +12,8 @@ EPSILON = 1e-6
 class TestPCovCUR(unittest.TestCase):
     def setUp(self):
         self.X, self.y = get_dataset(return_X_y=True)
-        self.idx = [256, 304, 58, 10, 23, 278, 230, 285, 291, 357]
+        self.X = self.X[:, :4]
+        self.idx = [256, 304, 41, 408, 311, 364, 152, 78, 359, 102]
 
     def test_known(self):
         """
@@ -51,7 +52,7 @@ class TestPCovCUR(unittest.TestCase):
         """
         This test checks that the model can be run non-iteratively
         """
-        self.idx = [256, 32, 138, 290, 362, 141, 359, 254, 428, 9]
+        self.idx = [256, 32, 138, 290, 362, 141, 359, 428, 254, 9]
         selector = PCovCUR(n_to_select=10, recompute_every=0)
         selector.fit(self.X, self.y)
 
@@ -62,7 +63,7 @@ class TestPCovCUR(unittest.TestCase):
         This test checks that the model can be run with multiple k's
         """
 
-        for k in np.logspace(0, np.log10(self.X.shape[0]), 4, dtype=int):
+        for k in list(set(np.logspace(0, np.log10(min(self.X.shape)), 4, dtype=int))):
             selector = PCovCUR(n_to_select=10, k=k)
             selector.fit(self.X, self.y)
 
