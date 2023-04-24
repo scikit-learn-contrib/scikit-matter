@@ -14,7 +14,7 @@ from sklearn.decomposition import PCA, KernelPCA
 from sklearn.kernel_ridge import KernelRidge
 from sklearn.linear_model import Ridge, RidgeCV
 from sklearn.metrics import r2_score
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import GridSearchCV, train_test_split
 
 from skmatter.datasets import load_who_dataset
 from skmatter.decomposition import KernelPCovR, PCovR
@@ -145,27 +145,33 @@ for c, x in zip(columns, X.T):
 #
 # Train the Different Kernel DR Techniques
 # ----------------------------------------
+#
 # Below, we obtain the regression errors using a variety of kernel DR techniques.
-
-# %%
+#
 # Select Kernel Hyperparameters
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 #
-# In the original publication, we used the following code to determine
-# the best hyperparameters for the kernel ridge regression via a cross-
-# validated grid-search, which determined that the best results came
-# from using the following parameters.
-#
+# In the original publication, we used a cross-validated grid search to determine the
+# best hyperparameters for the kernel ridge regression. We do not rerun this expensive
+# search in this example but use the obtained parameters for ``gamma`` and ``alpha``.
+# You may rerun the calculation locally by setting ``recalc=True``.
 
-# from sklearn.model_selection import GridSearchCV
-# param_grid = {"gamma": np.logspace(-8, 3, 20), "alpha": np.logspace(-8, 3, 20)}
-# clf = KernelRidge(kernel="rbf")
-#
-# gs = GridSearchCV(estimator=clf, param_grid=param_grid)
-# gs.fit(X_train, y_train)
 
-gamma = 0.08858667904100832
-alpha = 0.0016237767391887243
+recalc = False
+
+if recalc:
+    param_grid = {"gamma": np.logspace(-8, 3, 20), "alpha": np.logspace(-8, 3, 20)}
+
+    clf = KernelRidge(kernel="rbf")
+    gs = GridSearchCV(estimator=clf, param_grid=param_grid)
+    gs.fit(X_train, y_train)
+
+    gamma = gs.best_estimator_.gamma
+    alpha = gs.best_estimator_.alpha
+else:
+    gamma = 0.08858667904100832
+    alpha = 0.0016237767391887243
+
 kernel_params = {"kernel": "rbf", "gamma": gamma}
 
 
@@ -173,9 +179,9 @@ kernel_params = {"kernel": "rbf", "gamma": gamma}
 #
 # Kernel Regression
 # ^^^^^^^^^^^^^^^^^
-#
-KernelRidge(**kernel_params, alpha=alpha).fit(X_train, y_train).score(X_test, y_test)
 
+
+KernelRidge(**kernel_params, alpha=alpha).fit(X_train, y_train).score(X_test, y_test)
 
 # %%
 #
