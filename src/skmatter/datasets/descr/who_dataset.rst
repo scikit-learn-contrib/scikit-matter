@@ -22,6 +22,11 @@ where the corresponding file names are `API_{dataset}_DS2_excel_en_{version}.xls
 This dataset, intended only for demonstration, contains 2020 country-year pairings and
 the corresponding values above.
 
+Function Call
+-------------
+
+.. function:: skmatter.datasets.load_who_dataset
+
 Data Set Characteristics
 ------------------------
 
