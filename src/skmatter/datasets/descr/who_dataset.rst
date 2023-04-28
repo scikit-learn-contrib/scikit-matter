@@ -52,8 +52,7 @@ References
 Reference Code
 --------------
 
-and compiled through the following script, where the datasets have been placed in a
-folder named ``who_data``:
+The following script is compiled, where the datasets have been placed in a folder named who_data:
 
 .. code-block:: python
 
