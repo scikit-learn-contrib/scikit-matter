@@ -21,7 +21,6 @@ where the corresponding file names are `API_{dataset}_DS2_excel_en_{version}.xls
 
 This dataset, intended only for demonstration, contains 2020 country-year pairings and
 the corresponding values above.
-
 Function Call
 -------------
 
@@ -52,8 +51,8 @@ References
 Reference Code
 --------------
 
-The following script is compiled, where the datasets have been placed in a 
-folder named who_data:
+The following script is compiled, where the datasets have been placed in a
+folder named ``who_data``:
 
 .. code-block:: python
 
