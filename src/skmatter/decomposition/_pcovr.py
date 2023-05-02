@@ -51,7 +51,7 @@ class PCovR(_BasePCA, LinearModel):
 
     For all PCovR methods, it is strongly suggested that :math:`\mathbf{X}` and
     :math:`\mathbf{Y}` are centered and scaled to unit variance, otherwise the
-    results will change drastically near :math:`\alpha \to 0` and :math:`\alpha \to 0`.
+    results will change drastically near :math:`\alpha \to 0` and :math:`1-\alpha \to 0`.
     This can be done with the companion preprocessing classes, where
 
     >>> from skmatter.preprocessing import StandardFlexibleScaler as SFS
