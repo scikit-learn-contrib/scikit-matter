@@ -12,9 +12,8 @@ from scipy.linalg import eigh
 from scipy.sparse.linalg import eigsh
 from sklearn.base import BaseEstimator, MetaEstimatorMixin
 from sklearn.feature_selection._base import SelectorMixin
-from sklearn.utils import check_array, check_random_state, safe_mask
-from sklearn.utils._tags import _safe_tags
-from sklearn.utils.validation import check_is_fitted
+from sklearn.utils import check_array, check_random_state, check_X_y, safe_mask
+from sklearn.utils.validation import FLOAT_DTYPES, as_float_array, check_is_fitted
 
 from .utils import (
     X_orthogonalizer,
@@ -39,7 +38,7 @@ class GreedySelector(SelectorMixin, MetaEstimatorMixin, BaseEstimator):
 
     selection_type : str, {'feature', 'sample'}
         whether to choose a subset of columns ('feature') or rows ('sample').
-        Stored in :py:attr:`self._axis_name` (as text) and :py:attr:`self._axis`
+        Stored in :py:attr:`self.axis_name` (as text) and :py:attr:`self.axis`
         (as 0 or 1 for 'sample' or 'feature', respectively).
 
     n_to_select : int or float, default=None
@@ -63,13 +62,15 @@ class GreedySelector(SelectorMixin, MetaEstimatorMixin, BaseEstimator):
     progress_bar: bool, default=False
               option to use `tqdm <https://tqdm.github.io/>`_
               progress bar to monitor selections. Stored in
-              :py:attr:`self.report_progress`.
+              :py:attr:`self.report_progress_`.
 
     full : bool, default=False
         In the case that all non-redundant selections are exhausted, choose
         randomly from the remaining features. Stored in :py:attr:`self.full`.
 
     random_state: int or RandomState instance, default=0
+
+    axis: [0,1] axis over which we are doing selection
 
     Attributes
     ----------
@@ -92,13 +93,28 @@ class GreedySelector(SelectorMixin, MetaEstimatorMixin, BaseEstimator):
         score_threshold_type="absolute",
         progress_bar=False,
         full=False,
-        random_state=0,
+        random_state=1,
+        axis=None,
     ):
-        self.selection_type = selection_type
+        if selection_type is not None and axis is None:
+            self.selection_type = selection_type
+            if selection_type == "feature":
+                self.axis = 1
+            elif selection_type == "sample":
+                self.axis = 0
+            else:
+                raise ValueError("Only feature and sample selection supported.")
+        elif axis is not None:
+            if axis in [0, 1]:
+                self.axis = axis
+                self.selection_type = ["sample", "feature"][axis]
+            else:
+                raise ValueError(
+                    "Only feature (axis=1) and sample (axis=0) selection supported."
+                )
         self.n_to_select = n_to_select
         self.score_threshold = score_threshold
         self.score_threshold_type = score_threshold_type
-        self._first_score = None
         if self.score_threshold_type not in ["relative", "absolute"]:
             raise ValueError(
                 "invalid score_threshold_type, expected one of 'relative' or 'absolute'"
@@ -126,14 +142,21 @@ class GreedySelector(SelectorMixin, MetaEstimatorMixin, BaseEstimator):
         -------
         self : object
         """
-        tags = self._get_tags()
 
-        if self.selection_type == "feature":
-            self._axis = 1
-        elif self.selection_type == "sample":
-            self._axis = 0
+        params = dict(ensure_min_samples=2, ensure_min_features=2, dtype=FLOAT_DTYPES)
+
+        if hasattr(self, "mixing") or y is not None:
+            self._validate_data(X, y, **params)
+            X, y = check_X_y(X, y, multi_output=True)
+
+            if len(y.shape) == 1:
+                # force y to have multi_output 2D format even when it's 1D, since
+                # many functions, most notably PCov routines, assume an array storage
+                # format, most notably to compute (y @ y.T)
+                y = y.reshape((len(y), 1))
+
         else:
-            raise ValueError("Only feature and sample selection supported.")
+            X = check_array(X, **params)
 
         if self.full and self.score_threshold is not None:
             raise ValueError(
@@ -141,32 +164,12 @@ class GreedySelector(SelectorMixin, MetaEstimatorMixin, BaseEstimator):
             )
 
         if self.progress_bar is True:
-            self.report_progress = get_progress_bar()
+            self.report_progress_ = get_progress_bar()
         elif self.progress_bar is False:
-            self.report_progress = no_progress_bar
+            self.report_progress_ = no_progress_bar
 
-        params = dict(
-            accept_sparse="csc",
-            force_all_finite=not tags.get("allow_nan", True),
-        )
-        if self._axis == 1:
-            params["ensure_min_features"] = 2
-        else:
-            params["ensure_min_samples"] = 2
-
-        if y is not None:
-            params["multi_output"] = True
-            X, y = self._validate_data(X, y, **params)
-
-            if len(y.shape) == 1:
-                # force y to have multi_output 2D format even when it's 1D, since
-                # many functions, most notably PCov routines, assume an array storage
-                # format, most notably to compute (y @ y.T)
-                y = y.reshape((len(y), 1))
-        else:
-            X = check_array(X, **params)
-
-        n_to_select_from = X.shape[self._axis]
+        n_to_select_from = X.shape[self.axis]
+        self.n_samples_in_, self.n_features_in_ = X.shape
 
         error_msg = (
             "n_to_select must be either None, an "
@@ -203,7 +206,7 @@ class GreedySelector(SelectorMixin, MetaEstimatorMixin, BaseEstimator):
 
         n_iterations -= self.n_selected_
 
-        for n in self.report_progress(range(n_iterations)):
+        for n in self.report_progress_(range(n_iterations)):
             new_idx = self._get_best_new_selection(self.score, X, y)
             if new_idx is not None:
                 self._update_post_selection(X, y, new_idx)
@@ -214,7 +217,7 @@ class GreedySelector(SelectorMixin, MetaEstimatorMixin, BaseEstimator):
                     stacklevel=1,
                 )
                 self.X_selected_ = np.take(
-                    self.X_selected_, np.arange(self.n_selected_), axis=self._axis
+                    self.X_selected_, np.arange(self.n_selected_), axis=self.axis
                 )
 
                 if hasattr(self, "y_selected_"):
@@ -242,26 +245,27 @@ class GreedySelector(SelectorMixin, MetaEstimatorMixin, BaseEstimator):
             The selected subset of the input.
         """
 
-        if len(X.shape) == 1:
-            X = X.reshape(-1, 1)
+        if self.axis == 0:
+            raise ValueError(
+                "Transform is not currently supported for sample selection."
+            )
 
         mask = self.get_support()
 
-        # note: we use _safe_tags instead of _get_tags because this is a
-        # public Mixin.
-        X = self._validate_data(
-            X,
-            dtype=None,
-            accept_sparse="csr",
-            force_all_finite=not _safe_tags(self, key="allow_nan"),
-            reset=False,
-            ensure_2d=self._axis,
-        )
+        X = check_array(X)
 
-        if len(mask) != X.shape[self._axis]:
-            raise ValueError("X has a different shape than during fitting.")
+        if len(X.shape) == 1:
+            if self.axis == 0:
+                X = X.reshape(-1, 1)
+            else:
+                X = X.reshape(1, -1)
 
-        if self._axis == 1:
+        if len(mask) != X.shape[self.axis]:
+            raise ValueError(
+                "X has a different shape than during fitting. Reshape your data."
+            )
+
+        if self.axis == 1:
             return X[:, safe_mask(X, mask)]
         else:
             return X[safe_mask(X, mask)]
@@ -326,13 +330,14 @@ class GreedySelector(SelectorMixin, MetaEstimatorMixin, BaseEstimator):
         """Initializes the search. Prepares an array to store the selected features."""
 
         self.n_selected_ = 0
+        self.first_score_ = None
 
         sel_shape = list(X.shape)
-        sel_shape[self._axis] = n_to_select
+        sel_shape[self.axis] = n_to_select
 
         self.X_selected_ = np.zeros(sel_shape, float)
 
-        if y is not None and self._axis == 0:
+        if y is not None and self.axis == 0:
             self.y_selected_ = np.zeros(
                 (n_to_select, y.reshape(y.shape[0], -1).shape[1]), float
             )
@@ -342,7 +347,7 @@ class GreedySelector(SelectorMixin, MetaEstimatorMixin, BaseEstimator):
         """Continues the search. Prepares an array to store the selected features."""
 
         n_pad = [(0, 0), (0, 0)]
-        n_pad[self._axis] = (0, n_to_select - self.n_selected_)
+        n_pad[self.axis] = (0, n_to_select - self.n_selected_)
 
         self.X_selected_ = np.pad(
             self.X_selected_,
@@ -368,15 +373,15 @@ class GreedySelector(SelectorMixin, MetaEstimatorMixin, BaseEstimator):
 
         max_score_idx = np.argmax(scores)
         if self.score_threshold is not None:
-            if self._first_score is None:
-                self._first_score = scores[max_score_idx]
+            if self.first_score_ is None:
+                self.first_score_ = scores[max_score_idx]
 
             if self.score_threshold_type == "absolute":
                 if scores[max_score_idx] < self.score_threshold:
                     return None
 
             if self.score_threshold_type == "relative":
-                if scores[max_score_idx] / self._first_score < self.score_threshold:
+                if scores[max_score_idx] / self.first_score_ < self.score_threshold:
                     return None
 
         return max_score_idx
@@ -386,13 +391,13 @@ class GreedySelector(SelectorMixin, MetaEstimatorMixin, BaseEstimator):
         Saves the most recently selected feature and increments the feature counter
         """
 
-        if self._axis == 1:
+        if self.axis == 1:
             self.X_selected_[:, self.n_selected_] = np.take(
-                X, last_selected, axis=self._axis
+                X, last_selected, axis=self.axis
             )
         else:
             self.X_selected_[self.n_selected_] = np.take(
-                X, last_selected, axis=self._axis
+                X, last_selected, axis=self.axis
             )
 
             if hasattr(self, "y_selected_"):
@@ -421,7 +426,7 @@ class GreedySelector(SelectorMixin, MetaEstimatorMixin, BaseEstimator):
 
     def _postprocess(self, X, y):
         """Post-process X and / or y when selection is finished"""
-        self.support_ = np.full(X.shape[self._axis], False)
+        self.support_ = np.full(X.shape[self.axis], False)
         self.support_[self.selected_idx_] = True
 
     def _more_tags(self):
@@ -518,7 +523,7 @@ class _CUR(GreedySelector):
         features and computes their initial importance score.
         """
 
-        self.X_current_ = X.copy()
+        self.X_current_ = as_float_array(X.copy())
         self.pi_ = self._compute_pi(self.X_current_)
 
         super()._init_greedy_search(X, y, n_to_select)
@@ -532,7 +537,7 @@ class _CUR(GreedySelector):
 
         for c in self.selected_idx_:
             if self.recompute_every != 0 and (
-                np.linalg.norm(np.take(self.X_current_, [c], axis=self._axis))
+                np.linalg.norm(np.take(self.X_current_, [c], axis=self.axis))
                 > self.tolerance
             ):
                 self._orthogonalize(last_selected=c)
@@ -576,7 +581,7 @@ class _CUR(GreedySelector):
             :math:`\\pi` importance for the given samples or features
         """
 
-        if self._axis == 0:
+        if self.axis == 0:
             U, _, _ = scipy.sparse.linalg.svds(X, k=self.k, return_singular_vectors="u")
             U = np.real(U)
             new_pi = (U[:, : self.k] ** 2.0).sum(axis=1)
@@ -605,7 +610,7 @@ class _CUR(GreedySelector):
         self.pi_[last_selected] = 0.0
 
     def _orthogonalize(self, last_selected):
-        if self._axis == 1:
+        if self.axis == 1:
             self.X_current_ = X_orthogonalizer(
                 x1=self.X_current_, c=last_selected, tol=self.tolerance
             )
@@ -732,7 +737,7 @@ class _PCovCUR(GreedySelector):
 
         for c in self.selected_idx_:
             if self.recompute_every != 0 and (
-                np.linalg.norm(np.take(self.X_current_, [c], axis=self._axis))
+                np.linalg.norm(np.take(self.X_current_, [c], axis=self.axis))
                 > self.tolerance
             ):
                 self._orthogonalize(last_selected=c)
@@ -800,7 +805,7 @@ class _PCovCUR(GreedySelector):
             :math:`\pi` importance for the given samples or features
         """
 
-        if self._axis == 0:
+        if self.axis == 0:
             pcovr_distance = pcovr_kernel(
                 self.mixing,
                 X,
@@ -825,7 +830,7 @@ class _PCovCUR(GreedySelector):
         return pi
 
     def _orthogonalize(self, last_selected):
-        if self._axis == 1:
+        if self.axis == 1:
             self.X_current_ = X_orthogonalizer(
                 x1=self.X_current_, c=last_selected, tol=self.tolerance
             )
@@ -834,7 +839,7 @@ class _PCovCUR(GreedySelector):
                 x1=self.X_current_.T, c=last_selected, tol=self.tolerance
             ).T
         if self.y_current_ is not None:
-            if self._axis == 1:
+            if self.axis == 1:
                 self.y_current_ = Y_feature_orthogonalizer(
                     self.y_current_, X=self.X_selected_, tol=self.tolerance
                 )
@@ -960,13 +965,13 @@ class _FPS(GreedySelector):
 
         super()._init_greedy_search(X, y, n_to_select)
 
-        self.norms_ = (X**2).sum(axis=abs(self._axis - 1))
-        self.haussdorf_ = np.full(X.shape[self._axis], np.inf)
-        self.haussdorf_at_select_ = np.full(X.shape[self._axis], np.inf)
+        self.norms_ = (X**2).sum(axis=abs(self.axis - 1))
+        self.haussdorf_ = np.full(X.shape[self.axis], np.inf)
+        self.haussdorf_at_select_ = np.full(X.shape[self.axis], np.inf)
 
         if self.initialize == "random":
             random_state = check_random_state(self.random_state)
-            initialize = random_state.randint(X.shape[self._axis])
+            initialize = random_state.randint(X.shape[self.axis])
             self.selected_idx_[0] = initialize
             self._update_post_selection(X, y, self.selected_idx_[0])
         elif isinstance(self.initialize, numbers.Integral):
@@ -986,7 +991,7 @@ class _FPS(GreedySelector):
         self.haussdorf_at_select_[last_selected] = self.haussdorf_[last_selected]
 
         # distances of all points to the new point
-        if self._axis == 1:
+        if self.axis == 1:
             new_dist = (
                 self.norms_ + self.norms_[last_selected] - 2 * X[:, last_selected].T @ X
             )
@@ -1116,7 +1121,7 @@ class _PCovFPS(GreedySelector):
 
         super()._init_greedy_search(X, y, n_to_select)
 
-        if self._axis == 1:
+        if self.axis == 1:
             self.pcovr_distance_ = pcovr_covariance(mixing=self.mixing, X=X, Y=y)
         else:
             self.pcovr_distance_ = pcovr_kernel(mixing=self.mixing, X=X, Y=y)
@@ -1125,15 +1130,15 @@ class _PCovFPS(GreedySelector):
 
         if self.initialize == "random":
             random_state = check_random_state(self.random_state)
-            initialize = random_state.randint(X.shape[self._axis])
+            initialize = random_state.randint(X.shape[self.axis])
         elif isinstance(self.initialize, numbers.Integral):
             initialize = self.initialize
         else:
             raise ValueError("Invalid value of the initialize parameter")
 
         self.selected_idx_[0] = initialize
-        self.haussdorf_ = np.full(X.shape[self._axis], np.inf)
-        self.haussdorf_at_select_ = np.full(X.shape[self._axis], np.inf)
+        self.haussdorf_ = np.full(X.shape[self.axis], np.inf)
+        self.haussdorf_at_select_ = np.full(X.shape[self.axis], np.inf)
         self._update_post_selection(X, y, self.selected_idx_[0])
 
     def _update_haussdorf(self, X, y, last_selected):
@@ -1143,7 +1148,7 @@ class _PCovFPS(GreedySelector):
         new_dist = (
             self.norms_
             + self.norms_[last_selected]
-            - 2 * np.take(self.pcovr_distance_, last_selected, axis=self._axis)
+            - 2 * np.take(self.pcovr_distance_, last_selected, axis=self.axis)
         )
 
         # update in-place the Haussdorf distance list

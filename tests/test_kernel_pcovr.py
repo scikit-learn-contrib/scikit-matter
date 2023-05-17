@@ -403,9 +403,9 @@ class KernelPCovRTestSVDSolvers(KernelPCovRBaseTest):
                 kpcovr.fit(self.X, self.Y)
 
                 if solver == "arpack":
-                    self.assertTrue(kpcovr.n_components == self.X.shape[0] - 1)
+                    self.assertTrue(kpcovr.n_components_ == self.X.shape[0] - 1)
                 else:
-                    self.assertTrue(kpcovr.n_components == self.X.shape[0])
+                    self.assertTrue(kpcovr.n_components_ == self.X.shape[0])
 
     def test_bad_solver(self):
         """

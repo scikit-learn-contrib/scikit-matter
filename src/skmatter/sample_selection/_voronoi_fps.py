@@ -195,19 +195,19 @@ class VoronoiFPS(GreedySelector):
 
         super()._init_greedy_search(X, y, n_to_select)
 
-        self.norms_ = (X**2).sum(axis=abs(self._axis - 1))
+        self.norms_ = (X**2).sum(axis=abs(self.axis - 1))
 
         if self.initialize == "random":
             random_state = check_random_state(self.random_state)
-            initialize = random_state.randint(X.shape[self._axis])
+            initialize = random_state.randint(X.shape[self.axis])
         elif isinstance(self.initialize, numbers.Integral):
             initialize = self.initialize
         else:
             raise ValueError("Invalid value of the initialize parameter")
 
         self.selected_idx_[0] = initialize
-        self.haussdorf_ = np.full(X.shape[self._axis], np.inf)
-        self.haussdorf_at_select_ = np.full(X.shape[self._axis], np.inf)
+        self.haussdorf_ = np.full(X.shape[self.axis], np.inf)
+        self.haussdorf_at_select_ = np.full(X.shape[self.axis], np.inf)
         self._update_post_selection(X, y, self.selected_idx_[0])
 
     def _continue_greedy_search(self, X, y, n_to_select):

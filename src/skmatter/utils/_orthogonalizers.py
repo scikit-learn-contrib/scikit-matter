@@ -56,9 +56,9 @@ def X_orthogonalizer(x1, c=None, x2=None, tol=1e-12, copy=False):
         if np.linalg.norm(col) < tol:
             warnings.warn("Column vector contains only zeros.", stacklevel=1)
         else:
-            col /= np.linalg.norm(col, axis=0)
+            col = np.divide(col, np.linalg.norm(col, axis=0))
 
-        xnew -= col @ (col.T @ xnew)
+        xnew -= (col @ (col.T @ xnew)).astype(xnew.dtype)
 
     return xnew
 

@@ -56,10 +56,10 @@ class StandardFlexibleScaler(TransformerMixin, BaseEstimator):
 
     Attributes
     ----------
-    n_samples_seen_: int
+    n_samples_in_: int
         Number of samples in the reference ndarray
 
-    n_features_: int
+    n_features_in_: int
         Number of features in the reference ndarray
 
     mean_ : ndarray of shape (n_features,)
@@ -110,7 +110,6 @@ class StandardFlexibleScaler(TransformerMixin, BaseEstimator):
         self.column_wise = column_wise
         self.rtol = rtol
         self.atol = atol
-        self.n_samples_seen_ = 0
         self.copy = copy
 
     def fit(self, X, y=None, sample_weight=None):
@@ -136,21 +135,28 @@ class StandardFlexibleScaler(TransformerMixin, BaseEstimator):
             Fitted scaler.
         """
 
-        self.n_samples_seen_, self.n_features_ = X.shape
+        X = self._validate_data(
+            X,
+            copy=self.copy,
+            estimator=self,
+            dtype=FLOAT_DTYPES,
+            ensure_min_samples=2,
+        )
+        self.n_samples_in_, self.n_features_in_ = X.shape
 
         if sample_weight is not None:
             sample_weight = _check_sample_weight(sample_weight, X, dtype=X.dtype)
             sample_weight = sample_weight / np.sum(sample_weight)
 
         if self.with_mean:
-            self.mean_ = np.average(X, weights=sample_weight, axis=0)
+            self.mean_ = np.ma.average(X, weights=sample_weight, axis=0)
         else:
-            self.mean_ = np.zeros(self.n_features_)
+            self.mean_ = np.zeros(self.n_features_in_)
 
         self.scale_ = 1.0
         if self.with_std:
-            X_mean = np.average(X, weights=sample_weight, axis=0)
-            var = np.average((X - X_mean) ** 2, weights=sample_weight, axis=0)
+            X_mean = np.ma.average(X, weights=sample_weight, axis=0)
+            var = np.ma.average((X - X_mean) ** 2, weights=sample_weight, axis=0)
 
             if self.column_wise:
                 if np.any(var < self.atol + abs(X_mean) * self.rtol):
@@ -158,7 +164,7 @@ class StandardFlexibleScaler(TransformerMixin, BaseEstimator):
                 self.scale_ = np.sqrt(var)
             else:
                 var_sum = var.sum()
-                if var_sum < abs(np.mean(X_mean)) * self.rtol + self.atol:
+                if var_sum < abs(np.ma.average(X_mean)) * self.rtol + self.atol:
                     raise ValueError("Cannot normalize a matrix with zero variance")
                 self.scale_ = np.sqrt(var_sum)
 
@@ -188,15 +194,15 @@ class StandardFlexibleScaler(TransformerMixin, BaseEstimator):
         X = self._validate_data(
             X,
             reset=False,
-            accept_sparse="csr",
             copy=copy,
             estimator=self,
             dtype=FLOAT_DTYPES,
-            force_all_finite="allow-nan",
         )
-        check_is_fitted(self, attributes=["n_samples_seen_", "n_features_"])
+        check_is_fitted(
+            self, attributes=["n_samples_in_", "n_features_in_", "scale_", "mean_"]
+        )
 
-        if self.n_features_ != X.shape[1]:
+        if self.n_features_in_ != X.shape[1]:
             raise ValueError("X shape does not match training shape")
         return (X - self.mean_) / self.scale_
 
@@ -213,9 +219,11 @@ class StandardFlexibleScaler(TransformerMixin, BaseEstimator):
         X : original matrix
         """
 
-        check_is_fitted(self, attributes=["n_samples_seen_", "n_features_"])
+        check_is_fitted(
+            self, attributes=["n_samples_in_", "n_features_in_", "scale_", "mean_"]
+        )
 
-        if self.n_features_ != X_tr.shape[1]:
+        if self.n_features_in_ != X_tr.shape[1]:
             raise ValueError("X shape does not match training shape")
         return X_tr * self.scale_ + self.mean_
 
@@ -310,21 +318,23 @@ class KernelNormalizer(KernelCenterer):
         Kc = self._validate_data(K, copy=True, dtype=FLOAT_DTYPES, reset=False)
 
         if sample_weight is not None:
-            self.sample_weight_ = _check_sample_weight(sample_weight, K, dtype=K.dtype)
+            self.sample_weight_ = _check_sample_weight(
+                sample_weight, Kc, dtype=Kc.dtype
+            )
             self.sample_weight_ = self.sample_weight_ / np.sum(self.sample_weight_)
         else:
             self.sample_weight_ = sample_weight
 
         if self.with_center:
             if self.sample_weight_ is not None:
-                self.K_fit_rows_ = np.average(K, weights=self.sample_weight_, axis=0)
-                self.K_fit_all_ = np.average(
+                self.K_fit_rows_ = np.ma.average(K, weights=self.sample_weight_, axis=0)
+                self.K_fit_all_ = np.ma.average(
                     self.K_fit_rows_, weights=self.sample_weight_
                 )
             else:
                 super().fit(K, y)
 
-            K_pred_cols = np.average(Kc, weights=self.sample_weight_, axis=1)[
+            K_pred_cols = np.ma.average(Kc, weights=self.sample_weight_, axis=1)[
                 :, np.newaxis
             ]
         else:
@@ -364,7 +374,7 @@ class KernelNormalizer(KernelCenterer):
         K = self._validate_data(K, copy=copy, dtype=FLOAT_DTYPES, reset=False)
 
         if self.with_center:
-            K_pred_cols = np.average(K, weights=self.sample_weight_, axis=1)[
+            K_pred_cols = np.ma.average(K, weights=self.sample_weight_, axis=1)[
                 :, np.newaxis
             ]
         else:
@@ -405,7 +415,7 @@ class KernelNormalizer(KernelCenterer):
         return self.transform(K, copy)
 
 
-class SparseKernelCenterer(TransformerMixin, BaseEstimator):
+class SparseKernelCenterer(TransformerMixin):
     r"""Kernel centering method for sparse kernels, similar to
     KernelFlexibleCenterer.
 
@@ -508,7 +518,7 @@ class SparseKernelCenterer(TransformerMixin, BaseEstimator):
         self.n_active_ = Kmm.shape[0]
 
         if self.with_center:
-            self.K_fit_rows_ = np.average(Knm, weights=sample_weight, axis=0)
+            self.K_fit_rows_ = np.ma.average(Knm, weights=sample_weight, axis=0)
         else:
             self.K_fit_rows_ = np.zeros(Knm.shape[1])
 

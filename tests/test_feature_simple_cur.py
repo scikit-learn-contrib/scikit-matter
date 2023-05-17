@@ -4,12 +4,13 @@ import numpy as np
 from sklearn import exceptions
 
 from skmatter.datasets import load_csd_1000r as load
-from skmatter.feature_selection import CUR
+from skmatter.feature_selection import CUR, FPS
 
 
 class TestCUR(unittest.TestCase):
     def setUp(self):
         self.X, _ = load(return_X_y=True)
+        self.X = FPS(n_to_select=10).fit(self.X).transform(self.X)
 
     def test_bad_transform(self):
         selector = CUR(n_to_select=2)

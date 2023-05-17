@@ -61,9 +61,11 @@ class TestGreedy(unittest.TestCase):
 
     def test_bad_y(self):
         self.X, self.Y = get_dataset(return_X_y=True)
+        Y = self.Y[:2]
+        print(self.X.shape, Y.shape)
         selector = GreedyTester(n_to_select=2)
         with self.assertRaises(ValueError):
-            selector.fit(X=self.X, y=self.Y[:2])
+            selector.fit(X=self.X, y=Y)
 
     def test_bad_transform(self):
         selector = GreedyTester(n_to_select=2)
@@ -71,7 +73,8 @@ class TestGreedy(unittest.TestCase):
         with self.assertRaises(ValueError) as cm:
             _ = selector.transform(self.X[:, :3])
         self.assertEqual(
-            str(cm.exception), "X has a different shape than during fitting."
+            str(cm.exception),
+            "X has a different shape than during fitting. Reshape your data.",
         )
 
     def test_no_nfeatures(self):
@@ -118,23 +121,20 @@ class TestGreedy(unittest.TestCase):
         X = np.array([1, 2, 3, 4, 5]).reshape(-1, 1)
         selector_sample = GreedyTester(selection_type="sample")
         selector_feature = GreedyTester(selection_type="feature")
-        selector_sample.fit(X)
         with self.assertRaises(ValueError) as cm:
             selector_feature.fit(X)
-        self.assertEqual(
-            str(cm.exception),
-            "Found array with 1 feature(s) (shape=(5, 1)) while a minimum of 2 is "
-            "required.",
-        )
-        X = X.reshape(1, -1)
-        selector_feature.fit(X)
+            self.assertEqual(
+                str(cm.exception),
+                f"Found array with 1 feature(s) (shape={X.shape})"
+                " while a minimum of 2 is required.",
+            )
         with self.assertRaises(ValueError) as cm:
             selector_sample.fit(X)
-        self.assertEqual(
-            str(cm.exception),
-            "Found array with 1 sample(s) (shape=(1, 5)) while a minimum of 2 is "
-            "required.",
-        )
+            self.assertEqual(
+                str(cm.exception),
+                "Found array with 1 sample(s) (shape=(1, 5)) while a minimum of 2 is "
+                "required.",
+            )
 
 
 if __name__ == "__main__":
