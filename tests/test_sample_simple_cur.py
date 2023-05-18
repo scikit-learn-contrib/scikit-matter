@@ -1,7 +1,6 @@
 import unittest
 
 import numpy as np
-from sklearn import exceptions
 from sklearn.datasets import fetch_california_housing as load
 
 from skmatter.sample_selection import CUR, FPS
@@ -10,12 +9,12 @@ from skmatter.sample_selection import CUR, FPS
 class TestCUR(unittest.TestCase):
     def setUp(self):
         self.X, _ = load(return_X_y=True)
-        self.X = FPS(n_to_select=100).fit(self.X).transform(self.X)
+        self.X = self.X[FPS(n_to_select=100).fit(self.X).selected_idx_]
         self.n_select = min(20, min(self.X.shape) // 2)
 
     def test_bad_transform(self):
         selector = CUR(n_to_select=2)
-        with self.assertRaises(exceptions.NotFittedError):
+        with self.assertRaises(ValueError):
             _ = selector.transform(self.X)
 
     def test_restart(self):

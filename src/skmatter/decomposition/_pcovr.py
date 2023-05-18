@@ -130,7 +130,7 @@ class PCovR(_BasePCA, LinearModel):
          Used when the 'arpack' or 'randomized' solvers are used. Pass an int
          for reproducible results across multiple function calls.
 
-    white : boolean, deprecated
+    whiten : boolean, deprecated
 
     Attributes
     ----------
@@ -181,7 +181,7 @@ class PCovR(_BasePCA, LinearModel):
     >>> Y = np.array([[0, -5], [-1, 1], [1, -5], [-3, 2]])
     >>> pcovr = PCovR(mixing=0.1, n_components=2)
     >>> pcovr.fit(X, Y)
-    PCovR(mixing=0.1, n_components=2, space='sample')
+    PCovR(mixing=0.1, n_components=2)
     >>> pcovr.transform(X)
     array([[ 3.2630561 ,  0.06663787],
            [-2.69395511, -0.41582771],
