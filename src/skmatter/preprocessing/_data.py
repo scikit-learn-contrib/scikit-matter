@@ -318,9 +318,7 @@ class KernelNormalizer(KernelCenterer):
         K = self._validate_data(K, copy=True, dtype=FLOAT_DTYPES, reset=False)
 
         if sample_weight is not None:
-            self.sample_weight_ = _check_sample_weight(
-                sample_weight, K, dtype=K.dtype
-            )
+            self.sample_weight_ = _check_sample_weight(sample_weight, K, dtype=K.dtype)
             self.sample_weight_ = self.sample_weight_ / np.sum(self.sample_weight_)
         else:
             self.sample_weight_ = sample_weight
