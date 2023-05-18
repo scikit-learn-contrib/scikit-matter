@@ -149,14 +149,14 @@ class StandardFlexibleScaler(TransformerMixin, BaseEstimator):
             sample_weight = sample_weight / np.sum(sample_weight)
 
         if self.with_mean:
-            self.mean_ = np.ma.average(X, weights=sample_weight, axis=0)
+            self.mean_ = np.average(X, weights=sample_weight, axis=0)
         else:
             self.mean_ = np.zeros(self.n_features_in_)
 
         self.scale_ = 1.0
         if self.with_std:
-            X_mean = np.ma.average(X, weights=sample_weight, axis=0)
-            var = np.ma.average((X - X_mean) ** 2, weights=sample_weight, axis=0)
+            X_mean = np.average(X, weights=sample_weight, axis=0)
+            var = np.average((X - X_mean) ** 2, weights=sample_weight, axis=0)
 
             if self.column_wise:
                 if np.any(var < self.atol + abs(X_mean) * self.rtol):
@@ -164,7 +164,7 @@ class StandardFlexibleScaler(TransformerMixin, BaseEstimator):
                 self.scale_ = np.sqrt(var)
             else:
                 var_sum = var.sum()
-                if var_sum < abs(np.ma.average(X_mean)) * self.rtol + self.atol:
+                if var_sum < abs(np.average(X_mean)) * self.rtol + self.atol:
                     raise ValueError("Cannot normalize a matrix with zero variance")
                 self.scale_ = np.sqrt(var_sum)
 
@@ -293,7 +293,7 @@ class KernelNormalizer(KernelCenterer):
         self.with_trace = with_trace
         super().__init__()
 
-    def fit(self, K=None, y=None, sample_weight=None):
+    def fit(self, K, y=None, sample_weight=None):
         """Fit KernelFlexibleCenterer
 
         Parameters
@@ -315,11 +315,11 @@ class KernelNormalizer(KernelCenterer):
             Fitted transformer.
         """
 
-        Kc = self._validate_data(K, copy=True, dtype=FLOAT_DTYPES, reset=False)
+        K = self._validate_data(K, copy=True, dtype=FLOAT_DTYPES, reset=False)
 
         if sample_weight is not None:
             self.sample_weight_ = _check_sample_weight(
-                sample_weight, Kc, dtype=Kc.dtype
+                sample_weight, K, dtype=K.dtype
             )
             self.sample_weight_ = self.sample_weight_ / np.sum(self.sample_weight_)
         else:
@@ -327,27 +327,27 @@ class KernelNormalizer(KernelCenterer):
 
         if self.with_center:
             if self.sample_weight_ is not None:
-                self.K_fit_rows_ = np.ma.average(K, weights=self.sample_weight_, axis=0)
-                self.K_fit_all_ = np.ma.average(
+                self.K_fit_rows_ = np.average(K, weights=self.sample_weight_, axis=0)
+                self.K_fit_all_ = np.average(
                     self.K_fit_rows_, weights=self.sample_weight_
                 )
             else:
                 super().fit(K, y)
 
-            K_pred_cols = np.ma.average(Kc, weights=self.sample_weight_, axis=1)[
+            K_pred_cols = np.average(K, weights=self.sample_weight_, axis=1)[
                 :, np.newaxis
             ]
         else:
-            self.K_fit_rows_ = np.zeros(Kc.shape[1])
+            self.K_fit_rows_ = np.zeros(K.shape[1])
             self.K_fit_all_ = 0.0
-            K_pred_cols = np.zeros((Kc.shape[0], 1))
+            K_pred_cols = np.zeros((K.shape[0], 1))
 
         if self.with_trace:
-            Kc -= self.K_fit_rows_
-            Kc -= K_pred_cols
-            Kc += self.K_fit_all_
+            K -= self.K_fit_rows_
+            K -= K_pred_cols
+            K += self.K_fit_all_
 
-            self.scale_ = np.trace(Kc) / Kc.shape[0]
+            self.scale_ = np.trace(K) / K.shape[0]
         else:
             self.scale_ = 1.0
 
@@ -374,7 +374,7 @@ class KernelNormalizer(KernelCenterer):
         K = self._validate_data(K, copy=copy, dtype=FLOAT_DTYPES, reset=False)
 
         if self.with_center:
-            K_pred_cols = np.ma.average(K, weights=self.sample_weight_, axis=1)[
+            K_pred_cols = np.average(K, weights=self.sample_weight_, axis=1)[
                 :, np.newaxis
             ]
         else:
@@ -518,7 +518,7 @@ class SparseKernelCenterer(TransformerMixin):
         self.n_active_ = Kmm.shape[0]
 
         if self.with_center:
-            self.K_fit_rows_ = np.ma.average(Knm, weights=sample_weight, axis=0)
+            self.K_fit_rows_ = np.average(Knm, weights=sample_weight, axis=0)
         else:
             self.K_fit_rows_ = np.zeros(Knm.shape[1])
 
