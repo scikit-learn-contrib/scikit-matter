@@ -407,6 +407,30 @@ class KernelPCovRTestSVDSolvers(KernelPCovRBaseTest):
                 else:
                     self.assertTrue(kpcovr.n_components_ == self.X.shape[0])
 
+        n_component_solvers = {
+            "mle": "full",
+            int(0.75 * max(self.X.shape)): "randomized",
+            0.1: "full",
+        }
+        for n_components, solver in n_component_solvers.items():
+            with self.subTest(solver=solver, n_components=n_components):
+                kpcovr = self.model(
+                    tol=1e-12, n_components=n_components, svd_solver="auto"
+                )
+                if solver == "randomized":
+                    n_copies = (501 // max(self.X.shape)) + 1
+                    X = np.hstack(np.repeat(self.X.copy(), n_copies)).reshape(
+                        self.X.shape[0] * n_copies, -1
+                    )
+                    Y = np.hstack(np.repeat(self.Y.copy(), n_copies)).reshape(
+                        self.X.shape[0] * n_copies, -1
+                    )
+                    kpcovr.fit(X, Y)
+                else:
+                    kpcovr.fit(self.X, self.Y)
+
+                self.assertTrue(kpcovr._fit_svd_solver == solver)
+
     def test_bad_solver(self):
         """
         This test checks that PCovR will not work with a solver that isn't in
