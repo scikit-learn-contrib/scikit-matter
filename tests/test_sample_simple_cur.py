@@ -14,7 +14,7 @@ class TestCUR(unittest.TestCase):
 
     def test_bad_transform(self):
         selector = CUR(n_to_select=2)
-        with self.assertRaises(ValueError):
+        with self.assertRaises(exceptions.NotFittedError):
             _ = selector.transform(self.X)
 
     def test_restart(self):
