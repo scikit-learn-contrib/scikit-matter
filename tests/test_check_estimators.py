@@ -20,7 +20,6 @@ from skmatter.preprocessing import KernelNormalizer, StandardFlexibleScaler
         RidgeRegression2FoldCV(),
         KernelNormalizer(),
         StandardFlexibleScaler(),
-        # OrthogonalRegression(),
     ]
 )
 def test_sklearn_compatible_estimator(estimator, check):
