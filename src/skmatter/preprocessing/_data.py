@@ -142,6 +142,7 @@ class StandardFlexibleScaler(TransformerMixin, BaseEstimator):
             dtype=FLOAT_DTYPES,
             ensure_min_samples=2,
         )
+
         self.n_samples_in_, self.n_features_in_ = X.shape
 
         if sample_weight is not None:

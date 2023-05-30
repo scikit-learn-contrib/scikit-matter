@@ -139,6 +139,7 @@ class TestGreedy(unittest.TestCase):
             "required.",
         )
 
+>>>>>>> cdefe67 (Edits re: alex)
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)
