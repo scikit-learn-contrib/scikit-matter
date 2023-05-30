@@ -142,14 +142,7 @@ class GreedySelector(SelectorMixin, MetaEstimatorMixin, BaseEstimator):
         elif self.progress_bar is False:
             self.report_progress_ = no_progress_bar
 
-        params = dict(
-            accept_sparse="csc",
-            force_all_finite=not tags.get("allow_nan", True),
-        )
-        if self._axis == 1:
-            params["ensure_min_features"] = 2
-        else:
-            params["ensure_min_samples"] = 2
+        params = dict(ensure_min_samples=2, ensure_min_features=2, dtype=FLOAT_DTYPES)
 
         if hasattr(self, "mixing") or y is not None:
             self._validate_data(X, y, **params)
@@ -263,7 +256,7 @@ class GreedySelector(SelectorMixin, MetaEstimatorMixin, BaseEstimator):
             else:
                 X = X.reshape(1, -1)
 
-        if len(mask) != X.shape[self.axis]:
+        if len(mask) != X.shape[self._axis]:
             raise ValueError(
                 "X has a different shape than during fitting. Reshape your data."
             )
