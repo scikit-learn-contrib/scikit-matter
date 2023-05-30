@@ -169,6 +169,11 @@ class GreedySelector(SelectorMixin, MetaEstimatorMixin, BaseEstimator):
                 "You cannot specify both `score_threshold` and `full=True`."
             )
 
+        if self.progress_bar is True:
+            self.report_progress_ = get_progress_bar()
+        elif self.progress_bar is False:
+            self.report_progress_ = no_progress_bar
+
         n_to_select_from = X.shape[self._axis]
 
         self.n_samples_in_, self.n_features_in_ = X.shape
@@ -256,17 +261,18 @@ class GreedySelector(SelectorMixin, MetaEstimatorMixin, BaseEstimator):
 
         mask = self.get_support()
 
-        # note: we use _safe_tags instead of _get_tags because this is a
-        # public Mixin.
-        X = self._validate_data(
-            X,
-            dtype=None,
-            accept_sparse="csr",
-            force_all_finite=not _safe_tags(self, key="allow_nan"),
-            reset=False,
-            ensure_2d=self._axis,
-        )
+        X = check_array(X)
 
+        if len(X.shape) == 1:
+            if self.axis == 0:
+                X = X.reshape(-1, 1)
+            else:
+                X = X.reshape(1, -1)
+
+        if len(mask) != X.shape[self.axis]:
+            raise ValueError(
+                "X has a different shape than during fitting. Reshape your data."
+            )
         if self._axis == 1:
             return X[:, safe_mask(X, mask)]
         else:
