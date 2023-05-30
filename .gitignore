@@ -4,6 +4,7 @@ __pycache__
 *.egg-info
 *.swp
 *.swo
+*DS_Store
 
 .tox/
 build/

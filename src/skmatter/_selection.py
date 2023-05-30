@@ -12,9 +12,8 @@ from scipy.linalg import eigh
 from scipy.sparse.linalg import eigsh
 from sklearn.base import BaseEstimator, MetaEstimatorMixin
 from sklearn.feature_selection._base import SelectorMixin
-from sklearn.utils import check_array, check_random_state, safe_mask
-from sklearn.utils._tags import _safe_tags
-from sklearn.utils.validation import check_is_fitted
+from sklearn.utils import check_array, check_random_state, check_X_y, safe_mask
+from sklearn.utils.validation import FLOAT_DTYPES, as_float_array, check_is_fitted
 
 from .utils import (
     X_orthogonalizer,
@@ -125,7 +124,6 @@ class GreedySelector(SelectorMixin, MetaEstimatorMixin, BaseEstimator):
         -------
         self : object
         """
-        tags = self._get_tags()
 
         if self.selection_type == "feature":
             self._axis = 1
@@ -153,19 +151,26 @@ class GreedySelector(SelectorMixin, MetaEstimatorMixin, BaseEstimator):
         else:
             params["ensure_min_samples"] = 2
 
-        if y is not None:
-            params["multi_output"] = True
-            X, y = self._validate_data(X, y, **params)
+        if hasattr(self, "mixing") or y is not None:
+            self._validate_data(X, y, **params)
+            X, y = check_X_y(X, y, multi_output=True)
 
             if len(y.shape) == 1:
                 # force y to have multi_output 2D format even when it's 1D, since
                 # many functions, most notably PCov routines, assume an array storage
                 # format, most notably to compute (y @ y.T)
                 y = y.reshape((len(y), 1))
+
         else:
             X = check_array(X, **params)
 
+        if self.full and self.score_threshold is not None:
+            raise ValueError(
+                "You cannot specify both `score_threshold` and `full=True`."
+            )
+
         n_to_select_from = X.shape[self._axis]
+
         self.n_samples_in_, self.n_features_in_ = X.shape
 
         self.n_samples_in_, self.n_features_in_ = X.shape
@@ -244,8 +249,10 @@ class GreedySelector(SelectorMixin, MetaEstimatorMixin, BaseEstimator):
             The selected subset of the input.
         """
 
-        if len(X.shape) == 1:
-            X = X.reshape(-1, 1)
+        if self.axis == 0:
+            raise ValueError(
+                "Transform is not currently supported for sample selection."
+            )
 
         mask = self.get_support()
 
@@ -518,7 +525,7 @@ class _CUR(GreedySelector):
         features and computes their initial importance score.
         """
 
-        self.X_current_ = X.copy()
+        self.X_current_ = as_float_array(X.copy())
         self.pi_ = self._compute_pi(self.X_current_)
 
         super()._init_greedy_search(X, y, n_to_select)

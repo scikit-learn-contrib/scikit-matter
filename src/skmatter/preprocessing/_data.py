@@ -135,6 +135,14 @@ class StandardFlexibleScaler(TransformerMixin, BaseEstimator):
             Fitted scaler.
         """
 
+        X = self._validate_data(
+            X,
+            copy=self.copy,
+            estimator=self,
+            dtype=FLOAT_DTYPES,
+            ensure_min_samples=2,
+        )
+
         self.n_samples_in_, self.n_features_in_ = X.shape
 
         if sample_weight is not None:
@@ -157,7 +165,7 @@ class StandardFlexibleScaler(TransformerMixin, BaseEstimator):
                 self.scale_ = np.sqrt(var)
             else:
                 var_sum = var.sum()
-                if var_sum < abs(np.mean(X_mean)) * self.rtol + self.atol:
+                if var_sum < abs(np.average(X_mean)) * self.rtol + self.atol:
                     raise ValueError("Cannot normalize a matrix with zero variance")
                 self.scale_ = np.sqrt(var_sum)
 
@@ -187,11 +195,9 @@ class StandardFlexibleScaler(TransformerMixin, BaseEstimator):
         X = self._validate_data(
             X,
             reset=False,
-            accept_sparse="csr",
             copy=copy,
             estimator=self,
             dtype=FLOAT_DTYPES,
-            force_all_finite="allow-nan",
         )
         check_is_fitted(
             self, attributes=["n_samples_in_", "n_features_in_", "scale_", "mean_"]
@@ -288,7 +294,7 @@ class KernelNormalizer(KernelCenterer):
         self.with_trace = with_trace
         super().__init__()
 
-    def fit(self, K=None, y=None, sample_weight=None):
+    def fit(self, K, y=None, sample_weight=None):
         """Fit KernelFlexibleCenterer
 
         Parameters
@@ -310,7 +316,7 @@ class KernelNormalizer(KernelCenterer):
             Fitted transformer.
         """
 
-        Kc = self._validate_data(K, copy=True, dtype=FLOAT_DTYPES, reset=False)
+        K = self._validate_data(K, copy=True, dtype=FLOAT_DTYPES, reset=False)
 
         if sample_weight is not None:
             self.sample_weight_ = _check_sample_weight(sample_weight, K, dtype=K.dtype)
@@ -327,20 +333,20 @@ class KernelNormalizer(KernelCenterer):
             else:
                 super().fit(K, y)
 
-            K_pred_cols = np.average(Kc, weights=self.sample_weight_, axis=1)[
+            K_pred_cols = np.average(K, weights=self.sample_weight_, axis=1)[
                 :, np.newaxis
             ]
         else:
-            self.K_fit_rows_ = np.zeros(Kc.shape[1])
+            self.K_fit_rows_ = np.zeros(K.shape[1])
             self.K_fit_all_ = 0.0
-            K_pred_cols = np.zeros((Kc.shape[0], 1))
+            K_pred_cols = np.zeros((K.shape[0], 1))
 
         if self.with_trace:
-            Kc -= self.K_fit_rows_
-            Kc -= K_pred_cols
-            Kc += self.K_fit_all_
+            K -= self.K_fit_rows_
+            K -= K_pred_cols
+            K += self.K_fit_all_
 
-            self.scale_ = np.trace(Kc) / Kc.shape[0]
+            self.scale_ = np.trace(K) / K.shape[0]
         else:
             self.scale_ = 1.0
 
@@ -408,7 +414,7 @@ class KernelNormalizer(KernelCenterer):
         return self.transform(K, copy)
 
 
-class SparseKernelCenterer(TransformerMixin, BaseEstimator):
+class SparseKernelCenterer(TransformerMixin):
     r"""Kernel centering method for sparse kernels, similar to
     KernelFlexibleCenterer.
 

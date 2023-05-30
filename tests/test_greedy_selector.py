@@ -61,9 +61,11 @@ class TestGreedy(unittest.TestCase):
 
     def test_bad_y(self):
         self.X, self.Y = get_dataset(return_X_y=True)
+        Y = self.Y[:2]
+        print(self.X.shape, Y.shape)
         selector = GreedyTester(n_to_select=2)
         with self.assertRaises(ValueError):
-            selector.fit(X=self.X, y=self.Y[:2])
+            selector.fit(X=self.X, y=Y)
 
     def test_bad_transform(self):
         selector = GreedyTester(n_to_select=2)
@@ -130,6 +132,7 @@ class TestGreedy(unittest.TestCase):
         )
 
         X = X.reshape(1, -1)
+
         with self.assertRaises(ValueError) as cm:
             selector_sample.fit(X)
         self.assertEqual(
@@ -138,6 +141,7 @@ class TestGreedy(unittest.TestCase):
             "required.",
         )
 
+>>>>>>> cdefe67 (Edits re: alex)
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)

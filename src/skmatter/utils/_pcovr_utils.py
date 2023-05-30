@@ -186,7 +186,7 @@ def pcovr_covariance(
         C_Y = C_Y.reshape((C.shape[0], -1))
         C_Y = np.real(C_Y)
 
-        C += (1 - mixing) * C_Y @ C_Y.T
+        C += (1 - mixing) * np.array(C_Y @ C_Y.T, dtype=np.float64)
 
     if mixing > 0:
         C += (mixing) * (X.T @ X)

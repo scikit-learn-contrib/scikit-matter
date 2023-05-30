@@ -41,12 +41,6 @@ class KernelTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             model.fit_transform(K, sample_weight=wts_dim)
 
-    def test_NoInputs(self):
-        """Checks that fit cannot be called with zero inputs."""
-        model = KernelNormalizer()
-        with self.assertRaises(ValueError):
-            model.fit()
-
     def test_ValueError(self):
         """Checks that a non-square matrix cannot be normalized."""
         K = self.random_state.uniform(0, 100, size=(3, 4))
