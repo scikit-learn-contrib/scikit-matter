@@ -62,7 +62,6 @@ class TestGreedy(unittest.TestCase):
     def test_bad_y(self):
         self.X, self.Y = get_dataset(return_X_y=True)
         Y = self.Y[:2]
-        print(self.X.shape, Y.shape)
         selector = GreedyTester(n_to_select=2)
         with self.assertRaises(ValueError):
             selector.fit(X=self.X, y=Y)

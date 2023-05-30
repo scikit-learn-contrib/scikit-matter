@@ -152,12 +152,10 @@ class TestXOrth(unittest.TestCase):
             -1, 1, size=(self.n_samples, self.n_features)
         )
 
-        print(X_random)
         idx = self.random_state.choice(X_random.shape[-1])
 
         new_X = X_orthogonalizer(X_random, idx, tol=EPSILON, copy=True)
         X_orthogonalizer(X_random, idx, tol=EPSILON, copy=False)
-        print(new_X, X_random)
         self.assertTrue(np.allclose(X_random, new_X))
 
 

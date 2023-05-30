@@ -241,7 +241,9 @@ class GreedySelector(SelectorMixin, MetaEstimatorMixin, BaseEstimator):
             The selected subset of the input.
         """
 
-        if self.axis == 0:
+        check_is_fitted(self, ["_axis", "selected_idx_", "n_selected_"])
+
+        if self._axis == 0:
             raise ValueError(
                 "Transform is not currently supported for sample selection."
             )
@@ -251,7 +253,7 @@ class GreedySelector(SelectorMixin, MetaEstimatorMixin, BaseEstimator):
         X = check_array(X)
 
         if len(X.shape) == 1:
-            if self.axis == 0:
+            if self._axis == 0:
                 X = X.reshape(-1, 1)
             else:
                 X = X.reshape(1, -1)
