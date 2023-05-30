@@ -145,7 +145,7 @@ class TestXOrth(unittest.TestCase):
             X_orthogonalizer(np.zeros((self.n_samples, self.n_features)), 0)
 
     def test_copy(self):
-        # checks that the X_orthogonalizer works in-place when copy=True
+        # checks that the X_orthogonalizer works in-place when copy=False
 
         X_random = self.random_state.uniform(
             -1, 1, size=(self.n_samples, self.n_features)

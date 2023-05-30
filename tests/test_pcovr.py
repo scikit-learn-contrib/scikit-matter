@@ -167,7 +167,7 @@ class PCovRSpaceTest(PCovRBaseTest):
         pcovr = self.model(n_components=2, tol=1e-12)
         pcovr.fit(self.X, self.Y)
 
-        self.assertTrue(pcovr.space == "feature")
+        self.assertTrue(pcovr.space_ == "feature")
 
     def test_select_sample_space(self):
         """
@@ -179,7 +179,7 @@ class PCovRSpaceTest(PCovRBaseTest):
         n_samples = self.X.shape[1] - 1
         pcovr.fit(self.X[:n_samples], self.Y[:n_samples])
 
-        self.assertTrue(pcovr.space == "sample")
+        self.assertTrue(pcovr.space_ == "sample")
 
     def test_bad_space(self):
         """
@@ -198,7 +198,7 @@ class PCovRSpaceTest(PCovRBaseTest):
         pcovr = self.model(n_components=2, tol=1e-12, space="sample")
         pcovr.fit(self.X, self.Y)
 
-        self.assertTrue(pcovr.space == "sample")
+        self.assertTrue(pcovr.space_ == "sample")
 
     def test_spaces_equivalent(self):
         """
@@ -257,9 +257,9 @@ class PCovRTestSVDSolvers(PCovRBaseTest):
                 pcovr.fit(self.X, self.Y)
 
                 if solver == "arpack":
-                    self.assertTrue(pcovr.n_components == min(self.X.shape) - 1)
+                    self.assertTrue(pcovr.n_components_ == min(self.X.shape) - 1)
                 else:
-                    self.assertTrue(pcovr.n_components == min(self.X.shape))
+                    self.assertTrue(pcovr.n_components_ == min(self.X.shape))
 
     def test_bad_solver(self):
         """
@@ -317,7 +317,7 @@ class PCovRTestSVDSolvers(PCovRBaseTest):
                 "min(n_samples, n_features)=%r with "
                 "svd_solver='%s'"
                 % (
-                    pcovr.n_components,
+                    pcovr.n_components_,
                     min(self.X.shape),
                     pcovr.svd_solver,
                 ),
@@ -333,7 +333,7 @@ class PCovRTestSVDSolvers(PCovRBaseTest):
                 "min(n_samples, n_features)=%r with "
                 "svd_solver='%s'"
                 % (
-                    pcovr.n_components,
+                    pcovr.n_components_,
                     min(self.X.shape),
                     pcovr.svd_solver,
                 ),
@@ -348,7 +348,7 @@ class PCovRTestSVDSolvers(PCovRBaseTest):
                 "min(n_samples, n_features)=%r with "
                 "svd_solver='%s'"
                 % (
-                    pcovr.n_components,
+                    pcovr.n_components_,
                     min(self.X.shape),
                     pcovr.svd_solver,
                 ),
@@ -363,7 +363,7 @@ class PCovRTestSVDSolvers(PCovRBaseTest):
                     str(cm.exception),
                     "n_components=%r must be of type int "
                     "when greater than or equal to 1, was of type=%r"
-                    % (pcovr.n_components, type(pcovr.n_components)),
+                    % (pcovr.n_components_, type(pcovr.n_components_)),
                 )
 
 
@@ -418,7 +418,7 @@ class PCovRInfrastructureTest(PCovRBaseTest):
         pcovr = PCovR(mixing=0.5)
         pcovr.fit(self.X, self.Y)
 
-        self.assertEqual(pcovr.n_components, min(self.X.shape))
+        self.assertEqual(pcovr.n_components_, min(self.X.shape))
 
     def test_Y_Shape(self):
         pcovr = self.model()
@@ -426,7 +426,7 @@ class PCovRInfrastructureTest(PCovRBaseTest):
         pcovr.fit(self.X, self.Y)
 
         self.assertEqual(pcovr.pxy_.shape[0], self.X.shape[1])
-        self.assertEqual(pcovr.pty_.shape[0], pcovr.n_components)
+        self.assertEqual(pcovr.pty_.shape[0], pcovr.n_components_)
 
     def test_prefit_regressor(self):
         regressor = Ridge(alpha=1e-8, fit_intercept=False, tol=1e-12)

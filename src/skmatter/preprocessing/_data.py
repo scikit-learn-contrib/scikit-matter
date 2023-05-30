@@ -56,10 +56,10 @@ class StandardFlexibleScaler(TransformerMixin, BaseEstimator):
 
     Attributes
     ----------
-    n_samples_seen_: int
+    n_samples_in_: int
         Number of samples in the reference ndarray
 
-    n_features_: int
+    n_features_in_: int
         Number of features in the reference ndarray
 
     mean_ : ndarray of shape (n_features,)
@@ -110,7 +110,6 @@ class StandardFlexibleScaler(TransformerMixin, BaseEstimator):
         self.column_wise = column_wise
         self.rtol = rtol
         self.atol = atol
-        self.n_samples_seen_ = 0
         self.copy = copy
 
     def fit(self, X, y=None, sample_weight=None):
@@ -136,7 +135,7 @@ class StandardFlexibleScaler(TransformerMixin, BaseEstimator):
             Fitted scaler.
         """
 
-        self.n_samples_seen_, self.n_features_ = X.shape
+        self.n_samples_in_, self.n_features_in_ = X.shape
 
         if sample_weight is not None:
             sample_weight = _check_sample_weight(sample_weight, X, dtype=X.dtype)
@@ -145,7 +144,7 @@ class StandardFlexibleScaler(TransformerMixin, BaseEstimator):
         if self.with_mean:
             self.mean_ = np.average(X, weights=sample_weight, axis=0)
         else:
-            self.mean_ = np.zeros(self.n_features_)
+            self.mean_ = np.zeros(self.n_features_in_)
 
         self.scale_ = 1.0
         if self.with_std:
@@ -194,9 +193,11 @@ class StandardFlexibleScaler(TransformerMixin, BaseEstimator):
             dtype=FLOAT_DTYPES,
             force_all_finite="allow-nan",
         )
-        check_is_fitted(self, attributes=["n_samples_seen_", "n_features_"])
+        check_is_fitted(
+            self, attributes=["n_samples_in_", "n_features_in_", "scale_", "mean_"]
+        )
 
-        if self.n_features_ != X.shape[1]:
+        if self.n_features_in_ != X.shape[1]:
             raise ValueError("X shape does not match training shape")
         return (X - self.mean_) / self.scale_
 
@@ -213,9 +214,11 @@ class StandardFlexibleScaler(TransformerMixin, BaseEstimator):
         X : original matrix
         """
 
-        check_is_fitted(self, attributes=["n_samples_seen_", "n_features_"])
+        check_is_fitted(
+            self, attributes=["n_samples_in_", "n_features_in_", "scale_", "mean_"]
+        )
 
-        if self.n_features_ != X_tr.shape[1]:
+        if self.n_features_in_ != X_tr.shape[1]:
             raise ValueError("X shape does not match training shape")
         return X_tr * self.scale_ + self.mean_
 

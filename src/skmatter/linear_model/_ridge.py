@@ -138,6 +138,8 @@ class RidgeRegression2FoldCV(MultiOutputMixin, RegressorMixin):
                 "[0,1)"
             )
 
+        self.n_samples_in_, self.n_features_in_ = X.shape
+
         # check_scoring uses estimators scoring function if the scorer is None, this is
         # intercepted here
         if self.scoring is None:
