@@ -166,7 +166,6 @@ class GreedySelector(SelectorMixin, MetaEstimatorMixin, BaseEstimator):
             X = check_array(X, **params)
 
         n_to_select_from = X.shape[self._axis]
-
         self.n_samples_in_, self.n_features_in_ = X.shape
 
         self.n_samples_in_, self.n_features_in_ = X.shape
