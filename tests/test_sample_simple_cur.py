@@ -1,22 +1,32 @@
 import unittest
 
 import numpy as np
-from sklearn import exceptions
 from sklearn.datasets import fetch_california_housing as load
 
-from skmatter.sample_selection import CUR
+from skmatter.sample_selection import CUR, FPS
 
 
 class TestCUR(unittest.TestCase):
     def setUp(self):
         self.X, _ = load(return_X_y=True)
-        self.X = self.X[:1000]
+        self.X = self.X[FPS(n_to_select=100).fit(self.X).selected_idx_]
         self.n_select = min(20, min(self.X.shape) // 2)
 
-    def test_bad_transform(self):
-        selector = CUR(n_to_select=2)
-        with self.assertRaises(exceptions.NotFittedError):
+    def test_sample_transform(self):
+        """
+        This test checks that an error is raised when the transform function is used,
+        because sklearn does not support well transformers that change the number
+        of samples with other classes like Pipeline
+        """
+        selector = CUR(n_to_select=1)
+        selector.fit(self.X)
+        with self.assertRaises(ValueError) as error:
             _ = selector.transform(self.X)
+
+        self.assertTrue(
+            "Transform is not currently supported for sample selection."
+            == str(error.exception)
+        )
 
     def test_restart(self):
         """

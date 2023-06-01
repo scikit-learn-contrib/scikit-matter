@@ -445,7 +445,7 @@ def pointwise_local_reconstruction_error(
 
     scaler.fit(X_train)
     X_train = scaler.transform(X_train)
-    X_test = scaler.transform(X_test)
+    X_test = scaler.transform(X_test).astype(X_train.dtype)
     scaler.fit(Y_train)
     Y_train = scaler.transform(Y_train)
     Y_test = scaler.transform(Y_test)

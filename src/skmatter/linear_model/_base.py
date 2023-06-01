@@ -2,6 +2,8 @@ import numpy as np
 from scipy.linalg import orthogonal_procrustes
 from sklearn.base import MultiOutputMixin, RegressorMixin
 from sklearn.linear_model import LinearRegression
+from sklearn.utils import check_array, check_X_y
+from sklearn.utils.validation import check_is_fitted
 
 
 class OrthogonalRegression(MultiOutputMixin, RegressorMixin):
@@ -61,6 +63,15 @@ class OrthogonalRegression(MultiOutputMixin, RegressorMixin):
             and n_targets is the number of target properties.
         """
 
+        X, y = check_X_y(
+            X,
+            y,
+            y_numeric=True,
+            ensure_min_features=1,
+            ensure_min_samples=1,
+            multi_output=True,
+        )
+
         self.n_samples_in_, self.n_features_in_ = X.shape
         if self.use_orthogonal_projector:
             # check estimator
@@ -71,12 +82,15 @@ class OrthogonalRegression(MultiOutputMixin, RegressorMixin):
             )
             # compute orthogonal projectors
             linear_estimator.fit(X, y)
-            U, _, Vt = np.linalg.svd(linear_estimator.coef_.T, full_matrices=False)
-            # project X and y to same dimension
-            X = X @ U
-            y = y @ Vt.T
+            coef = np.reshape(linear_estimator.coef_.T, (X.shape[1], -1))
+            U, _, Vt = np.linalg.svd(coef, full_matrices=False)
+
             # compute weights by solving the Procrustes problem
-            self.coef_ = (U @ orthogonal_procrustes(X, y)[0] @ Vt).T
+            self.coef_ = (
+                U
+                @ orthogonal_procrustes(X @ U, y.reshape(X.shape[0], -1) @ Vt.T)[0]
+                @ Vt
+            ).T
         else:
             self.max_components_ = max(X.shape[1], y.shape[1])
             X = np.pad(X, [(0, 0), (0, self.max_components_ - X.shape[1])])
@@ -93,6 +107,9 @@ class OrthogonalRegression(MultiOutputMixin, RegressorMixin):
             Training data, where n_samples is the number of samples
             and n_features is the number of features.
         """
+        X = check_array(X, ensure_min_features=1, ensure_min_samples=1)
+        check_is_fitted(self, ["coef_"])
+
         if not (self.use_orthogonal_projector):
             X = np.pad(X, [(0, 0), (0, self.max_components_ - X.shape[1])])
         return X @ self.coef_.T

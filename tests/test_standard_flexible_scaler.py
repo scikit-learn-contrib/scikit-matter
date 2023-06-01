@@ -188,6 +188,14 @@ class ScalerTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             model.fit(X)
 
+    def test_not_w_mean(self):
+        """Checks that the matrix normalized `with_mean=False`
+        does not have a mean."""
+        X = np.array([2, 2, 3]).reshape(-1, 1)
+        model = StandardFlexibleScaler(with_mean=False)
+        model.fit(X)
+        self.assertTrue(np.allclose(model.mean_, 0))
+
 
 if __name__ == "__main__":
     unittest.main()

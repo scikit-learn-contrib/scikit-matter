@@ -1,11 +1,13 @@
 import numpy as np
 from joblib import Parallel, delayed
-from sklearn.base import MultiOutputMixin, RegressorMixin
+from sklearn.base import BaseEstimator, MultiOutputMixin, RegressorMixin
 from sklearn.metrics import check_scoring
 from sklearn.model_selection import KFold
+from sklearn.utils import check_array
+from sklearn.utils.validation import check_is_fitted
 
 
-class RidgeRegression2FoldCV(MultiOutputMixin, RegressorMixin):
+class RidgeRegression2FoldCV(BaseEstimator, MultiOutputMixin, RegressorMixin):
     r"""Ridge regression with an efficient 2-fold cross-validation method using the SVD
     solver.
 
@@ -110,6 +112,9 @@ class RidgeRegression2FoldCV(MultiOutputMixin, RegressorMixin):
         self.shuffle = shuffle
         self.n_jobs = n_jobs
 
+    def _more_tags(self):
+        return {"multioutput_only": True}
+
     def fit(self, X, y):
         """
         Parameters
@@ -138,6 +143,7 @@ class RidgeRegression2FoldCV(MultiOutputMixin, RegressorMixin):
                 "[0,1)"
             )
 
+        X, y = self._validate_data(X, y, y_numeric=True, multi_output=True)
         self.n_samples_in_, self.n_features_in_ = X.shape
 
         # check_scoring uses estimators scoring function if the scorer is None, this is
@@ -164,6 +170,11 @@ class RidgeRegression2FoldCV(MultiOutputMixin, RegressorMixin):
             Training data, where n_samples is the number of samples
             and n_features is the number of features.
         """
+
+        X = check_array(X)
+
+        check_is_fitted(self, ["coef_"])
+
         return X @ self.coef_.T
 
     def _2fold_cv(self, X, y, fold1_idx, fold2_idx, scorer):

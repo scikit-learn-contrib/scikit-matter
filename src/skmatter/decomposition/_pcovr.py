@@ -130,6 +130,8 @@ class PCovR(_BasePCA, LinearModel):
          Used when the 'arpack' or 'randomized' solvers are used. Pass an int
          for reproducible results across multiple function calls.
 
+    whiten : boolean, deprecated
+
     Attributes
     ----------
 
@@ -202,12 +204,13 @@ class PCovR(_BasePCA, LinearModel):
         regressor=None,
         iterated_power="auto",
         random_state=None,
+        whiten=False,
     ):
         self.mixing = mixing
         self.n_components = n_components
         self.space = space
 
-        self.whiten = False
+        self.whiten = whiten
         self.svd_solver = svd_solver
         self.tol = tol
         self.iterated_power = iterated_power

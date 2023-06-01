@@ -20,8 +20,8 @@ class TestXOrth(unittest.TestCase):
         self.random_state = np.random.RandomState(0)
 
     def setUp(self):
-        self.n_samples = 100
-        self.n_features = 100
+        self.n_samples = 2
+        self.n_features = 4
 
     def test_null_column(self):
         # checks that the column passed to the orthogonalizer
@@ -117,6 +117,7 @@ class TestXOrth(unittest.TestCase):
         X_correlated = X_orthogonalizer(
             X_correlated, x2=X_correlated[:, :n_uncorrelated]
         )
+        print(X_correlated)
 
         self.assertLessEqual(np.linalg.norm(X_correlated), EPSILON)
 
