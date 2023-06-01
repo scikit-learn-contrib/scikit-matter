@@ -145,7 +145,7 @@ class GreedySelector(SelectorMixin, MetaEstimatorMixin, BaseEstimator):
         params = dict(ensure_min_samples=2, ensure_min_features=2, dtype=FLOAT_DTYPES)
 
         if hasattr(self, "mixing") or y is not None:
-            self._validate_data(X, y, **params)
+            X, y = self._validate_data(X, y, **params)
             X, y = check_X_y(X, y, multi_output=True)
 
             if len(y.shape) == 1:
