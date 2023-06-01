@@ -60,6 +60,8 @@ class OrthogonalRegression(MultiOutputMixin, RegressorMixin):
             Training data, where n_samples is the number of samples
             and n_targets is the number of target properties.
         """
+
+        self.n_samples_in_, self.n_features_in_ = X.shape
         if self.use_orthogonal_projector:
             # check estimator
             linear_estimator = (

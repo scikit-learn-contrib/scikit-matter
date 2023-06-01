@@ -63,7 +63,7 @@ class GreedySelector(SelectorMixin, MetaEstimatorMixin, BaseEstimator):
     progress_bar: bool, default=False
               option to use `tqdm <https://tqdm.github.io/>`_
               progress bar to monitor selections. Stored in
-              :py:attr:`self.report_progress`.
+              :py:attr:`self.report_progress_`.
 
     full : bool, default=False
         In the case that all non-redundant selections are exhausted, choose
@@ -98,7 +98,6 @@ class GreedySelector(SelectorMixin, MetaEstimatorMixin, BaseEstimator):
         self.n_to_select = n_to_select
         self.score_threshold = score_threshold
         self.score_threshold_type = score_threshold_type
-        self._first_score = None
         if self.score_threshold_type not in ["relative", "absolute"]:
             raise ValueError(
                 "invalid score_threshold_type, expected one of 'relative' or 'absolute'"
@@ -141,9 +140,9 @@ class GreedySelector(SelectorMixin, MetaEstimatorMixin, BaseEstimator):
             )
 
         if self.progress_bar is True:
-            self.report_progress = get_progress_bar()
+            self.report_progress_ = get_progress_bar()
         elif self.progress_bar is False:
-            self.report_progress = no_progress_bar
+            self.report_progress_ = no_progress_bar
 
         params = dict(
             accept_sparse="csc",
@@ -167,6 +166,8 @@ class GreedySelector(SelectorMixin, MetaEstimatorMixin, BaseEstimator):
             X = check_array(X, **params)
 
         n_to_select_from = X.shape[self._axis]
+
+        self.n_samples_in_, self.n_features_in_ = X.shape
 
         error_msg = (
             "n_to_select must be either None, an "
@@ -203,7 +204,7 @@ class GreedySelector(SelectorMixin, MetaEstimatorMixin, BaseEstimator):
 
         n_iterations -= self.n_selected_
 
-        for n in self.report_progress(range(n_iterations)):
+        for n in self.report_progress_(range(n_iterations)):
             new_idx = self._get_best_new_selection(self.score, X, y)
             if new_idx is not None:
                 self._update_post_selection(X, y, new_idx)
@@ -257,9 +258,6 @@ class GreedySelector(SelectorMixin, MetaEstimatorMixin, BaseEstimator):
             reset=False,
             ensure_2d=self._axis,
         )
-
-        if len(mask) != X.shape[self._axis]:
-            raise ValueError("X has a different shape than during fitting.")
 
         if self._axis == 1:
             return X[:, safe_mask(X, mask)]
@@ -326,6 +324,7 @@ class GreedySelector(SelectorMixin, MetaEstimatorMixin, BaseEstimator):
         """Initializes the search. Prepares an array to store the selected features."""
 
         self.n_selected_ = 0
+        self.first_score_ = None
 
         sel_shape = list(X.shape)
         sel_shape[self._axis] = n_to_select
@@ -368,15 +367,15 @@ class GreedySelector(SelectorMixin, MetaEstimatorMixin, BaseEstimator):
 
         max_score_idx = np.argmax(scores)
         if self.score_threshold is not None:
-            if self._first_score is None:
-                self._first_score = scores[max_score_idx]
+            if self.first_score_ is None:
+                self.first_score_ = scores[max_score_idx]
 
             if self.score_threshold_type == "absolute":
                 if scores[max_score_idx] < self.score_threshold:
                     return None
 
             if self.score_threshold_type == "relative":
-                if scores[max_score_idx] / self._first_score < self.score_threshold:
+                if scores[max_score_idx] / self.first_score_ < self.score_threshold:
                     return None
 
         return max_score_idx

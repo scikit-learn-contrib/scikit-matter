@@ -71,7 +71,9 @@ class TestGreedy(unittest.TestCase):
         with self.assertRaises(ValueError) as cm:
             _ = selector.transform(self.X[:, :3])
         self.assertEqual(
-            str(cm.exception), "X has a different shape than during fitting."
+            str(cm.exception),
+            "X has 3 features, but GreedyTester is expecting {} features"
+            " as input.".format(self.X.shape[1]),
         )
 
     def test_no_nfeatures(self):
@@ -118,21 +120,21 @@ class TestGreedy(unittest.TestCase):
         X = np.array([1, 2, 3, 4, 5]).reshape(-1, 1)
         selector_sample = GreedyTester(selection_type="sample")
         selector_feature = GreedyTester(selection_type="feature")
-        selector_sample.fit(X)
+
         with self.assertRaises(ValueError) as cm:
             selector_feature.fit(X)
         self.assertEqual(
             str(cm.exception),
-            "Found array with 1 feature(s) (shape=(5, 1)) while a minimum of 2 is "
+            f"Found array with 1 feature(s) (shape={X.shape}) while a minimum of 2 is "
             "required.",
         )
+
         X = X.reshape(1, -1)
-        selector_feature.fit(X)
         with self.assertRaises(ValueError) as cm:
             selector_sample.fit(X)
         self.assertEqual(
             str(cm.exception),
-            "Found array with 1 sample(s) (shape=(1, 5)) while a minimum of 2 is "
+            f"Found array with 1 sample(s) (shape={X.shape}) while a minimum of 2 is "
             "required.",
         )
 

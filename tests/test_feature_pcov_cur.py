@@ -31,7 +31,7 @@ class TestPCovCUR(unittest.TestCase):
 
         for i in range(len(self.idx) - 2):
             selector.n_to_select += 1
-            selector.fit(self.X, warm_start=True)
+            selector.fit(self.X, self.y, warm_start=True)
             self.assertEqual(selector.selected_idx_[i], self.idx[i])
 
     def test_non_it(self):
