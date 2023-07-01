@@ -11,7 +11,7 @@ The rules for CHANGELOG file:
 
 .. inclusion-marker-changelog-start
 
-0.1.5 (XXXX/XX/XX)
+0.2.0 (2023/08/24)
 ------------------
 
 - Add this ``CHANGELOG`` file (#198)
