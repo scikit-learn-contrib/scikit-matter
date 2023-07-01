@@ -1,0 +1,82 @@
+CHANGELOG file
+--------------
+
+The rules for CHANGELOG file:
+
+- entries are sorted newest-first
+- summarize sets of changes (do not reproduce every git log comment here).
+- do not ever delete anything
+- keep the format consistent (88 char width, Y/M/D date format) and do not use tabs but
+  use spaces for formatting
+
+.. inclusion-marker-changelog-start
+
+0.1.5 (XXXX/XX/XX)
+------------------
+
+- Add this ``CHANGELOG`` file (#198)
+- Update example of WHO feature selection (#212)
+- Rename ``RidgeRegression2FoldCV`` -> ``Ridge2FoldCV`` (#211)
+- Adding metrics for prediction rigidity (#209)
+- Overhaul of documentation page (#200 to #204)
+- Rename and add member variables (#197)
+- Fix/check estimator (#196)
+- fixed small typo in ``PCovR`` class documentation (#194)
+- Resolved Issue WHO dataset missing function call section in doc (#181, #192)
+- Speeding up tests (#190)
+- Removing kernel optimization from who example (#189)
+- Ignore rendered examples for linting (#188)
+- Add more infos on documentation landing pages & ``CODE_OF_CONDUCT`` (#186)
+- Add contributors pictures to ``README``, show pip install instructions in docs (#185)
+- Add linting and tests for docstring and documentation code (#184)
+- Rerestructure requirements after (#171, #183)
+- Update ``README.md`` to show banners (#176)
+- Modernize package infrastructure (#172)
+- Add an example of GCH for molecular materials (#171)
+- Port examples to ``sphinx_gallery`` (#170)
+
+0.1.4 (2023/03/14)
+------------------
+
+- documentation formatting fixes for math and datasets (#161, #163)
+- changing the way the distance to the convex hull is computed in the
+  ``DirectionalConvexHull`` due to numerical issues with the old method (#165)
+
+0.1.3 (2023/03/02)
+------------------
+
+- Refactor ``scikit-cosmo`` to ``scikit-matter`` (#157, #151)
+- Deprecation warning was added to link to renamed package (#154)
+- dropped Python `<3.8` support, because we are now using ``scikit-learn`` version
+  `>=1.1.0` (#139, #146, #152)
+- WHO dataset and examples were added (#149)
+- nice dataset was added (#143)
+- overhaul of documentation (#142, #150)
+- added ``DirectionalConvexHull`` class (#140)
+- added test_precomputed_regression function to ``KPCovR`` (#136)
+- other bugfixes (#141, #148)
+
+
+0.1.2 (2022/07/04)
+------------------
+
+- fixed a bug in the orthonormalization step of ``PCov-CUR`` (#118)
+- users can now initialize ``FPS`` selecting using a list of selected points, allowing
+  to restart the selection in the middle (#116)
+- KPCovR is now able to use pre-fitted regressor in the same way that ``PCovR`` can
+  (#113)
+
+0.1.1 (2021/11/30)
+------------------
+
+- fixed a bug in the ``orthonormalization`` step of ``PCov-CUR`` (#118)
+- users can now initialize ``FPS`` selecting using a list of selected points, allowing to
+  restart the selection in the middle (#116)
+- KPCovR is now able to use pre-fitted regressor in the same way that ``PCovR`` can (#113)
+
+0.1.0 (2021/05/12)
+------------------
+
+- first release out of the lab
+
+.. inclusion-marker-changelog-end
