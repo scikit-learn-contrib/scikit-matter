@@ -4,4 +4,5 @@ Sergei Kliavinek
 Alexander Goscinski
 Benjamin A. Helfrecht
 Victor P. Principe
+Philip Loche
 Michele Ceriotti
