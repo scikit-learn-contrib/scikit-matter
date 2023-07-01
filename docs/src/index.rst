@@ -82,6 +82,7 @@
   references/index
   tutorials
   contributing
+  changelog
   bibliography
 
 If you would like to contribute to scikit-matter, check out our :ref:`contributing`
