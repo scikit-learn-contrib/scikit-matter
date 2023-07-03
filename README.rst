@@ -37,10 +37,10 @@ Having problems or ideas?
 -------------------------
 
 Having a problem with scikit-matter? Please let us know by `submitting an issue
-<https://github.com/lab-cosmo/scikit-matter/issues>`_.
+<https://github.com/scikit-learn-contrib/scikit-matter/issues>`_.
 
 Submit new features or bug fixes through a `pull request
-<https://github.com/lab-cosmo/scikit-matter/pulls>`_.
+<https://github.com/scikit-learn-contrib/scikit-matter/pulls>`_.
 
 .. marker-contributing
 
@@ -60,9 +60,9 @@ Writing code is not the only way to contribute to the project. You can also:
 * contribute `new datasets`_
 
 .. _`contribution guidelines`: https://scikit-matter.readthedocs.io/en/latest/contributing.html
-.. _`good first issue`: https://github.com/lab-cosmo/scikit-matter/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22
-.. _`pull requests`: https://github.com/lab-cosmo/scikit-matter/pulls
-.. _`issues`: https://github.com/lab-cosmo/scikit-matter/issues
+.. _`good first issue`: https://github.com/scikit-learn-contrib/scikit-matter/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22
+.. _`pull requests`: https://github.com/scikit-learn-contrib/scikit-matter/pulls
+.. _`issues`: https://github.com/scikit-learn-contrib/scikit-matter/issues
 .. _`improve our documentation`: https://scikit-matter.readthedocs.io/en/latest/contributing.html#contributing-to-the-documentation
 .. _`examples and tutorials`: https://scikit-matter.readthedocs.io/en/latest/contributing.html#contributing-new-examples
 .. _`new datasets`: https://scikit-matter.readthedocs.io/en/latest/contributing.html#contributing-datasets
@@ -74,16 +74,16 @@ Contributors
 
 Thanks goes to all people that make scikit-matter possible:
 
-.. image:: https://contrib.rocks/image?repo=lab-cosmo/scikit-matter
-   :target: https://github.com/lab-cosmo/scikit-matter/graphs/contributors
+.. image:: https://contrib.rocks/image?repo=scikit-learn-contrib/scikit-matter
+   :target: https://github.com/scikit-learn-contrib/scikit-matter/graphs/contributors
 
-.. |tests| image:: https://github.com/lab-cosmo/scikit-matter/workflows/Test/badge.svg
+.. |tests| image:: https://github.com/scikit-learn-contrib/scikit-matter/workflows/Test/badge.svg
    :alt: Github Actions Tests Job Status
-   :target: https://github.com/lab-cosmo/scikit-matter/actions?query=workflow%3ATests
+   :target: https://github.com/scikit-learn-contrib/scikit-matter/actions?query=workflow%3ATests
 
-.. |codecov| image:: https://codecov.io/gh/lab-cosmo/scikit-matter/branch/main/graph/badge.svg?token=UZJPJG34SM
+.. |codecov| image:: https://codecov.io/gh/scikit-learn-contrib/scikit-matter/branch/main/graph/badge.svg?token=UZJPJG34SM
    :alt: Code coverage
-   :target: https://codecov.io/gh/lab-cosmo/scikit-matter/
+   :target: https://codecov.io/gh/scikit-learn-contrib/scikit-matter/
 
 .. |pypi| image:: https://img.shields.io/pypi/v/skmatter.svg
    :alt: Latest PYPI version
