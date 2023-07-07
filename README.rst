@@ -79,7 +79,8 @@ Thanks goes to all people that make scikit-matter possible:
 
 .. |tests| image:: https://github.com/scikit-learn-contrib/scikit-matter/workflows/Test/badge.svg
    :alt: Github Actions Tests Job Status
-   :target: https://github.com/scikit-learn-contrib/scikit-matter/actions?query=workflow%3ATests
+   :target: (https://github.com/scikit-learn-contrib/scikit-matter/\
+                actions?query=workflow%3ATests)
 
 .. |codecov| image:: https://codecov.io/gh/scikit-learn-contrib/scikit-matter/branch/main/graph/badge.svg?token=UZJPJG34SM
    :alt: Code coverage
