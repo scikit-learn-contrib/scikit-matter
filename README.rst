@@ -31,6 +31,19 @@ or conda
 
 You can then `import skmatter` and use scikit-matter in your projects!
 
+.. marker-ci-tests
+
+Tests
+-----
+
+We are testing our code for Python 3.8 and 3.11 on  `Windows Server 2019
+<https://github.com/actions/runner-images/blob/main/images/win/Windows2019-Readme.md>`_,
+`macOS 11
+<https://github.com/actions/runner-images/blob/main/images/macos/macos-11-Readme.md>`_
+and `Ubuntu LTS 22.04
+<https://github.com/actions/runner-images/
+blob/main/images/linux/Ubuntu2204-Readme.md>`_.
+
 .. marker-issues
 
 Having problems or ideas?
@@ -85,6 +98,10 @@ Thanks goes to all people that make scikit-matter possible:
 .. |codecov| image:: https://codecov.io/gh/scikit-learn-contrib/scikit-matter/branch/main/graph/badge.svg?token=UZJPJG34SM
    :alt: Code coverage
    :target: https://codecov.io/gh/scikit-learn-contrib/scikit-matter/
+
+.. |docs| image:: https://img.shields.io/badge/documentation-latest-sucess
+   :alt: Python
+   :target: https://scikit-matter.readthedocs.io
 
 .. |pypi| image:: https://img.shields.io/pypi/v/skmatter.svg
    :alt: Latest PYPI version
