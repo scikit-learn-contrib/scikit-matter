@@ -1,6 +1,6 @@
 .. include:: ../../README.rst
    :start-after: marker-installation
-   :end-before: marker-issues
+   :end-before: marker-ci-tests
 
 Install from source
 -------------------
