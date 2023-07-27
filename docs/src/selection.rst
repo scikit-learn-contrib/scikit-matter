@@ -1,18 +1,22 @@
+.. _selection-api:
 
 Feature and Sample Selection
 ============================
 
-`scikit-matter` contains multiple data sub-selection modules,
-primarily corresponding to methods derived from CUR matrix decomposition
-and Farthest Point Sampling. In their classical form, CUR and FPS determine
-a data subset that maximizes the
-variance (CUR) or distribution (FPS) of the features or samples. These methods
-can be modified to combine supervised and unsupervised learning, in a formulation
-denoted `PCov-CUR` and `PCov-FPS`.
+.. marker-selection-introduction-begin
+
+Data sub-selection modules primarily corresponding to methods derived from
+CUR matrix decomposition and Farthest Point Sampling. In their classical form,
+CUR and FPS determine a data subset that maximizes the variance (CUR) or
+distribution (FPS) of the features or samples.
+These methods can be modified to combine supervised target information denoted by the
+methods `PCov-CUR` and `PCov-FPS`.
 For further reading, refer to [Imbalzano2018]_ and [Cersonsky2021]_.
 
 These selectors can be used for both feature and sample selection, with similar
-instantiations. This can be executed using:
+instantiations. All sub-selection methods  scores each feature or sample
+(without an estimator)
+and chooses that with the maximum score. As an simple example
 
 .. doctest::
 
@@ -62,6 +66,7 @@ instantiations. This can be executed using:
     >>> print(Xr.shape)
     (2, 3)
 
+.. marker-selection-introduction-end
 
 .. _CUR-api:
 
