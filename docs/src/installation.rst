@@ -1,6 +1,12 @@
+Installation
+============
+
+Install using pip or conda
+--------------------------
+
 .. include:: ../../README.rst
-   :start-after: marker-installation
-   :end-before: marker-issues
+   :start-after: marker-installation-begin
+   :end-before: marker-installation-end
 
 Install from source
 -------------------

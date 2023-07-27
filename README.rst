@@ -10,10 +10,11 @@ For details, tutorials, and examples, please have a look at our `documentation`_
 
 .. _`documentation`: https://scikit-matter.readthedocs.io
 
-.. marker-installation
 
 Installation
 ------------
+
+.. marker-installation-begin
 
 You can install *scikit-matter* either via pip using
 
@@ -30,6 +31,9 @@ or conda
 
 
 You can then `import skmatter` and use scikit-matter in your projects!
+
+.. marker-installation-end
+
 
 .. marker-issues
 
