@@ -11,15 +11,12 @@ can be modified to combine supervised and unsupervised learning, in a formulatio
 denoted `PCov-CUR` and `PCov-FPS`.
 For further reading, refer to [Imbalzano2018]_ and [Cersonsky2021]_.
 
-
 These selectors can be used for both feature and sample selection, with similar
-instantiations. Currently, all sub-selection methods extend :py:class:`GreedySelector`,
-where at each iteration the model scores each
-feature or sample (without an estimator) and chooses that with the maximum score.
-This can be executed using:
+instantiations. This can be executed using:
 
 .. doctest::
 
+    >>> # feature selection
     >>> import numpy as np
     >>> from skmatter.feature_selection import CUR, FPS, PCovCUR, PCovFPS
     >>> selector = CUR(
@@ -36,10 +33,14 @@ This can be executed using:
     ...     # are exhausted
     ...     full=False,
     ... )
-    >>> X = np.array([[ 0.12,  0.21,  0.02], # 3 samples, 3 features
-    ...               [-0.09,  0.32, -0.10],
-    ...               [-0.03, -0.53,  0.08]])
-    >>> y = np.array([0., 0., 1.])  # classes of each sample
+    >>> X = np.array(
+    ...     [
+    ...         [0.12, 0.21, 0.02],  # 3 samples, 3 features
+    ...         [-0.09, 0.32, -0.10],
+    ...         [-0.03, -0.53, 0.08],
+    ...     ]
+    ... )
+    >>> y = np.array([0.0, 0.0, 1.0])  # classes of each sample
     >>> selector.fit(X)
     CUR(n_to_select=2, progress_bar=True, score_threshold=1e-12)
     >>> Xr = selector.transform(X)
@@ -51,6 +52,8 @@ This can be executed using:
     >>> Xr = selector.transform(X)
     >>> print(Xr.shape)
     (3, 2)
+    >>>
+    >>> # Now sample selection
     >>> from skmatter.sample_selection import CUR, FPS, PCovCUR, PCovFPS
     >>> selector = CUR(n_to_select=2)
     >>> selector.fit(X)
@@ -59,23 +62,11 @@ This can be executed using:
     >>> print(Xr.shape)
     (2, 3)
 
-where `Selector` is one of the classes below that overwrites the method
-:py:func:`score`.
-
-From :py:class:`GreedySelector`, selectors inherit these public methods:
-
-.. currentmodule:: skmatter._selection
-
-.. class:: GreedySelector
-
-  .. automethod:: fit
-  .. automethod:: transform
-  .. automethod:: get_support
 
 .. _CUR-api:
 
 CUR
-###
+---
 
 
 CUR decomposition begins by approximating a matrix :math:`{\mathbf{X}}` using a subset
@@ -100,42 +91,24 @@ features in a single iteration based upon the relative :math:`\pi` importance.
 The feature and sample selection versions of CUR differ only in the computation of
 :math:`\pi`. In sample selection :math:`\pi` is computed using the left singular
 vectors, versus in feature selection, :math:`\pi` is computed using the right singular
-vectors. In addition to :py:class:`GreedySelector`, both instances of CUR selection
-build off of :py:class:`skmatter._selection._cur._CUR`, and inherit
+vectors.
 
-.. currentmodule:: skmatter._selection
+.. autoclass:: skmatter.feature_selection.CUR
+   :members:
+   :private-members: _compute_pi
+   :undoc-members:
+   :inherited-members:
 
-.. automethod:: _CUR.score
-.. automethod:: _CUR._compute_pi
-
-They are instantiated using
-:py:class:`skmatter.feature_selection.CUR` and
-:py:class:`skmatter.sample_selection.CUR`, e.g.
-
-.. code-block:: python
-
-    from skmatter.feature_selection import CUR
-
-    selector = CUR(
-        n_to_select=4,
-        progress_bar=True,
-        score_threshold=1e-12,
-        full=False,
-        # int, number of eigenvectors to use in computing pi
-        k=1,
-        # int, number of steps after which to recompute pi
-        recompute_every=1,
-        # float, threshold below which scores will be considered 0, defaults to 1E-12
-        tolerance=1e-12,
-    )
-    selector.fit(X)
-
-    Xr = selector.transform(X)
+.. autoclass:: skmatter.sample_selection.CUR
+   :members:
+   :private-members: _compute_pi
+   :undoc-members:
+   :inherited-members:
 
 .. _PCov-CUR-api:
 
 PCov-CUR
-########
+--------
 
 PCov-CUR extends upon CUR by using augmented right or left singular vectors inspired by
 Principal Covariates Regression, as demonstrated in [Cersonsky2021]_. These methods
@@ -143,45 +116,25 @@ employ the modified kernel and covariance matrices introduced in :ref:`PCovR-api
 available via the Utility Classes.
 
 Again, the feature and sample selection versions of PCov-CUR differ only in the
-computation of :math:`\pi`. So, in addition to :py:class:`GreedySelector`, both
-instances of PCov-CUR selection build off of
-:py:class:`skmatter._selection._cur._PCovCUR`, inheriting
+computation of :math:`\pi`. S
 
-.. currentmodule:: skmatter._selection
+.. autoclass:: skmatter.feature_selection.PCovCUR
+   :members:
+   :private-members: _compute_pi
+   :undoc-members:
+   :inherited-members:
 
-.. automethod:: _PCovCUR.score
-.. automethod:: _PCovCUR._compute_pi
+.. autoclass:: skmatter.sample_selection.PCovCUR
+   :members:
+   :private-members: _compute_pi
+   :undoc-members:
+   :inherited-members:
 
-and are instantiated using
-:py:class:`skmatter.feature_selection.PCovCUR` and :py:class:`skmatter.sample_selection.PCovCUR`.
-
-.. code-block:: python
-
-    from skmatter.feature_selection import PCovCUR
-
-    selector = PCovCUR(
-        n_to_select=4,
-        progress_bar=True,
-        score_threshold=1e-12,
-        full=False,
-        # float, default=0.5
-        # The PCovR mixing parameter, as described in PCovR as alpha
-        mixing=0.5,
-        # int, number of eigenvectors to use in computing pi
-        k=1,
-        # int, number of steps after which to recompute pi
-        recompute_every=1,
-        # float, threshold below which scores will be considered 0, defaults to 1E-12
-        tolerance=1e-12,
-    )
-    selector.fit(X, y)
-
-    Xr = selector.transform(X)
 
 .. _FPS-api:
 
 Farthest Point-Sampling (FPS)
-#############################
+-----------------------------
 
 Farthest Point Sampling is a common selection technique intended to exploit the
 diversity of the input space.
@@ -194,116 +147,53 @@ distance, however other distance metrics may be employed.
 Similar to CUR, the feature and selection versions of FPS differ only in the way
 distance is computed (feature selection does so column-wise, sample selection does so
 row-wise), and are built off of the same base class,
-:py:class:`skmatter._selection._fps._FPS`, in addition to GreedySelector, and inherit
-
-.. currentmodule:: skmatter._selection
-
-.. automethod:: _FPS.score
-.. automethod:: _FPS.get_distance
-.. automethod:: _FPS.get_select_distance
 
 These selectors can be instantiated using :py:class:`skmatter.feature_selection.FPS` and
 :py:class:`skmatter.sample_selection.FPS`.
 
-.. code-block:: python
 
-    from skmatter.feature_selection import FPS
+.. autoclass:: skmatter.feature_selection.FPS
+   :members:
+   :undoc-members:
+   :inherited-members:
 
-    selector = FPS(
-        n_to_select=4,
-        progress_bar=True,
-        score_threshold=1e-12,
-        full=False,
-        # int or 'random', default=0
-        # Index of the first selection.
-        # If ‘random’, picks a random value when fit starts.
-        initialize=0,
-    )
-    selector.fit(X)
-
-    Xr = selector.transform(X)
+.. autoclass:: skmatter.sample_selection.FPS
+   :members:
+   :undoc-members:
+   :inherited-members:
 
 .. _PCov-FPS-api:
 
 PCov-FPS
-########
+--------
 
 PCov-FPS extends upon FPS much like PCov-CUR does to CUR. Instead of using the Euclidean
 distance solely in the space of :math:`\mathbf{X}`, we use a combined distance in terms
 of :math:`\mathbf{X}` and :math:`\mathbf{y}`.
 
-Again, the feature and sample selection versions of PCov-FPS differ only in computing
-the distances. So, in addition to :py:class:`GreedySelector`, both instances of PCov-FPS
-selection build off of :py:class:`skmatter._selection._fps._PCovFPS`, and inherit
+.. autoclass:: skmatter.feature_selection.PCovFPS
+   :members:
+   :undoc-members:
+   :inherited-members:
 
-.. currentmodule:: skmatter._selection
-
-.. automethod:: _PCovFPS.score
-.. automethod:: _PCovFPS.get_distance
-.. automethod:: _PCovFPS.get_select_distance
-
-
-and can
-be instantiated using
-:py:class:`skmatter.feature_selection.PCovFPS` and :py:class:`skmatter.sample_selection.PCovFPS`.
-
-.. code-block:: python
-
-    from skmatter.feature_selection import PCovFPS
-
-    selector = PCovFPS(
-        n_to_select=4,
-        progress_bar=True,
-        score_threshold=1e-12,
-        full=False,
-        # float, default=0.5
-        # The PCovR mixing parameter, as described in PCovR as alpha
-        mixing=0.5,
-        # int or 'random', default=0
-        # Index of the first selection.
-        # If ‘random’, picks a random value when fit starts.
-        initialize=0,
-    )
-    selector.fit(X, y)
-
-    Xr = selector.transform(X)
+.. autoclass:: skmatter.sample_selection.PCovFPS
+   :members:
+   :undoc-members:
+   :inherited-members:
 
 .. _Voronoi-FPS-api:
 
 Voronoi FPS
-###########
+-----------
 
-.. currentmodule:: skmatter.sample_selection._voronoi_fps
+.. autoclass:: skmatter.sample_selection.VoronoiFPS
+   :members:
+   :undoc-members:
+   :inherited-members:
 
-.. autoclass :: VoronoiFPS
-
-These selectors can be instantiated using
-:py:class:`skmatter.sample_selection.VoronoiFPS`.
-
-.. code-block:: python
-
-    from skmatter.feature_selection import VoronoiFPS
-
-    selector = VoronoiFPS(
-        n_to_select=4,
-        progress_bar=True,
-        score_threshold=1e-12,
-        full=False,
-        # n_trial_calculation used for calculation of full_fraction,
-        # so you need to determine only one parameter
-        n_trial_calculation=4,
-        full_fraction=None,
-        # int or 'random', default=0
-        # Index of the first selection.
-        # If ‘random’, picks a random value when fit starts.
-        initialize=0,
-    )
-    selector.fit(X)
-
-    Xr = selector.transform(X)
 
 When *Not* to Use Voronoi FPS
------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 In many cases, this algorithm may not increase upon the efficiency. For example, for
 simple metrics (such as Euclidean distance), Voronoi FPS will likely not accelerate, and
@@ -315,27 +205,9 @@ bookkeeping significantly degrades the speed of work compared to FPS.
 .. _DCH-api:
 
 Directional Convex Hull (DCH)
-#############################
-.. currentmodule:: skmatter.sample_selection._base
+-----------------------------
 
-.. autoclass :: DirectionalConvexHull
-
-This selector can be instantiated using
-:class:`skmatter.sample_selection.DirectionalConvexHull`.
-
-.. code-block:: python
-
-    from skmatter.sample_selection import DirectionalConvexHull
-
-    selector = DirectionalConvexHull(
-        # Indices of columns of X to use for fitting
-        # the convex hull
-        low_dim_idx=[0, 1],
-    )
-    selector.fit(X, y)
-
-    # Get the distance to the convex hull for samples used to fit the
-    # convex hull. This can also be called using other samples (X_new)
-    # and corresponding properties (y_new) that were not used to fit
-    # the hull.
-    Xr = selector.score_samples(X, y)
+.. autoclass:: skmatter.sample_selection.DirectionalConvexHull
+   :members:
+   :undoc-members:
+   :inherited-members:

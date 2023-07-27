@@ -50,9 +50,36 @@ class FPS(_FPS):
 
     n_selected_ : int
                   Counter tracking the number of selections that have been made
+
     X_selected_ : ndarray,
                   Matrix containing the selected features, for use in fitting
 
+    selected_idx_ : ndarray
+                  indices of selected samples
+
+    Examples
+    --------
+    >>> from skmatter.feature_selection import FPS
+    >>> import numpy as np
+    >>> selector = FPS(
+    ...     n_to_select=2,
+    ...     # int or 'random', default=0
+    ...     # Index of the first selection.
+    ...     # If ‘random’, picks a random value when fit starts.
+    ...     initialize=0,
+    ... )
+    >>> X = np.array(
+    ...     [
+    ...         [0.12, 0.21, 0.02],  # 3 samples, 3 features
+    ...         [-0.09, 0.32, -0.10],
+    ...         [-0.03, -0.53, 0.08],
+    ...     ]
+    ... )
+    >>> selector.fit(X)
+    FPS(n_to_select=2)
+    >>> Xr = selector.transform(X)
+    >>> selector.selected_idx_
+    array([0, 1])
     """
 
     def __init__(
@@ -129,6 +156,30 @@ class PCovFPS(_PCovFPS):
     X_selected_ : ndarray,
                   Matrix containing the selected features, for use in fitting
 
+    Examples
+    --------
+    >>> from skmatter.feature_selection import PCovFPS
+    >>> import numpy as np
+    >>> selector = PCovFPS(
+    ...     n_to_select=2,
+    ...     # int or 'random', default=0
+    ...     # Index of the first selection.
+    ...     # If ‘random’, picks a random value when fit starts.
+    ...     initialize=0,
+    ... )
+    >>> X = np.array(
+    ...     [
+    ...         [0.12, 0.21, 0.02],  # 3 samples, 3 features
+    ...         [-0.09, 0.32, -0.10],
+    ...         [-0.03, -0.53, 0.08],
+    ...     ]
+    ... )
+    >>> y = np.array([0.0, 0.0, 1.0])  # classes of each sample
+    >>> selector.fit(X, y)
+    PCovFPS(n_to_select=2)
+    >>> Xr = selector.transform(X)
+    >>> selector.selected_idx_
+    array([0, 1])
     """
 
     def __init__(
@@ -172,7 +223,6 @@ class CUR(_CUR):
     tolerance: float
          threshold below which scores will be considered 0, defaults to 1E-12
 
-
     n_to_select : int or float, default=None
         The number of selections to make. If `None`, half of the features are
         selected. If integer, the parameter is the absolute number of selections
@@ -202,6 +252,7 @@ class CUR(_CUR):
 
     random_state: int or RandomState instance, default=0
 
+
     Attributes
     ----------
 
@@ -210,9 +261,37 @@ class CUR(_CUR):
 
     n_selected_ : int
                   Counter tracking the number of selections that have been made
+
     X_selected_ : ndarray,
                   Matrix containing the selected features, for use in fitting
 
+    pi_ : ndarray (n_features),
+                  the importance score see :func:`_compute_pi`
+
+    selected_idx_ : ndarray
+                  indices of selected features
+
+    Examples
+    --------
+    >>> from skmatter.feature_selection import CUR
+    >>> import numpy as np
+    >>> selector = CUR(n_to_select=2, random_state=0)
+    >>> X = np.array(
+    ...     [
+    ...         [0.12, 0.21, 0.02],  # 3 samples, 3 features
+    ...         [-0.09, 0.32, -0.10],
+    ...         [-0.03, -0.53, 0.08],
+    ...     ]
+    ... )
+    >>> selector.fit(X)
+    CUR(n_to_select=2)
+    >>> Xr = selector.transform(X)
+    >>> print(Xr.shape)
+    (3, 2)
+    >>> np.round(selector.pi_, 2)  # importance scole
+    array([0.  , 0.  , 0.05])
+    >>> selector.selected_idx_  # importance scole
+    array([1, 0])
     """
 
     def __init__(
@@ -296,17 +375,40 @@ class PCovCUR(_PCovCUR):
     ----------
 
     X_current_ : ndarray (n_samples, n_features)
-                  The original matrix orthogonalized by previous selections
+                The original matrix orthogonalized by previous selections
 
     y_current_ : ndarray (n_samples, n_properties)
                 The targets orthogonalized by a regression on
                 the previous selections.
 
     n_selected_ : int
-                  Counter tracking the number of selections that have been made
-    X_selected_ : ndarray,
-                  Matrix containing the selected features, for use in fitting
+                Counter tracking the number of selections that have been made
 
+    X_selected_ : ndarray,
+                Matrix containing the selected features, for use in fitting
+
+    Examples
+    --------
+    >>> from skmatter.feature_selection import PCovCUR
+    >>> import numpy as np
+    >>> selector = PCovCUR(n_to_select=2, mixing=0.5, random_state=0)
+    >>> X = np.array(
+    ...     [
+    ...         [0.12, 0.21, 0.02],  # 3 samples, 3 features
+    ...         [-0.09, 0.32, -0.10],
+    ...         [-0.03, -0.53, 0.08],
+    ...     ]
+    ... )
+    >>> y = np.array([0.0, 0.0, 1.0])  # classes of each sample
+    >>> selector.fit(X, y)
+    PCovCUR(n_to_select=2)
+    >>> Xr = selector.transform(X)
+    >>> print(Xr.shape)
+    (3, 2)
+    >>> np.round(selector.pi_, 2)  # importance scole
+    array([0.  , 0.  , 0.05])
+    >>> selector.selected_idx_  # importance scole
+    array([1, 0])
     """
 
     def __init__(

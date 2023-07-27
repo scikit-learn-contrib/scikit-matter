@@ -96,12 +96,39 @@ class FPS(_FPS):
 
     n_selected_ : int
                   Counter tracking the number of selections that have been made
+
     X_selected_ : ndarray,
                   Matrix containing the selected samples, for use in fitting
+
     y_selected_ : ndarray,
                   In sample selection, the matrix containing the selected targets, for
                   use in fitting
 
+    selected_idx_ : ndarray
+                  indices of selected samples
+
+    Examples
+    --------
+    >>> from skmatter.sample_selection import FPS
+    >>> import numpy as np
+    >>> selector = FPS(
+    ...     n_to_select=2,
+    ...     # int or 'random', default=0
+    ...     # Index of the first selection.
+    ...     # If ‘random’, picks a random value when fit starts.
+    ...     initialize=0,
+    ... )
+    >>> X = np.array(
+    ...     [
+    ...         [0.12, 0.21, 0.02],  # 3 samples, 3 features
+    ...         [-0.09, 0.32, -0.10],
+    ...         [-0.03, -0.53, 0.08],
+    ...     ]
+    ... )
+    >>> selector.fit(X)
+    FPS(n_to_select=2)
+    >>> selector.selected_idx_
+    array([0, 2])
     """
 
     def __init__(
@@ -175,13 +202,40 @@ class PCovFPS(_PCovFPS):
 
     n_selected_ : int
                   Counter tracking the number of selections that have been made
+
     X_selected_ : ndarray,
                   Matrix containing the selected samples, for use in fitting
+
     y_selected_ : ndarray,
                   In sample selection, the matrix containing the selected targets, for
                   use in fitting
 
+    selected_idx_ : ndarray
+                  indices of selected samples
 
+    Examples
+    --------
+    >>> from skmatter.sample_selection import PCovFPS
+    >>> import numpy as np
+    >>> selector = PCovFPS(
+    ...     n_to_select=2,
+    ...     # int or 'random', default=0
+    ...     # Index of the first selection.
+    ...     # If ‘random’, picks a random value when fit starts.
+    ...     initialize=0,
+    ... )
+    >>> X = np.array(
+    ...     [
+    ...         [0.12, 0.21, 0.02],  # 3 samples, 3 features
+    ...         [-0.09, 0.32, -0.10],
+    ...         [-0.03, -0.53, 0.08],
+    ...     ]
+    ... )
+    >>> y = np.array([0.0, 0.0, 1.0])  # classes of each sample
+    >>> selector.fit(X, y)
+    PCovFPS(n_to_select=2)
+    >>> selector.selected_idx_
+    array([0, 2])
     """
 
     def __init__(
@@ -210,63 +264,97 @@ class PCovFPS(_PCovFPS):
 
 class CUR(_CUR):
     """Transformer that performs Greedy Sample Selection by choosing samples
-     which maximize the magnitude of the left singular vectors, consistent with
-     classic CUR matrix decomposition.
+    which maximize the magnitude of the left singular vectors, consistent with
+    classic CUR matrix decomposition.
 
     Parameters
-     ----------
-     recompute_every : int
-                       number of steps after which to recompute the pi score
-                       defaults to 1, if 0 no re-computation is done
+    ----------
+    recompute_every : int
+                      number of steps after which to recompute the pi score
+                      defaults to 1, if 0 no re-computation is done
 
-     k : int
-         number of eigenvectors to compute the importance score with, defaults to 1
+    k : int
+        number of eigenvectors to compute the importance score with, defaults to 1
 
-     tolerance: float
-          threshold below which scores will be considered 0, defaults to 1E-12
+    tolerance: float
+         threshold below which scores will be considered 0, defaults to 1E-12
 
-     n_to_select : int or float, default=None
-         The number of selections to make. If `None`, half of the samples are
-         selected. If integer, the parameter is the absolute number of selections
-         to make. If float between 0 and 1, it is the fraction of the total dataset to
-         select. Stored in :py:attr:`self.n_to_select`.
+    n_to_select : int or float, default=None
+        The number of selections to make. If `None`, half of the samples are
+        selected. If integer, the parameter is the absolute number of selections
+        to make. If float between 0 and 1, it is the fraction of the total dataset to
+        select. Stored in :py:attr:`self.n_to_select`.
 
-     score_threshold : float, default=None
-         Threshold for the score. If `None` selection will continue until the
-         n_to_select is chosen. Otherwise will stop when the score falls below the
-         threshold. Stored in :py:attr:`self.score_threshold`.
+    score_threshold : float, default=None
+        Threshold for the score. If `None` selection will continue until the
+        n_to_select is chosen. Otherwise will stop when the score falls below the
+        threshold. Stored in :py:attr:`self.score_threshold`.
 
-     score_threshold_type : str, default="absolute"
-         How to interpret the ``score_threshold``. When "absolute", the score used by
-         the selector is compared to the threshold directly. When "relative", at each
-         iteration, the score used by the selector is compared proportionally to the
-         score of the first selection, i.e. the selector quits when
-         ``current_score / first_score < threshold``. Stored in
-         :py:attr:`self.score_threshold_type`.
+    score_threshold_type : str, default="absolute"
+        How to interpret the ``score_threshold``. When "absolute", the score used by
+        the selector is compared to the threshold directly. When "relative", at each
+        iteration, the score used by the selector is compared proportionally to the
+        score of the first selection, i.e. the selector quits when
+        ``current_score / first_score < threshold``. Stored in
+        :py:attr:`self.score_threshold_type`.
 
-     progress_bar: bool, default=False
-               option to use `tqdm <https://tqdm.github.io/>`_ progress bar to monitor
-               selections. Stored in :py:attr:`self.report_progress`.
+    progress_bar: bool, default=False
+              option to use `tqdm <https://tqdm.github.io/>`_ progress bar to monitor
+              selections. Stored in :py:attr:`self.report_progress`.
 
-     full : bool, default=False
-         In the case that all non-redundant selections are exhausted, choose
-         randomly from the remaining samples. Stored in :py:attr:`self.full`.
+    full : bool, default=False
+        In the case that all non-redundant selections are exhausted, choose
+        randomly from the remaining samples. Stored in :py:attr:`self.full`.
 
-     random_state: int or RandomState instance, default=0
+    random_state: int or RandomState instance, default=0
 
-     Attributes
-     ----------
+    Attributes
+    ----------
 
-     X_current_ : ndarray (n_samples, n_features)
-                   The original matrix orthogonalized by previous selections
+    X_current_ : ndarray (n_samples, n_features)
+                  The original matrix orthogonalized by previous selections
 
-     n_selected_ : int
-                   Counter tracking the number of selections that have been made
-     X_selected_ : ndarray,
-                   Matrix containing the selected samples, for use in fitting
-     y_selected_ : ndarray,
-                   In sample selection, the matrix containing the selected targets, for
-                   use in fitting
+    n_selected_ : int
+                  Counter tracking the number of selections that have been made
+
+    X_selected_ : ndarray,
+                  Matrix containing the selected samples, for use in fitting
+
+    y_selected_ : ndarray,
+                  In sample selection, the matrix containing the selected targets, for
+                  use in fitting
+
+    pi_ : ndarray (n_features),
+                  the importance score see :func:`_compute_pi`
+
+    selected_idx_ : ndarray
+                  indices of selected features
+
+    Examples
+    --------
+    >>> from skmatter.sample_selection import CUR
+    >>> import numpy as np
+    >>> selector = CUR(n_to_select=2, random_state=0)
+    >>> X = np.array(
+    ...     [
+    ...         [0.12, 0.21, 0.02],  # 3 samples, 3 features
+    ...         [-0.09, 0.32, -0.10],
+    ...         [-0.03, -0.53, 0.08],
+    ...     ]
+    ... )
+    >>> np.random.seed(0)  # there is a source of randomness in it
+    >>> selector.fit(X)
+    CUR(n_to_select=2)
+    >>> np.round(selector.pi_, 2)  # importance scole
+    array([0., 1., 0.])
+    >>> selector.selected_idx_  # importance scole
+    array([2, 0])
+    >>> # selector.transform(X) cannot be used as sklearn API
+    >>> # restricts the change of sample size using transformers
+    >>> # So one has to do
+    >>> X[selector.selected_idx_]
+    array([[-0.03, -0.53,  0.08],
+           [ 0.12,  0.21,  0.02]])
 
     """
 
@@ -362,12 +450,45 @@ class PCovCUR(_PCovCUR):
 
     n_selected_ : int
                   Counter tracking the number of selections that have been made
+
     X_selected_ : ndarray,
                   Matrix containing the selected samples, for use in fitting
+
     y_selected_ : ndarray,
                   In sample selection, the matrix containing the selected targets, for
                   use in fitting
 
+    pi_ : ndarray (n_features),
+                  the importance score see :func:`_compute_pi`
+
+    selected_idx_ : ndarray
+                  indices of selected features
+
+    Examples
+    --------
+    >>> from skmatter.sample_selection import PCovCUR
+    >>> import numpy as np
+    >>> selector = PCovCUR(n_to_select=2, random_state=0)
+    >>> X = np.array(
+    ...     [
+    ...         [0.12, 0.21, 0.02],  # 3 samples, 3 features
+    ...         [-0.09, 0.32, -0.10],
+    ...         [-0.03, -0.53, 0.08],
+    ...     ]
+    ... )
+    >>> y = np.array([0.0, 0.0, 1.0])  # classes of each sample
+    >>> selector.fit(X, y)
+    PCovCUR(n_to_select=2)
+    >>> np.round(selector.pi_, 2)  # importance scole
+    array([1., 0., 0.])
+    >>> selector.selected_idx_  # importance scole
+    array([2, 1])
+    >>> # selector.transform(X) cannot be used as sklearn API
+    >>> # restricts the change of sample size using transformers
+    >>> # So one has to do
+    >>> X[selector.selected_idx_]
+    array([[-0.03, -0.53,  0.08],
+           [-0.09,  0.32, -0.1 ]])
     """
 
     def __init__(
@@ -454,6 +575,34 @@ class DirectionalConvexHull:
     interpolator_high_dim_  : scipy.interpolate.interpnd.LinearNDInterpolator
                     Interpolator for the features in the high-
                     dimensional space
+
+    Examples
+    --------
+    >>> from skmatter.sample_selection import DirectionalConvexHull
+    >>> selector = DirectionalConvexHull(
+    ...     # Indices of columns of X to use for fitting
+    ...     # the convex hull
+    ...     low_dim_idx=[0, 1],
+    ... )
+    >>> X = np.array(
+    ...     [
+    ...         [0.12, 0.21, 0.02],  # 3 samples, 3 features
+    ...         [-0.09, 0.32, -0.10],
+    ...         [-0.03, -0.53, 0.08],
+    ...         [-0.41, 0.25, 0.34],
+    ...     ]
+    ... )
+    >>> y = np.array([0.1, 1.0, 0.2, 0.4])  # classes of each sample
+    >>> dch = selector.fit(X, y)
+    >>> # Get the distance to the convex hull for samples used to fit the
+    >>> # convex hull. This can also be called using other samples (X_new)
+    >>> # and corresponding properties (y_new) that were not used to fit
+    >>> # the hull. In this case they are alle one the conex hull so we
+    >>> # zeros
+    >>> np.allclose(dch.score_samples(X, y), [0.0, 0.0, 0.0, 0.0])
+    True
+
+
 
     References
     ----------
