@@ -54,6 +54,33 @@ class VoronoiFPS(GreedySelector):
         depends on many conditions, and it is determined "in situ" for optimal
         use of the algorithm. Determination is done with a few test calculations
         and memory operations.
+
+    Examples
+    --------
+    >>> from skmatter.sample_selection import VoronoiFPS
+    >>> selector = VoronoiFPS(
+    ...     n_to_select=2,
+    ...     progress_bar=True,
+    ...     score_threshold=1e-12,
+    ...     full=False,
+    ...     # n_trial_calculation used for calculation of full_fraction,
+    ...     # so you need to determine only one parameter
+    ...     n_trial_calculation=4,
+    ...     full_fraction=0.45,
+    ...     # int or 'random', default=0
+    ...     # Index of the first selection.
+    ...     # If ‘random’, picks a random value when fit starts.
+    ...     initialize=0,
+    ... )
+    >>> X = np.array(
+    ...     [
+    ...         [0.12, 0.21, 0.02],  # 3 samples, 3 features
+    ...         [-0.09, 0.32, -0.10],
+    ...         [-0.03, -0.53, 0.08],
+    ...     ]
+    ... )
+    >>> selector.fit(X)
+    VoronoiFPS(full_fraction=0.45)
     """
 
     def __init__(
