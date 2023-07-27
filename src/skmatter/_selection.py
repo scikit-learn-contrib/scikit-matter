@@ -1,5 +1,77 @@
-"""
-Sequential selection
+r"""
+This module contains data sub-selection modules primarily corresponding to
+methods derived from CUR matrix decomposition and Farthest Point Sampling. In
+their classical form, CUR and FPS determine a data subset that maximizes the
+variance (CUR) or distribution (FPS) of the features or samples.  These methods
+can be modified to combine supervised target information denoted by the methods
+`PCov-CUR` and `PCov-FPS`.  For further reading, refer to [Imbalzano2018]_ and
+[Cersonsky2021]_. These selectors can be used for both feature and sample
+selection, with similar instantiations. All sub-selection methods  scores each
+feature or sample (without an estimator) and chooses that with the maximum
+score. A simple example of usage:
+
+.. doctest::
+
+    >>> # feature selection
+    >>> import numpy as np
+    >>> from skmatter.feature_selection import CUR, FPS, PCovCUR, PCovFPS
+    >>> selector = CUR(
+    ...     # the number of selections to make
+    ...     # if None, set to half the samples or features
+    ...     # if float, fraction of the total dataset to select
+    ...     # if int, absolute number of selections to make
+    ...     n_to_select=2,
+    ...     # option to use `tqdm <https://tqdm.github.io/>`_ progress bar
+    ...     progress_bar=True,
+    ...     # float, cutoff score to stop selecting
+    ...     score_threshold=1e-12,
+    ...     # boolean, whether to select randomly after non-redundant selections
+    ...     # are exhausted
+    ...     full=False,
+    ... )
+    >>> X = np.array(
+    ...     [
+    ...         [0.12, 0.21, 0.02],  # 3 samples, 3 features
+    ...         [-0.09, 0.32, -0.10],
+    ...         [-0.03, -0.53, 0.08],
+    ...     ]
+    ... )
+    >>> y = np.array([0.0, 0.0, 1.0])  # classes of each sample
+    >>> selector.fit(X)
+    CUR(n_to_select=2, progress_bar=True, score_threshold=1e-12)
+    >>> Xr = selector.transform(X)
+    >>> print(Xr.shape)
+    (3, 2)
+    >>> selector = PCovCUR(n_to_select=2)
+    >>> selector.fit(X, y)
+    PCovCUR(n_to_select=2)
+    >>> Xr = selector.transform(X)
+    >>> print(Xr.shape)
+    (3, 2)
+    >>>
+    >>> # Now sample selection
+    >>> from skmatter.sample_selection import CUR, FPS, PCovCUR, PCovFPS
+    >>> selector = CUR(n_to_select=2)
+    >>> selector.fit(X)
+    CUR(n_to_select=2)
+    >>> Xr = X[selector.selected_idx_]
+    >>> print(Xr.shape)
+    (2, 3)
+
+These selectors are available:
+
+* :ref:`CUR-api`: a decomposition: an iterative feature selection method based upon the
+  singular value decoposition.
+* :ref:`PCov-CUR-api` decomposition extends upon CUR by using augmented right or left
+  singular vectors inspired by Principal Covariates Regression.
+* :ref:`FPS-api`: a common selection technique intended to exploit the diversity of
+  the input space. The selection of the first point is made at random or by a
+  separate metric
+* :ref:`PCov-FPS-api` extends upon FPS much like PCov-CUR does to CUR.
+* :ref:`Voronoi-FPS-api`: conduct FPS selection, taking advantage of Voronoi
+  tessellations to accelerate selection.
+* :ref:`DCH-api`: selects samples by constructing a directional convex hull and
+  determining which samples lie on the bounding surface.
 """
 
 import numbers
