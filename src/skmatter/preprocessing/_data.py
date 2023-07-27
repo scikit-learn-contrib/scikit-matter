@@ -232,10 +232,11 @@ class KernelNormalizer(KernelCenterer):
     """Kernel centering method, similar to KernelCenterer,
     but with additional scaling and ability to pass a set of sample weights.
 
-    Let K(x, z) be a kernel defined by phi(x)^T phi(z), where phi is a
-    function mapping x to a Hilbert space. KernelNormalizer centers (i.e.,
-    normalize to have zero mean) the data without explicitly computing phi(x).
-    It is equivalent to centering and scaling phi(x) with
+    Let :math:`K(x, z)` be a kernel defined by :math:`\\phi(x)^T \\phi(z)`,
+    where :math:`\\phi` is a function mapping x to a Hilbert space.
+    KernelNormalizer centers (i.e., normalize to have zero mean) the data without
+    explicitly computing :math:`\\phi(x)`.
+    It is equivalent to centering and scaling :math:`\\phi(x)` with
     sklearn.preprocessing.StandardScaler(with_std=False).
 
     Parameters

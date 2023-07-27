@@ -33,4 +33,4 @@ for feature and sample selection.
 Random Partitioning with Overlaps
 #################################
 
-.. automodule:: skmatter.model_selection._split
+.. autofunction:: skmatter.model_selection.train_test_split
