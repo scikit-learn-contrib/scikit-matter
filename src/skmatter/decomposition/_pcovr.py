@@ -55,6 +55,7 @@ class PCovR(_BasePCA, LinearModel):
     This can be done with the companion preprocessing classes, where
 
     >>> from skmatter.preprocessing import StandardFlexibleScaler as SFS
+    >>> import numpy as np
     >>>
     >>> # Set column_wise to True when the columns are relative to one another,
     >>> # False otherwise.

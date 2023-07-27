@@ -18,24 +18,46 @@ where at each iteration the model scores each
 feature or sample (without an estimator) and chooses that with the maximum score.
 This can be executed using:
 
-.. code-block:: python
+.. doctest::
 
-    selector = Selector(
-        # the number of selections to make
-        # if None, set to half the samples or features
-        # if float, fraction of the total dataset to select
-        # if int, absolute number of selections to make
-        n_to_select=4,
-        # option to use `tqdm <https://tqdm.github.io/>`_ progress bar
-        progress_bar=True,
-        # float, cutoff score to stop selecting
-        score_threshold=1e-12,
-        # boolean, whether to select randomly after non-redundant selections are exhausted
-        full=False,
-    )
-    selector.fit(X, y)
-
-    Xr = selector.transform(X)
+    >>> import numpy as np
+    >>> from skmatter.feature_selection import CUR, FPS, PCovCUR, PCovFPS
+    >>> selector = CUR(
+    ...     # the number of selections to make
+    ...     # if None, set to half the samples or features
+    ...     # if float, fraction of the total dataset to select
+    ...     # if int, absolute number of selections to make
+    ...     n_to_select=2,
+    ...     # option to use `tqdm <https://tqdm.github.io/>`_ progress bar
+    ...     progress_bar=True,
+    ...     # float, cutoff score to stop selecting
+    ...     score_threshold=1e-12,
+    ...     # boolean, whether to select randomly after non-redundant selections
+    ...     # are exhausted
+    ...     full=False,
+    ... )
+    >>> X = np.array([[ 0.12,  0.21,  0.02], # 3 samples, 3 features
+    ...               [-0.09,  0.32, -0.10],
+    ...               [-0.03, -0.53,  0.08]])
+    >>> y = np.array([0., 0., 1.])  # classes of each sample
+    >>> selector.fit(X)
+    CUR(n_to_select=2, progress_bar=True, score_threshold=1e-12)
+    >>> Xr = selector.transform(X)
+    >>> print(Xr.shape)
+    (3, 2)
+    >>> selector = PCovCUR(n_to_select=2)
+    >>> selector.fit(X, y)
+    PCovCUR(n_to_select=2)
+    >>> Xr = selector.transform(X)
+    >>> print(Xr.shape)
+    (3, 2)
+    >>> from skmatter.sample_selection import CUR, FPS, PCovCUR, PCovFPS
+    >>> selector = CUR(n_to_select=2)
+    >>> selector.fit(X)
+    CUR(n_to_select=2)
+    >>> Xr = X[selector.selected_idx_]
+    >>> print(Xr.shape)
+    (2, 3)
 
 where `Selector` is one of the classes below that overwrites the method
 :py:func:`score`.
