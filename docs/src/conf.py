@@ -45,6 +45,7 @@ extensions = [
     "sphinx.ext.intersphinx",
     "sphinx.ext.napoleon",
     "sphinx.ext.viewcode",
+    "sphinx.ext.doctest",
     "sphinx_gallery.gen_gallery",
     "sphinx_toggleprompt",
 ]
