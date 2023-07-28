@@ -91,6 +91,7 @@ html_theme = "pydata_sphinx_theme"
 # further.  For a list of options available for each theme, see the
 # documentation.
 html_theme_options = {
+    "github_url": "https://github.com/scikit-learn-contrib/scikit-matter",
     "use_edit_page_button": True,
 }
 
