@@ -8,6 +8,8 @@ our :ref:`installation` instructions for installing ``scikit-matter``.
 For a detailed explaination of the functionalities, please look at the
 :ref:`selection-api`
 
+.. _getting_started-selection:
+
 Features and Samples Selection
 ------------------------------
 
@@ -21,6 +23,8 @@ Notebook Examples
    :start-line: 4
 
 
+.. _getting_started-reconstruction:
+
 Reconstruction Measures
 -----------------------
 
@@ -32,6 +36,8 @@ Notebook Examples
 
 .. include:: examples/reconstruction/index.rst
    :start-line: 4
+
+.. _getting_started-pcovr:
 
 Principal Covariates Regression
 -------------------------------
