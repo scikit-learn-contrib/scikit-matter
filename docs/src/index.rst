@@ -5,8 +5,7 @@
    :end-before: marker-contributing
 
 .. toctree::
-  :maxdepth: 1
-  :caption: Contents:
+  :hidden:
 
   getting-started
   installation
