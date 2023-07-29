@@ -1,2 +1,2 @@
-Orthogonal Regression
-=====================
+Regression
+==========
