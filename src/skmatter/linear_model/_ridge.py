@@ -87,7 +87,7 @@ class RidgeRegression2FoldCV(BaseEstimator, MultiOutputMixin, RegressorMixin):
         A string (see model evaluation documentation) or
         a scorer callable object / function with signature
         ``scorer(estimator, X, y)``.
-        If None, the negative root mean squared error is used.
+        If None, the negative mean squared error is used.
     n_jobs : int, default=None
         The number of CPUs to use to do the computation.
         :obj:`None` means 1 unless in a :obj:`joblib.parallel_backend` context.
@@ -166,7 +166,7 @@ class RidgeRegression2FoldCV(BaseEstimator, MultiOutputMixin, RegressorMixin):
         # intercepted here
         if self.scoring is None:
             scorer = check_scoring(
-                self, scoring="neg_root_mean_squared_error", allow_none=False
+                self, scoring="neg_mean_squared_error", allow_none=False
             )
         else:
             scorer = check_scoring(self, scoring=self.scoring, allow_none=False)
