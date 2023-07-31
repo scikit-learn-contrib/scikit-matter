@@ -18,18 +18,44 @@ class RidgeRegression2FoldCV(BaseEstimator, MultiOutputMixin, RegressorMixin):
         \|y - Xw\|^2_2 + \alpha \|w\|^2_2,
 
     while the alpha value is determined with a 2-fold cross-validation from a list of
-    alpha values. It is more efficient than doing a 2-fold cross-validation using
-    :obj:`sklearn.linear_model.RidgeCV`.
-    The advantage over :obj:`sklearn.linear_model.RidgeCV` using leave-one-out
-    cross-validation (LOOCV) [loocv]_ needs to be analyzed more in detail. Internal
-    benchmarks suggest that it is more efficient than the LOOCV in
-    :obj:`sklearn.linear_model.RidgeCV` for feature sizes < 600 and in general more
-    accurate, see issue #40. However, it is constraint to a svd solver for the matrix
-    inversion.
+    alpha values. It is more efficient version than doing 2-fold cross-validation
+    naively The algorithmic trick is to reuse the matrices obtained by SVD for each
+    regularization paramater :param alpha: The 2-fold CV can be broken donw to
+
+    .. math::
+
+         \begin{align}
+             &\mathbf{X}_1 = \mathbf{U}_1\mathbf{S}_1\mathbf{V}_1^T,
+                   \qquad\qquad\qquad\quad
+                   \textrm{feature matrix }\mathbf{X}\textrm{ for fold 1} \\
+             &\mathbf{W}_1(\lambda) = \mathbf{V}_1
+                    \tilde{\mathbf{S}}_1(\lambda)^{-1} \mathbf{U}_1^T y_1,
+                    \qquad
+                    \textrm{weight matrix fitted on fold 1}\\
+             &\tilde{y}_2 = \mathbf{X}_2 \mathbf{W}_1,
+                    \qquad\qquad\qquad\qquad
+                    \textrm{ prediction of } y\textrm{ for fold 2}
+         \end{align}
+
+    where the matrices
+
+     .. math::
+
+          \begin{align}
+              &\mathbf{A}_1 = \mathbf{X}_2 \mathbf{V}_1, \quad
+               \mathbf{B}_1 = \mathbf{U}_1^T y_1.
+          \end{align}
+
+    are stored to not recompute the SVD.
+
     It offers additional functionalities in comparison to
-    :obj:`sklearn.linear_model.Ridge`: The regularaization parameters can be chosen
-    relative to the largest eigenvalue of the feature matrix
-    as well as regularization method. Details are explained in the `Parameters` section.
+    :obj:`sklearn.linear_model.RidgeCV`: The regularization parameters can be chosen
+    relative to the largest eigenvalue of the feature matrix using :param alpha_type:
+    as well as type of regularization using :param regularization_method:.
+    Details are explained in the `Parameters` section.
+
+    It does not offer :param fit_intercept: as sklearn linear models do. It only
+    can fit with no intercept.
 
     Parameters
     ----------
@@ -49,19 +75,19 @@ class RidgeRegression2FoldCV(BaseEstimator, MultiOutputMixin, RegressorMixin):
         parameter in e.g. :obj:`numpy.linalg.lstsq`. Be aware that for every case
         we always apply a small default cutoff dependend on the numerical
         accuracy of the data type of ``X`` in the fitting function.
+    shuffle : bool, default=True
+        Whether or not to shuffle the data before splitting.
     random_state : int or RandomState instance, default=None
         Controls the shuffling applied to the data before applying the split.
         Pass an int for reproducible output across multiple function calls.
         See
         `random_state glossary from sklearn (external link) <https://scikit-learn.org/stable/glossary.html#term-random-state>`_
-    shuffle : bool, default=True
-        Whether or not to shuffle the data before splitting. If shuffle=False
-        then stratify must be None.
+        parameter is ignored.
     scoring : str, callable, default=None
         A string (see model evaluation documentation) or
         a scorer callable object / function with signature
         ``scorer(estimator, X, y)``.
-        If None, the negative mean squared error is used.
+        If None, the negative root mean squared error is used.
     n_jobs : int, default=None
         The number of CPUs to use to do the computation.
         :obj:`None` means 1 unless in a :obj:`joblib.parallel_backend` context.
@@ -71,27 +97,17 @@ class RidgeRegression2FoldCV(BaseEstimator, MultiOutputMixin, RegressorMixin):
 
     Attributes
     ----------
-    cv_values_ : ndarray of shape (n_samples, n_alphas) or \
-        shape (n_samples, n_targets, n_alphas), optional
-        Cross-validation values for each alpha (only available if \
-        ``store_cv_values=True`` and ``cv=None``). After ``fit()`` has been \
-        called, this attribute will contain the mean squared errors \
-        (by default) or the values of the ``{loss,score}_func`` function \
-        (if provided in the constructor).
+    cv_values_ : ndarray of shape (n_alphas)
+        2-fold cross-validation values for each alpha. After :meth:`fit` has
+        been called, this attribute will contain the values out of score
+        function
     coef_ : ndarray of shape (n_features) or (n_targets, n_features)
         Weight vector(s).
-    intercept_ : float or ndarray of shape (n_targets,)
-        Independent term in decision function. Set to 0.0 if
-        ``fit_intercept = False``.
     alpha_ : float
         Estimated regularization parameter.
     best_score_ : float
         Score of base estimator with best alpha.
 
-    References
-    ----------
-    .. [loocv] Rifkin "Regularized Least Squares."
-            https://www.mit.edu/~9.520/spring07/Classes/rlsslides.pdf
     """  # NoQa: E501
 
     def __init__(
@@ -154,6 +170,7 @@ class RidgeRegression2FoldCV(BaseEstimator, MultiOutputMixin, RegressorMixin):
             )
         else:
             scorer = check_scoring(self, scoring=self.scoring, allow_none=False)
+
         fold1_idx, fold2_idx = next(
             KFold(
                 n_splits=2, shuffle=self.shuffle, random_state=self.random_state
