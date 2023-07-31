@@ -2,7 +2,7 @@ import numpy as np
 from joblib import Parallel, delayed
 from sklearn.base import BaseEstimator, MultiOutputMixin, RegressorMixin
 from sklearn.metrics import check_scoring
-from sklearn.model_selection import KFold
+from sklearn.model_selection import KFold, check_cv
 from sklearn.utils import check_array
 from sklearn.utils.validation import check_is_fitted
 
@@ -75,14 +75,20 @@ class RidgeRegression2FoldCV(BaseEstimator, MultiOutputMixin, RegressorMixin):
         parameter in e.g. :obj:`numpy.linalg.lstsq`. Be aware that for every case
         we always apply a small default cutoff dependend on the numerical
         accuracy of the data type of ``X`` in the fitting function.
+    cv: cross-validation generator or an iterable, default=None
+        The first yield of the generator is used do determine the two folds.
+        If None, a 0.5 split of the two folds is used using the arguments
+        :param shuffle: and :param random_state:
     shuffle : bool, default=True
         Whether or not to shuffle the data before splitting.
+        If :param cv: is not None, this parameter is ignored.
     random_state : int or RandomState instance, default=None
         Controls the shuffling applied to the data before applying the split.
         Pass an int for reproducible output across multiple function calls.
         See
         `random_state glossary from sklearn (external link) <https://scikit-learn.org/stable/glossary.html#term-random-state>`_
         parameter is ignored.
+        If :param cv: is not None, this parameter is ignored.
     scoring : str, callable, default=None
         A string (see model evaluation documentation) or
         a scorer callable object / function with signature
@@ -115,6 +121,7 @@ class RidgeRegression2FoldCV(BaseEstimator, MultiOutputMixin, RegressorMixin):
         alphas=(0.1, 1.0, 10.0),
         alpha_type="absolute",
         regularization_method="tikhonov",
+        cv=None,
         scoring=None,
         random_state=None,
         shuffle=True,
@@ -123,6 +130,7 @@ class RidgeRegression2FoldCV(BaseEstimator, MultiOutputMixin, RegressorMixin):
         self.alphas = np.asarray(alphas)
         self.alpha_type = alpha_type
         self.regularization_method = regularization_method
+        self.cv = cv
         self.scoring = scoring
         self.random_state = random_state
         self.shuffle = shuffle
@@ -171,11 +179,12 @@ class RidgeRegression2FoldCV(BaseEstimator, MultiOutputMixin, RegressorMixin):
         else:
             scorer = check_scoring(self, scoring=self.scoring, allow_none=False)
 
-        fold1_idx, fold2_idx = next(
-            KFold(
-                n_splits=2, shuffle=self.shuffle, random_state=self.random_state
-            ).split(X)
-        )
+        if self.cv is None:
+            cv = KFold(n_splits=2, shuffle=self.shuffle, random_state=self.random_state)
+        else:
+            cv = check_cv(self.cv)
+
+        fold1_idx, fold2_idx = next(cv.split(X))
         self.coef_ = self._2fold_cv(X, y, fold1_idx, fold2_idx, scorer)
         return self
 

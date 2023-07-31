@@ -133,6 +133,13 @@ class RidgeTests(unittest.TestCase):
                 self.features_small, self.features_small
             )
 
+    def test_ridge_regression_2fold_iterable_cv(self):
+        # tests if we can use iterable as cv parameter
+        cv = [([0, 1, 2, 3], [4, 5, 6])]
+        RidgeRegression2FoldCV(alphas=[1], cv=cv).fit(
+            self.features_small, self.features_small
+        )
+
     ridge_parameters = [
         ["absolute_tikhonov", "absolute", "tikhonov"],
         ["absolute_cutoff", "absolute", "cutoff"],
