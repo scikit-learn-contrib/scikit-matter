@@ -1,7 +1,7 @@
 scikit-matter
 =============
 
-|tests| |codecov| |pypi| |conda| |docs|
+|tests| |codecov| |pypi| |conda| |docs| |doi|
 
 A collection of scikit-learn compatible utilities that implement methods born out of the
 materials science and chemistry communities.
@@ -114,3 +114,7 @@ Thanks goes to all people that make scikit-matter possible:
 .. |docs| image:: https://img.shields.io/badge/documentation-latest-sucess
    :alt: Documentation
    :target: https://scikit-matter.readthedocs.io
+
+.. |doi| image:: https://img.shields.io/badge/DOI-10.12688-blue
+   :alt: ORE Paper
+   :target: https://doi.org/10.12688/openreseurope.15789.1
