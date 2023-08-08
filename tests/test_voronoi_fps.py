@@ -95,7 +95,7 @@ class TestVoronoiFPS(TestFPS):
 
     def test_get_distances(self):
         """
-        This test checks that the haussdorf distances are returnable after fitting
+        This test checks that the hausdorff distances are returnable after fitting
         """
         selector = VoronoiFPS(n_to_select=1)
         selector.fit(self.X)
@@ -141,7 +141,7 @@ class TestVoronoiFPS(TestFPS):
         selector.fit(self.X)
 
         active_points = np.where(
-            selector.dSL_[selector.vlocation_of_idx] < selector.haussdorf_
+            selector.dSL_[selector.vlocation_of_idx] < selector.hausdorff_
         )[0]
 
         ap = selector._get_active(self.X, selector.selected_idx_[-1])
@@ -165,13 +165,13 @@ class TestVoronoiFPS(TestFPS):
         )
 
     def test_score(self):
-        """This test check that function score return haussdorf distance"""
+        """This test check that function score return hausdorff distance"""
         selector = VoronoiFPS(n_to_select=3, initialize=0)
         selector.fit(self.X)
 
         self.assertTrue(
             np.allclose(
-                selector.haussdorf_,
+                selector.hausdorff_,
                 selector.score(self.X, selector.selected_idx_[-1]),
             )
         )

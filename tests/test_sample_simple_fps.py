@@ -52,7 +52,7 @@ class TestFPS(unittest.TestCase):
 
     def test_get_distances(self):
         """
-        This test checks that the haussdorf distances are returnable after fitting
+        This test checks that the hausdorff distances are returnable after fitting
         """
         selector = FPS(n_to_select=1)
         selector.fit(self.X)

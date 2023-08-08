@@ -80,7 +80,7 @@ Farthest Point Sampling is a common selection technique intended to exploit the
 diversity of the input space.
 
 In FPS, the selection of the first point is made at random or by a separate metric. Each
-subsequent selection is made to maximize the Haussdorf distance, i.e. the minimum
+subsequent selection is made to maximize the Hausdorf distance, i.e. the minimum
 distance between a point and all previous selections. It is common to use the Euclidean
 distance, however other distance metrics may be employed.
 
