@@ -965,11 +965,11 @@ class _FPS(GreedySelector):
 
     def score(self, X, y=None):
         """
-        Returns the Haussdorf distances of all samples to previous selections
+        Returns the Hausdorff distances of all samples to previous selections
 
         NOTE: This function does not compute the importance score each time it
-        is called, in order to avoid unnecessary computations. The haussdorf
-        distance is updated in :py:func:`self._update_haussdorf`
+        is called, in order to avoid unnecessary computations. The hausdorff
+        distance is updated in :py:func:`self._update_hausdorff`
 
         Parameters
         ----------
@@ -978,9 +978,9 @@ class _FPS(GreedySelector):
 
         Returns
         -------
-        haussdorf : Haussdorf distances
+        hausdorff : Hausdorff distances
         """
-        return self.haussdorf_
+        return self.hausdorff_
 
     def get_distance(self):
         """
@@ -1002,13 +1002,13 @@ class _FPS(GreedySelector):
         Returns
         -------
 
-        haussdorf : ndarray of shape (`n_to_select_from_`)
+        hausdorff : ndarray of shape (`n_to_select_from_`)
                      the minimum distance from each point to the set of selected
                      points. once a point is selected, the distance is not updated;
                      the final list will reflect the distances when selected.
 
         """
-        return self.haussdorf_
+        return self.hausdorff_
 
     def get_select_distance(self):
         """
@@ -1016,26 +1016,26 @@ class _FPS(GreedySelector):
         Returns
         -------
 
-        haussdorf_at_select : ndarray of shape (`n_to_select`)
+        hausdorff_at_select : ndarray of shape (`n_to_select`)
                      at the time of selection, the minimum distance from each
                      selected point to the set of previously selected points.
 
         """
         mask = self.get_support(indices=True, ordered=True)
-        return self.haussdorf_at_select_[mask]
+        return self.hausdorff_at_select_[mask]
 
     def _init_greedy_search(self, X, y, n_to_select):
         """
         Initializes the search. Prepares an array to store the selections,
         makes the initial selection (unless provided), and
-        computes the starting haussdorf distances.
+        computes the starting hausdorff distances.
         """
 
         super()._init_greedy_search(X, y, n_to_select)
 
         self.norms_ = (X**2).sum(axis=abs(self._axis - 1))
-        self.haussdorf_ = np.full(X.shape[self._axis], np.inf)
-        self.haussdorf_at_select_ = np.full(X.shape[self._axis], np.inf)
+        self.hausdorff_ = np.full(X.shape[self._axis], np.inf)
+        self.hausdorff_at_select_ = np.full(X.shape[self._axis], np.inf)
 
         if self.initialize == "random":
             random_state = check_random_state(self.random_state)
@@ -1055,8 +1055,8 @@ class _FPS(GreedySelector):
         else:
             raise ValueError("Invalid value of the initialize parameter")
 
-    def _update_haussdorf(self, X, y, last_selected):
-        self.haussdorf_at_select_[last_selected] = self.haussdorf_[last_selected]
+    def _update_hausdorff(self, X, y, last_selected):
+        self.hausdorff_at_select_[last_selected] = self.hausdorff_[last_selected]
 
         # distances of all points to the new point
         if self._axis == 1:
@@ -1068,15 +1068,15 @@ class _FPS(GreedySelector):
                 self.norms_ + self.norms_[last_selected] - 2 * X[last_selected] @ X.T
             )
 
-        # update in-place the Haussdorf distance list
-        np.minimum(self.haussdorf_, new_dist, self.haussdorf_)
+        # update in-place the Hausdorff distance list
+        np.minimum(self.hausdorff_, new_dist, self.hausdorff_)
 
     def _update_post_selection(self, X, y, last_selected):
         """
         Saves the most recent selections, increments the counter,
-        and, recomputes haussdorf distances.
+        and, recomputes hausdorff distances.
         """
-        self._update_haussdorf(X, y, last_selected)
+        self._update_hausdorff(X, y, last_selected)
         super()._update_post_selection(X, y, last_selected)
 
 
@@ -1135,11 +1135,11 @@ class _PCovFPS(GreedySelector):
 
     def score(self, X, y=None):
         """
-        Returns the Haussdorf distances of all samples to previous selections
+        Returns the Hausdorff distances of all samples to previous selections
 
         NOTE: This function does not compute the importance score each time it
-        is called, in order to avoid unnecessary computations. The haussdorf
-        distance is updated in :py:func:`self._update_haussdorf`
+        is called, in order to avoid unnecessary computations. The hausdorff
+        distance is updated in :py:func:`self._update_hausdorff`
 
         Parameters
         ----------
@@ -1148,9 +1148,9 @@ class _PCovFPS(GreedySelector):
 
         Returns
         -------
-        haussdorf : Haussdorf distances
+        hausdorff : Hausdorff distances
         """
-        return self.haussdorf_
+        return self.hausdorff_
 
     def get_distance(self):
         """
@@ -1158,13 +1158,13 @@ class _PCovFPS(GreedySelector):
         Returns
         -------
 
-        haussdorf : ndarray of shape (`n_to_select_from_`)
+        hausdorff : ndarray of shape (`n_to_select_from_`)
                      the minimum distance from each point to the set of selected
                      points. once a point is selected, the distance is not updated;
                      the final list will reflect the distances when selected.
 
         """
-        return self.haussdorf_
+        return self.hausdorff_
 
     def get_select_distance(self):
         """
@@ -1172,19 +1172,19 @@ class _PCovFPS(GreedySelector):
         Returns
         -------
 
-        haussdorf_at_select : ndarray of shape (`n_to_select`)
+        hausdorff_at_select : ndarray of shape (`n_to_select`)
                      at the time of selection, the minimum distance from each
                      selected point to the set of previously selected points.
 
         """
         mask = self.get_support(indices=True, ordered=True)
-        return self.haussdorf_at_select_[mask]
+        return self.hausdorff_at_select_[mask]
 
     def _init_greedy_search(self, X, y, n_to_select):
         """
         Initializes the search. Prepares an array to store the selections,
         makes the initial selection (unless provided), and
-        computes the starting haussdorf distances.
+        computes the starting hausdorff distances.
         """
 
         super()._init_greedy_search(X, y, n_to_select)
@@ -1205,12 +1205,12 @@ class _PCovFPS(GreedySelector):
             raise ValueError("Invalid value of the initialize parameter")
 
         self.selected_idx_[0] = initialize
-        self.haussdorf_ = np.full(X.shape[self._axis], np.inf)
-        self.haussdorf_at_select_ = np.full(X.shape[self._axis], np.inf)
+        self.hausdorff_ = np.full(X.shape[self._axis], np.inf)
+        self.hausdorff_at_select_ = np.full(X.shape[self._axis], np.inf)
         self._update_post_selection(X, y, self.selected_idx_[0])
 
-    def _update_haussdorf(self, X, y, last_selected):
-        self.haussdorf_at_select_[last_selected] = self.haussdorf_[last_selected]
+    def _update_hausdorff(self, X, y, last_selected):
+        self.hausdorff_at_select_[last_selected] = self.hausdorff_[last_selected]
 
         # distances of all points to the new point
         new_dist = (
@@ -1219,15 +1219,15 @@ class _PCovFPS(GreedySelector):
             - 2 * np.take(self.pcovr_distance_, last_selected, axis=self._axis)
         )
 
-        # update in-place the Haussdorf distance list
-        np.minimum(self.haussdorf_, new_dist, self.haussdorf_)
+        # update in-place the Hausdorff distance list
+        np.minimum(self.hausdorff_, new_dist, self.hausdorff_)
 
     def _update_post_selection(self, X, y, last_selected):
         """
         Saves the most recent selections, increments the counter,
-        and, recomputes haussdorf distances.
+        and, recomputes hausdorff distances.
         """
-        self._update_haussdorf(X, y, last_selected)
+        self._update_hausdorff(X, y, last_selected)
         super()._update_post_selection(X, y, last_selected)
 
     def _more_tags(self):

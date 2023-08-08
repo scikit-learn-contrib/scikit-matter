@@ -93,10 +93,10 @@ class VoronoiFPS(GreedySelector):
 
     def score(self, X=None, y=None):
         """
-        Returns the Haussdorf distances of all samples to previous selections
+        Returns the Hausdorff distances of all samples to previous selections
 
         NOTE: This function does not compute the importance score each time it
-        is called, in order to avoid unnecessary computations. The haussdorf
+        is called, in order to avoid unnecessary computations. The hausdorff
         distance is updated in :py:func:`self._update_post_selection`
 
         Parameters
@@ -106,9 +106,9 @@ class VoronoiFPS(GreedySelector):
 
         Returns
         -------
-        haussdorf : Haussdorf distances
+        hausdorff : Hausdorff distances
         """
-        return self.haussdorf_
+        return self.hausdorff_
 
     def get_distance(self):
         """
@@ -130,13 +130,13 @@ class VoronoiFPS(GreedySelector):
         Returns
         -------
 
-        haussdorf : ndarray of shape (`n_to_select_from_`)
+        hausdorff : ndarray of shape (`n_to_select_from_`)
                      the minimum distance from each point to the set of selected
                      points. once a point is selected, the distance is not updated;
                      the final list will reflect the distances when selected.
 
         """
-        return self.haussdorf_
+        return self.hausdorff_
 
     def get_select_distance(self):
         """
@@ -144,13 +144,13 @@ class VoronoiFPS(GreedySelector):
         Returns
         -------
 
-        haussdorf_at_select : ndarray of shape (`n_to_select`)
+        hausdorff_at_select : ndarray of shape (`n_to_select`)
                      at the time of selection, the minimum distance from each
                      selected point to the set of previously selected points.
 
         """
         mask = self.get_support(indices=True, ordered=True)
-        return self.haussdorf_at_select_[mask]
+        return self.hausdorff_at_select_[mask]
 
     def _init_greedy_search(self, X, y, n_to_select):
         """
@@ -233,8 +233,8 @@ class VoronoiFPS(GreedySelector):
             raise ValueError("Invalid value of the initialize parameter")
 
         self.selected_idx_[0] = initialize
-        self.haussdorf_ = np.full(X.shape[self._axis], np.inf)
-        self.haussdorf_at_select_ = np.full(X.shape[self._axis], np.inf)
+        self.hausdorff_ = np.full(X.shape[self._axis], np.inf)
+        self.hausdorff_at_select_ = np.full(X.shape[self._axis], np.inf)
         self._update_post_selection(X, y, self.selected_idx_[0])
 
     def _continue_greedy_search(self, X, y, n_to_select):
@@ -264,7 +264,7 @@ class VoronoiFPS(GreedySelector):
         S are the selected points from before this iteration;
         X are the candidates;
         The logic here is that we want to check if d(XL) can be smaller than
-        min(d(X,S)) (which is stored in self.haussdorf_)
+        min(d(X,S)) (which is stored in self.hausdorff_)
         now, if a point belongs to the Voronoi cell of S then
         min(d(X,S_i))=d(X,S). Triangle inequality implies that
         d(S,L) < |d(X,S) + d(L,X)| so we just need to check if
@@ -284,7 +284,7 @@ class VoronoiFPS(GreedySelector):
             # calculation in a single block
 
             active_points = np.where(
-                self.dSL_[self.vlocation_of_idx] < self.haussdorf_
+                self.dSL_[self.vlocation_of_idx] < self.hausdorff_
             )[0]
 
             return active_points
@@ -292,7 +292,7 @@ class VoronoiFPS(GreedySelector):
     def _update_post_selection(self, X, y, last_selected):
         """
         Saves the most recently selected feature, increments the feature counter
-        and update the haussdorf distances
+        and update the hausdorff distances
         Let:
         L is the last point selected;
         S are the selected points from before this iteration;
@@ -303,7 +303,7 @@ class VoronoiFPS(GreedySelector):
         the distances between L and all the points in the dataset.
         """
 
-        self.haussdorf_at_select_[last_selected] = self.haussdorf_[last_selected]
+        self.hausdorff_at_select_[last_selected] = self.hausdorff_[last_selected]
         active_points = self._get_active(X, last_selected)
 
         if len(active_points) > 0:
@@ -314,7 +314,7 @@ class VoronoiFPS(GreedySelector):
                     - 2 * X[last_selected] @ X.T
                 )
             else:
-                self.new_dist_ = self.haussdorf_.copy()
+                self.new_dist_ = self.hausdorff_.copy()
 
                 self.new_dist_[active_points] = (
                     self.norms_[active_points]
@@ -323,9 +323,9 @@ class VoronoiFPS(GreedySelector):
                 )
                 self.new_dist_[last_selected] = 0
 
-            updated_points = np.where(self.new_dist_ < self.haussdorf_)[0]
+            updated_points = np.where(self.new_dist_ < self.hausdorff_)[0]
             np.minimum(
-                self.haussdorf_, self.new_dist_, self.haussdorf_, casting="unsafe"
+                self.hausdorff_, self.new_dist_, self.hausdorff_, casting="unsafe"
             )
         else:
             updated_points = np.array([])
