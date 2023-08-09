@@ -1,5 +1,5 @@
-Reconstruction Measures
-=======================
+Metrics
+=======
 
 .. automodule:: skmatter.metrics
 
@@ -26,3 +26,17 @@ Local Reconstruction Error
 
 .. autofunction:: skmatter.metrics.pointwise_local_reconstruction_error
 .. autofunction:: skmatter.metrics.local_reconstruction_error
+
+.. _LPR-api:
+
+Local Prediction Rigidity
+-------------------------
+
+.. autofunction:: skmatter.metrics.local_prediction_rigidity
+
+.. _CPR-api:
+
+Component-wise Prediction Rigidity
+----------------------------------
+
+.. autofunction:: skmatter.metrics.componentwise_prediction_rigidity
