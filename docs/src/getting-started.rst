@@ -25,8 +25,8 @@ Notebook Examples
 
 .. _getting_started-reconstruction:
 
-Reconstruction Measures
------------------------
+Metrics
+-------
 
 .. automodule:: skmatter.metrics
    :noindex:

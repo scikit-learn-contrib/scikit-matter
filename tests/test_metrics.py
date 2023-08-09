@@ -4,12 +4,57 @@ import numpy as np
 from sklearn.datasets import load_iris
 from sklearn.utils import check_random_state, extmath
 
+from skmatter.datasets import load_degenerate_CH4_manifold
 from skmatter.metrics import (
+    componentwise_prediction_rigidity,
     global_reconstruction_distortion,
     global_reconstruction_error,
+    local_prediction_rigidity,
     local_reconstruction_error,
     pointwise_local_reconstruction_error,
 )
+
+
+class PredictionRigidityTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        soap_features = load_degenerate_CH4_manifold().data["SOAP_power_spectrum"]
+        soap_features = soap_features[:11]
+        # each structure in CH4 has 5 environmental feature, because there are 5 atoms
+        # per structure and each atom is one environment
+        cls.features = [
+            soap_features[i * 5 : (i + 1) * 5] for i in range(len(soap_features) // 5)
+        ]
+        # add a single environment structure to check value
+        cls.features = cls.features + [soap_features[-1:]]
+        cls.alpha = 1e-8
+        bi_features = load_degenerate_CH4_manifold().data["SOAP_bispectrum"]
+        bi_features = bi_features[:11]
+        comp_features = np.column_stack([soap_features, bi_features])
+        cls.comp_features = [
+            comp_features[i * 5 : (i + 1) * 5] for i in range(len(comp_features) // 5)
+        ]
+        cls.comp_dims = np.array([soap_features.shape[1], bi_features.shape[1]])
+
+    def test_local_prediction_rigidity(self):
+        LPR, rank_diff = local_prediction_rigidity(
+            self.features, self.features, self.alpha
+        )
+        self.assertTrue(
+            LPR[-1] >= 1,
+            f"LPR of the single environment structure is incorrectly lower than 1:"
+            f"LPR = {LPR[-1]}",
+        )
+        self.assertTrue(
+            rank_diff == 0,
+            f"LPR Covariance matrix rank is not full, with a difference of:"
+            f"{rank_diff}",
+        )
+
+    def test_componentwise_prediction_rigidity(self):
+        _CPR, _LCPR, _rank_diff = componentwise_prediction_rigidity(
+            self.comp_features, self.comp_features, self.alpha, self.comp_dims
+        )
 
 
 class ReconstructionMeasuresTests(unittest.TestCase):
