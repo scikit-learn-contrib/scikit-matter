@@ -1,21 +1,17 @@
 Linear Models
 =============
 
-.. currentmodule:: skmatter.linear_model._base
-
 Orthogonal Regression
-#####################
+---------------------
 
-.. autoclass:: OrthogonalRegression
-
-.. currentmodule:: skmatter.linear_model._ridge
+.. autoclass:: skmatter.linear_model.OrthogonalRegression
 
 Ridge Regression with Two-fold Cross Validation
-###############################################
+-----------------------------------------------
 
-.. autoclass:: RidgeRegression2FoldCV
+.. autoclass:: skmatter.linear_model.RidgeRegression2FoldCV
 
 PCovR
-#####
+-----
 
 Principal Covariates Regression is a linear model, see :ref:`PCovR-api`.
