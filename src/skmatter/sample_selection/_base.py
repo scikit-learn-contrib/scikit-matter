@@ -355,7 +355,6 @@ class CUR(_CUR):
     >>> X[selector.selected_idx_]
     array([[-0.03, -0.53,  0.08],
            [ 0.12,  0.21,  0.02]])
-
     """
 
     def __init__(

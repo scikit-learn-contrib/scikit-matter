@@ -1,14 +1,13 @@
-r"""
-This module contains data sub-selection modules primarily corresponding to
-methods derived from CUR matrix decomposition and Farthest Point Sampling. In
-their classical form, CUR and FPS determine a data subset that maximizes the
-variance (CUR) or distribution (FPS) of the features or samples.  These methods
-can be modified to combine supervised target information denoted by the methods
-`PCov-CUR` and `PCov-FPS`.  For further reading, refer to [Imbalzano2018]_ and
-[Cersonsky2021]_. These selectors can be used for both feature and sample
-selection, with similar instantiations. All sub-selection methods  scores each
-feature or sample (without an estimator) and chooses that with the maximum
-score. A simple example of usage:
+"""
+This module contains data sub-selection modules primarily corresponding to methods
+derived from CUR matrix decomposition and Farthest Point Sampling. In their classical
+form, CUR and FPS determine a data subset that maximizes the variance (CUR) or
+distribution (FPS) of the features or samples. These methods can be modified to combine
+supervised target information denoted by the methods `PCov-CUR` and `PCov-FPS`. For
+further reading, refer to [Imbalzano2018]_ and [Cersonsky2021]_. These selectors can be
+used for both feature and sample selection, with similar instantiations. All
+sub-selection methods  scores each feature or sample (without an estimator) and chooses
+that with the maximum score. A simple example of usage:
 
 .. doctest::
 
@@ -64,9 +63,9 @@ These selectors are available:
   singular value decoposition.
 * :ref:`PCov-CUR-api` decomposition extends upon CUR by using augmented right or left
   singular vectors inspired by Principal Covariates Regression.
-* :ref:`FPS-api`: a common selection technique intended to exploit the diversity of
-  the input space. The selection of the first point is made at random or by a
-  separate metric
+* :ref:`FPS-api`: a common selection technique intended to exploit the diversity of the
+  input space. The selection of the first point is made at random or by a separate
+  metric
 * :ref:`PCov-FPS-api` extends upon FPS much like PCov-CUR does to CUR.
 * :ref:`Voronoi-FPS-api`: conduct FPS selection, taking advantage of Voronoi
   tessellations to accelerate selection.

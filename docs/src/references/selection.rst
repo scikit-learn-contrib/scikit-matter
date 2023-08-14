@@ -10,7 +10,6 @@ Feature and Sample Selection
 CUR
 ---
 
-
 CUR decomposition begins by approximating a matrix :math:`{\mathbf{X}}` using a subset
 of columns and rows
 
@@ -72,7 +71,6 @@ computation of :math:`\pi`. S
    :undoc-members:
    :inherited-members:
 
-
 .. _FPS-api:
 
 Farthest Point-Sampling (FPS)
@@ -92,7 +90,6 @@ row-wise), and are built off of the same base class,
 
 These selectors can be instantiated using :py:class:`skmatter.feature_selection.FPS` and
 :py:class:`skmatter.sample_selection.FPS`.
-
 
 .. autoclass:: skmatter.feature_selection.FPS
    :members:
@@ -139,7 +136,7 @@ When *Not* to Use Voronoi FPS
 
 In many cases, this algorithm may not increase upon the efficiency. For example, for
 simple metrics (such as Euclidean distance), Voronoi FPS will likely not accelerate, and
-may decelerate, computations when compared to FPS.  The sweet spot for Voronoi FPS is
+may decelerate, computations when compared to FPS. The sweet spot for Voronoi FPS is
 when the number of selectable samples is already enough to divide the space with Voronoi
 polyhedrons, but not yet comparable to the total number of samples, when the cost of
 bookkeeping significantly degrades the speed of work compared to FPS.

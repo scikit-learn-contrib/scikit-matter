@@ -1,6 +1,7 @@
 Preprocessing
 =============
 
+.. automodule:: skmatter.preprocessing
 
 KernelNormalizer
 ----------------

@@ -4,11 +4,9 @@ Principal Covariates Regression (PCovR)
 .. _PCovR-api:
 
 PCovR
-#####
+-----
 
-.. currentmodule:: skmatter.decomposition
-
-.. autoclass:: PCovR
+.. autoclass:: skmatter.decomposition.PCovR
     :show-inheritance:
     :special-members:
 
@@ -25,11 +23,9 @@ PCovR
 .. _KPCovR-api:
 
 Kernel PCovR
-############
+------------
 
-.. currentmodule:: skmatter.decomposition
-
-.. autoclass:: KernelPCovR
+.. autoclass:: skmatter.decomposition.KernelPCovR
     :show-inheritance:
     :special-members:
 
