@@ -17,7 +17,7 @@ and coding guidelines to promote usability and interoperability with existing wo
 
   getting-started
   installation
-  reference
+  references/index
   tutorials
   contributing
   bibliography
