@@ -649,14 +649,15 @@ class _CUR(GreedySelector):
             :math:`\\pi` importance for the given samples or features
         """
 
+        svd_kwargs = dict(k=self.k, random_state=self.random_state)
         if self._axis == 0:
-            U, _, _ = scipy.sparse.linalg.svds(X, k=self.k, return_singular_vectors="u")
+            svd_kwargs["return_singular_vectors"] = "u"
+            U, _, _ = scipy.sparse.linalg.svds(X, **svd_kwargs)
             U = np.real(U)
             new_pi = (U[:, : self.k] ** 2.0).sum(axis=1)
         else:
-            _, _, Vt = scipy.sparse.linalg.svds(
-                X, k=self.k, return_singular_vectors="vh"
-            )
+            svd_kwargs["return_singular_vectors"] = "vh"
+            _, _, Vt = scipy.sparse.linalg.svds(X, **svd_kwargs)
             new_pi = (np.real(Vt) ** 2.0).sum(axis=0)
 
         return new_pi
