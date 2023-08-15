@@ -342,7 +342,6 @@ class CUR(_CUR):
     ...         [-0.03, -0.53, 0.08],
     ...     ]
     ... )
-    >>> np.random.seed(0)  # there is a source of randomness in it
     >>> selector.fit(X)
     CUR(n_to_select=2)
     >>> np.round(selector.pi_, 2)  # importance scole
