@@ -10,7 +10,7 @@ API Reference
   preprocessing
   selection
   linear_models
-  pcovr
-  gfrm
+  decomposition
+  metrics
   datasets
   utils
