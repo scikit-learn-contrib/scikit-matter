@@ -337,23 +337,24 @@ class CUR(_CUR):
     >>> selector = CUR(n_to_select=2, random_state=0)
     >>> X = np.array(
     ...     [
-    ...         [0.12, 0.21, 0.02],  # 3 samples, 3 features
-    ...         [-0.09, 0.32, -0.10],
-    ...         [-0.03, -0.53, 0.08],
+    ...         [0.12, 0.21, -0.11],  # 4 samples, 3 features
+    ...         [-0.09, 0.32, 0.51],
+    ...         [-0.03, 0.53, 0.14],
+    ...         [-0.83, -0.13, 0.82],
     ...     ]
     ... )
     >>> selector.fit(X)
     CUR(n_to_select=2)
-    >>> np.round(selector.pi_, 2)  # importance scole
-    array([0., 1., 0.])
-    >>> selector.selected_idx_  # importance scole
-    array([2, 0])
+    >>> np.round(selector.pi_, 2)  # importance score
+    array([0.01, 0.99, 0.  , 0.  ])
+    >>> selector.selected_idx_  # selected idx
+    array([3, 2])
     >>> # selector.transform(X) cannot be used as sklearn API
     >>> # restricts the change of sample size using transformers
     >>> # So one has to do
     >>> X[selector.selected_idx_]
-    array([[-0.03, -0.53,  0.08],
-           [ 0.12,  0.21,  0.02]])
+    array([[-0.83, -0.13,  0.82],
+           [-0.03,  0.53,  0.14]])
     """
 
     def __init__(
