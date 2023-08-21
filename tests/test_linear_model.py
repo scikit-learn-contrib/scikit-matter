@@ -5,7 +5,7 @@ from parameterized import parameterized
 from sklearn.datasets import load_iris
 from sklearn.utils import check_random_state, extmath
 
-from skmatter.linear_model import OrthogonalRegression, RidgeRegression2FoldCV
+from skmatter.linear_model import OrthogonalRegression, Ridge2FoldCV
 
 
 class BaseTests(unittest.TestCase):
@@ -108,37 +108,35 @@ class RidgeTests(unittest.TestCase):
         cls.ridge_regressions = []
 
     def test_ridge_regression_2fold_regularization_method_raise_error(self):
-        # tests if wrong regularization_method in RidgeRegression2FoldCV raises error
+        # tests if wrong regularization_method in Ridge2FoldCV raises error
         with self.assertRaises(ValueError):
-            RidgeRegression2FoldCV(
+            Ridge2FoldCV(
                 regularization_method="dummy",
             ).fit(self.features_small, self.features_small)
 
     def test_ridge_regression_2fold_alpha_type_raise_error(self):
-        # tests if wrong alpha type in RidgeRegression2FoldCV raises error
+        # tests if wrong alpha type in Ridge2FoldCV raises error
         with self.assertRaises(ValueError):
-            RidgeRegression2FoldCV(
+            Ridge2FoldCV(
                 alpha_type="dummy",
             ).fit(self.features_small, self.features_small)
 
     def test_ridge_regression_2fold_relative_alpha_type_raise_error(self):
         # tests if an error is raised if alpha not in [0,1)
         with self.assertRaises(ValueError):
-            RidgeRegression2FoldCV(alphas=[1], alpha_type="relative").fit(
+            Ridge2FoldCV(alphas=[1], alpha_type="relative").fit(
                 self.features_small, self.features_small
             )
 
         with self.assertRaises(ValueError):
-            RidgeRegression2FoldCV(alphas=[-0.1], alpha_type="relative").fit(
+            Ridge2FoldCV(alphas=[-0.1], alpha_type="relative").fit(
                 self.features_small, self.features_small
             )
 
     def test_ridge_regression_2fold_iterable_cv(self):
         # tests if we can use iterable as cv parameter
         cv = [([0, 1, 2, 3], [4, 5, 6])]
-        RidgeRegression2FoldCV(alphas=[1], cv=cv).fit(
-            self.features_small, self.features_small
-        )
+        Ridge2FoldCV(alphas=[1], cv=cv).fit(self.features_small, self.features_small)
 
     ridge_parameters = [
         ["absolute_tikhonov", "absolute", "tikhonov"],
@@ -151,11 +149,11 @@ class RidgeTests(unittest.TestCase):
     def test_ridge_regression_2fold_cv_small_to_small(
         self, name, alpha_type, regularization_method
     ):
-        # tests if RidgeRegression2FoldCV can predict small features using small
+        # tests if Ridge2FoldCV can predict small features using small
         # features with use_orthogonal_projector False
         err = np.linalg.norm(
             self.features_small
-            - RidgeRegression2FoldCV(
+            - Ridge2FoldCV(
                 alphas=self.alphas,
                 alpha_type=alpha_type,
                 regularization_method=regularization_method,
@@ -169,7 +167,7 @@ class RidgeTests(unittest.TestCase):
 
     @parameterized.expand(ridge_parameters)
     def test_ridge_regression_2fold_cv_small_to_large(
-        # tests if RidgeRegression2FoldCV can predict large features using small
+        # tests if Ridge2FoldCV can predict large features using small
         # features with use_orthogonal_projector False
         self,
         name,
@@ -178,7 +176,7 @@ class RidgeTests(unittest.TestCase):
     ):
         err = np.linalg.norm(
             self.features_large
-            - RidgeRegression2FoldCV(
+            - Ridge2FoldCV(
                 alphas=self.alphas,
                 alpha_type=alpha_type,
                 regularization_method=regularization_method,
@@ -196,7 +194,7 @@ class RidgeTests(unittest.TestCase):
         self, name, alpha_type, regularization_method
     ):
         # tests if the regularization in the CV split of
-        # RidgeRegression2FoldCV does effect the results
+        # Ridge2FoldCV does effect the results
 
         # regularization parameters are chosen to match the singular values o
         # the features, thus each regularization parameter affects the minimized
@@ -207,8 +205,8 @@ class RidgeTests(unittest.TestCase):
         if alpha_type == "relative":
             alphas = singular_values[1:][::-1] / singular_values[0]
 
-        # tests if RidgeRegression2FoldCV does do regularization correct
-        ridge = RidgeRegression2FoldCV(
+        # tests if Ridge2FoldCV does do regularization correct
+        ridge = Ridge2FoldCV(
             alphas=alphas,
             alpha_type=alpha_type,
             regularization_method=regularization_method,

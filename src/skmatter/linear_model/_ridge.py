@@ -7,7 +7,7 @@ from sklearn.utils import check_array
 from sklearn.utils.validation import check_is_fitted
 
 
-class RidgeRegression2FoldCV(BaseEstimator, MultiOutputMixin, RegressorMixin):
+class Ridge2FoldCV(BaseEstimator, MultiOutputMixin, RegressorMixin):
     r"""Ridge regression with an efficient 2-fold cross-validation method using the SVD
     solver.
 

@@ -1,14 +1,14 @@
 # %%
 
 r"""
- RidgeRegression2FoldCV for data with low effective rank
+ Ridge2FoldCV for data with low effective rank
  =======================================================
  In this notebook we explain in more detail how
- :class:`skmatter.linear_model.RidgeRegression2FoldCV` speeds up the
+ :class:`skmatter.linear_model.Ridge2FoldCV` speeds up the
  cross-validation optimizing the regularitzation parameter :param alpha: and
  compare it with existing solution for that in scikit-learn
  :class:`slearn.linear_model.RidgeCV`.
- :class:`skmatter.linear_model.RidgeRegression2FoldCV` was designed to predict
+ :class:`skmatter.linear_model.Ridge2FoldCV` was designed to predict
  efficiently feature matrices, but it can be also useful for the prediction
  single targets.
 """
@@ -24,7 +24,7 @@ from sklearn.linear_model import RidgeCV
 from sklearn.metrics import mean_squared_error
 from sklearn.model_selection import KFold, train_test_split
 
-from skmatter.linear_model import RidgeRegression2FoldCV
+from skmatter.linear_model import Ridge2FoldCV
 
 
 # %%
@@ -44,7 +44,7 @@ N_REPEAT_MICRO_BENCH = 5
 # efficient leave-one-out CV (LOO CV) for its ridge regression which avoids
 # these repeated computations [loocv]_. Because we needed an efficient ridge that works
 # in predicting  for the reconstruction measures in :py:mod:`skmatter.metrics`
-# we implemented with :class:`skmatter.linear_model.RidgeRegression2FoldCV` an
+# we implemented with :class:`skmatter.linear_model.Ridge2FoldCV` an
 # efficient 2-fold CV ridge regression that uses a singular value decomposition
 # (SVD) to reuse it for all regularization parameters :math:`\lambda`. Assuming
 # we have the standard regression problem optimizing the weight matrix in
@@ -75,7 +75,7 @@ N_REPEAT_MICRO_BENCH = 5
 #                 \textrm{ prediction of }\mathbf{Y}\textrm{ for fold 2}
 #      \end{align}
 #
-# The efficient 2-fold scheme in `RidgeRegression2FoldCV` reuses the matrices
+# The efficient 2-fold scheme in `Ridge2FoldCV` reuses the matrices
 #
 # .. math::
 #
@@ -107,11 +107,11 @@ alphas = np.geomspace(1e-12, 1e-1, 12)
 # 2 folds for train and validation split
 cv = KFold(n_splits=2, shuffle=True, random_state=SEED)
 
-skmatter_ridge_2foldcv_cutoff = RidgeRegression2FoldCV(
+skmatter_ridge_2foldcv_cutoff = Ridge2FoldCV(
     alphas=alphas, regularization_method="cutoff", cv=cv
 )
 
-skmatter_ridge_2foldcv_tikhonov = RidgeRegression2FoldCV(
+skmatter_ridge_2foldcv_tikhonov = Ridge2FoldCV(
     alphas=alphas, regularization_method="tikhonov", cv=cv
 )
 
@@ -318,13 +318,13 @@ alphas = np.geomspace(1e-8, 1e-1, 20)
 
 cv = KFold(n_splits=2, shuffle=True, random_state=SEED)
 
-skmatter_ridge_2foldcv_cutoff = RidgeRegression2FoldCV(
+skmatter_ridge_2foldcv_cutoff = Ridge2FoldCV(
     alphas=alphas,
     regularization_method="cutoff",
     cv=cv,
 )
 
-skmatter_ridge_2foldcv_tikhonov = RidgeRegression2FoldCV(
+skmatter_ridge_2foldcv_tikhonov = Ridge2FoldCV(
     alphas=alphas,
     regularization_method="tikhonov",
     cv=cv,

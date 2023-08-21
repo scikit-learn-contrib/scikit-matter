@@ -9,7 +9,7 @@ Orthogonal Regression
 Ridge Regression with Two-fold Cross Validation
 -----------------------------------------------
 
-.. autoclass:: skmatter.linear_model.RidgeRegression2FoldCV
+.. autoclass:: skmatter.linear_model.Ridge2FoldCV
 
 PCovR
 -----

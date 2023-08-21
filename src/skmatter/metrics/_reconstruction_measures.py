@@ -1,7 +1,7 @@
 import numpy as np
 from joblib import Parallel, delayed
 
-from ..linear_model import OrthogonalRegression, RidgeRegression2FoldCV
+from ..linear_model import OrthogonalRegression, Ridge2FoldCV
 from ..model_selection import train_test_split
 from ..preprocessing import StandardFlexibleScaler
 
@@ -597,7 +597,7 @@ def check_global_reconstruction_measures_input(
         scaler = StandardFlexibleScaler()
 
     if estimator is None:
-        estimator = RidgeRegression2FoldCV(
+        estimator = Ridge2FoldCV(
             alphas=np.geomspace(1e-9, 0.9, 20),
             alpha_type="relative",
             regularization_method="cutoff",
