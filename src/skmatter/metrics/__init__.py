@@ -10,7 +10,7 @@ is contained in `F`. All methods are implemented as the root mean-square error
 for the regression of the feature matrix `X_F'` (or sometimes called `Y` in the
 doc) from `X_F` (or sometimes called `X` in the doc) for transformations with
 different constraints (linear, orthogonal, locally-linear). By default a custom
-2-fold cross-validation :py:class:`skosmo.linear_model.RidgeRegression2FoldCV`
+2-fold cross-validation :py:class:`skosmo.linear_model.Ridge2FoldCV`
 is used to ensure the generalization of the transformation and efficiency of the
 computation, since we deal with a multi-target regression problem. Methods were
 applied to compare different forms of featurizations through different
