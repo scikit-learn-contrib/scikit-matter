@@ -9,8 +9,9 @@ Feature Selection on the WHO Dataset
 #
 
 import numpy as np
+import scipy
 from matplotlib import pyplot as plt
-from sklearn.kernel_ridge import KernelRidge
+from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import train_test_split
 
 from skmatter.datasets import load_who_dataset
@@ -57,8 +58,8 @@ column_names = np.array(
     ]
 )
 
-columns = columns[[8, 4, 5, 6, 1, 0, 7, 3, 2]].tolist()
-column_names = column_names[[8, 4, 5, 6, 1, 0, 7, 3, 2]].tolist()
+columns = columns[[8, 4, 2, 6, 1, 7, 0, 5, 3]].tolist()
+column_names = column_names[[8, 4, 2, 6, 1, 7, 0, 5, 3]].tolist()
 
 # %%
 #
@@ -102,9 +103,10 @@ X_train, X_test, y_train, y_test = train_test_split(
 
 
 kernel_params = {"kernel": "rbf", "gamma": 0.08858667904100832}
-krr = KernelRidge(alpha=0.006158482110660267, **kernel_params)
+lr = LinearRegression(fit_intercept=False)
 
-yp_train = krr.fit(X_train, y_train).predict(X_train)
+
+yp_train = lr.fit(X_train, y_train).predict(X_train)
 
 # %%
 #
@@ -171,8 +173,8 @@ class RecursiveFeatureAddition:
         for n in range(self.n_to_select):
             errors = np.zeros(len(remaining))
             for i, pp in enumerate(remaining):
-                krr.fit(X[:, [*self.selected_idx_[:n], pp]], y)
-                errors[i] = krr.score(X[:, [*self.selected_idx_[:n], pp]], y)
+                lr.fit(X[:, [*self.selected_idx_[:n], pp]], y)
+                errors[i] = lr.score(X[:, [*self.selected_idx_[:n], pp]], y)
             self.selected_idx_[n] = remaining[np.argmax(errors)]
             remaining = np.array(np.delete(remaining, np.argmax(errors)), dtype=int)
         return self
@@ -212,8 +214,8 @@ for selector, color, linestyle, label in zip(
     if label not in all_errors:
         errors = np.zeros(len(ns))
         for i, n in enumerate(ns):
-            krr.fit(X_train[:, selector.selected_idx_[:n]], y_train)
-            errors[i] = krr.score(X_test[:, selector.selected_idx_[:n]], y_test)
+            lr.fit(X_train[:, selector.selected_idx_[:n]], y_train)
+            errors[i] = lr.score(X_test[:, selector.selected_idx_[:n]], y_test)
         all_errors[label] = errors
     axes[0].plot(ns, all_errors[label], c=color, label=label, linestyle=linestyle)
     axes[1].plot(
@@ -229,4 +231,38 @@ axes[0].legend(ncol=2, fontsize=8, bbox_to_anchor=(0.5, 1.0), loc="lower center"
 axes[1].invert_yaxis()
 axes[1].grid(axis="y", alpha=0.5)
 plt.tight_layout()
+plt.show()
+
+
+# %%
+#
+# Plot correlation between selectors
+# ----------------------------------
+
+
+selected_idx = np.array(
+    [selector.selected_idx_ for selector in [cur, fps, pcur, pfps, rfa]]
+).T
+
+similarity = np.zeros((len(selected_idx.T), len(selected_idx.T)))
+for i in range(len(selected_idx.T)):
+    for j in range(len(selected_idx.T)):
+        similarity[i, j] = scipy.stats.weightedtau(
+            selected_idx[:, i], selected_idx[:, j], rank=False
+        )[0]
+
+labels = ["CUR", "FPS", "PCovCUR", "PCovFPS,", "RFA"]
+
+plt.imshow(similarity, cmap="Greens")
+plt.xticks(np.arange(len(labels)), labels=labels)
+plt.yticks(np.arange(len(labels)), labels=labels)
+
+plt.title("Feature selection similarity")
+for i in range(len(labels)):
+    for j in range(len(labels)):
+        value = np.round(similarity[i, j], 2)
+        color = "white" if value > 0.5 else "black"
+        text = plt.gca().text(j, i, value, ha="center", va="center", color=color)
+
+plt.colorbar()
 plt.show()
