@@ -111,10 +111,6 @@ Thanks goes to all people that make scikit-matter possible:
    :alt: Latest conda version
    :target: https://anaconda.org/conda-forge/skmatter
 
-.. |docs| image:: https://img.shields.io/badge/documentation-latest-sucess
-   :alt: Documentation
-   :target: https://scikit-matter.readthedocs.io
-
 .. |doi| image:: https://img.shields.io/badge/DOI-10.12688-blue
    :alt: ORE Paper
    :target: https://doi.org/10.12688/openreseurope.15789.1
