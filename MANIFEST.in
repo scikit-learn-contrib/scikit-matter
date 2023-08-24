@@ -1,4 +1,21 @@
-recursive-include src/skmatter/datasets/data/ *
-recursive-include src/skmatter/datasets/descr/ *
+graft src
 
+include LICENSE
+include contributors.txt
+include README.rst
+
+prune docs
+prune developer
+prune examples
 prune tests
+prune .github
+prune .tox
+
+exclude CHANGELOG
+exclude CODE_OF_CONDUCT.md
+exclude .gitignore
+exclude .codecov.yml
+exclude .readthedocs.yaml
+exclude tox.ini
+
+global-exclude *.py[cod] __pycache__/* *.so *.dylib
