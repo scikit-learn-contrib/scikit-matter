@@ -14,6 +14,8 @@ import os
 import sys
 from datetime import datetime
 
+import tomli  # Replace by tomllib from std library once docs are build with Python 3.11
+
 import skmatter
 
 
@@ -25,8 +27,12 @@ sys.path.insert(0, ROOT)
 # The master toctree document.
 master_doc = "index"
 
-project = "scikit-matter"
-author = ", ".join(open(os.path.join(ROOT, "contributors.txt")).read().splitlines())
+with open(os.path.join(ROOT, "pyproject.toml"), "rb") as fp:
+    project_dict = tomli.load(fp)["project"]
+
+project = project_dict["name"]
+author = ", ".join(a["name"] for a in project_dict["authors"])
+
 copyright = f"{datetime.now().date().year}, {author}"
 
 # The full version, including alpha/beta/rc tags
