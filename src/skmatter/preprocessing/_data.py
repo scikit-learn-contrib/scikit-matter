@@ -528,7 +528,7 @@ class SparseKernelCenterer(TransformerMixin):
             # but has been changed to Knm.T @ Knm @ Kmm^{-1} to avoid the memory
             # overload often caused by storing n x n matrices. This is fine
             # for the following trace, but should not be used for other operations.
-            Khat = Knm_centered.T @ Knm_centered @ np.linalg.pinv(Kmm, self.rcond)
+            Khat_trace = np.trace(Knm_centered.T @ Knm_centered @ np.linalg.pinv(Kmm, self.rcond))
 
             self.scale_ = np.sqrt(np.trace(Khat) / Knm.shape[0])
         else:
