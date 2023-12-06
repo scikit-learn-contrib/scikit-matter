@@ -29,7 +29,7 @@ or conda
     conda install -c conda-forge skmatter
 
 
-You can then `import skmatter` and use scikit-matter in your projects!
+You can then ``import skmatter`` and use scikit-matter in your projects!
 
 .. marker-ci-tests
 
