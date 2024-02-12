@@ -55,6 +55,10 @@ from ._prediction_rigidities import (
     componentwise_prediction_rigidity,
 )
 
+from .pairwise import (
+    pairwise_euclidean_distances,
+)
+
 __all__ = [
     "pointwise_global_reconstruction_error",
     "global_reconstruction_error",
@@ -66,4 +70,5 @@ __all__ = [
     "check_local_reconstruction_measures_input",
     "local_prediction_rigidity",
     "componentwise_prediction_rigidity",
+    "pairwise_euclidean_distances",
 ]
