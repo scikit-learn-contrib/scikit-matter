@@ -1,12 +1,12 @@
 import warnings
-from dataclasses import dataclass
-from typing import Union, Optional
-from sklearn.base import BaseEstimator
-from sklearn.utils.validation import _check_sample_weight
-import numpy as np
-from rich.progress import track
+from tqdm import tqdm
 
-from ..metrics.pairwise import pairwise_euclidean_distances
+import numpy as np
+from sklearn.base import BaseEstimator
+from scipy.special import logsumexp as LSE
+
+from ..metrics.pairwise import pairwise_euclidean_distances, pairwise_mahalanobis_distance
+from ..utils._sparsekde import *
 
 
 class SparseKDE(BaseEstimator):
@@ -62,7 +62,7 @@ class SparseKDE(BaseEstimator):
         self.nmsopt = nmsopt
         self.kdecut2 = None
         self.model = None
-        self.cluster_center = None
+        self.cluster_mean = None
         self.cluster_cov = None
         self.cluster_weight = None
 
@@ -112,7 +112,7 @@ class SparseKDE(BaseEstimator):
         probs = self._computes_kernel_density_estimation(
             X, sample_weight, h_invs, normkernels, igrid, grid_neighbour
         )
-        normpks = logsumexp(np.ones(grid_dist_mat.shape[0]), probs, 1)
+        normpks = LSE(probs)
         cluster_centers, idxroot = quick_shift(
             X, probs, grid_dist_mat, qscut2, normpks, self.gs, self.cell, self.thrpcl
         )
@@ -200,7 +200,7 @@ class SparseKDE(BaseEstimator):
 
     def _assign_descriptors_to_grids(self, X):
 
-        assigner = NearestNeighborClustering(self.cell)
+        assigner = NearestGridAssigner(self.cell)
         assigner.fit(X)
         labels = assigner.predict(self.descriptors, sample_weight=self.weights)
         grid_npoints = assigner.grid_npoints
@@ -231,9 +231,7 @@ class SparseKDE(BaseEstimator):
         )
         h_invs = np.zeros((len(X), X.shape[1], X.shape[1]))
 
-        for i in track(
-            range(len(X)), description="Estimating kernel density bandwidths"
-        ):
+        for i in tqdm(range(len(X)), desc="Estimating kernel density bandwidths"):
             wlocal, flocal[i] = local_population(
                 self.cell, X, X[i], sample_weights, sigma2[i]
             )
@@ -323,30 +321,30 @@ class SparseKDE(BaseEstimator):
         self,
         X: np.ndarray,
         sample_weights: np.ndarray,
-        h_inv: np.ndarray,
+        h_invs: np.ndarray,
         normkernel: np.ndarray,
         igrid: np.ndarray,
         neighbour: dict,
     ):
 
         prob = np.full(len(X), -np.inf)
-        for i in track(
-            range(len(X)), description="Computing kernel density on reference points"
+        for i in tqdm(
+            range(len(X)), desc="Computing kernel density on reference points"
         ):
-            dummd1s = mahalanobis(self.cell, X, X[i], h_inv)
+            dummd1s = pairwise_mahalanobis_distance(X, X[i], h_invs, self.cell, squared=True)
             for j, dummd1 in enumerate(dummd1s):
                 if dummd1 > self.kdecut2:
                     lnk = -0.5 * (normkernel[j] + dummd1) + np.log(sample_weights[j])
-                    prob[i] = _update_prob(prob[i], lnk)
+                    prob[i] = LSE([prob[i], lnk])
                 else:
                     neighbours = neighbour[j][neighbour[j] != igrid[i]]
-                    dummd1s = mahalanobis(
-                        self.cell, self.descriptors[neighbours], X[i], h_inv[j]
-                    )
+                    dummd1s = pairwise_mahalanobis_distance(
+                        self.descriptors[neighbours], X[i], h_invs[j], self.cell, squared=True
+                    )[0]
                     lnks = -0.5 * (normkernel[j] + dummd1s) + np.log(
                         self.weights[neighbours]
                     )
-                    prob[i] = _update_probs(prob[i], lnks)
+                    prob[i] = LSE(np.concatenate([[prob[i]], lnks]))
 
         prob -= np.log(np.sum(sample_weights))
 
@@ -384,19 +382,19 @@ class SparseKDE(BaseEstimator):
         for k in range(len(cluster_centers)):
             cluster_mean[k] = X[center_idx[k]]
             cluster_weight[k] = np.exp(
-                logsumexp(idxroot, probs, center_idx[k]) - normpks
+                LSE(probs[idxroot == center_idx[k]]) - normpks
             )
             for _ in range(self.nmsopt):
                 msmu = np.zeros(dimension, dtype=float)
                 tmppks = -np.inf
                 for i, x in enumerate(X):
-                    dummd1 = mahalanobis(
-                        self.cell, x, X[center_idx[k]], h_invs[center_idx[k]]
-                    )
+                    dummd1 = pairwise_mahalanobis_distance(
+                        x, X[center_idx[k]], h_invs[center_idx[k]], self.cell, squared=True
+                    )[0]
                     msw = -0.5 * (normkernels[center_idx[k]] + dummd1) + probs[i]
                     tmpmsmu = rij(self.cell, x, X[center_idx[k]])
                     msmu += np.exp(msw) * tmpmsmu
-                tmppks = _update_prob(tmppks, msw)
+                tmppks = LSE([tmppks, msw])
                 cluster_mean[k] += msmu / np.exp(tmppks)
             cluster_cov[k] = self._update_cluster_cov(
                 X, k, sample_labels, probs, idxroot, center_idx
@@ -445,7 +443,7 @@ class SparseKDE(BaseEstimator):
                 print("Warning: single point cluster!")
             cov = oas(
                 cov,
-                logsumexp(idxroot, probs, center_idx[k]) * self.nsamples,
+                LSE(probs[idxroot == center_idx[k]]) * self.nsamples,
                 X.shape[1],
             )
 
@@ -462,7 +460,7 @@ class SparseKDE(BaseEstimator):
     ):
 
         ww = np.zeros(N)
-        normww = logsumexp(clroots, probs, idcl)
+        normww = LSE(probs[clroots == idcl])
         ww[clroots == idcl] = np.exp(probs[clroots == idcl] - normww)
         cov = covariance(x, ww, cell)
 
@@ -480,7 +478,7 @@ class SparseKDE(BaseEstimator):
     ):
 
         ww = np.zeros(N)
-        totnormp = logsumexp(np.zeros(N), probs, 0)
+        totnormp = LSE(probs)
         cov = np.zeros((x.shape[1], x.shape[1]), dtype=float)
         xx = np.zeros(x.shape, dtype=float)
         ww[clroots == idcl] = np.exp(probs[clroots == idcl] - totnormp)
@@ -495,511 +493,3 @@ class SparseKDE(BaseEstimator):
             cov[i, i] = 1 / (np.sqrt(re2) * (2 - re2) / (1 - re2))
 
         return cov
-
-
-def covariance(X: np.ndarray, sample_weights: np.ndarray, cell: np.ndarray):
-    """
-    Calculate the covariance matrix for a given set of grid positions and weights.
-
-    Parameters:
-        grid_pos (np.ndarray): An array of shape (nsample, dimension)
-        representing the grid positions.
-        period (np.ndarray): An array of shape (dimension,)
-        representing the periodicity of each dimension.
-        grid_weight (np.ndarray): An array of shape (nsample,)
-        representing the weights of the grid positions.
-
-    Returns:
-        cov (np.ndarray): The covariance matrix of shape (dimension, dimension).
-
-    Note:
-        The function assumes that the grid positions, weights, and total weight are provided correctly.
-        The function handles periodic and non-periodic dimensions differently to calculate the covariance matrix.
-    """
-
-    nsample = X.shape[0]
-    dimension = X.shape[1]
-    xm = np.zeros(dimension)
-    xxm = np.zeros((nsample, dimension))
-    xxmw = np.zeros((nsample, dimension))
-    totw = np.sum(sample_weights)
-
-    if cell is None:
-        xm = np.average(X, axis=0, weights=sample_weights / totw)
-    else:
-        for i in range(dimension):
-            sumsin = (
-                np.sum(sample_weights * np.sin(X[:, i]) * (2 * np.pi) / cell[i]) / totw
-            )
-            sumcos = (
-                np.sum(sample_weights * np.cos(X[:, i]) * (2 * np.pi) / cell[i]) / totw
-            )
-            xm[i] = np.arctan2(sumsin, sumcos)
-
-    xxm = X - xm
-    if cell is not None:
-        xxm -= np.round(xxm / cell) * cell
-    xxmw = xxm * sample_weights.reshape(-1, 1) / totw
-    cov = xxmw.T.dot(xxm)
-    cov /= 1 - sum((sample_weights / totw) ** 2)
-
-    return cov
-
-
-def local_population(
-    cell: np.ndarray,
-    grid_pos: np.ndarray,
-    target_grid_pos: np.ndarray,
-    grid_weight: np.ndarray,
-    s2: float,
-):
-    """
-    Calculates the local population of a set of vectors in a grid.
-
-    Args:
-        cell (np.ndarray): An array of periods for each dimension of the grid.
-        x (np.ndarray): An array of vectors to be localized.
-        y (np.ndarray): An array of target vectors representing the grid.
-        grid_weight (np.ndarray): An array of weights for each target vector.
-        s2 (float): The scaling factor for the squared distance.
-
-    Returns:
-        tuple: A tuple containing two numpy arrays:
-            wl (np.ndarray): An array of localized weights for each vector.
-            num (np.ndarray): The sum of the localized weights.
-
-    """
-
-    xy = grid_pos - target_grid_pos
-    if cell is not None:
-        xy -= np.round(xy / cell) * cell
-
-    wl = np.exp(-0.5 / s2 * np.sum(xy**2, axis=1)) * grid_weight
-    num = np.sum(wl)
-
-    return wl, num
-
-
-def effdim(cov):
-    """
-    Calculate the effective dimension of a covariance matrix based on Shannon entropy.
-
-    Parameters:
-        cov (ndarray): The covariance matrix.
-
-    Returns:
-        float: The effective dimension of the covariance matrix.
-
-    Ref:
-        https://ieeexplore.ieee.org/document/7098875
-    """
-
-    eigval = np.linalg.eigvals(cov)
-    eigval /= sum(eigval)
-    eigval *= np.log(eigval)
-    eigval[np.isnan(eigval)] = 0.0
-
-    return np.exp(-sum(eigval))
-
-
-def oas(cov: np.ndarray, n: float, D: int):
-    """Oracle approximating shrinkage (OAS) estimator
-
-    Args:
-        cov: A covariance matrix
-        n: The local population
-        D: Dimension
-
-    Returns
-        Covariance matrix
-    """
-
-    tr = np.trace(cov)
-    tr2 = tr**2
-    tr_cov2 = np.trace(cov**2)
-    phi = ((1 - 2 / D) * tr_cov2 + tr2) / ((n + 1 - 2 / D) * tr_cov2 - tr2 / D)
-
-    return (1 - phi) * cov + phi * np.eye(D) * tr / D
-
-
-def mahalanobis(period: np.ndarray, x: np.ndarray, y: np.ndarray, cov_inv: np.ndarray):
-    """
-    Calculates the Mahalanobis distance between two vectors.
-
-    Args:
-        period (np.ndarray): An array of periods for each dimension of vectors.
-        x (np.ndarray): An array of vectors to be localized.
-        y (np.ndarray): An array of target vectors.
-        cov_inv (np.ndarray): The inverse of the covariance matrix.
-
-    Returns:
-        float: The Mahalanobis distance.
-
-    """
-
-    x, cov_inv = _mahalanobis_preprocess(x, cov_inv)
-    return _mahalanobis(period, x, y, cov_inv)
-
-
-def _mahalanobis_preprocess(x: np.ndarray, cov_inv: np.ndarray):
-
-    if len(x.shape) == 1:
-        x = x[np.newaxis, :]
-    if len(cov_inv.shape) == 2:
-        cov_inv = cov_inv[np.newaxis, :, :]
-
-    return x, cov_inv
-
-
-def _mahalanobis(period: np.ndarray, x: np.ndarray, y: np.ndarray, cov_inv: np.ndarray):
-
-    tmpv = np.zeros(x.shape, dtype=float)
-    xcx = np.zeros(x.shape[0], dtype=float)
-    xy = x - y
-    if period is not None:
-        xy -= np.round(xy / period) * period
-    if cov_inv.shape[0] == 1:
-        # many samples and one cov
-        tmpv = xy.dot(cov_inv[0])
-    else:
-        # many samples and many cov
-        for i in range(x.shape[0]):
-            tmpv[i] = np.dot(xy[i], cov_inv[i])
-    for i in range(x.shape[0]):
-        xcx[i] = np.dot(xy[i], tmpv[i].T)
-
-    return xcx
-
-
-def _update_probs(prob_i: float, lnks: np.ndarray):
-
-    for lnk in lnks:
-        prob_i = _update_prob(prob_i, lnk)
-
-    return prob_i
-
-
-def _update_prob(prob_i: float, lnk: float):
-
-    if prob_i > lnk:
-        return prob_i + np.log(1 + np.exp(lnk - prob_i))
-    else:
-        return lnk + np.log(1 + np.exp(prob_i - lnk))
-
-
-class NearestNeighborClustering:
-    """NearestNeighborClustering Class
-    Assign descriptor to its nearest grid."""
-
-    def __init__(self, period: Optional[np.ndarray] = None) -> None:
-
-        self.labels_ = None
-        self.period = period
-        self._distance = pairwise_euclidean_distances
-        self.grid_pos = None
-        self.grid_npoints = None
-        self.grid_weight = None
-        self.grid_neighbour = None
-
-    def fit(self, X: np.ndarray, y: Optional[np.ndarray] = None) -> None:
-        """Fit the data. Generate the cluster center by FPS algorithm."""
-
-        ngrid = len(X)
-        self.grid_pos = X
-        self.grid_npoints = np.zeros(ngrid, dtype=int)
-        self.grid_weight = np.zeros(ngrid, dtype=float)
-        self.grid_neighbour = {i: [] for i in range(ngrid)}
-
-    def predict(
-        self,
-        X: np.ndarray,
-        y: Optional[np.ndarray] = None,
-        sample_weight: Optional[np.ndarray] = None,
-    ) -> np.ndarray:
-        """Transform the data."""
-        if sample_weight is None:
-            sample_weight = np.ones(len(X)) / len(X)
-        self.labels_ = []
-        for i, point in track(
-            enumerate(X), description="Assigning samples to grids...", total=len(X)
-        ):
-            descriptor2grid = self._distance(
-                X=point.reshape(1, -1), Y=self.grid_pos, cell=self.period
-            )
-            self.labels_.append(np.argmin(descriptor2grid))
-            self.grid_npoints[self.labels_[-1]] += 1
-            self.grid_weight[self.labels_[-1]] += sample_weight[i]
-            self.grid_neighbour[self.labels_[-1]].append(i)
-
-        for key in self.grid_neighbour:
-            self.grid_neighbour[key] = np.array(self.grid_neighbour[key])
-
-        return self.labels_
-
-
-def quick_shift(
-    X: np.ndarray,
-    probs: np.ndarray,
-    dist_matrix: np.ndarray,
-    cutoff2: np.ndarray,
-    normpks: float,
-    gs: float,
-    cell: np.ndarray,
-    thrpcl: float,
-):
-    """
-    Perform quick shift clustering on the given probability array and distance matrix.
-
-    Args:
-        probs (np.ndarray): The log-likelihood of each sample.
-        dist_matrix (np.ndarray): The squared distance matrix.
-        cutoff2 (np.ndarray): The squared cutoff array.
-        gs (float): The value of gs.
-
-    Returns:
-        tuple: A tuple containing the cluster centers and the root indices.
-    """
-
-    def gs_next(
-        idx: int,
-        probs: np.ndarray,
-        n_shells: int,
-        distmm: np.ndarray,
-        gabriel: np.ndarray,
-    ):
-        """Find next cluster in Gabriel graph."""
-
-        ngrid = len(probs)
-        neighs = np.copy(gabriel[idx])
-        for _ in range(1, n_shells):
-            nneighs = np.full(ngrid, False)
-            for j in range(ngrid):
-                if neighs[j]:
-                    nneighs |= gabriel[j]
-            neighs |= nneighs
-
-        next_idx = idx
-        dmin = np.inf
-        for j in range(ngrid):
-            if probs[j] > probs[idx] and distmm[idx, j] < dmin and neighs[j]:
-                next_idx = j
-                dmin = distmm[idx, j]
-
-        return next_idx
-
-    def qs_next(
-        idx: int, idxn: int, probs: np.ndarray, distmm: np.ndarray, lambda_: float
-    ):
-        """Find next cluster with respect to qscut(lambda_)."""
-
-        ngrid = len(probs)
-        dmin = np.inf
-        next_idx = idx
-        if probs[idxn] > probs[idx]:
-            next_idx = idxn
-        for j in range(ngrid):
-            if (
-                probs[j] > probs[idx]
-                and distmm[idx, j] < dmin
-                and distmm[idx, j] < lambda_
-            ):
-                next_idx = j
-                dmin = distmm[idx, j]
-
-        return next_idx
-
-    def getidmax(v1: np.ndarray, probs: np.ndarray, clusterid: int):
-
-        tmpv = np.copy(probs)
-        tmpv[v1 != clusterid] = -np.inf
-        return np.argmax(tmpv)
-
-    def post_process(
-        normpks: float,
-        cluster_centers: np.ndarray,
-        grid_pos: np.ndarray,
-        idxroot: np.ndarray,
-        probs: np.ndarray,
-        cell: np.ndarray,
-        thrpcl: float,
-    ):
-
-        nk = len(cluster_centers)
-        to_merge = np.full(nk, False)
-        for k in range(nk):
-            dummd1 = np.exp(logsumexp(idxroot, probs, cluster_centers[k]) - normpks)
-            to_merge[k] = dummd1 > thrpcl
-        # merge the outliers
-        for i in range(nk):
-            if not to_merge[k]:
-                continue
-            dummd1yi1 = cluster_centers[i]
-            dummd1 = np.inf
-            for j in range(nk):
-                if to_merge[k]:
-                    continue
-                dummd2 = pairwise_euclidean_distances(
-                    grid_pos[idxroot[dummd1yi1]], grid_pos[idxroot[j]], cell=cell
-                )
-                if dummd2 < dummd1:
-                    dummd1 = dummd2
-                    cluster_centers[i] = j
-            idxroot[idxroot == dummd1yi1] = cluster_centers[i]
-        if sum(to_merge) > 0:
-            cluster_centers = np.concatenate(
-                np.argwhere(idxroot == np.arange(len(idxroot)))
-            )
-            nk = len(cluster_centers)
-            for i in range(nk):
-                dummd1yi1 = cluster_centers[i]
-                cluster_centers[i] = getidmax(idxroot, probs, cluster_centers[i])
-                idxroot[idxroot == dummd1yi1] = cluster_centers[i]
-
-        return cluster_centers, idxroot
-
-    gabrial = get_gabriel_graph(dist_matrix)
-    idmindist = np.argmin(dist_matrix, axis=1)
-    idxroot = np.full(dist_matrix.shape[0], -1, dtype=int)
-    for i in track(range(dist_matrix.shape[0]), description="Quick-Shift"):
-        if idxroot[i] != -1:
-            continue
-        qspath = []
-        qspath.append(i)
-        while qspath[-1] != idxroot[qspath[-1]]:
-            if gs > 0:
-                idxroot[qspath[-1]] = gs_next(
-                    qspath[-1], probs, gs, dist_matrix, gabrial
-                )
-            else:
-                idxroot[qspath[-1]] = qs_next(
-                    qspath[-1],
-                    idmindist[qspath[-1]],
-                    probs,
-                    dist_matrix,
-                    cutoff2[qspath[-1]],
-                )
-            if idxroot[idxroot[qspath[-1]]] != -1:
-                break
-            qspath.append(idxroot[qspath[-1]])
-        idxroot[qspath] = idxroot[idxroot[qspath[-1]]]
-    cluster_centers = np.concatenate(
-        np.argwhere(idxroot == np.arange(dist_matrix.shape[0]))
-    )
-
-    return post_process(normpks, cluster_centers, X, idxroot, probs, cell, thrpcl)
-
-
-def get_gabriel_graph(dist_matrix2: np.ndarray):
-    """
-    Generate the Gabriel graph based on the given squared distance matrix.
-
-    Parameters:
-        dist_matrix2 (np.ndarray): The squared distance matrix of shape (n_points, n_points).
-        outputname (Optional[str]): The name of the output file. Default is None.
-
-    Returns:
-        np.ndarray: The Gabriel graph matrix of shape (n_points, n_points).
-
-    """
-
-    n_points = dist_matrix2.shape[0]
-    gabriel = np.full((n_points, n_points), True)
-    for i in track(range(n_points), description="Calculating Gabriel graph"):
-        gabriel[i, i] = False
-        for j in range(i, n_points):
-            if np.sum(dist_matrix2[i] + dist_matrix2[j] < dist_matrix2[i, j]):
-                gabriel[i, j] = False
-                gabriel[j, i] = False
-
-    return gabriel
-
-
-from scipy.special import logsumexp as LSE
-
-
-def logsumexp(v1: np.ndarray, probs: np.ndarray, clusterid: int):
-
-    mask = v1 == clusterid
-    probs = np.copy(probs)
-    probs[~mask] = -np.inf
-
-    return LSE(probs)
-
-
-def rij(period: np.ndarray, xi: np.ndarray, xj: np.ndarray):
-    """
-    Calculates the period-concerned position vector.
-    Args:
-        period (np.ndarray): An array of periods for each dimension of the points.
-        -1 stands for not periodic.
-        xij (np.ndarray): An array for storing the result.
-        xi (np.ndarray): An array of point coordinates. It can also contain many points.
-        Shape: (n_points, n_dimensions)
-        xj (np.ndarray): An array of point coordinates. It can only contain one point.
-
-    Returns:
-        xij (np.ndarray): An array of position vectors. Shape: (n_points, n_dimensions)
-    """
-
-    xij = xi - xj
-    if period is not None:
-        xij -= np.round(xij / period) * period
-
-    return xij
-
-
-@dataclass
-class GaussianMixtureModel:
-    weights: np.ndarray
-    means: np.ndarray
-    covariances: np.ndarray
-    period: Optional[np.ndarray] = None
-
-    def __post_init__(self):
-        self.dimension = self.means.shape[1]
-        self.cov_inv = np.linalg.inv(self.covariances)
-        self.cov_det = np.linalg.det(self.covariances)
-        self.norm = 1 / np.sqrt((2 * np.pi) ** self.dimension * self.cov_det)
-
-    def __call__(self, x: np.ndarray, i: Optional[Union[int, list[int]]] = None):
-        """
-        Calculate the probability density function (PDF) value for a given input array.
-
-        Parameters:
-            x (np.ndarray): The input array for which the PDF is calculated. Once a point.
-            i (Optional[int]): The index of the element in the PDF array to return.
-                If None, the sum of all elements is returned.
-
-        Returns:
-            float or np.ndarray: The PDF value(s) for the given input(s).
-                If i is None, the sum of all PDF values is returned.
-                If i is specified, the normalized value of the corresponding gaussian is returned.
-
-        Raises:
-            None
-
-        Example:
-            >>> obj = ClassName()
-            >>> obj.__call__(x, i)
-            0.123456789
-        """
-
-        if len(x.shape) == 1:
-            x = x[np.newaxis, :]
-        if self.period is not None:
-            xij = np.zeros(self.means.shape)
-            xij = rij(self.period, x, self.means)
-        else:
-            xij = x - self.means
-        p = (
-            self.weights
-            * self.norm
-            * np.exp(
-                -0.5 * (xij[:, np.newaxis, :] @ self.cov_inv @ xij[:, :, np.newaxis])
-            ).reshape(-1)
-        )
-        sum_p = np.sum(p)
-        if i is None:
-            return sum_p
-
-        return np.sum(p[i]) / sum_p

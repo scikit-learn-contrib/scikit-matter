@@ -1,6 +1,11 @@
+from typing import Union
 import numpy as np
 
-from sklearn.metrics.pairwise import check_pairwise_arrays, check_array, _euclidean_distances
+from sklearn.metrics.pairwise import (
+    check_pairwise_arrays,
+    check_array,
+    _euclidean_distances,
+)
 
 
 def pairwise_euclidean_distances(
@@ -114,13 +119,60 @@ def pairwise_euclidean_distances(
         return _periodic_euclidean_distances(X, Y, squared=squared, cell=cell)
 
 
-def _periodic_euclidean_distances(
-    X, Y=None, *, squared=False, cell=None
-):
+def _periodic_euclidean_distances(X, Y=None, *, squared=False, cell=None):
     X, Y = np.array(X).astype(float), np.array(Y).astype(float)
     XY = np.concatenate([X - y for y in Y])
     XY -= np.round(XY / cell) * cell
-    distance = np.linalg.norm(XY, axis=1).reshape(X.shape[0], Y.shape[0], order='F')
+    distance = np.linalg.norm(XY, axis=1).reshape(X.shape[0], Y.shape[0], order="F")
     if squared:
         distance **= 2
     return distance
+
+
+def pairwise_mahalanobis_distance(
+    X: np.ndarray,
+    Y: np.ndarray,
+    cov_inv: np.ndarray,
+    cell: Union[np.ndarray, None] = None,
+    squared: bool = False,
+):
+    """
+    Calculate the pairwise Mahalanobis distance between two arrays.
+
+    Args:
+        x (np.ndarray): The first input array.
+        y (np.ndarray): The second input array.
+        cov_inv (np.ndarray): The inverse covariance matrix.
+        cell (Union[np.ndarray, None]): The cell size for periodic boundary conditions.
+        squared (bool): Whether to return the squared distance.
+
+    Returns:
+        np.ndarray: The pairwise Mahalanobis distance between the two input arrays,
+            of shape (cov_inv.shape[0], x.shape[0], y.shape[0]).
+    """
+
+    def _mahalanobis_preprocess(cov_inv: np.ndarray):
+
+        if len(cov_inv.shape) == 2:
+            cov_inv = cov_inv[np.newaxis, :, :]
+
+        return cov_inv
+
+    def _mahalanobis(
+        cell: np.ndarray, X: np.ndarray, Y: np.ndarray, cov_inv: np.ndarray
+    ):
+
+        XY = np.concatenate([X - y for y in Y])
+        if cell is not None:
+            XY -= np.round(XY / cell) * cell
+
+        return np.sum(XY * np.transpose(cov_inv @ XY.T, (0, 2, 1)), axis=-1).reshape(
+            (cov_inv.shape[0], X.shape[0], Y.shape[0]), order="F"
+        )
+
+    X, Y = check_pairwise_arrays(X, Y)
+    cov_inv = _mahalanobis_preprocess(cov_inv)
+    dists = _mahalanobis(cell, X, Y, cov_inv)
+    if not squared:
+        dists **= 0.5
+    return dists
