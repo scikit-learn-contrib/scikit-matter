@@ -5,7 +5,10 @@ import numpy as np
 from sklearn.base import BaseEstimator
 from scipy.special import logsumexp as LSE
 
-from ..metrics.pairwise import pairwise_euclidean_distances, pairwise_mahalanobis_distance
+from ..metrics.pairwise import (
+    pairwise_euclidean_distances,
+    pairwise_mahalanobis_distances,
+)
 from ..utils._sparsekde import *
 
 
@@ -244,9 +247,7 @@ class SparseKDE(BaseEstimator):
                     X, sample_weights, sigma2, flocal, i, mindist
                 )
             h_invs[i], normkernels[i], qscut2[i], h_tr_normed[i] = (
-                self._bandwidth_estimation_from_localization(
-                    X, sample_weights, wlocal, flocal, i
-                )
+                self._bandwidth_estimation_from_localization(X, wlocal, flocal, i)
             )
 
         qscut2 *= self.qs**2
@@ -297,9 +298,7 @@ class SparseKDE(BaseEstimator):
 
         return sigma2, flocal, wlocal
 
-    def _bandwidth_estimation_from_localization(
-        self, X, sample_weights, wlocal, flocal, idx
-    ):
+    def _bandwidth_estimation_from_localization(self, X, wlocal, flocal, idx):
 
         cov_i = covariance(X, wlocal, self.cell)
         nlocal = flocal[idx] * self.nsamples
@@ -328,19 +327,27 @@ class SparseKDE(BaseEstimator):
     ):
 
         prob = np.full(len(X), -np.inf)
+        dummd1s_mat = pairwise_mahalanobis_distances(
+            X, X, h_invs, self.cell, squared=True
+        )
         for i in tqdm(
             range(len(X)), desc="Computing kernel density on reference points"
         ):
-            dummd1s = pairwise_mahalanobis_distance(X, X[i], h_invs, self.cell, squared=True)
-            for j, dummd1 in enumerate(dummd1s):
+            for j, dummd1 in enumerate(dummd1s_mat[:, i, i]):
                 if dummd1 > self.kdecut2:
                     lnk = -0.5 * (normkernel[j] + dummd1) + np.log(sample_weights[j])
                     prob[i] = LSE([prob[i], lnk])
                 else:
                     neighbours = neighbour[j][neighbour[j] != igrid[i]]
-                    dummd1s = pairwise_mahalanobis_distance(
-                        self.descriptors[neighbours], X[i], h_invs[j], self.cell, squared=True
-                    )[0]
+                    if neighbours.size == 0:
+                        continue
+                    dummd1s = pairwise_mahalanobis_distances(
+                        self.descriptors[neighbours],
+                        X[i][np.newaxis, ...],
+                        h_invs[j],
+                        self.cell,
+                        squared=True,
+                    ).reshape(-1)
                     lnks = -0.5 * (normkernel[j] + dummd1s) + np.log(
                         self.weights[neighbours]
                     )
@@ -381,15 +388,17 @@ class SparseKDE(BaseEstimator):
 
         for k in range(len(cluster_centers)):
             cluster_mean[k] = X[center_idx[k]]
-            cluster_weight[k] = np.exp(
-                LSE(probs[idxroot == center_idx[k]]) - normpks
-            )
+            cluster_weight[k] = np.exp(LSE(probs[idxroot == center_idx[k]]) - normpks)
             for _ in range(self.nmsopt):
                 msmu = np.zeros(dimension, dtype=float)
                 tmppks = -np.inf
                 for i, x in enumerate(X):
-                    dummd1 = pairwise_mahalanobis_distance(
-                        x, X[center_idx[k]], h_invs[center_idx[k]], self.cell, squared=True
+                    dummd1 = pairwise_mahalanobis_distances(
+                        x[np.newaxis, ...],
+                        X[center_idx[k]][np.newaxis, ...],
+                        h_invs[center_idx[k]],
+                        self.cell,
+                        squared=True,
                     )[0]
                     msw = -0.5 * (normkernels[center_idx[k]] + dummd1) + probs[i]
                     tmpmsmu = rij(self.cell, x, X[center_idx[k]])
