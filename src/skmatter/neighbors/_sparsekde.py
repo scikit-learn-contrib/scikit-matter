@@ -28,7 +28,7 @@ class SparseKDE(BaseEstimator):
     """
     def __init__(self, kernel, metric, metric_params,
                  descriptors: np.ndarray, weights: np.ndarray,
-                 qs:float = 1., gs:int = -1,
+                 qs:float = 1., gs:int = -1, thrpcl: float=0.,
                  fspread:float = -1., fpoints:float = 0.15):
         self.kernel = kernel
         self.metric = metric
@@ -39,6 +39,7 @@ class SparseKDE(BaseEstimator):
         self.nsamples = len(descriptors)
         self.qs = qs
         self.gs = gs
+        self.thrpcl = thrpcl
         self.fspread = fspread
         self.fpoints = fpoints
         self.kdecut2 = None
@@ -84,9 +85,10 @@ class SparseKDE(BaseEstimator):
         h_invs, normkernels, qscut2 = self._computes_localization(X, sample_weight, min_grid_dist)
         probs = self._computes_kernel_density_estimation(X, sample_weight, h_invs, normkernels, \
                                                          igrid, grid_neighbour)
+        cluster_centers, idxroot = quick_shift(
+            X, probs, grid_dist_mat, qscut2, self.gs, self.cell, self.thrpcl)
 
-        return probs
-
+        return idxroot
 
 
     def score_samples(self, X):
@@ -491,3 +493,165 @@ class NearestNeighborClustering:
             self.grid_neighbour[key] = np.array(self.grid_neighbour[key])
 
         return self.labels_
+
+
+def quick_shift(X: np.ndarray,
+                probs: np.ndarray,
+                dist_matrix: np.ndarray,
+                cutoff2: np.ndarray,
+                gs:float,
+                cell: np.ndarray,
+                thrpcl: float):
+    """
+    Perform quick shift clustering on the given probability array and distance matrix.
+
+    Args:
+        probs (np.ndarray): The log-likelihood of each sample.
+        dist_matrix (np.ndarray): The squared distance matrix.
+        cutoff2 (np.ndarray): The squared cutoff array.
+        gs (float): The value of gs.
+
+    Returns:
+        tuple: A tuple containing the cluster centers and the root indices.
+    """
+    from scipy.special import logsumexp as LSE
+
+    def gs_next(idx: int, probs: np.ndarray, n_shells: int, distmm: np.ndarray, gabriel: np.ndarray):
+        """Find next cluster in Gabriel graph."""
+
+        ngrid = len(probs)
+        neighs = np.copy(gabriel[idx])
+        for _ in range(1, n_shells):
+            nneighs = np.full(ngrid, False)
+            for j in range(ngrid):
+                if neighs[j]:
+                    nneighs |= gabriel[j]
+            neighs |= nneighs
+
+        next_idx = idx
+        dmin = np.inf
+        for j in range(ngrid):
+            if probs[j] > probs[idx] and \
+                distmm[idx, j] < dmin and \
+                neighs[j]:
+                next_idx = j
+                dmin = distmm[idx, j]
+
+        return next_idx
+
+    def qs_next(idx:int, idxn: int, probs: np.ndarray, distmm: np.ndarray, lambda_: float):
+        """Find next cluster with respect to qscut(lambda_)."""
+
+        ngrid = len(probs)
+        dmin = np.inf
+        next_idx = idx
+        if probs[idxn] > probs[idx]:
+            next_idx = idxn
+        for j in range(ngrid):
+            if probs[j] > probs[idx] and \
+                distmm[idx, j] < dmin and \
+                distmm[idx, j] < lambda_:
+                next_idx = j
+                dmin = distmm[idx, j]
+
+        return next_idx
+    
+    def logsumexp(v1: np.ndarray, probs: np.ndarray, clusterid: int):
+
+        mask = v1 == clusterid
+        probs = np.copy(probs)
+        probs[~mask] = -np.inf
+
+        return LSE(probs)
+    
+    def getidmax(v1: np.ndarray, probs: np.ndarray, clusterid: int):
+
+        tmpv = np.copy(probs)
+        tmpv[v1 != clusterid] = -np.inf
+        return np.argmax(tmpv)
+
+    def post_process(cluster_centers: np.ndarray,
+                     grid_pos: np.ndarray,
+                     idxroot: np.ndarray,
+                     probs: np.ndarray,
+                     cell: np.ndarray,
+                     thrpcl: float):
+
+        normpks = logsumexp(np.ones(dist_matrix.shape[0]), probs, 1)
+        nk = len(cluster_centers)
+        to_merge = np.full(nk, False)
+        for k in range(nk):
+            dummd1 = np.exp(logsumexp(idxroot, probs, cluster_centers[k]) - normpks)
+            to_merge[k] = dummd1 > thrpcl
+        # merge the outliers
+        for i in range(nk):
+            if not to_merge[k]:
+                continue
+            dummd1yi1 = cluster_centers[i]
+            dummd1 = np.inf
+            for j in range(nk):
+                if to_merge[k]:
+                    continue
+                dummd2 = pairwise_euclidean_distances(
+                    grid_pos[idxroot[dummd1yi1]], grid_pos[idxroot[j]], cell=cell)
+                if dummd2 < dummd1:
+                    dummd1 = dummd2
+                    cluster_centers[i] = j
+            idxroot[idxroot == dummd1yi1] = cluster_centers[i]
+        if sum(to_merge) > 0:
+            cluster_centers = np.concatenate(np.argwhere(idxroot == np.arange(len(idxroot))))
+            nk = len(cluster_centers)
+            for i in range(nk):
+                dummd1yi1 = cluster_centers[i]
+                cluster_centers[i] = getidmax(idxroot, probs, cluster_centers[i])
+                idxroot[idxroot == dummd1yi1] = cluster_centers[i]
+
+        return cluster_centers, idxroot
+
+    gabrial = get_gabriel_graph(dist_matrix)
+    idmindist = np.argmin(dist_matrix, axis=1)
+    idxroot = np.full(dist_matrix.shape[0], -1, dtype=int)
+    for i in track(range(dist_matrix.shape[0]), description='Quick-Shift'):
+        if idxroot[i] != -1:
+            continue
+        qspath = []
+        qspath.append(i)
+        while qspath[-1] != idxroot[qspath[-1]]:
+            if gs > 0:
+                idxroot[qspath[-1]] = gs_next(qspath[-1], probs, gs,
+                                              dist_matrix, gabrial)
+            else:
+                idxroot[qspath[-1]] = qs_next(qspath[-1], idmindist[qspath[-1]],
+                                              probs, dist_matrix, cutoff2[qspath[-1]])
+            if idxroot[idxroot[qspath[-1]]] != -1:
+                break
+            qspath.append(idxroot[qspath[-1]])
+        idxroot[qspath] = idxroot[idxroot[qspath[-1]]]
+    cluster_centers = np.concatenate(np.argwhere(idxroot == np.arange(dist_matrix.shape[0])))
+
+    return post_process(cluster_centers, X, idxroot, probs, cell, thrpcl)
+
+def get_gabriel_graph(dist_matrix2: np.ndarray):
+    """
+    Generate the Gabriel graph based on the given squared distance matrix.
+
+    Parameters:
+        dist_matrix2 (np.ndarray): The squared distance matrix of shape (n_points, n_points).
+        outputname (Optional[str]): The name of the output file. Default is None.
+
+    Returns:
+        np.ndarray: The Gabriel graph matrix of shape (n_points, n_points).
+
+    """
+
+    n_points = dist_matrix2.shape[0]
+    gabriel = np.full((n_points, n_points), True)
+    for i in track(range(n_points), description='Calculating Gabriel graph'):
+        gabriel[i, i] = False
+        for j in range(i, n_points):
+            if np.sum(dist_matrix2[i] + dist_matrix2[j] < dist_matrix2[i, j]):
+                gabriel[i, j] = False
+                gabriel[j, i] = False
+
+    return gabriel
+
