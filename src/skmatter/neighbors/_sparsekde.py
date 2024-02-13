@@ -3,6 +3,7 @@ from tqdm import tqdm
 
 import numpy as np
 from sklearn.base import BaseEstimator
+from sklearn.utils.validation import check_is_fitted, check_random_state
 from scipy.special import logsumexp as LSE
 
 from ..metrics.pairwise import (
@@ -199,7 +200,21 @@ class SparseKDE(BaseEstimator):
         X : array-like of shape (n_samples, n_features)
             List of samples.
         """
-        ...
+        check_is_fitted(self)
+        rng = check_random_state(random_state)
+        u = rng.uniform(0, 1, size=n_samples)
+        cumsum_weight = np.cumsum(np.asarray(self.cluster_weight))
+        sum_weight = cumsum_weight[-1]
+        idxs = np.searchsorted(cumsum_weight, u * sum_weight)
+
+        return np.concatenate(
+            [
+                np.atleast_2d(
+                    rng.multivariate_normal(self.cluster_mean[i], self.cluster_cov[i])
+                )
+                for i in idxs
+            ]
+        )
 
     def _assign_descriptors_to_grids(self, X):
 
