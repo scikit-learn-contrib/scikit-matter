@@ -1,3 +1,6 @@
-from ._sparsekde import SparseKDE
+from ._sparsekde import SparseKDE, covariance, effdim, oas
 
-__all__ = ["SparseKDE"]
+__all__ = ["SparseKDE",
+           "covariance",
+           "effdim",
+           "oas"]
