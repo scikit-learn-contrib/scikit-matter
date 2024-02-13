@@ -57,6 +57,7 @@ from ._prediction_rigidities import (
 
 from .pairwise import (
     pairwise_euclidean_distances,
+    pairwise_mahalanobis_distance,
 )
 
 __all__ = [
@@ -71,4 +72,5 @@ __all__ = [
     "local_prediction_rigidity",
     "componentwise_prediction_rigidity",
     "pairwise_euclidean_distances",
+    "pairwise_mahalanobis_distance",
 ]
