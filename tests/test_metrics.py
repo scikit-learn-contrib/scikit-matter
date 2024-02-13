@@ -13,6 +13,7 @@ from skmatter.metrics import (
     local_reconstruction_error,
     pointwise_local_reconstruction_error,
     pairwise_euclidean_distances,
+    pairwise_mahalanobis_distances,
 )
 
 
@@ -221,31 +222,62 @@ class DistanceTests(unittest.TestCase):
     def setUpClass(cls):
         cls.X = [[1, 2], [3, 4], [5, 6]]
         cls.Y = [[7, 8], [9, 10]]
+        cls.covs = np.array(
+            [
+                [[1, 0.5], [0.5, 1]],
+                [[1, 0.], [0., 1]]
+            ]
+        )
         cls.cell = [5, 7]
-        cls.distances = np.array([[ 8.48528137, 11.3137085 ],
-                                  [ 5.65685425,  8.48528137],
-                                  [ 2.82842712,  5.65685425]])
-        cls.periodic_distances = np.array([[1.41421356, 2.23606798],
-                                           [3.16227766, 1.41421356],
-                                           [2.82842712, 3.16227766]])
+        cls.distances = np.array(
+            [
+                [8.48528137, 11.3137085],
+                [5.65685425, 8.48528137],
+                [2.82842712, 5.65685425],
+            ]
+        )
+        cls.periodic_distances = np.array(
+            [
+                [1.41421356, 2.23606798],
+                [3.16227766, 1.41421356],
+                [2.82842712, 3.16227766],
+            ]
+        )
+        cls.mahalanobis_distances = np.array(
+            [
+                [
+                    [10.39230485, 13.85640646],
+                    [6.92820323, 10.39230485],
+                    [3.46410162, 6.92820323],
+                ],
+            cls.distances,
+            ]
+        )
 
     def test_euclidean_distance(self):
         distances = pairwise_euclidean_distances(self.X, self.Y)
         self.assertTrue(
             np.allclose(distances, self.distances),
             f"Calculated distance does not match expected value"
-            f"Calculated: {distances} Expected: {self.distances}"
+            f"Calculated: {distances} Expected: {self.distances}",
         )
 
     def test_periodic_euclidean_distance(self):
-        distances = pairwise_euclidean_distances(
-            self.X, self.Y, cell=self.cell
-        )
+        distances = pairwise_euclidean_distances(self.X, self.Y, cell=self.cell)
         self.assertTrue(
             np.allclose(distances, self.periodic_distances),
             f"Calculated distance does not match expected value"
-            f"Calculated: {distances} Expected: {self.periodic_distances}"
+            f"Calculated: {distances} Expected: {self.periodic_distances}",
         )
+
+    def test_mahalanobis_distance(self):
+        distances = pairwise_mahalanobis_distances(self.X, self.Y, self.covs)
+        self.assertTrue(
+            np.allclose(distances, self.mahalanobis_distances),
+            f"Calculated distance does not match expected value"
+            f"Calculated: {distances} Expected: {self.mahalanobis_distances}",
+        )
+
 
 if __name__ == "__main__":
     unittest.main()
