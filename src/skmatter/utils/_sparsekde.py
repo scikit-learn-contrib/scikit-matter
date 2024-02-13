@@ -114,6 +114,31 @@ class GaussianMixtureModel:
             return sum_p
 
         return np.sum(p[i]) / sum_p
+    
+    def sample(self, n_samples=1, random_state=None):
+        """Generate random samples from the model.
+
+        Currently, this is implemented only for gaussian and tophat kernels.
+
+        Parameters
+        ----------
+        n_samples : int, default=1
+            Number of samples to generate.
+
+        random_state : int or None, default=None
+            Determines random number generation used to generate
+            random samples. Pass an int for reproducible results
+            across multiple function calls.
+            See :term:`Glossary <random_state>`.
+
+        Returns
+        -------
+        X : array-like of shape (n_samples, n_features)
+            List of samples.
+        """
+        return np.random.multivariate_normal(
+            mean=self.means, cov=self.covariances, size=n_samples
+        )
 
 
 def covariance(X: np.ndarray, sample_weights: np.ndarray, cell: np.ndarray):
