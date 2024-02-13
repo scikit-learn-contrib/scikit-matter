@@ -129,7 +129,7 @@ def _periodic_euclidean_distances(X, Y=None, *, squared=False, cell=None):
     return distance
 
 
-def pairwise_mahalanobis_distance(
+def pairwise_mahalanobis_distances(
     X: np.ndarray,
     Y: np.ndarray,
     cov_inv: np.ndarray,
