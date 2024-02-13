@@ -1,4 +1,5 @@
 import warnings
+from dataclasses import dataclass
 from typing import Union, Optional
 from sklearn.base import BaseEstimator
 from sklearn.utils.validation import _check_sample_weight
@@ -47,7 +48,7 @@ class SparseKDE(BaseEstimator):
         self.metric_params = metric_params
         self.cell = metric_params["cell"] if "cell" in metric_params else None
         self.descriptors = descriptors
-        self.weight = (
+        self.weights = (
             weights
             if weights is not None
             else np.ones(len(descriptors)) / len(descriptors)
@@ -60,6 +61,10 @@ class SparseKDE(BaseEstimator):
         self.fpoints = fpoints
         self.nmsopt = nmsopt
         self.kdecut2 = None
+        self.model = None
+        self.cluster_center = None
+        self.cluster_cov = None
+        self.cluster_weight = None
 
         if self.fspread > 0:
             self.fpoints = -1.0
@@ -111,8 +116,24 @@ class SparseKDE(BaseEstimator):
         cluster_centers, idxroot = quick_shift(
             X, probs, grid_dist_mat, qscut2, normpks, self.gs, self.cell, self.thrpcl
         )
+        self.cluster_weight, self.cluster_mean, self.cluster_cov = (
+            self.generate_probability_model(
+                X,
+                sample_labels_,
+                cluster_centers,
+                h_invs,
+                normkernels,
+                probs,
+                idxroot,
+                normpks,
+            )
+        )
+        self.model = GaussianMixtureModel(
+            self.cluster_weight, self.cluster_mean, self.cluster_cov, period=self.cell
+        )
+        self.__sklearn_is_fitted__ = True
 
-        return self.generate_probability_model(X, sample_labels_, cluster_centers, h_invs, normkernels, probs, idxroot, normpks)
+        return self
 
     def score_samples(self, X):
         """Compute the log-likelihood of each sample under the model.
@@ -130,7 +151,7 @@ class SparseKDE(BaseEstimator):
             probability densities, so values will be low for high-dimensional
             data.
         """
-        ...
+        return np.array([self.model(x) for x in X])
 
     def score(self, X, y=None):
         """Compute the total log-likelihood under the model.
@@ -181,7 +202,7 @@ class SparseKDE(BaseEstimator):
 
         assigner = NearestNeighborClustering(self.cell)
         assigner.fit(X)
-        labels = assigner.predict(self.descriptors, sample_weight=self.weight)
+        labels = assigner.predict(self.descriptors, sample_weight=self.weights)
         grid_npoints = assigner.grid_npoints
         grid_neighbour = assigner.grid_neighbour
 
@@ -323,7 +344,7 @@ class SparseKDE(BaseEstimator):
                         self.cell, self.descriptors[neighbours], X[i], h_inv[j]
                     )
                     lnks = -0.5 * (normkernel[j] + dummd1s) + np.log(
-                        self.weight[neighbours]
+                        self.weights[neighbours]
                     )
                     prob[i] = _update_probs(prob[i], lnks)
 
@@ -377,7 +398,9 @@ class SparseKDE(BaseEstimator):
                     msmu += np.exp(msw) * tmpmsmu
                 tmppks = _update_prob(tmppks, msw)
                 cluster_mean[k] += msmu / np.exp(tmppks)
-            cluster_cov[k] = self._update_cluster_cov(X, k, sample_labels, probs, idxroot, center_idx)
+            cluster_cov[k] = self._update_cluster_cov(
+                X, k, sample_labels, probs, idxroot, center_idx
+            )
 
         return cluster_weight, cluster_mean, cluster_cov
 
@@ -402,19 +425,21 @@ class SparseKDE(BaseEstimator):
                     self.descriptors,
                     sample_labels,
                     center_idx[k],
-                    self.weight,
+                    self.weights,
                     self.cell,
                 )
                 print("Warning: single point cluster!")
         else:
-            cov = self._get_lcov_cluster(len(X), X, idxroot, center_idx[k], probs, self.cell)
+            cov = self._get_lcov_cluster(
+                len(X), X, idxroot, center_idx[k], probs, self.cell
+            )
             if np.sum(idxroot == center_idx[k]) == 1:
                 cov = self._get_lcov_cluster(
                     self.nsamples,
                     self.descriptors,
                     sample_labels,
                     center_idx[k],
-                    self.weight,
+                    self.weights,
                     self.cell,
                 )
                 print("Warning: single point cluster!")
@@ -921,3 +946,60 @@ def rij(period: np.ndarray, xi: np.ndarray, xj: np.ndarray):
         xij -= np.round(xij / period) * period
 
     return xij
+
+
+@dataclass
+class GaussianMixtureModel:
+    weights: np.ndarray
+    means: np.ndarray
+    covariances: np.ndarray
+    period: Optional[np.ndarray] = None
+
+    def __post_init__(self):
+        self.dimension = self.means.shape[1]
+        self.cov_inv = np.linalg.inv(self.covariances)
+        self.cov_det = np.linalg.det(self.covariances)
+        self.norm = 1 / np.sqrt((2 * np.pi) ** self.dimension * self.cov_det)
+
+    def __call__(self, x: np.ndarray, i: Optional[Union[int, list[int]]] = None):
+        """
+        Calculate the probability density function (PDF) value for a given input array.
+
+        Parameters:
+            x (np.ndarray): The input array for which the PDF is calculated. Once a point.
+            i (Optional[int]): The index of the element in the PDF array to return.
+                If None, the sum of all elements is returned.
+
+        Returns:
+            float or np.ndarray: The PDF value(s) for the given input(s).
+                If i is None, the sum of all PDF values is returned.
+                If i is specified, the normalized value of the corresponding gaussian is returned.
+
+        Raises:
+            None
+
+        Example:
+            >>> obj = ClassName()
+            >>> obj.__call__(x, i)
+            0.123456789
+        """
+
+        if len(x.shape) == 1:
+            x = x[np.newaxis, :]
+        if self.period is not None:
+            xij = np.zeros(self.means.shape)
+            xij = rij(self.period, x, self.means)
+        else:
+            xij = x - self.means
+        p = (
+            self.weights
+            * self.norm
+            * np.exp(
+                -0.5 * (xij[:, np.newaxis, :] @ self.cov_inv @ xij[:, :, np.newaxis])
+            ).reshape(-1)
+        )
+        sum_p = np.sum(p)
+        if i is None:
+            return sum_p
+
+        return np.sum(p[i]) / sum_p
