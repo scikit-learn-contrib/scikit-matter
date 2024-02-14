@@ -30,17 +30,19 @@ DIST_METRICS = {
 
 class SparseKDE(BaseEstimator):
     """A sparse implementation of the Kernel Density Estimation.
-
-    The bandwidth will be optimized per sample.
-
-    - We only support Gaussian kernels.
-    - Implement a sklean like metric: named periodic euclidian.
-    and make metric parameter distance.
+    This class is used to build a sparse kernel density estimator.
+    It takes a set of descriptors and a set of weights as input,
+    and fit the KDE model on the sampled data (e.g. the grid point
+    selected by FPS).
 
     Parameters
     ----------
-    descriptors: Descriptors of the system where you want to build a sparse KDE.
-    weights: Weights of the descriptors.
+    descriptors: np.ndarray
+        Descriptors of the system where you want to build a sparse KDE.
+        It should be an array of shape `(n_descriptors, n_features)`.
+    weights: np.ndarray, default=None
+        Weights of the descriptors.
+        If None, all weights are set to `1/n_descriptors`.
     kernel : {'gaussian'}, default='gaussian'
         The kernel to use. Currentlty only one.
     metric : str, default='periodic_euclidean'
@@ -48,12 +50,35 @@ class SparseKDE(BaseEstimator):
     metric_params : dict, default=None
         Additional parameters to be passed to the use of
         metric.  i.e. the cell dimension for `periodic_euclidean`
-    qs : Scaling factor used during the QS clustering.
-    gs : The neighbor shell for gabriel shift.
-    thrpcl : Clusters with a pk loewr than this value are merged with the NN.
-    fspread : The fractional variance for bandwidth estimation.
-    fpoints : The fractional number of grid points.
-    nmsopt : The number of mean-shift refinement steps.
+        {'cell': [2, 2]}
+    qs : float, default=1.0
+        Scaling factor used during the QS clustering.
+    gs : int, default=-1
+        The neighbor shell for gabriel shift.
+    thrpcl : float, default=0.0
+        Clusters with a pk lower than this value are merged with the NN.
+    fspread : float, default=-1.0
+        The fractional variance for bandwidth estimation.
+    fpoints : float, default=0.15
+        The fractional number of grid points.
+    nmsopt : int, default=0
+        The number of mean-shift refinement steps.
+
+    
+    Attributes
+    ----------
+    kdecut2 : float
+        The cut-off value for the KDE.
+    cell : np.ndarray
+        The cell dimension for the metric.
+    model : `GaussianMixtureModel`
+        The model of the KDE.
+    cluster_mean : np.ndarray
+        The mean of each gaussian.
+    cluster_cov : np.ndarray
+        The covariance of each gaussian.
+    cluster_weight : np.ndarray
+        The weight of each gaussian.
 
     Examples
     --------
@@ -89,7 +114,7 @@ class SparseKDE(BaseEstimator):
     def __init__(
         self,
         descriptors: np.ndarray,
-        weights: np.ndarray,
+        weights: Optional[np.ndarray] = None,
         kernel: str = "gaussian",
         metric: str = "periodic_euclidean",
         metric_params: Optional[dict] = None,
@@ -140,9 +165,10 @@ class SparseKDE(BaseEstimator):
             :class:`~sklearn.pipeline.Pipeline`.
 
         sample_weight : array-like of shape (n_samples,), default=None
-            List of sample weights attached to the data X.
+            List of sample weights attached to the data X. This parameter
+            is ignored. Instead of reading sample_weight from the input,
+            it is calculated internally.
 
-            .. versionadded:: 0.20
 
         Returns
         -------
@@ -150,12 +176,6 @@ class SparseKDE(BaseEstimator):
             Returns the instance itself.
         """
 
-        # if sample_weight is not None:
-        #     sample_weight = _check_sample_weight(
-        #         sample_weight, X, dtype=np.float64, only_non_negative=True
-        #     )
-        # else:
-        #     sample_weight = np.ones(X.shape[0], dtype=np.float64) / X.shape[0]
         self.kdecut2 = 9 * (np.sqrt(X.shape[1]) + 1) ** 2
         grid_dist_mat = DIST_METRICS[self.metric](X, X, squared=True, cell=self.cell)
         np.fill_diagonal(grid_dist_mat, np.inf)
@@ -187,7 +207,7 @@ class SparseKDE(BaseEstimator):
             )
         )
         self.model = GaussianMixtureModel(
-            self.cluster_weight, self.cluster_mean, self.cluster_cov, period=self.cell
+            self.cluster_weight, self.cluster_mean, self.cluster_cov, cell=self.cell
         )
         self.fitted_ = True
 
@@ -326,7 +346,7 @@ class SparseKDE(BaseEstimator):
     def _localization_based_on_fraction_of_points(
         self, X, sample_weights, sigma2, flocal, idx, delta, tune
     ):
-        """Used in cases where one expects clusterswith very different spreads,
+        """Used in cases where one expects clusters with very different spreads,
         but similar populations"""
 
         lim = self.fpoints
@@ -360,7 +380,8 @@ class SparseKDE(BaseEstimator):
     def _localization_based_on_fraction_of_spread(
         self, X, sample_weights, sigma2, flocal, idx, mindist
     ):
-
+        """Used in cases where one expects the spatial extentof clusters to be
+        relatively homogeneous"""
         sigma2[idx] = mindist[idx]
         wlocal, flocal[idx] = local_population(
             self.cell, self.descriptors, X, sample_weights, sigma2[idx]
