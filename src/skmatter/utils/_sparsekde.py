@@ -5,18 +5,22 @@ from typing import Optional, Union
 from tqdm import tqdm
 
 import numpy as np
-from scipy.special import logsumexp as LSE
 from ..metrics.pairwise import pairwise_euclidean_distances
 
 
 class NearestGridAssigner:
     """NearestGridAssigner Class
-    Assign descriptor to its nearest grid."""
+    Assign descriptor to its nearest grid.
+    
+    Args:
+        cell (np.ndarray): An array of periods for each dimension of the grid.
+        exclude_grid (bool): Whether to exclude the grid itself from neighbor lists."""
 
-    def __init__(self, period: Optional[np.ndarray] = None) -> None:
+    def __init__(self, cell: Optional[np.ndarray] = None, exclude_grid: bool = True) -> None:
 
         self.labels_ = None
-        self.period = period
+        self.cell = cell
+        self.exclude_grid = exclude_grid
         self._distance = pairwise_euclidean_distances
         self.grid_pos = None
         self.grid_npoints = None
@@ -46,7 +50,7 @@ class NearestGridAssigner:
             enumerate(X), desc="Assigning samples to grids...", total=len(X)
         ):
             descriptor2grid = self._distance(
-                X=point.reshape(1, -1), Y=self.grid_pos, cell=self.period
+                X=point.reshape(1, -1), Y=self.grid_pos, cell=self.cell
             )
             self.labels_.append(np.argmin(descriptor2grid))
             self.grid_npoints[self.labels_[-1]] += 1
@@ -114,32 +118,6 @@ class GaussianMixtureModel:
             return sum_p
 
         return np.sum(p[i]) / sum_p
-    
-    def sample(self, n_samples=1, random_state=None):
-        """Generate random samples from the model.
-
-        Currently, this is implemented only for gaussian and tophat kernels.
-
-        Parameters
-        ----------
-        n_samples : int, default=1
-            Number of samples to generate.
-
-        random_state : int or None, default=None
-            Determines random number generation used to generate
-            random samples. Pass an int for reproducible results
-            across multiple function calls.
-            See :term:`Glossary <random_state>`.
-
-        Returns
-        -------
-        X : array-like of shape (n_samples, n_features)
-            List of samples.
-        """
-        return np.random.multivariate_normal(
-            mean=self.means, cov=self.covariances, size=n_samples
-        )
-
 
 def covariance(X: np.ndarray, sample_weights: np.ndarray, cell: np.ndarray):
     """
@@ -265,14 +243,10 @@ def oas(cov: np.ndarray, n: float, D: int):
 
 
 def quick_shift(
-    X: np.ndarray,
     probs: np.ndarray,
     dist_matrix: np.ndarray,
     cutoff2: np.ndarray,
-    normpks: float,
     gs: float,
-    cell: np.ndarray,
-    thrpcl: float,
 ):
     """
     Perform quick shift clustering on the given probability array and distance matrix.
@@ -302,6 +276,8 @@ def quick_shift(
             nneighs = np.full(ngrid, False)
             for j in range(ngrid):
                 if neighs[j]:
+                    # j can be accessed from idx
+                    # j's neighbors can also be accessed from idx
                     nneighs |= gabriel[j]
             neighs |= nneighs
 
@@ -309,15 +285,16 @@ def quick_shift(
         dmin = np.inf
         for j in range(ngrid):
             if probs[j] > probs[idx] and distmm[idx, j] < dmin and neighs[j]:
+                # find the closest neighbor
                 next_idx = j
                 dmin = distmm[idx, j]
 
         return next_idx
 
     def qs_next(
-        idx: int, idxn: int, probs: np.ndarray, distmm: np.ndarray, lambda_: float
+        idx: int, idxn: int, probs: np.ndarray, distmm: np.ndarray, cutoff: float
     ):
-        """Find next cluster with respect to qscut(lambda_)."""
+        """Find next cluster with respect to cutoff."""
 
         ngrid = len(probs)
         dmin = np.inf
@@ -325,64 +302,11 @@ def quick_shift(
         if probs[idxn] > probs[idx]:
             next_idx = idxn
         for j in range(ngrid):
-            if (
-                probs[j] > probs[idx]
-                and distmm[idx, j] < dmin
-                and distmm[idx, j] < lambda_
-            ):
+            if probs[j] > probs[idx] and distmm[idx, j] < min(dmin, cutoff):
                 next_idx = j
                 dmin = distmm[idx, j]
 
         return next_idx
-
-    def getidmax(v1: np.ndarray, probs: np.ndarray, clusterid: int):
-
-        tmpv = np.copy(probs)
-        tmpv[v1 != clusterid] = -np.inf
-        return np.argmax(tmpv)
-
-    def post_process(
-        normpks: float,
-        cluster_centers: np.ndarray,
-        grid_pos: np.ndarray,
-        idxroot: np.ndarray,
-        probs: np.ndarray,
-        cell: np.ndarray,
-        thrpcl: float,
-    ):
-
-        nk = len(cluster_centers)
-        to_merge = np.full(nk, False)
-        for k in range(nk):
-            dummd1 = np.exp(LSE(probs[idxroot == cluster_centers[k]]) - normpks)
-            to_merge[k] = dummd1 > thrpcl
-        # merge the outliers
-        for i in range(nk):
-            if not to_merge[k]:
-                continue
-            dummd1yi1 = cluster_centers[i]
-            dummd1 = np.inf
-            for j in range(nk):
-                if to_merge[k]:
-                    continue
-                dummd2 = pairwise_euclidean_distances(
-                    grid_pos[idxroot[dummd1yi1]], grid_pos[idxroot[j]], cell=cell
-                )
-                if dummd2 < dummd1:
-                    dummd1 = dummd2
-                    cluster_centers[i] = j
-            idxroot[idxroot == dummd1yi1] = cluster_centers[i]
-        if sum(to_merge) > 0:
-            cluster_centers = np.concatenate(
-                np.argwhere(idxroot == np.arange(len(idxroot)))
-            )
-            nk = len(cluster_centers)
-            for i in range(nk):
-                dummd1yi1 = cluster_centers[i]
-                cluster_centers[i] = getidmax(idxroot, probs, cluster_centers[i])
-                idxroot[idxroot == dummd1yi1] = cluster_centers[i]
-
-        return cluster_centers, idxroot
 
     gabrial = get_gabriel_graph(dist_matrix)
     idmindist = np.argmin(dist_matrix, axis=1)
@@ -413,7 +337,7 @@ def quick_shift(
         np.argwhere(idxroot == np.arange(dist_matrix.shape[0]))
     )
 
-    return post_process(normpks, cluster_centers, X, idxroot, probs, cell, thrpcl)
+    return cluster_centers, idxroot
 
 
 def get_gabriel_graph(dist_matrix2: np.ndarray):

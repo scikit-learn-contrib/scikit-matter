@@ -35,11 +35,11 @@ class SparseKDE(BaseEstimator):
 
     def __init__(
         self,
-        kernel,
-        metric,
-        metric_params,
         descriptors: np.ndarray,
         weights: np.ndarray,
+        kernel: str = "gaussian",
+        metric: str = 'periodic_euclidean',
+        metric_params: dict = {},
         qs: float = 1.0,
         gs: int = -1,
         thrpcl: float = 0.0,
@@ -73,7 +73,7 @@ class SparseKDE(BaseEstimator):
         if self.fspread > 0:
             self.fpoints = -1.0
 
-    def fit(self, X, y=None, sample_weight=None, igrid=None):
+    def fit(self, X, y=None, sample_weight=None):
         """Fit the Kernel Density model on the data.
 
         Parameters
@@ -114,14 +114,15 @@ class SparseKDE(BaseEstimator):
             X, sample_weight, min_grid_dist
         )
         probs = self._computes_kernel_density_estimation(
-            X, sample_weight, h_invs, normkernels, igrid, grid_neighbour
+            X, sample_weight, h_invs, normkernels, grid_neighbour
         )
         normpks = LSE(probs)
         cluster_centers, idxroot = quick_shift(
-            X, probs, grid_dist_mat, qscut2, normpks, self.gs, self.cell, self.thrpcl
+            probs, grid_dist_mat, qscut2, self.gs
         )
+        cluster_centers, idxroot = self._post_process(X, cluster_centers, idxroot, probs, normpks)
         self.cluster_weight, self.cluster_mean, self.cluster_cov = (
-            self.generate_probability_model(
+            self._generate_probability_model(
                 X,
                 sample_labels_,
                 cluster_centers,
@@ -137,7 +138,7 @@ class SparseKDE(BaseEstimator):
         )
         self.__sklearn_is_fitted__ = True
 
-        return self
+        return self, probs
 
     def score_samples(self, X):
         """Compute the log-likelihood of each sample under the model.
@@ -337,7 +338,6 @@ class SparseKDE(BaseEstimator):
         sample_weights: np.ndarray,
         h_invs: np.ndarray,
         normkernel: np.ndarray,
-        igrid: np.ndarray,
         neighbour: dict,
     ):
 
@@ -353,7 +353,7 @@ class SparseKDE(BaseEstimator):
                     lnk = -0.5 * (normkernel[j] + dummd1) + np.log(sample_weights[j])
                     prob[i] = LSE([prob[i], lnk])
                 else:
-                    neighbours = neighbour[j][neighbour[j] != igrid[i]]
+                    neighbours = neighbour[j][np.any(self.descriptors[neighbour[j]] != X[i], axis=1)]
                     if neighbours.size == 0:
                         continue
                     dummd1s = pairwise_mahalanobis_distances(
@@ -372,7 +372,55 @@ class SparseKDE(BaseEstimator):
 
         return prob
 
-    def generate_probability_model(
+    def _post_process(
+        self,
+        X: np.ndarray,
+        cluster_centers: np.ndarray,
+        idxroot: np.ndarray,
+        probs: np.ndarray,
+        normpks: float,
+    ):
+
+        def getidmax(v1: np.ndarray, probs: np.ndarray, clusterid: int):
+
+            tmpv = np.copy(probs)
+            tmpv[v1 != clusterid] = -np.inf
+            return np.argmax(tmpv)
+
+        nk = len(cluster_centers)
+        to_merge = np.full(nk, False)
+        for k in range(nk):
+            dummd1 = np.exp(LSE(probs[idxroot == cluster_centers[k]]) - normpks)
+            to_merge[k] = dummd1 > self.thrpcl
+        # merge the outliers
+        for i in range(nk):
+            if not to_merge[k]:
+                continue
+            dummd1yi1 = cluster_centers[i]
+            dummd1 = np.inf
+            for j in range(nk):
+                if to_merge[k]:
+                    continue
+                dummd2 = pairwise_euclidean_distances(
+                    X[idxroot[dummd1yi1]], X[idxroot[j]], cell=self.cell
+                )
+                if dummd2 < dummd1:
+                    dummd1 = dummd2
+                    cluster_centers[i] = j
+            idxroot[idxroot == dummd1yi1] = cluster_centers[i]
+        if sum(to_merge) > 0:
+            cluster_centers = np.concatenate(
+                np.argwhere(idxroot == np.arange(len(idxroot)))
+            )
+            nk = len(cluster_centers)
+            for i in range(nk):
+                dummd1yi1 = cluster_centers[i]
+                cluster_centers[i] = getidmax(idxroot, probs, cluster_centers[i])
+                idxroot[idxroot == dummd1yi1] = cluster_centers[i]
+
+        return cluster_centers, idxroot
+
+    def _generate_probability_model(
         self,
         X: np.ndarray,
         sample_labels: np.ndarray,
