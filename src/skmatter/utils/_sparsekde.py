@@ -11,16 +11,16 @@ class NearestGridAssigner:
     """NearestGridAssigner Class
     Assign descriptor to its nearest grid. This is an auxilirary class.
 
-    
+
     Parameters
     ----------
     metric :
-        The metric to use. 
+        The metric to use.
         Currently only `sklearn.metrics.pairwise.pairwise_euclidean_distances`.
     cell : np.ndarray
         An array of periods for each dimension of the grid.
 
-    
+
     Attributes
     ----------
     grid_pos : np.ndarray
@@ -36,7 +36,9 @@ class NearestGridAssigner:
     """
 
     def __init__(
-        self, metric, cell: Optional[np.ndarray] = None,
+        self,
+        metric,
+        cell: Optional[np.ndarray] = None,
     ) -> None:
 
         self.labels_ = None
@@ -49,7 +51,7 @@ class NearestGridAssigner:
 
     def fit(self, X: np.ndarray, y: Optional[np.ndarray] = None) -> None:
         """Fit the data.
-        
+
         Parameters
         ----------
             X : np.ndarray
@@ -139,6 +141,7 @@ class GaussianMixtureModel:
         The normalization constants.
 
     """
+
     def __post_init__(self):
         self.dimension = self.means.shape[1]
         self.cov_invs = np.linalg.inv(self.covariances)
@@ -154,7 +157,7 @@ class GaussianMixtureModel:
         x : np.ndarray
             The input array for which the PDF is calculated. Once a point.
         i : int, list[int], optional, default=None
-            The index of the element inthe PDF array to return. 
+            The index of the element inthe PDF array to return.
             If None, the sum of all elements is returned.
 
         Returns
@@ -205,9 +208,9 @@ def covariance(X: np.ndarray, sample_weights: np.ndarray, cell: np.ndarray):
         The covariance matrix of shape (dimension, dimension).
     Notes
     -----
-    The function assumes that the grid positions, weights, 
+    The function assumes that the grid positions, weights,
     and total weight are provided correctly.
-    The function handles periodic and non-periodic dimensions differently to 
+    The function handles periodic and non-periodic dimensions differently to
     calculate the covariance matrix.
     """
 
@@ -354,7 +357,7 @@ def quick_shift(
         The squared distance matrix.
     cutoff2 : np.ndarray
         The squared cutoff array.
-    gs : float 
+    gs : float
         The value of gs.
 
     Returns
@@ -479,7 +482,7 @@ def rij(period: Optional[np.ndarray], xi: np.ndarray, xj: np.ndarray) -> np.ndar
         An array of periods for each dimension of the points.
         None stands for not periodic.
     xi : np.ndarray
-        An array of point coordinates. It can also contain many points. 
+        An array of point coordinates. It can also contain many points.
         Shape: (n_points, n_dimensions)
     xj : np.ndarray
         An array of point coordinates. It can only contain one point.
