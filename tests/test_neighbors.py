@@ -23,42 +23,40 @@ class SparseKDETests(unittest.TestCase):
         )
         cls.selector = FPS(n_to_select=int(np.sqrt(2 * cls.n_samples_per_cov)))
         cls.grids = cls.selector.fit_transform(cls.samples.T).T
-        cls.expect_weight = np.array([0.49887635, 0.50112365])
+        cls.expect_weight = np.array([0.49848071, 0.50151929])
         cls.expect_means = np.array(
             [[0.01281471, 0.18859686], [4.22711008, 4.36817619]],
         )
         cls.expect_covs = np.array(
             [
-                [[1.12389543, 0.64427576], [0.64427576, 1.1347041]],
-                [[1.05031634, 0.50629971], [0.50629971, 0.53994028]],
+                [[1.10462777, 0.6370178], [0.6370178, 1.11759455]],
+                [[1.03559702, 0.50091544], [0.50091544, 0.53316178]],
             ]
         )
 
         cls.cell = np.array([4, 4])
         cls.expect_weight_periodic = np.array([1.0])
         cls.expect_means_periodic = np.array([[0.01281471, 0.18859686]])
-        cls.expect_covs_periodic = np.array([[[0.72280929, 0.0], [0.0, 0.56174913]]])
+        cls.expect_covs_periodic = np.array([[[0.72231751, 0.0], [0.0, 0.56106493]]])
 
     def test_sparse_kde(self):
         estimator = SparseKDE(
-            "gaussian", "pero", {}, self.samples, None, fpoints=0.5, qs=0.85
+            self.samples, None, fpoints=0.5, qs=0.85
         )
-        estimator.fit(self.grids, igrid=self.selector.selected_idx_)
+        estimator.fit(self.grids)
         self.assertTrue(np.allclose(estimator.cluster_weight, self.expect_weight))
         self.assertTrue(np.allclose(estimator.cluster_mean, self.expect_means))
         self.assertTrue(np.allclose(estimator.cluster_cov, self.expect_covs))
 
     def test_sparse_kde_periodic(self):
         estimator = SparseKDE(
-            "gaussian",
-            "pero",
-            {"cell": self.cell},
             self.samples,
             None,
+            metric_params={"cell": self.cell},
             fpoints=0.5,
             qs=0.85,
         )
-        estimator.fit(self.grids, igrid=self.selector.selected_idx_)
+        estimator.fit(self.grids)
         self.assertTrue(
             np.allclose(estimator.cluster_weight, self.expect_weight_periodic)
         )
