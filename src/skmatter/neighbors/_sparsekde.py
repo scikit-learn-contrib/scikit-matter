@@ -1,5 +1,5 @@
 import warnings
-from typing import Optional
+from typing import Union
 
 import numpy as np
 from scipy.special import logsumexp as LSE
@@ -114,10 +114,10 @@ class SparseKDE(BaseEstimator):
     def __init__(
         self,
         descriptors: np.ndarray,
-        weights: Optional[np.ndarray] = None,
+        weights: Union[np.ndarray, None] = None,
         kernel: str = "gaussian",
         metric: str = "periodic_euclidean",
-        metric_params: Optional[dict] = None,
+        metric_params: Union[dict, None] = None,
         qs: float = 1.0,
         gs: int = -1,
         thrpcl: float = 0.0,
