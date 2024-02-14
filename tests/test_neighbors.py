@@ -40,9 +40,7 @@ class SparseKDETests(unittest.TestCase):
         cls.expect_covs_periodic = np.array([[[0.72231751, 0.0], [0.0, 0.56106493]]])
 
     def test_sparse_kde(self):
-        estimator = SparseKDE(
-            self.samples, None, fpoints=0.5, qs=0.85
-        )
+        estimator = SparseKDE(self.samples, None, fpoints=0.5, qs=0.85)
         estimator.fit(self.grids)
         self.assertTrue(np.allclose(estimator.cluster_weight, self.expect_weight))
         self.assertTrue(np.allclose(estimator.cluster_mean, self.expect_means))

@@ -1,25 +1,27 @@
 import warnings
-from tqdm import tqdm
+from typing import Optional
 
 import numpy as np
+from scipy.special import logsumexp as LSE
 from sklearn.base import BaseEstimator
 from sklearn.utils.validation import check_is_fitted, check_random_state
-from scipy.special import logsumexp as LSE
+from tqdm import tqdm
 
 from ..metrics.pairwise import (
     pairwise_euclidean_distances,
     pairwise_mahalanobis_distances,
 )
 from ..utils._sparsekde import (
-    NearestGridAssigner,
     GaussianMixtureModel,
+    NearestGridAssigner,
     covariance,
-    local_population,
     effdim,
+    local_population,
     oas,
     quick_shift,
     rij,
 )
+
 
 DIST_METRICS = {
     "periodic_euclidean": pairwise_euclidean_distances,
@@ -32,8 +34,8 @@ class SparseKDE(BaseEstimator):
     The bandwidth will be optimized per sample.
 
     - We only support Gaussian kernels.
-    - Implement a sklean like metric: named periodic euclidian. and make metric parameter
-    distance.
+    - Implement a sklean like metric: named periodic euclidian.
+    and make metric parameter distance.
 
     Parameters
     ----------
@@ -60,14 +62,24 @@ class SparseKDE(BaseEstimator):
     >>> from skmatter.feature_selection import FPS
     >>> np.random.seed(0)
     >>> n_samples = 10000
-    >>> samples = np.concatenate(
-    >>>     [np.random.multivariate_normal([0, 0], [[1, 0.5], [0.5, 1]], n_samples),
-    >>>     np.random.multivariate_normal([4, 4], [[1, 0.5], [0.5, 0.5]], n_samples)]
-    >>> )
+    >>> cov1 = [[1, 0.5], [0.5, 1]]
+    >>> cov2 = [[1, 0.5], [0.5, 0.5]]
+    >>> sample1 = np.random.multivariate_normal([0, 0], cov1, n_samples)
+    >>> sample2 = np.random.multivariate_normal([4, 4], cov2, n_samples)
+    >>> samples = np.concatenate([sample1, sample2])
     >>> selector = FPS(n_to_select=int(np.sqrt(2 * n_samples)))
     >>> result = selector.fit_transform(samples.T).T
     >>> estimator = SparseKDE(samples, None, fpoints=0.5, qs=0.85)
     >>> estimator.fit(result)
+    SparseKDE(descriptors=array([[-1.72779275, -1.32763554],
+           [-1.96805856,  0.27283464],
+           [-1.12871372, -2.1059916 ],
+           ...,
+           [ 3.75859454,  3.10217702],
+           [ 1.6544348 ,  3.41851374],
+           [ 4.08667637,  3.42457743]]),
+              fpoints=0.5, qs=0.85,
+              weights=array([5.e-05, 5.e-05, 5.e-05, ..., 5.e-05, 5.e-05, 5.e-05]))
     >>> estimator.score(result)
     2.7671739267690363
     >>> estimator.sample()
@@ -80,7 +92,7 @@ class SparseKDE(BaseEstimator):
         weights: np.ndarray,
         kernel: str = "gaussian",
         metric: str = "periodic_euclidean",
-        metric_params: dict = {},
+        metric_params: Optional[dict] = None,
         qs: float = 1.0,
         gs: int = -1,
         thrpcl: float = 0.0,
@@ -89,9 +101,9 @@ class SparseKDE(BaseEstimator):
         nmsopt: int = 0,
     ):
         self.kernel = kernel
-        self.metric = DIST_METRICS[metric]
+        self.metric = metric
         self.metric_params = metric_params
-        self.cell = metric_params["cell"] if "cell" in metric_params else None
+        self.cell = metric_params["cell"] if metric_params is not None else None
         self.descriptors = descriptors
         self.weights = (
             weights
@@ -145,7 +157,7 @@ class SparseKDE(BaseEstimator):
         # else:
         #     sample_weight = np.ones(X.shape[0], dtype=np.float64) / X.shape[0]
         self.kdecut2 = 9 * (np.sqrt(X.shape[1]) + 1) ** 2
-        grid_dist_mat = self.metric(X, X, squared=True, cell=self.cell)
+        grid_dist_mat = DIST_METRICS[self.metric](X, X, squared=True, cell=self.cell)
         np.fill_diagonal(grid_dist_mat, np.inf)
         min_grid_dist = np.min(grid_dist_mat, axis=1)
         _, grid_neighbour, sample_labels_, sample_weight = (
@@ -260,7 +272,7 @@ class SparseKDE(BaseEstimator):
 
     def _assign_descriptors_to_grids(self, X):
 
-        assigner = NearestGridAssigner(self.metric, self.cell)
+        assigner = NearestGridAssigner(DIST_METRICS[self.metric], self.cell)
         assigner.fit(X)
         labels = assigner.predict(self.descriptors, sample_weight=self.weights)
         grid_npoints = assigner.grid_npoints
@@ -322,7 +334,8 @@ class SparseKDE(BaseEstimator):
             lim = sample_weights[idx] + delta
             warnings.warn(
                 " Warning: localization smaller than voronoi,"
-                " increase grid size (meanwhile adjusted localization)!"
+                " increase grid size (meanwhile adjusted localization)!",
+                stacklevel=2,
             )
         while flocal[idx] < lim:
             sigma2[idx] += tune
