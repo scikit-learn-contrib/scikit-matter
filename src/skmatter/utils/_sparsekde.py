@@ -9,27 +9,54 @@ from tqdm import tqdm
 
 class NearestGridAssigner:
     """NearestGridAssigner Class
-    Assign descriptor to its nearest grid. This is an axulirary class.
+    Assign descriptor to its nearest grid. This is an auxilirary class.
 
-    Args:
-        cell (np.ndarray): An array of periods for each dimension of the grid.
-        exclude_grid (bool): Whether to exclude the grid itself from neighbor lists."""
+    
+    Parameters
+    ----------
+    metric :
+        The metric to use. 
+        Currently only `sklearn.metrics.pairwise.pairwise_euclidean_distances`.
+    cell : np.ndarray
+        An array of periods for each dimension of the grid.
+
+    
+    Attributes
+    ----------
+    grid_pos : np.ndarray
+        An array of grid positions.
+    grid_npoints : np.ndarray
+        An array of number of points in each grid.
+    grid_weight : np.ndarray
+        An array of weights in each grid.
+    grid_neighbour : dict
+        A dictionary of neighbor lists for each grid.
+    labels_ : np.ndarray
+        An array of labels for each descriptor.
+    """
 
     def __init__(
-        self, metric, cell: Optional[np.ndarray] = None, exclude_grid: bool = True
+        self, metric, cell: Optional[np.ndarray] = None,
     ) -> None:
 
         self.labels_ = None
         self.metric = metric
         self.cell = cell
-        self.exclude_grid = exclude_grid
         self.grid_pos = None
         self.grid_npoints = None
         self.grid_weight = None
         self.grid_neighbour = None
 
     def fit(self, X: np.ndarray, y: Optional[np.ndarray] = None) -> None:
-        """Fit the data. Generate the cluster center by FPS algorithm."""
+        """Fit the data.
+        
+        Parameters
+        ----------
+            X : np.ndarray
+                An array of grid positions.
+            y : np.ndarray, optional, default=None
+                Igonred.
+        """
 
         ngrid = len(X)
         self.grid_pos = X
@@ -43,7 +70,23 @@ class NearestGridAssigner:
         y: Optional[np.ndarray] = None,
         sample_weight: Optional[np.ndarray] = None,
     ) -> np.ndarray:
-        """Transform the data."""
+        """
+        Predicts labels for input data and returns an array of labels.
+
+        Parameters
+        ----------
+        X : np.ndarray
+            Input data to predict labels for.
+        y : np.ndarray, optional, default=None
+            Igonred.
+        sample_weight : np.ndarray, optional
+            Sample weights for each data point.
+
+        Returns
+        -------
+        np.ndarray
+            Array of predicted labels.
+        """
         if sample_weight is None:
             sample_weight = np.ones(len(X)) / len(X)
         self.labels_ = []
@@ -69,48 +112,72 @@ class GaussianMixtureModel:
     weights: np.ndarray
     means: np.ndarray
     covariances: np.ndarray
-    period: Optional[np.ndarray] = None
-    """A simple class for Gaussian Mixture Model. This is an axulirary class."""
+    cell: Optional[np.ndarray] = None
+    """
+    A Gaussian Mixture Model for clustering and density estimation.
 
+    Parameters
+    ----------
+    weights : np.ndarray
+        The weights of the Gaussian components.
+    means : np.ndarray
+        The means of the Gaussian components.
+    covariances : np.ndarray
+        The covariance matrices of the Gaussian components.
+    cell : Optional[np.ndarray], optional
+        The cell size for periodic boundary conditions. Default is None.
+
+    Attributes
+    ----------
+    dimension : int
+        The dimension of the Gaussian Mixture Model.
+    cov_invs : np.ndarray
+        The inverses of the covariance matrices.
+    cov_dets : np.ndarray
+        The determinants of the covariance matrices.
+    norms : np.ndarray
+        The normalization constants.
+
+    """
     def __post_init__(self):
         self.dimension = self.means.shape[1]
-        self.cov_inv = np.linalg.inv(self.covariances)
-        self.cov_det = np.linalg.det(self.covariances)
-        self.norm = 1 / np.sqrt((2 * np.pi) ** self.dimension * self.cov_det)
+        self.cov_invs = np.linalg.inv(self.covariances)
+        self.cov_dets = np.linalg.det(self.covariances)
+        self.norms = 1 / np.sqrt((2 * np.pi) ** self.dimension * self.cov_dets)
 
     def __call__(self, x: np.ndarray, i: Optional[Union[int, list[int]]] = None):
         """
         Calculate the probability density function (PDF) value for a given input array.
 
-        Parameters:
-            x (np.ndarray): The input array for which the PDF
-                is calculated. Once a point.
-            i (Optional[int]): The index of the element in
-                the PDF array to return. If None, the sum of
-                all elements is returned.
+        Parameters
+        ----------
+        x : np.ndarray
+            The input array for which the PDF is calculated. Once a point.
+        i : int, list[int], optional, default=None
+            The index of the element inthe PDF array to return. 
+            If None, the sum of all elements is returned.
 
-        Returns:
-            float or np.ndarray: The PDF value(s) for the given input(s).
-                If i is None, the sum of all PDF values is returned.
-                If i is specified, the normalized value of the corresponding
-                Wgaussian is returned.
-
-        Raises:
-            None
+        Returns
+        -------
+        float or np.ndarray
+            The PDF value(s) for the given input(s).
+            If i is None, the sum of all PDF values is returned.
+            If i is specified, the normalized value of the corresponding
+            gaussian is returned.
         """
 
         if len(x.shape) == 1:
             x = x[np.newaxis, :]
-        if self.period is not None:
+        if self.cell is not None:
             xij = np.zeros(self.means.shape)
-            xij = rij(self.period, x, self.means)
+            xij = rij(self.cell, x, self.means)
         else:
             xij = x - self.means
         p = (
             self.weights
-            * self.norm
+            * self.norms
             * np.exp(
-                -0.5 * (xij[:, np.newaxis, :] @ self.cov_inv @ xij[:, :, np.newaxis])
+                -0.5 * (xij[:, np.newaxis, :] @ self.cov_invs @ xij[:, :, np.newaxis])
             ).reshape(-1)
         )
         sum_p = np.sum(p)
@@ -124,22 +191,24 @@ def covariance(X: np.ndarray, sample_weights: np.ndarray, cell: np.ndarray):
     """
     Calculate the covariance matrix for a given set of grid positions and weights.
 
-    Parameters:
-        grid_pos (np.ndarray): An array of shape (nsample, dimension)
-        representing the grid positions.
-        period (np.ndarray): An array of shape (dimension,)
-        representing the periodicity of each dimension.
-        grid_weight (np.ndarray): An array of shape (nsample,)
-        representing the weights of the grid positions.
-
-    Returns:
-        cov (np.ndarray): The covariance matrix of shape (dimension, dimension).
-
-    Note:
-        The function assumes that the grid positions, weights,
-        and total weight are provided correctly. The function handles
-        periodic and non-periodic dimensions differently to calculate
-        the covariance matrix.
+    Parameters
+    ----------
+    X : np.ndarray
+        An array of shape (nsample, dimension) representing the grid positions.
+    sample_weights : np.ndarray
+        An array of shape (nsample,) representing the weights of the grid positions.
+    cell : np.ndarray
+        An array of shape (dimension,) representing the periodicity of each dimension.
+    Returns
+    -------
+    np.ndarray
+        The covariance matrix of shape (dimension, dimension).
+    Notes
+    -----
+    The function assumes that the grid positions, weights, 
+    and total weight are provided correctly.
+    The function handles periodic and non-periodic dimensions differently to 
+    calculate the covariance matrix.
     """
 
     totw = np.sum(sample_weights)
@@ -179,17 +248,28 @@ def local_population(
     """
     Calculates the local population of a set of vectors in a grid.
 
-    Args:
-        cell (np.ndarray): An array of periods for each dimension of the grid.
-        x (np.ndarray): An array of vectors to be localized.
-        y (np.ndarray): An array of target vectors representing the grid.
-        grid_weight (np.ndarray): An array of weights for each target vector.
-        s2 (float): The scaling factor for the squared distance.
+    Parameters
+    ----------
+    cell : np.ndarray
+        An array of periods for each dimension of the grid.
+    grid_pos : np.ndarray
+        An array of vectors to be localized.
+    target_grid_pos : np.ndarray
+        An array of target vectors representing the grid.
+    grid_weight : np.ndarray
+        An array of weights for each target vector.
+    s2 : float
+        The scaling factor for the squared distance.
 
-    Returns:
-        tuple: A tuple containing two numpy arrays:
-            wl (np.ndarray): An array of localized weights for each vector.
-            num (np.ndarray): The sum of the localized weights.
+
+    Returns
+    -------
+    tuple
+        A tuple containing two numpy arrays:
+        wl : np.ndarray
+            An array of localized weights for each vector.
+        num : np.ndarray
+            The sum of the localized weights.
 
     """
 
@@ -207,14 +287,19 @@ def effdim(cov):
     """
     Calculate the effective dimension of a covariance matrix based on Shannon entropy.
 
-    Parameters:
-        cov (ndarray): The covariance matrix.
+    Parameters
+    ----------
+    cov : ndarray
+        The covariance matrix.
 
-    Returns:
-        float: The effective dimension of the covariance matrix.
+    Returns
+    -------
+    float
+        The effective dimension of the covariance matrix.
 
-    Ref:
-        https://ieeexplore.ieee.org/document/7098875
+    References
+    ----------
+    https://ieeexplore.ieee.org/document/7098875
     """
 
     eigval = np.linalg.eigvals(cov)
@@ -225,15 +310,22 @@ def effdim(cov):
     return np.exp(-sum(eigval))
 
 
-def oas(cov: np.ndarray, n: float, D: int):
-    """Oracle approximating shrinkage (OAS) estimator
+def oas(cov: np.ndarray, n: float, D: int) -> np.ndarray:
+    """
+    Oracle approximating shrinkage (OAS) estimator
 
-    Args:
-        cov: A covariance matrix
-        n: The local population
-        D: Dimension
+    Parameters
+    ----------
+    cov : np.ndarray
+        A covariance matrix
+    n : float
+        The local population
+    D : int
+        Dimension
 
     Returns
+    -------
+    np.ndarray
         Covariance matrix
     """
 
@@ -254,14 +346,21 @@ def quick_shift(
     """
     Perform quick shift clustering on the given probability array and distance matrix.
 
-    Args:
-        probs (np.ndarray): The log-likelihood of each sample.
-        dist_matrix (np.ndarray): The squared distance matrix.
-        cutoff2 (np.ndarray): The squared cutoff array.
-        gs (float): The value of gs.
+    Parameters
+    ----------
+    probs : np.ndarray
+        The log-likelihood of each sample.
+    dist_matrix : np.ndarray
+        The squared distance matrix.
+    cutoff2 : np.ndarray
+        The squared cutoff array.
+    gs : float 
+        The value of gs.
 
-    Returns:
-        tuple: A tuple containing the cluster centers and the root indices.
+    Returns
+    -------
+    tuple
+        A tuple containing the cluster centers and the root indices.
     """
 
     def gs_next(
@@ -347,14 +446,15 @@ def get_gabriel_graph(dist_matrix2: np.ndarray):
     """
     Generate the Gabriel graph based on the given squared distance matrix.
 
-    Parameters:
-        dist_matrix2 (np.ndarray):
-            The squared distance matrix of shape (n_points, n_points).
-        outputname (Optional[str]): The name of the output file. Default is None.
+    Parameters
+    ----------
+    dist_matrix2 : np.ndarray
+        The squared distance matrix of shape (n_points, n_points).
 
-    Returns:
-        np.ndarray: The Gabriel graph matrix of shape (n_points, n_points).
-
+    Returns
+    -------
+    np.ndarray
+        The Gabriel graph matrix of shape (n_points, n_points).
     """
 
     n_points = dist_matrix2.shape[0]
@@ -369,18 +469,25 @@ def get_gabriel_graph(dist_matrix2: np.ndarray):
     return gabriel
 
 
-def rij(period: np.ndarray, xi: np.ndarray, xj: np.ndarray):
+def rij(period: Optional[np.ndarray], xi: np.ndarray, xj: np.ndarray) -> np.ndarray:
     """
-    Calculates the period-concerned position vector.
-    Args:
-        period (np.ndarray): An array of periods for each dimension of the points.
-        -1 stands for not periodic.
-        xi (np.ndarray): An array of point coordinates. It can also contain many points.
-        Shape: (n_points, n_dimensions)
-        xj (np.ndarray): An array of point coordinates. It can only contain one point.
+    Calculate the position vector considering the periodic boundary conditions.
 
-    Returns:
-        xij (np.ndarray): An array of position vectors. Shape: (n_points, n_dimensions)
+    Parameters
+    ----------
+    period : np.ndarray, Optional
+        An array of periods for each dimension of the points.
+        None stands for not periodic.
+    xi : np.ndarray
+        An array of point coordinates. It can also contain many points. 
+        Shape: (n_points, n_dimensions)
+    xj : np.ndarray
+        An array of point coordinates. It can only contain one point.
+
+    Returns
+    -------
+    np.ndarray
+        An array of position vectors. Shape: (n_points, n_dimensions)
     """
 
     xij = xi - xj
