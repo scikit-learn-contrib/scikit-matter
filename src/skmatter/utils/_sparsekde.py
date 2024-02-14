@@ -1,7 +1,7 @@
 """This file holds utility functions and classes for the sparse KDE."""
 
 from dataclasses import dataclass
-from typing import Optional, Union
+from typing import Union
 
 import numpy as np
 from tqdm import tqdm
@@ -114,7 +114,7 @@ class GaussianMixtureModel:
     weights: np.ndarray
     means: np.ndarray
     covariances: np.ndarray
-    cell: Optional[np.ndarray] = None
+    cell: Union[np.ndarray, None] = None
     """
     A Gaussian Mixture Model for clustering and density estimation.
 
@@ -148,7 +148,7 @@ class GaussianMixtureModel:
         self.cov_dets = np.linalg.det(self.covariances)
         self.norms = 1 / np.sqrt((2 * np.pi) ** self.dimension * self.cov_dets)
 
-    def __call__(self, x: np.ndarray, i: Optional[Union[int, list[int]]] = None):
+    def __call__(self, x: np.ndarray, i: Union[int, list[int], None] = None):
         """
         Calculate the probability density function (PDF) value for a given input array.
 
