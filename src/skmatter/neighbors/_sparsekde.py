@@ -10,7 +10,20 @@ from ..metrics.pairwise import (
     pairwise_euclidean_distances,
     pairwise_mahalanobis_distances,
 )
-from ..utils._sparsekde import *
+from ..utils._sparsekde import (
+    NearestGridAssigner,
+    GaussianMixtureModel,
+    covariance,
+    local_population,
+    effdim,
+    oas,
+    quick_shift,
+    rij,
+)
+
+DIST_METRICS = {
+    "periodic_euclidean": pairwise_euclidean_distances,
+}
 
 
 class SparseKDE(BaseEstimator):
@@ -18,19 +31,47 @@ class SparseKDE(BaseEstimator):
 
     The bandwidth will be optimized per sample.
 
-    - We only support Gaussian kernels. (Check
-    howe hard others are and make it paramater later)
+    - We only support Gaussian kernels.
     - Implement a sklean like metric: named periodic euclidian. and make metric parameter
     distance.
 
     Parameters
     ----------
+    descriptors: Descriptors of the system where you want to build a sparse KDE.
+    weights: Weights of the descriptors.
     kernel : {'gaussian'}, default='gaussian'
-        The kernel to use. Currentlty only one. Check how sklearn kernels are defined. Try to reuse
+        The kernel to use. Currentlty only one.
     metric : str, default='periodic_euclidean'
+        The metric to use. Currently only one.
     metric_params : dict, default=None
         Additional parameters to be passed to the use of
         metric.  i.e. the cell dimension for `periodic_euclidean`
+    qs : Scaling factor used during the QS clustering.
+    gs : The neighbor shell for gabriel shift.
+    thrpcl : Clusters with a pk loewr than this value are merged with the NN.
+    fspread : The fractional variance for bandwidth estimation.
+    fpoints : The fractional number of grid points.
+    nmsopt : The number of mean-shift refinement steps.
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> from skmatter.neighbors import SparseKDE
+    >>> from skmatter.feature_selection import FPS
+    >>> np.random.seed(0)
+    >>> n_samples = 10000
+    >>> samples = np.concatenate(
+    >>>     [np.random.multivariate_normal([0, 0], [[1, 0.5], [0.5, 1]], n_samples),
+    >>>     np.random.multivariate_normal([4, 4], [[1, 0.5], [0.5, 0.5]], n_samples)]
+    >>> )
+    >>> selector = FPS(n_to_select=int(np.sqrt(2 * n_samples)))
+    >>> result = selector.fit_transform(samples.T).T
+    >>> estimator = SparseKDE(samples, None, fpoints=0.5, qs=0.85)
+    >>> estimator.fit(result)
+    >>> estimator.score(result)
+    2.7671739267690363
+    >>> estimator.sample()
+    array([[3.32383366, 3.51779084]])
     """
 
     def __init__(
@@ -38,7 +79,7 @@ class SparseKDE(BaseEstimator):
         descriptors: np.ndarray,
         weights: np.ndarray,
         kernel: str = "gaussian",
-        metric: str = 'periodic_euclidean',
+        metric: str = "periodic_euclidean",
         metric_params: dict = {},
         qs: float = 1.0,
         gs: int = -1,
@@ -48,7 +89,7 @@ class SparseKDE(BaseEstimator):
         nmsopt: int = 0,
     ):
         self.kernel = kernel
-        self.metric = metric
+        self.metric = DIST_METRICS[metric]
         self.metric_params = metric_params
         self.cell = metric_params["cell"] if "cell" in metric_params else None
         self.descriptors = descriptors
@@ -104,10 +145,10 @@ class SparseKDE(BaseEstimator):
         # else:
         #     sample_weight = np.ones(X.shape[0], dtype=np.float64) / X.shape[0]
         self.kdecut2 = 9 * (np.sqrt(X.shape[1]) + 1) ** 2
-        grid_dist_mat = pairwise_euclidean_distances(X, X, squared=True, cell=self.cell)
+        grid_dist_mat = self.metric(X, X, squared=True, cell=self.cell)
         np.fill_diagonal(grid_dist_mat, np.inf)
         min_grid_dist = np.min(grid_dist_mat, axis=1)
-        grid_npoints, grid_neighbour, sample_labels_, sample_weight = (
+        _, grid_neighbour, sample_labels_, sample_weight = (
             self._assign_descriptors_to_grids(X)
         )
         h_invs, normkernels, qscut2 = self._computes_localization(
@@ -117,10 +158,10 @@ class SparseKDE(BaseEstimator):
             X, sample_weight, h_invs, normkernels, grid_neighbour
         )
         normpks = LSE(probs)
-        cluster_centers, idxroot = quick_shift(
-            probs, grid_dist_mat, qscut2, self.gs
+        cluster_centers, idxroot = quick_shift(probs, grid_dist_mat, qscut2, self.gs)
+        cluster_centers, idxroot = self._post_process(
+            X, cluster_centers, idxroot, probs, normpks
         )
-        cluster_centers, idxroot = self._post_process(X, cluster_centers, idxroot, probs, normpks)
         self.cluster_weight, self.cluster_mean, self.cluster_cov = (
             self._generate_probability_model(
                 X,
@@ -136,9 +177,9 @@ class SparseKDE(BaseEstimator):
         self.model = GaussianMixtureModel(
             self.cluster_weight, self.cluster_mean, self.cluster_cov, period=self.cell
         )
-        self.__sklearn_is_fitted__ = True
+        self.fitted_ = True
 
-        return self, probs
+        return self
 
     def score_samples(self, X):
         """Compute the log-likelihood of each sample under the model.
@@ -219,7 +260,7 @@ class SparseKDE(BaseEstimator):
 
     def _assign_descriptors_to_grids(self, X):
 
-        assigner = NearestGridAssigner(self.cell)
+        assigner = NearestGridAssigner(self.metric, self.cell)
         assigner.fit(X)
         labels = assigner.predict(self.descriptors, sample_weight=self.weights)
         grid_npoints = assigner.grid_npoints
@@ -353,7 +394,9 @@ class SparseKDE(BaseEstimator):
                     lnk = -0.5 * (normkernel[j] + dummd1) + np.log(sample_weights[j])
                     prob[i] = LSE([prob[i], lnk])
                 else:
-                    neighbours = neighbour[j][np.any(self.descriptors[neighbour[j]] != X[i], axis=1)]
+                    neighbours = neighbour[j][
+                        np.any(self.descriptors[neighbour[j]] != X[i], axis=1)
+                    ]
                     if neighbours.size == 0:
                         continue
                     dummd1s = pairwise_mahalanobis_distances(
@@ -401,7 +444,7 @@ class SparseKDE(BaseEstimator):
             for j in range(nk):
                 if to_merge[k]:
                     continue
-                dummd2 = pairwise_euclidean_distances(
+                dummd2 = self.metric(
                     X[idxroot[dummd1yi1]], X[idxroot[j]], cell=self.cell
                 )
                 if dummd2 < dummd1:
