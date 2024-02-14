@@ -2,20 +2,22 @@
 
 from dataclasses import dataclass
 from typing import Optional, Union
-from tqdm import tqdm
 
 import numpy as np
+from tqdm import tqdm
 
 
 class NearestGridAssigner:
     """NearestGridAssigner Class
     Assign descriptor to its nearest grid. This is an axulirary class.
-    
+
     Args:
         cell (np.ndarray): An array of periods for each dimension of the grid.
         exclude_grid (bool): Whether to exclude the grid itself from neighbor lists."""
 
-    def __init__(self, metric, cell: Optional[np.ndarray] = None, exclude_grid: bool = True) -> None:
+    def __init__(
+        self, metric, cell: Optional[np.ndarray] = None, exclude_grid: bool = True
+    ) -> None:
 
         self.labels_ = None
         self.metric = metric
@@ -81,22 +83,20 @@ class GaussianMixtureModel:
         Calculate the probability density function (PDF) value for a given input array.
 
         Parameters:
-            x (np.ndarray): The input array for which the PDF is calculated. Once a point.
-            i (Optional[int]): The index of the element in the PDF array to return.
-                If None, the sum of all elements is returned.
+            x (np.ndarray): The input array for which the PDF
+                is calculated. Once a point.
+            i (Optional[int]): The index of the element in
+                the PDF array to return. If None, the sum of
+                all elements is returned.
 
         Returns:
             float or np.ndarray: The PDF value(s) for the given input(s).
                 If i is None, the sum of all PDF values is returned.
-                If i is specified, the normalized value of the corresponding gaussian is returned.
+                If i is specified, the normalized value of the corresponding
+                Wgaussian is returned.
 
         Raises:
             None
-
-        Example:
-            >>> obj = ClassName()
-            >>> obj.__call__(x, i)
-            0.123456789
         """
 
         if len(x.shape) == 1:
@@ -119,6 +119,7 @@ class GaussianMixtureModel:
 
         return np.sum(p[i]) / sum_p
 
+
 def covariance(X: np.ndarray, sample_weights: np.ndarray, cell: np.ndarray):
     """
     Calculate the covariance matrix for a given set of grid positions and weights.
@@ -135,8 +136,10 @@ def covariance(X: np.ndarray, sample_weights: np.ndarray, cell: np.ndarray):
         cov (np.ndarray): The covariance matrix of shape (dimension, dimension).
 
     Note:
-        The function assumes that the grid positions, weights, and total weight are provided correctly.
-        The function handles periodic and non-periodic dimensions differently to calculate the covariance matrix.
+        The function assumes that the grid positions, weights,
+        and total weight are provided correctly. The function handles
+        periodic and non-periodic dimensions differently to calculate
+        the covariance matrix.
     """
 
     totw = np.sum(sample_weights)
@@ -345,7 +348,8 @@ def get_gabriel_graph(dist_matrix2: np.ndarray):
     Generate the Gabriel graph based on the given squared distance matrix.
 
     Parameters:
-        dist_matrix2 (np.ndarray): The squared distance matrix of shape (n_points, n_points).
+        dist_matrix2 (np.ndarray):
+            The squared distance matrix of shape (n_points, n_points).
         outputname (Optional[str]): The name of the output file. Default is None.
 
     Returns:
