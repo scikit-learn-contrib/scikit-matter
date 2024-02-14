@@ -64,7 +64,7 @@ class SparseKDE(BaseEstimator):
     nmsopt : int, default=0
         The number of mean-shift refinement steps.
 
-    
+
     Attributes
     ----------
     kdecut2 : float
