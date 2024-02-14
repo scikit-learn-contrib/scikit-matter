@@ -56,6 +56,10 @@ def pairwise_euclidean_distances(
         ``(X**2).sum(axis=1)``)
         May be ignored in some cases, see the note below.
 
+    cell : array-like of shape (n_features,), default=None
+        The cell size for periodic boundary conditions.
+        None for non-periodic boundary conditions.
+
     Returns
     -------
     distances : ndarray of shape (n_samples_X, n_samples_Y)
@@ -139,16 +143,23 @@ def pairwise_mahalanobis_distances(
     """
     Calculate the pairwise Mahalanobis distance between two arrays.
 
-    Args:
-        x (np.ndarray): The first input array.
-        y (np.ndarray): The second input array.
-        cov_inv (np.ndarray): The inverse covariance matrix.
-        cell (Union[np.ndarray, None]): The cell size for periodic boundary conditions.
-        squared (bool): Whether to return the squared distance.
+    Parameters:
+        x : np.ndarray
+            The first input array.
+        y : np.ndarray
+            The second input array.
+        cov_inv : np.ndarray
+            The inverse covariance matrix.
+        cell : np.ndarray, optinal
+            The cell size for periodic boundary conditions.
+        squared : bool
+            Whether to return the squared distance.
 
-    Returns:
-        np.ndarray: The pairwise Mahalanobis distance between the two input arrays,
-            of shape (cov_inv.shape[0], x.shape[0], y.shape[0]).
+    Returns
+    -------
+    np.ndarray
+        The pairwise Mahalanobis distance between the two input arrays,
+        of shape `(cov_inv.shape[0], x.shape[0], y.shape[0])`.
     """
 
     def _mahalanobis_preprocess(cov_inv: np.ndarray):
