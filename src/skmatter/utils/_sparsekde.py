@@ -5,23 +5,22 @@ from typing import Optional, Union
 from tqdm import tqdm
 
 import numpy as np
-from ..metrics.pairwise import pairwise_euclidean_distances
 
 
 class NearestGridAssigner:
     """NearestGridAssigner Class
-    Assign descriptor to its nearest grid.
+    Assign descriptor to its nearest grid. This is an axulirary class.
     
     Args:
         cell (np.ndarray): An array of periods for each dimension of the grid.
         exclude_grid (bool): Whether to exclude the grid itself from neighbor lists."""
 
-    def __init__(self, cell: Optional[np.ndarray] = None, exclude_grid: bool = True) -> None:
+    def __init__(self, metric, cell: Optional[np.ndarray] = None, exclude_grid: bool = True) -> None:
 
         self.labels_ = None
+        self.metric = metric
         self.cell = cell
         self.exclude_grid = exclude_grid
-        self._distance = pairwise_euclidean_distances
         self.grid_pos = None
         self.grid_npoints = None
         self.grid_weight = None
@@ -49,7 +48,7 @@ class NearestGridAssigner:
         for i, point in tqdm(
             enumerate(X), desc="Assigning samples to grids...", total=len(X)
         ):
-            descriptor2grid = self._distance(
+            descriptor2grid = self.metric(
                 X=point.reshape(1, -1), Y=self.grid_pos, cell=self.cell
             )
             self.labels_.append(np.argmin(descriptor2grid))
@@ -69,6 +68,7 @@ class GaussianMixtureModel:
     means: np.ndarray
     covariances: np.ndarray
     period: Optional[np.ndarray] = None
+    """A simple class for Gaussian Mixture Model. This is an axulirary class."""
 
     def __post_init__(self):
         self.dimension = self.means.shape[1]
