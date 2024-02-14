@@ -11,9 +11,9 @@ from skmatter.metrics import (
     global_reconstruction_error,
     local_prediction_rigidity,
     local_reconstruction_error,
-    pointwise_local_reconstruction_error,
     pairwise_euclidean_distances,
     pairwise_mahalanobis_distances,
+    pointwise_local_reconstruction_error,
 )
 
 
@@ -222,12 +222,7 @@ class DistanceTests(unittest.TestCase):
     def setUpClass(cls):
         cls.X = [[1, 2], [3, 4], [5, 6]]
         cls.Y = [[7, 8], [9, 10]]
-        cls.covs = np.array(
-            [
-                [[1, 0.5], [0.5, 1]],
-                [[1, 0.], [0., 1]]
-            ]
-        )
+        cls.covs = np.array([[[1, 0.5], [0.5, 1]], [[1, 0.0], [0.0, 1]]])
         cls.cell = [5, 7]
         cls.distances = np.array(
             [
@@ -250,7 +245,7 @@ class DistanceTests(unittest.TestCase):
                     [6.92820323, 10.39230485],
                     [3.46410162, 6.92820323],
                 ],
-            cls.distances,
+                cls.distances,
             ]
         )
 

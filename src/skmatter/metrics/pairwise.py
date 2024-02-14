@@ -1,10 +1,10 @@
 from typing import Union
-import numpy as np
 
+import numpy as np
 from sklearn.metrics.pairwise import (
-    check_pairwise_arrays,
-    check_array,
     _euclidean_distances,
+    check_array,
+    check_pairwise_arrays,
 )
 
 
