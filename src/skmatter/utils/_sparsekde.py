@@ -38,7 +38,7 @@ class NearestGridAssigner:
     def __init__(
         self,
         metric,
-        cell: Optional[np.ndarray] = None,
+        cell: Union[np.ndarray, None] = None,
     ) -> None:
 
         self.labels_ = None
@@ -49,7 +49,7 @@ class NearestGridAssigner:
         self.grid_weight = None
         self.grid_neighbour = None
 
-    def fit(self, X: np.ndarray, y: Optional[np.ndarray] = None) -> None:
+    def fit(self, X: np.ndarray, y: Union[np.ndarray, None] = None) -> None:
         """Fit the data.
 
         Parameters
@@ -69,8 +69,8 @@ class NearestGridAssigner:
     def predict(
         self,
         X: np.ndarray,
-        y: Optional[np.ndarray] = None,
-        sample_weight: Optional[np.ndarray] = None,
+        y: Union[np.ndarray, None] = None,
+        sample_weight: Union[np.ndarray, None] = None,
     ) -> np.ndarray:
         """
         Predicts labels for input data and returns an array of labels.
@@ -472,7 +472,7 @@ def get_gabriel_graph(dist_matrix2: np.ndarray):
     return gabriel
 
 
-def rij(period: Optional[np.ndarray], xi: np.ndarray, xj: np.ndarray) -> np.ndarray:
+def rij(period: Union[np.ndarray, None], xi: np.ndarray, xj: np.ndarray) -> np.ndarray:
     """
     Calculate the position vector considering the periodic boundary conditions.
 
