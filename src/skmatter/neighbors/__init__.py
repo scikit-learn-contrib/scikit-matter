@@ -6,7 +6,7 @@ distribution of the sampled data reflects the (free) energetic stability of mole
 patterns. The KDE model can be used to characterize the probability distribution, and
 thus to identify the stable patterns in the system. However, the computational
 cost of KDE is `O(N^2)` where `N` is the number of sampled points, which is very
-expensive. Here we offer a sparse implementation of the KDE model with a 
+expensive. Here we offer a sparse implementation of the KDE model with a
 `O(MN)` computational cost, where `M` is the number of grid points generated from the
 sampled data.
 
