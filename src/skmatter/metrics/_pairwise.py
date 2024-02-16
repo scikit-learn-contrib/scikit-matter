@@ -14,20 +14,23 @@ def pairwise_euclidean_distances(
     """
     Compute the pairwise distance matrix between each pair from a vector array X and Y.
 
+    .. math::
+        d = XXX
+
     For efficiency reasons, the euclidean distance between a pair of row
     vector x and y is computed as::
 
         dist(x, y) = sqrt(dot(x, x) - 2 * dot(x, y) + dot(y, y))
 
-    This formulation has two advantages over other ways of computing distances.
-    First, it is computationally efficient when dealing with sparse data.
-    Second, if one argument varies but the other remains unchanged, then
-    `dot(x, x)` and/or `dot(y, y)` can be pre-computed.
+    This formulation has two advantages over other ways of computing distances. First,
+    it is computationally efficient when dealing with sparse data. Second, if one
+    argument varies but the other remains unchanged, then `dot(x, x)` and/or `dot(y, y)`
+    can be pre-computed.
 
-    However, this is not the most precise way of doing this computation,
-    because this equation potentially suffers from "catastrophic cancellation".
-    Also, the distance matrix returned by this function may not be exactly
-    symmetric as required by, e.g., ``scipy.spatial.distance`` functions.
+    However, this is not the most precise way of doing this computation, because this
+    equation potentially suffers from "catastrophic cancellation". Also, the distance
+    matrix returned by this function may not be exactly symmetric as required by, e.g.,
+    ``scipy.spatial.distance`` functions.
 
     Read more in the :ref:`User Guide <metrics>`.
 
@@ -68,7 +71,8 @@ def pairwise_euclidean_distances(
 
     See Also
     --------
-    paired_distances : Distances between pairs of elements of X and Y.
+    :func:`sklearn.metrics.pairwise.paired_distance` : Distances between pairs of
+        elements of X and Y.
 
     Notes
     -----
@@ -142,6 +146,9 @@ def pairwise_mahalanobis_distances(
 ):
     """
     Calculate the pairwise Mahalanobis distance between two arrays.
+
+    .. math::
+        d = XXX
 
     Parameters:
         x : np.ndarray

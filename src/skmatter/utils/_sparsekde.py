@@ -8,9 +8,7 @@ from tqdm import tqdm
 
 
 class NearestGridAssigner:
-    """NearestGridAssigner Class
-    Assign descriptor to its nearest grid. This is an auxilirary class.
-
+    """Assign descriptor to its nearest grid. This is an auxilirary class.
 
     Parameters
     ----------

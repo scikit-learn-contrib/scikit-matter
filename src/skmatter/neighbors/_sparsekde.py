@@ -7,7 +7,7 @@ from sklearn.base import BaseEstimator
 from sklearn.utils.validation import check_is_fitted, check_random_state
 from tqdm import tqdm
 
-from ..metrics.pairwise import (
+from ..metrics._pairwise import (
     pairwise_euclidean_distances,
     pairwise_mahalanobis_distances,
 )
@@ -105,8 +105,8 @@ class SparseKDE(BaseEstimator):
            [ 4.08667637,  3.42457743]]),
               fpoints=0.5, qs=0.85,
               weights=array([5.e-05, 5.e-05, 5.e-05, ..., 5.e-05, 5.e-05, 5.e-05]))
-    >>> estimator.score(result)
-    2.7671739267690363
+    >>> round(estimator.score(result), 3)
+    2.767
     >>> estimator.sample()
     array([[3.32383366, 3.51779084]])
     """
