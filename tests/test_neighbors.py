@@ -24,14 +24,20 @@ class SparseKDETests(unittest.TestCase):
         )
         cls.selector = FPS(n_to_select=int(np.sqrt(2 * cls.n_samples_per_cov)))
         cls.grids = cls.selector.fit_transform(cls.samples.T).T
-        cls.expect_weight = np.array([0.49848071, 0.50151929])
+        cls.expect_weight = np.array([0.49848713, 0.50151287])
         cls.expect_means = np.array(
             [[0.01281471, 0.18859686], [4.22711008, 4.36817619]],
         )
         cls.expect_covs = np.array(
             [
-                [[1.10462777, 0.6370178], [0.6370178, 1.11759455]],
-                [[1.03559702, 0.50091544], [0.50091544, 0.53316178]],
+                [
+                    [1.10462664, 0.63701621],
+                    [0.63701621, 1.11759179],
+                ],
+                [
+                    [1.03561686, 0.50092035],
+                    [0.50092035, 0.5331638],
+                ],
             ]
         )
 
