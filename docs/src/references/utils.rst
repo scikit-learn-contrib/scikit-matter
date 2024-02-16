@@ -30,3 +30,9 @@ Random Partitioning with Overlaps
 ---------------------------------
 
 .. autofunction:: skmatter.model_selection.train_test_split
+
+
+Nearest Grid Assigner
+---------------------
+
+.. autoclass:: skmatter.utils.NearestGridAssigner

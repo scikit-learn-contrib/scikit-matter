@@ -36,6 +36,12 @@ These prediction rigidities are available:
   kernel model.
 * :ref:`CPR-api` (CPR) computes the component-wise prediction rigidity of a
   linear or kernel model.
+
+TODO: Add some explanation what the pairwise metrics do.
+
+* :ref:`pairwise-euclidian-api` computes TODO
+* :ref:`pairwise-mahalanobis-api` computes TODO
+  linear or kernel model.
 """
 
 from ._reconstruction_measures import (
@@ -54,7 +60,7 @@ from ._prediction_rigidities import (
     componentwise_prediction_rigidity,
 )
 
-from .pairwise import (
+from ._pairwise import (
     pairwise_euclidean_distances,
     pairwise_mahalanobis_distances,
 )

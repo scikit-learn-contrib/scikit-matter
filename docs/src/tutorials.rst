@@ -6,3 +6,4 @@
   examples/selection/index
   examples/regression/index
   examples/reconstruction/index
+  examples/neighbors/index
