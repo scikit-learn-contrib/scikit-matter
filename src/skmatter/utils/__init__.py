@@ -26,8 +26,6 @@ from ._sparsekde import (
     local_population,
     effdim,
     oas,
-    quick_shift,
-    get_gabriel_graph,
     rij,
 )
 
@@ -47,7 +45,5 @@ __all__ = [
     "local_population",
     "effdim",
     "oas",
-    "quick_shift",
-    "get_gabriel_graph",
     "rij",
 ]
