@@ -6,6 +6,8 @@ from typing import Union
 import numpy as np
 from tqdm import tqdm
 
+from ..metrics import DIST_METRICS
+
 
 class NearestGridAssigner:
     """Assign descriptor to its nearest grid. This is an auxilirary class.
@@ -36,12 +38,16 @@ class NearestGridAssigner:
     def __init__(
         self,
         metric,
-        cell: Union[np.ndarray, None] = None,
+        metric_params: Union[dict, None] = None,
     ) -> None:
 
         self.labels_ = None
         self.metric = metric
-        self.cell = cell
+        self.metric_params = metric_params
+        if isinstance(self.metric_params, dict):
+            self.cell = self.metric_params["cell"]
+        else:
+            self.cell = None
         self.grid_pos = None
         self.grid_npoints = None
         self.grid_weight = None
@@ -93,7 +99,7 @@ class NearestGridAssigner:
         for i, point in tqdm(
             enumerate(X), desc="Assigning samples to grids...", total=len(X)
         ):
-            descriptor2grid = self.metric(
+            descriptor2grid = DIST_METRICS[self.metric](
                 X=point.reshape(1, -1), Y=self.grid_pos, cell=self.cell
             )
             self.labels_.append(np.argmin(descriptor2grid))
@@ -336,138 +342,6 @@ def oas(cov: np.ndarray, n: float, D: int) -> np.ndarray:
     phi = ((1 - 2 / D) * tr_cov2 + tr2) / ((n + 1 - 2 / D) * tr_cov2 - tr2 / D)
 
     return (1 - phi) * cov + phi * np.eye(D) * tr / D
-
-
-def quick_shift(
-    probs: np.ndarray,
-    dist_matrix: np.ndarray,
-    cutoff2: np.ndarray,
-    gs: float,
-):
-    """
-    Perform quick shift clustering on the given probability array and distance matrix.
-
-    Parameters
-    ----------
-    probs : np.ndarray
-        The log-likelihood of each sample.
-    dist_matrix : np.ndarray
-        The squared distance matrix.
-    cutoff2 : np.ndarray
-        The squared cutoff array.
-    gs : float
-        The value of gs.
-
-    Returns
-    -------
-    tuple
-        A tuple containing the cluster centers and the root indices.
-    """
-
-    def gs_next(
-        idx: int,
-        probs: np.ndarray,
-        n_shells: int,
-        distmm: np.ndarray,
-        gabriel: np.ndarray,
-    ):
-        """Find next cluster in Gabriel graph."""
-
-        ngrid = len(probs)
-        neighs = np.copy(gabriel[idx])
-        for _ in range(1, n_shells):
-            nneighs = np.full(ngrid, False)
-            for j in range(ngrid):
-                if neighs[j]:
-                    # j can be accessed from idx
-                    # j's neighbors can also be accessed from idx
-                    nneighs |= gabriel[j]
-            neighs |= nneighs
-
-        next_idx = idx
-        dmin = np.inf
-        for j in range(ngrid):
-            if probs[j] > probs[idx] and distmm[idx, j] < dmin and neighs[j]:
-                # find the closest neighbor
-                next_idx = j
-                dmin = distmm[idx, j]
-
-        return next_idx
-
-    def qs_next(
-        idx: int, idxn: int, probs: np.ndarray, distmm: np.ndarray, cutoff: float
-    ):
-        """Find next cluster with respect to cutoff."""
-
-        ngrid = len(probs)
-        dmin = np.inf
-        next_idx = idx
-        if probs[idxn] > probs[idx]:
-            next_idx = idxn
-        for j in range(ngrid):
-            if probs[j] > probs[idx] and distmm[idx, j] < min(dmin, cutoff):
-                next_idx = j
-                dmin = distmm[idx, j]
-
-        return next_idx
-
-    gabrial = get_gabriel_graph(dist_matrix)
-    idmindist = np.argmin(dist_matrix, axis=1)
-    idxroot = np.full(dist_matrix.shape[0], -1, dtype=int)
-    for i in tqdm(range(dist_matrix.shape[0]), desc="Quick-Shift"):
-        if idxroot[i] != -1:
-            continue
-        qspath = []
-        qspath.append(i)
-        while qspath[-1] != idxroot[qspath[-1]]:
-            if gs > 0:
-                idxroot[qspath[-1]] = gs_next(
-                    qspath[-1], probs, gs, dist_matrix, gabrial
-                )
-            else:
-                idxroot[qspath[-1]] = qs_next(
-                    qspath[-1],
-                    idmindist[qspath[-1]],
-                    probs,
-                    dist_matrix,
-                    cutoff2[qspath[-1]],
-                )
-            if idxroot[idxroot[qspath[-1]]] != -1:
-                break
-            qspath.append(idxroot[qspath[-1]])
-        idxroot[qspath] = idxroot[idxroot[qspath[-1]]]
-    cluster_centers = np.concatenate(
-        np.argwhere(idxroot == np.arange(dist_matrix.shape[0]))
-    )
-
-    return cluster_centers, idxroot
-
-
-def get_gabriel_graph(dist_matrix2: np.ndarray):
-    """
-    Generate the Gabriel graph based on the given squared distance matrix.
-
-    Parameters
-    ----------
-    dist_matrix2 : np.ndarray
-        The squared distance matrix of shape (n_points, n_points).
-
-    Returns
-    -------
-    np.ndarray
-        The Gabriel graph matrix of shape (n_points, n_points).
-    """
-
-    n_points = dist_matrix2.shape[0]
-    gabriel = np.full((n_points, n_points), True)
-    for i in tqdm(range(n_points), desc="Calculating Gabriel graph"):
-        gabriel[i, i] = False
-        for j in range(i, n_points):
-            if np.sum(dist_matrix2[i] + dist_matrix2[j] < dist_matrix2[i, j]):
-                gabriel[i, j] = False
-                gabriel[j, i] = False
-
-    return gabriel
 
 
 def rij(period: Union[np.ndarray, None], xi: np.ndarray, xj: np.ndarray) -> np.ndarray:

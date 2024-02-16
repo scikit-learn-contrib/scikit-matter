@@ -7,6 +7,7 @@ from sklearn.base import BaseEstimator
 from sklearn.utils.validation import check_is_fitted, check_random_state
 from tqdm import tqdm
 
+from ..clustering import QuickShift
 from ..metrics._pairwise import (
     pairwise_euclidean_distances,
     pairwise_mahalanobis_distances,
@@ -18,7 +19,6 @@ from ..utils._sparsekde import (
     effdim,
     local_population,
     oas,
-    quick_shift,
     rij,
 )
 
@@ -56,7 +56,7 @@ class SparseKDE(BaseEstimator):
         {'cell': [2, 2]}
     qs : float, default=1.0
         Scaling factor used during the QS clustering.
-    gs : int, default=-1
+    gs : int, optional, default=None
         The neighbor shell for gabriel shift.
     thrpcl : float, default=0.0
         Clusters with a pk lower than this value are merged with the NN.
@@ -123,7 +123,7 @@ class SparseKDE(BaseEstimator):
         metric: str = "periodic_euclidean",
         metric_params: Union[dict, None] = None,
         qs: float = 1.0,
-        gs: int = -1,
+        gs: Union[int, None] = None,
         thrpcl: float = 0.0,
         fspread: float = -1.0,
         fpoints: float = 0.15,
@@ -146,7 +146,7 @@ class SparseKDE(BaseEstimator):
         self.fspread = fspread
         self.fpoints = fpoints
         self.nmsopt = nmsopt
-        self.kdecut2 = None
+        self.kdecut2 = 9 * (np.sqrt(descriptors.shape[1]) + 1) ** 2
         self.model = None
         self.cluster_mean = None
         self.cluster_cov = None
@@ -180,21 +180,26 @@ class SparseKDE(BaseEstimator):
             Returns the instance itself.
         """
 
-        self.kdecut2 = 9 * (np.sqrt(X.shape[1]) + 1) ** 2
+        self._grids = X
         grid_dist_mat = DIST_METRICS[self.metric](X, X, squared=True, cell=self.cell)
         np.fill_diagonal(grid_dist_mat, np.inf)
         min_grid_dist = np.min(grid_dist_mat, axis=1)
-        _, grid_neighbour, sample_labels_, sample_weight = (
+        _, self._grid_neighbour, sample_labels_, self._sample_weights = (
             self._assign_descriptors_to_grids(X)
         )
-        h_invs, normkernels, qscut2 = self._computes_localization(
-            X, sample_weight, min_grid_dist
+        self._h_invs, self._normkernels, qscut2 = self._computes_localization(
+            X, self._sample_weights, min_grid_dist
         )
-        probs = self._computes_kernel_density_estimation(
-            X, sample_weight, h_invs, normkernels, grid_neighbour
-        )
+        self._qscut2 = qscut2
+        self._h = np.array([np.linalg.inv(h_inv) for h_inv in self._h_invs])
+        probs = self._computes_kernel_density_estimation(X)
         normpks = LSE(probs)
-        cluster_centers, idxroot = quick_shift(probs, grid_dist_mat, qscut2, self.gs)
+        clustering = QuickShift(
+            qscut2, self.gs, metric=self.metric, metric_params=self.metric_params
+        )
+        clustering.fit(X, samples_weight=probs)
+        cluster_centers = clustering.cluster_centers_idx_
+        idxroot = clustering.labels_
         cluster_centers, idxroot = self._post_process(
             X, cluster_centers, idxroot, probs, normpks
         )
@@ -203,8 +208,8 @@ class SparseKDE(BaseEstimator):
                 X,
                 sample_labels_,
                 cluster_centers,
-                h_invs,
-                normkernels,
+                self._h_invs,
+                self._normkernels,
                 probs,
                 idxroot,
                 normpks,
@@ -233,7 +238,9 @@ class SparseKDE(BaseEstimator):
             probability densities, so values will be low for high-dimensional
             data.
         """
-        return np.array([self.model(x) for x in X])
+        return self._computes_kernel_density_estimation(
+            X
+        )  # np.array([self.model(x) for x in X])
 
     def score(self, X, y=None):
         """Compute the total log-likelihood under the model.
@@ -281,22 +288,20 @@ class SparseKDE(BaseEstimator):
         check_is_fitted(self)
         rng = check_random_state(random_state)
         u = rng.uniform(0, 1, size=n_samples)
-        cumsum_weight = np.cumsum(np.asarray(self.cluster_weight))
+        cumsum_weight = np.cumsum(np.asarray(self._sample_weights))
         sum_weight = cumsum_weight[-1]
         idxs = np.searchsorted(cumsum_weight, u * sum_weight)
 
         return np.concatenate(
             [
-                np.atleast_2d(
-                    rng.multivariate_normal(self.cluster_mean[i], self.cluster_cov[i])
-                )
+                np.atleast_2d(rng.multivariate_normal(self._grids[i], self._h[i]))
                 for i in idxs
             ]
         )
 
     def _assign_descriptors_to_grids(self, X):
 
-        assigner = NearestGridAssigner(DIST_METRICS[self.metric], self.cell)
+        assigner = NearestGridAssigner(self.metric, self.metric_params)
         assigner.fit(X)
         labels = assigner.predict(self.descriptors, sample_weight=self.weights)
         grid_npoints = assigner.grid_npoints
@@ -411,45 +416,43 @@ class SparseKDE(BaseEstimator):
 
         return h_inv, normkernel, qscut2, h_tr_normed
 
-    def _computes_kernel_density_estimation(
-        self,
-        X: np.ndarray,
-        sample_weights: np.ndarray,
-        h_invs: np.ndarray,
-        normkernel: np.ndarray,
-        neighbour: dict,
-    ):
+    def _computes_kernel_density_estimation(self, X: np.ndarray):
 
         prob = np.full(len(X), -np.inf)
         dummd1s_mat = pairwise_mahalanobis_distances(
-            X, X, h_invs, self.cell, squared=True
+            X, self._grids, self._h_invs, self.cell, squared=True
         )
         for i in tqdm(
             range(len(X)), desc="Computing kernel density on reference points"
         ):
-            for j, dummd1 in enumerate(dummd1s_mat[:, i, i]):
+            for j, dummd1 in enumerate(np.diagonal(dummd1s_mat[:, i, :])):
+                # The second point is the mean corresponding to the cov
                 if dummd1 > self.kdecut2:
-                    lnk = -0.5 * (normkernel[j] + dummd1) + np.log(sample_weights[j])
+                    lnk = -0.5 * (self._normkernels[j] + dummd1) + np.log(
+                        self._sample_weights[j]
+                    )
                     prob[i] = LSE([prob[i], lnk])
                 else:
-                    neighbours = neighbour[j][
-                        np.any(self.descriptors[neighbour[j]] != X[i], axis=1)
+                    neighbours = self._grid_neighbour[j][
+                        np.any(
+                            self.descriptors[self._grid_neighbour[j]] != X[i], axis=1
+                        )
                     ]
                     if neighbours.size == 0:
                         continue
                     dummd1s = pairwise_mahalanobis_distances(
                         self.descriptors[neighbours],
                         X[i][np.newaxis, ...],
-                        h_invs[j],
+                        self._h_invs[j],
                         self.cell,
                         squared=True,
                     ).reshape(-1)
-                    lnks = -0.5 * (normkernel[j] + dummd1s) + np.log(
+                    lnks = -0.5 * (self._normkernels[j] + dummd1s) + np.log(
                         self.weights[neighbours]
                     )
                     prob[i] = LSE(np.concatenate([[prob[i]], lnks]))
 
-        prob -= np.log(np.sum(sample_weights))
+        prob -= np.log(np.sum(self._sample_weights))
 
         return prob
 
