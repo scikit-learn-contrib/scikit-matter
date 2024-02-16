@@ -144,19 +144,24 @@ def pairwise_mahalanobis_distances(
     cell: Union[np.ndarray, None] = None,
     squared: bool = False,
 ):
-    """
-    Calculate the pairwise Mahalanobis distance between two arrays.
+    r"""
+    Calculate the pairwise Mahalanobis distance between two arrays. This metric is used
+    for calculating the distances between observations from Gaussian distributions. It
+    is defined as:
 
     .. math::
-        d = XXX
+        d_{\Sigma}(x, y)^2 = (x - y)^T \Sigma^{-1} (x - y)
+
+    where :math:`\Sigma` is the covariance matrix, :math:`x` and :math:`y` are
+    observations from the same distribution.
 
     Parameters:
-        x : np.ndarray
-            The first input array.
-        y : np.ndarray
-            The second input array.
+        x : np.ndarray of shape (n_samples_X, n_features)
+            An array where each row is a sample and each column is a feature.
+        y : np.ndarray of shape (n_samples_Y, n_features)
+            An array where each row is a sample and each column is a feature.
         cov_inv : np.ndarray
-            The inverse covariance matrix.
+            The inverse covariance matrix of shape (n_features, n_features).
         cell : np.ndarray, optinal
             The cell size for periodic boundary conditions.
         squared : bool
@@ -167,6 +172,18 @@ def pairwise_mahalanobis_distances(
     np.ndarray
         The pairwise Mahalanobis distance between the two input arrays,
         of shape `(cov_inv.shape[0], x.shape[0], y.shape[0])`.
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> from skmatter.metrics import pairwise_mahalanobis_distances
+    >>> iv = np.array([[1, 0.5, 0.5], [0.5, 1, 0.5], [0.5, 0.5, 1]])
+    >>> X = np.array([[1, 0, 0], [0, 2, 0], [2, 0, 0]])
+    >>> Y = np.array([[0, 1, 0]])
+    >>> pairwise_mahalanobis_distances(X, Y, iv)
+    array([[[1.        ],
+            [1.        ],
+            [1.73205081]]])
     """
 
     def _mahalanobis_preprocess(cov_inv: np.ndarray):
