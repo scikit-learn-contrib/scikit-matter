@@ -462,12 +462,6 @@ class SparseKDE(BaseEstimator):
         normpks: float,
     ):
 
-        def getidmax(v1: np.ndarray, probs: np.ndarray, clusterid: int):
-
-            tmpv = np.copy(probs)
-            tmpv[v1 != clusterid] = -np.inf
-            return np.argmax(tmpv)
-
         nk = len(cluster_centers)
         to_merge = np.full(nk, False)
         for k in range(nk):
@@ -496,7 +490,9 @@ class SparseKDE(BaseEstimator):
             nk = len(cluster_centers)
             for i in range(nk):
                 dummd1yi1 = cluster_centers[i]
-                cluster_centers[i] = getidmax(idxroot, probs, cluster_centers[i])
+                cluster_centers[i] = np.argmax(
+                    np.ma.array(probs, mask=idxroot != cluster_centers[i])
+                )
                 idxroot[idxroot == dummd1yi1] = cluster_centers[i]
 
         return cluster_centers, idxroot
@@ -531,30 +527,48 @@ class SparseKDE(BaseEstimator):
         center_idx = np.unique(idxroot)
 
         for k in range(len(cluster_centers)):
-            cluster_mean[k] = X[center_idx[k]]
             cluster_weight[k] = np.exp(LSE(probs[idxroot == center_idx[k]]) - normpks)
-            for _ in range(self.nmsopt):
-                # Mean shift optimization
-                msmu = np.zeros(dimension, dtype=float)
-                tmppks = -np.inf
-                for i, x in enumerate(X):
-                    dummd1 = pairwise_mahalanobis_distances(
-                        x[np.newaxis, ...],
-                        X[center_idx[k]][np.newaxis, ...],
-                        h_invs[center_idx[k]],
-                        self.cell,
-                        squared=True,
-                    )[0]
-                    msw = -0.5 * (normkernels[center_idx[k]] + dummd1) + probs[i]
-                    tmpmsmu = rij(self.cell, x, X[center_idx[k]])
-                    msmu += np.exp(msw) * tmpmsmu
-                tmppks = LSE([tmppks, msw])
-                cluster_mean[k] += msmu / np.exp(tmppks)
+            cluster_mean[k] = self._mean_shift_optimizaton(
+                X[center_idx[k]],
+                X,
+                h_invs[center_idx[k]],
+                normkernels[center_idx[k]],
+                probs,
+            )
             cluster_cov[k] = self._update_cluster_cov(
                 X, k, sample_labels, probs, idxroot, center_idx
             )
 
         return cluster_weight, cluster_mean, cluster_cov
+
+    def _mean_shift_optimizaton(
+        self,
+        mean: np.ndarray,
+        X: np.array,
+        h_inv: np.ndarray,
+        normkernel: float,
+        probs: np.ndarray,
+    ):
+        # Never tested and not used in any available example cases
+        grid = np.copy(mean)
+        for _ in range(self.nmsopt):
+            # Mean shift optimization
+            msmu = np.zeros(X.shape[1], dtype=float)
+            tmppks = -np.inf
+            dummd1s = pairwise_mahalanobis_distances(
+                X,
+                grid[np.newaxis, ...],
+                h_inv,
+                self.cell,
+                squared=True,
+            )[0]
+            msws = -0.5 * (normkernel + dummd1s) + probs
+            tmpmsmu = rij(self.cell, X, grid)
+            msmu += np.sum(np.exp(msws) * tmpmsmu, axis=1)
+            tmppks = LSE(np.concatenate([tmppks, msws]))
+            mean += msmu / np.exp(tmppks)
+
+        return mean
 
     def _update_cluster_cov(
         self,
