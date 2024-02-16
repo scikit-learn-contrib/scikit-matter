@@ -32,8 +32,11 @@ class SparseKDE(BaseEstimator):
     """A sparse implementation of the Kernel Density Estimation.
     This class is used to build a sparse kernel density estimator.
     It takes a set of descriptors and a set of weights as input,
-    and fit the KDE model on the sampled data (e.g. the grid point
-    selected by FPS).
+    and fit the KDE model on the sampled point (e.g. the grid point
+    selected by FPS). First, the probability density is estimated for
+    each sampled point. Then, quick shift clustering is applied to the
+    grid points. Finally, a kernel density estimator is built based on
+    the clustering results.
 
     Parameters
     ----------
@@ -69,16 +72,17 @@ class SparseKDE(BaseEstimator):
     ----------
     kdecut2 : float
         The cut-off value for the KDE.
-    cell : np.ndarray
+    cell : numpy.ndarray
         The cell dimension for the metric.
-    model : `GaussianMixtureModel`
+    model : :class:`skmatter.utils.GaussianMixtureModel`
         The model of the KDE.
-    cluster_mean : np.ndarray
+    cluster_mean : numpy.ndarray of shape (n_clusters, n_features)
         The mean of each gaussian.
-    cluster_cov : np.ndarray
-        The covariance of each gaussian.
-    cluster_weight : np.ndarray
+    cluster_cov : numpy.ndarray of shape (n_clusters, n_features)
+        The covariance matrix of each gaussian.
+    cluster_weight : numpy.ndarray of shape (n_clusters, n_features)
         The weight of each gaussian.
+
 
     Examples
     --------
@@ -530,6 +534,7 @@ class SparseKDE(BaseEstimator):
             cluster_mean[k] = X[center_idx[k]]
             cluster_weight[k] = np.exp(LSE(probs[idxroot == center_idx[k]]) - normpks)
             for _ in range(self.nmsopt):
+                # Mean shift optimization
                 msmu = np.zeros(dimension, dtype=float)
                 tmppks = -np.inf
                 for i, x in enumerate(X):
