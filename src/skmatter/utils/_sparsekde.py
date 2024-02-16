@@ -148,7 +148,7 @@ class GaussianMixtureModel:
         self.cov_dets = np.linalg.det(self.covariances)
         self.norms = 1 / np.sqrt((2 * np.pi) ** self.dimension * self.cov_dets)
 
-    def __call__(self, x: np.ndarray, i: Union[int, list[int], None] = None):
+    def __call__(self, x: np.ndarray, i: Union[int, list, None] = None):
         """
         Calculate the probability density function (PDF) value for a given input array.
 
