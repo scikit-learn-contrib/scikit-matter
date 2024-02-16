@@ -12,5 +12,6 @@ API Reference
   linear_models
   decomposition
   metrics
+  neighbors
   datasets
   utils
