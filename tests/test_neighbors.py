@@ -3,7 +3,8 @@ import unittest
 import numpy as np
 
 from skmatter.feature_selection import FPS
-from skmatter.neighbors import SparseKDE, covariance, effdim, oas
+from skmatter.neighbors import SparseKDE
+from skmatter.utils import covariance, effdim, oas
 
 
 class SparseKDETests(unittest.TestCase):

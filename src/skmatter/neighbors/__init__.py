@@ -1,6 +1,5 @@
 """
-Some introduction what the neighbors directory is about.
-Get some inspiration form sklearn.
+This module implements the sparse kernel density estimator.
 
 * :ref:`sparse-kde-api` TODO
 """
