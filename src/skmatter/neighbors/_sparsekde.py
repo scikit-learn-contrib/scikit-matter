@@ -7,19 +7,16 @@ from sklearn.base import BaseEstimator
 from sklearn.utils.validation import check_is_fitted, check_random_state
 from tqdm import tqdm
 
-from ..clustering import QuickShift
 from ..metrics._pairwise import (
     pairwise_euclidean_distances,
     pairwise_mahalanobis_distances,
 )
 from ..utils._sparsekde import (
-    GaussianMixtureModel,
     NearestGridAssigner,
     covariance,
     effdim,
     local_population,
     oas,
-    rij,
 )
 
 
@@ -110,9 +107,7 @@ class SparseKDE(BaseEstimator):
               fpoints=0.5, qs=0.85,
               weights=array([5.e-05, 5.e-05, 5.e-05, ..., 5.e-05, 5.e-05, 5.e-05]))
     >>> round(estimator.score(result), 3)
-    2.767
-    >>> estimator.sample()
-    array([[3.32383366, 3.51779084]])
+    -759.831
     """
 
     def __init__(
@@ -134,11 +129,8 @@ class SparseKDE(BaseEstimator):
         self.metric_params = metric_params
         self.cell = metric_params["cell"] if metric_params is not None else None
         self.descriptors = descriptors
-        self.weights = (
-            weights
-            if weights is not None
-            else np.ones(len(descriptors)) / len(descriptors)
-        )
+        self.weights = weights if weights is not None else np.ones(len(descriptors))
+        self.weights /= np.sum(self.weights)
         self.nsamples = len(descriptors)
         self.qs = qs
         self.gs = gs
@@ -184,7 +176,7 @@ class SparseKDE(BaseEstimator):
         grid_dist_mat = DIST_METRICS[self.metric](X, X, squared=True, cell=self.cell)
         np.fill_diagonal(grid_dist_mat, np.inf)
         min_grid_dist = np.min(grid_dist_mat, axis=1)
-        _, self._grid_neighbour, sample_labels_, self._sample_weights = (
+        _, self._grid_neighbour, self._sample_labels_, self._sample_weights = (
             self._assign_descriptors_to_grids(X)
         )
         self._h_invs, self._normkernels, qscut2 = self._computes_localization(
@@ -192,32 +184,7 @@ class SparseKDE(BaseEstimator):
         )
         self._qscut2 = qscut2
         self._h = np.array([np.linalg.inv(h_inv) for h_inv in self._h_invs])
-        probs = self._computes_kernel_density_estimation(X)
-        normpks = LSE(probs)
-        clustering = QuickShift(
-            qscut2, self.gs, metric=self.metric, metric_params=self.metric_params
-        )
-        clustering.fit(X, samples_weight=probs)
-        cluster_centers = clustering.cluster_centers_idx_
-        idxroot = clustering.labels_
-        cluster_centers, idxroot = self._post_process(
-            X, cluster_centers, idxroot, probs, normpks
-        )
-        self.cluster_weight, self.cluster_mean, self.cluster_cov = (
-            self._generate_probability_model(
-                X,
-                sample_labels_,
-                cluster_centers,
-                self._h_invs,
-                self._normkernels,
-                probs,
-                idxroot,
-                normpks,
-            )
-        )
-        self.model = GaussianMixtureModel(
-            self.cluster_weight, self.cluster_mean, self.cluster_cov, cell=self.cell
-        )
+
         self.fitted_ = True
 
         return self
@@ -455,212 +422,3 @@ class SparseKDE(BaseEstimator):
         prob -= np.log(np.sum(self._sample_weights))
 
         return prob
-
-    def _post_process(
-        self,
-        X: np.ndarray,
-        cluster_centers: np.ndarray,
-        idxroot: np.ndarray,
-        probs: np.ndarray,
-        normpks: float,
-    ):
-
-        nk = len(cluster_centers)
-        to_merge = np.full(nk, False)
-        for k in range(nk):
-            dummd1 = np.exp(LSE(probs[idxroot == cluster_centers[k]]) - normpks)
-            to_merge[k] = dummd1 > self.thrpcl
-        # merge the outliers
-        for i in range(nk):
-            if not to_merge[k]:
-                continue
-            dummd1yi1 = cluster_centers[i]
-            dummd1 = np.inf
-            for j in range(nk):
-                if to_merge[k]:
-                    continue
-                dummd2 = self.metric(
-                    X[idxroot[dummd1yi1]], X[idxroot[j]], cell=self.cell
-                )
-                if dummd2 < dummd1:
-                    dummd1 = dummd2
-                    cluster_centers[i] = j
-            idxroot[idxroot == dummd1yi1] = cluster_centers[i]
-        if sum(to_merge) > 0:
-            cluster_centers = np.concatenate(
-                np.argwhere(idxroot == np.arange(len(idxroot)))
-            )
-            nk = len(cluster_centers)
-            for i in range(nk):
-                dummd1yi1 = cluster_centers[i]
-                cluster_centers[i] = np.argmax(
-                    np.ma.array(probs, mask=idxroot != cluster_centers[i])
-                )
-                idxroot[idxroot == dummd1yi1] = cluster_centers[i]
-
-        return cluster_centers, idxroot
-
-    def _generate_probability_model(
-        self,
-        X: np.ndarray,
-        sample_labels: np.ndarray,
-        cluster_centers: np.ndarray,
-        h_invs: np.ndarray,
-        normkernels: np.ndarray,
-        probs: np.ndarray,
-        idxroot: np.ndarray,
-        normpks: float,
-    ):
-        """
-        Generates a probability model based on the given inputs.
-
-        Parameters:
-            None
-
-        Returns:
-            None
-        """
-
-        dimension = X.shape[1]
-        cluster_mean = np.zeros((len(cluster_centers), dimension), dtype=float)
-        cluster_cov = np.zeros(
-            (len(cluster_centers), dimension, dimension), dtype=float
-        )
-        cluster_weight = np.zeros(len(cluster_centers), dtype=float)
-        center_idx = np.unique(idxroot)
-
-        for k in range(len(cluster_centers)):
-            cluster_weight[k] = np.exp(LSE(probs[idxroot == center_idx[k]]) - normpks)
-            cluster_mean[k] = self._mean_shift_optimizaton(
-                X[center_idx[k]],
-                X,
-                h_invs[center_idx[k]],
-                normkernels[center_idx[k]],
-                probs,
-            )
-            cluster_cov[k] = self._update_cluster_cov(
-                X, k, sample_labels, probs, idxroot, center_idx
-            )
-
-        return cluster_weight, cluster_mean, cluster_cov
-
-    def _mean_shift_optimizaton(
-        self,
-        mean: np.ndarray,
-        X: np.array,
-        h_inv: np.ndarray,
-        normkernel: float,
-        probs: np.ndarray,
-    ):
-        # Never tested and not used in any available example cases
-        grid = np.copy(mean)
-        for _ in range(self.nmsopt):
-            # Mean shift optimization
-            msmu = np.zeros(X.shape[1], dtype=float)
-            tmppks = -np.inf
-            dummd1s = pairwise_mahalanobis_distances(
-                X,
-                grid[np.newaxis, ...],
-                h_inv,
-                self.cell,
-                squared=True,
-            )[0]
-            msws = -0.5 * (normkernel + dummd1s) + probs
-            tmpmsmu = rij(self.cell, X, grid)
-            msmu += np.sum(np.exp(msws) * tmpmsmu, axis=1)
-            tmppks = LSE(np.concatenate([tmppks, msws]))
-            mean += msmu / np.exp(tmppks)
-
-        return mean
-
-    def _update_cluster_cov(
-        self,
-        X: np.ndarray,
-        k: int,
-        sample_labels: np.ndarray,
-        probs: np.ndarray,
-        idxroot: np.ndarray,
-        center_idx: np.ndarray,
-    ):
-
-        if self.cell is not None:
-            cov = self._get_lcov_clusterp(
-                len(X), self.nsamples, X, idxroot, center_idx[k], probs, self.cell
-            )
-            if np.sum(idxroot == center_idx[k]) == 1:
-                cov = self._get_lcov_clusterp(
-                    self.nsamples,
-                    self.nsamples,
-                    self.descriptors,
-                    sample_labels,
-                    center_idx[k],
-                    self.weights,
-                    self.cell,
-                )
-                print("Warning: single point cluster!")
-        else:
-            cov = self._get_lcov_cluster(
-                len(X), X, idxroot, center_idx[k], probs, self.cell
-            )
-            if np.sum(idxroot == center_idx[k]) == 1:
-                cov = self._get_lcov_cluster(
-                    self.nsamples,
-                    self.descriptors,
-                    sample_labels,
-                    center_idx[k],
-                    self.weights,
-                    self.cell,
-                )
-                print("Warning: single point cluster!")
-            cov = oas(
-                cov,
-                LSE(probs[idxroot == center_idx[k]]) * self.nsamples,
-                X.shape[1],
-            )
-
-        return cov
-
-    def _get_lcov_cluster(
-        self,
-        N: int,
-        x: np.ndarray,
-        clroots: np.ndarray,
-        idcl: int,
-        probs: np.ndarray,
-        cell: np.ndarray,
-    ):
-
-        ww = np.zeros(N)
-        normww = LSE(probs[clroots == idcl])
-        ww[clroots == idcl] = np.exp(probs[clroots == idcl] - normww)
-        cov = covariance(x, ww, cell)
-
-        return cov
-
-    def _get_lcov_clusterp(
-        self,
-        N: int,
-        Ntot: int,
-        x: np.ndarray,
-        clroots: np.ndarray,
-        idcl: int,
-        probs: np.ndarray,
-        cell: np.ndarray,
-    ):
-
-        ww = np.zeros(N)
-        totnormp = LSE(probs)
-        cov = np.zeros((x.shape[1], x.shape[1]), dtype=float)
-        xx = np.zeros(x.shape, dtype=float)
-        ww[clroots == idcl] = np.exp(probs[clroots == idcl] - totnormp)
-        ww *= Ntot
-        nlk = np.sum(ww)
-        for i in range(x.shape[1]):
-            xx[:, i] = x[:, i] - np.round(x[:, i] / cell[i]) * cell[i]
-            r2 = (np.sum(ww * np.cos(xx[:, i])) / nlk) ** 2 + (
-                np.sum(ww * np.sin(xx[:, i])) / nlk
-            ) ** 2
-            re2 = (nlk / (nlk - 1)) * (r2 - (1 / nlk))
-            cov[i, i] = 1 / (np.sqrt(re2) * (2 - re2) / (1 - re2))
-
-        return cov

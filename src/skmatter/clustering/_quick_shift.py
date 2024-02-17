@@ -9,6 +9,7 @@ from ..metrics import DIST_METRICS
 
 class QuickShift(BaseEstimator):
     """TODO"""
+
     def __init__(
         self,
         dist_cutoff2: Union[float, None] = None,
@@ -18,7 +19,7 @@ class QuickShift(BaseEstimator):
     ):
         if (dist_cutoff2 is None) and (gabriel_shell is None):
             raise ValueError("Either dist_cutoff or gabriel_depth must be set.")
-        self.dist_cutoff = dist_cutoff2
+        self.dist_cutoff2 = dist_cutoff2
         self.gabriel_shell = gabriel_shell
         self.metric = metric
         self.metric_params = metric_params
@@ -30,8 +31,8 @@ class QuickShift(BaseEstimator):
     def fit(self, X, y=None, samples_weight=None):
 
         dist_matrix = DIST_METRICS[self.metric](X, X, squared=True, cell=self.cell)
-        if self.dist_cutoff is None:
-            gabrial = get_gabriel_graph(dist_matrix)
+        if self.dist_cutoff2 is None:
+            gabrial = _get_gabriel_graph(dist_matrix)
         idmindist = np.argmin(dist_matrix, axis=1)
         idxroot = np.full(dist_matrix.shape[0], -1, dtype=int)
         for i in tqdm(range(dist_matrix.shape[0]), desc="Quick-Shift"):
@@ -51,7 +52,7 @@ class QuickShift(BaseEstimator):
                         idmindist[current],
                         samples_weight,
                         dist_matrix,
-                        self.dist_cutoff[current],
+                        self.dist_cutoff2[current],
                     )
                 if idxroot[idxroot[current]] != -1:
                     # Found a path to a root
@@ -116,7 +117,7 @@ class QuickShift(BaseEstimator):
         return next_idx
 
 
-def get_gabriel_graph(dist_matrix2: np.ndarray):
+def _get_gabriel_graph(dist_matrix2: np.ndarray):
     """
     Generate the Gabriel graph based on the given squared distance matrix.
 
