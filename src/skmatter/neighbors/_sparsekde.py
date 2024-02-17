@@ -11,13 +11,7 @@ from ..metrics._pairwise import (
     pairwise_euclidean_distances,
     pairwise_mahalanobis_distances,
 )
-from ..utils._sparsekde import (
-    NearestGridAssigner,
-    covariance,
-    effdim,
-    local_population,
-    oas,
-)
+from ..utils._sparsekde import effdim, oas
 
 
 DIST_METRICS = {
@@ -51,18 +45,12 @@ class SparseKDE(BaseEstimator):
         Additional parameters to be passed to the use of
         metric.  i.e. the cell dimension for `periodic_euclidean`
         {'cell': [2, 2]}
-    qs : float, default=1.0
-        Scaling factor used during the QS clustering.
-    gs : int, optional, default=None
-        The neighbor shell for gabriel shift.
-    thrpcl : float, default=0.0
-        Clusters with a pk lower than this value are merged with the NN.
     fspread : float, default=-1.0
-        The fractional variance for bandwidth estimation.
+        The fractional "space" occupied by the voronoi cell of each grid. Use this when
+        each cell is of a similar size.
     fpoints : float, default=0.15
-        The fractional number of grid points.
-    nmsopt : int, default=0
-        The number of mean-shift refinement steps.
+        The fractional number of points in the voronoi cell of each grid points. Use
+        this when each cell has a similar number of points.
 
 
     Attributes
@@ -95,7 +83,7 @@ class SparseKDE(BaseEstimator):
     >>> samples = np.concatenate([sample1, sample2])
     >>> selector = FPS(n_to_select=int(np.sqrt(2 * n_samples)))
     >>> result = selector.fit_transform(samples.T).T
-    >>> estimator = SparseKDE(samples, None, fpoints=0.5, qs=0.85)
+    >>> estimator = SparseKDE(samples, None, fpoints=0.5)
     >>> estimator.fit(result)
     SparseKDE(descriptors=array([[-1.72779275, -1.32763554],
            [-1.96805856,  0.27283464],
@@ -104,7 +92,7 @@ class SparseKDE(BaseEstimator):
            [ 3.75859454,  3.10217702],
            [ 1.6544348 ,  3.41851374],
            [ 4.08667637,  3.42457743]]),
-              fpoints=0.5, qs=0.85,
+              fpoints=0.5,
               weights=array([5.e-05, 5.e-05, 5.e-05, ..., 5.e-05, 5.e-05, 5.e-05]))
     >>> round(estimator.score(result), 3)
     -759.831
@@ -117,12 +105,8 @@ class SparseKDE(BaseEstimator):
         kernel: str = "gaussian",
         metric: str = "periodic_euclidean",
         metric_params: Union[dict, None] = None,
-        qs: float = 1.0,
-        gs: Union[int, None] = None,
-        thrpcl: float = 0.0,
         fspread: float = -1.0,
         fpoints: float = 0.15,
-        nmsopt: int = 0,
     ):
         self.kernel = kernel
         self.metric = metric
@@ -132,12 +116,8 @@ class SparseKDE(BaseEstimator):
         self.weights = weights if weights is not None else np.ones(len(descriptors))
         self.weights /= np.sum(self.weights)
         self.nsamples = len(descriptors)
-        self.qs = qs
-        self.gs = gs
-        self.thrpcl = thrpcl
         self.fspread = fspread
         self.fpoints = fpoints
-        self.nmsopt = nmsopt
         self.kdecut2 = 9 * (np.sqrt(descriptors.shape[1]) + 1) ** 2
         self.model = None
         self.cluster_mean = None
@@ -179,10 +159,9 @@ class SparseKDE(BaseEstimator):
         _, self._grid_neighbour, self._sample_labels_, self._sample_weights = (
             self._assign_descriptors_to_grids(X)
         )
-        self._h_invs, self._normkernels, qscut2 = self._computes_localization(
+        self._h_invs, self._normkernels, self._qscut2 = self._computes_localization(
             X, self._sample_weights, min_grid_dist
         )
-        self._qscut2 = qscut2
         self._h = np.array([np.linalg.inv(h_inv) for h_inv in self._h_invs])
 
         self.fitted_ = True
@@ -315,8 +294,6 @@ class SparseKDE(BaseEstimator):
                 self._bandwidth_estimation_from_localization(X, wlocal, flocal, i)
             )
 
-        qscut2 *= self.qs**2
-
         return h_invs, normkernels, qscut2
 
     def _localization_based_on_fraction_of_points(
@@ -422,3 +399,203 @@ class SparseKDE(BaseEstimator):
         prob -= np.log(np.sum(self._sample_weights))
 
         return prob
+
+
+class NearestGridAssigner:
+    """Assign descriptor to its nearest grid. This is an auxilirary class.
+
+    Parameters
+    ----------
+    metric :
+        The metric to use.
+        Currently only `sklearn.metrics.pairwise.pairwise_euclidean_distances`.
+    cell : np.ndarray
+        An array of periods for each dimension of the grid.
+
+
+    Attributes
+    ----------
+    grid_pos : np.ndarray
+        An array of grid positions.
+    grid_npoints : np.ndarray
+        An array of number of points in each grid.
+    grid_weight : np.ndarray
+        An array of weights in each grid.
+    grid_neighbour : dict
+        A dictionary of neighbor lists for each grid.
+    labels_ : np.ndarray
+        An array of labels for each descriptor.
+    """
+
+    def __init__(
+        self,
+        metric,
+        metric_params: Union[dict, None] = None,
+    ) -> None:
+
+        self.labels_ = None
+        self.metric = metric
+        self.metric_params = metric_params
+        if isinstance(self.metric_params, dict):
+            self.cell = self.metric_params["cell"]
+        else:
+            self.cell = None
+        self.grid_pos = None
+        self.grid_npoints = None
+        self.grid_weight = None
+        self.grid_neighbour = None
+
+    def fit(self, X: np.ndarray, y: Union[np.ndarray, None] = None) -> None:
+        """Fit the data.
+
+        Parameters
+        ----------
+            X : np.ndarray
+                An array of grid positions.
+            y : np.ndarray, optional, default=None
+                Igonred.
+        """
+
+        ngrid = len(X)
+        self.grid_pos = X
+        self.grid_npoints = np.zeros(ngrid, dtype=int)
+        self.grid_weight = np.zeros(ngrid, dtype=float)
+        self.grid_neighbour = {i: [] for i in range(ngrid)}
+
+    def predict(
+        self,
+        X: np.ndarray,
+        y: Union[np.ndarray, None] = None,
+        sample_weight: Union[np.ndarray, None] = None,
+    ) -> np.ndarray:
+        """
+        Predicts labels for input data and returns an array of labels.
+
+        Parameters
+        ----------
+        X : np.ndarray
+            Input data to predict labels for.
+        y : np.ndarray, optional, default=None
+            Igonred.
+        sample_weight : np.ndarray, optional
+            Sample weights for each data point.
+
+        Returns
+        -------
+        np.ndarray
+            Array of predicted labels.
+        """
+        if sample_weight is None:
+            sample_weight = np.ones(len(X)) / len(X)
+        self.labels_ = []
+        for i, point in tqdm(
+            enumerate(X), desc="Assigning samples to grids...", total=len(X)
+        ):
+            descriptor2grid = DIST_METRICS[self.metric](
+                X=point.reshape(1, -1), Y=self.grid_pos, cell=self.cell
+            )
+            self.labels_.append(np.argmin(descriptor2grid))
+            self.grid_npoints[self.labels_[-1]] += 1
+            self.grid_weight[self.labels_[-1]] += sample_weight[i]
+            self.grid_neighbour[self.labels_[-1]].append(i)
+
+        for key in self.grid_neighbour:
+            self.grid_neighbour[key] = np.array(self.grid_neighbour[key])
+
+        return self.labels_
+
+
+def covariance(X: np.ndarray, sample_weights: np.ndarray, cell: np.ndarray):
+    """
+    Calculate the covariance matrix for a given set of grid positions and weights.
+
+    Parameters
+    ----------
+    X : np.ndarray
+        An array of shape (nsample, dimension) representing the grid positions.
+    sample_weights : np.ndarray
+        An array of shape (nsample,) representing the weights of the grid positions.
+    cell : np.ndarray
+        An array of shape (dimension,) representing the periodicity of each dimension.
+    Returns
+    -------
+    np.ndarray
+        The covariance matrix of shape (dimension, dimension).
+    Notes
+    -----
+    The function assumes that the grid positions, weights,
+    and total weight are provided correctly.
+    The function handles periodic and non-periodic dimensions differently to
+    calculate the covariance matrix.
+    """
+
+    totw = np.sum(sample_weights)
+
+    if cell is None:
+        xm = np.average(X, axis=0, weights=sample_weights / totw)
+    else:
+        sumsin = np.average(
+            np.sin(X) * (2 * np.pi) / cell,
+            axis=0,
+            weights=sample_weights / totw,
+        )
+        sumcos = np.average(
+            np.cos(X) * (2 * np.pi) / cell,
+            axis=0,
+            weights=sample_weights / totw,
+        )
+        xm = np.arctan2(sumsin, sumcos)
+
+    xxm = X - xm
+    if cell is not None:
+        xxm -= np.round(xxm / cell) * cell
+    xxmw = xxm * sample_weights.reshape(-1, 1) / totw
+    cov = xxmw.T.dot(xxm)
+    cov /= 1 - sum((sample_weights / totw) ** 2)
+
+    return cov
+
+
+def local_population(
+    cell: np.ndarray,
+    grid_pos: np.ndarray,
+    target_grid_pos: np.ndarray,
+    grid_weight: np.ndarray,
+    s2: float,
+):
+    """
+    Calculates the local population of a set of vectors in a grid.
+
+    Parameters
+    ----------
+    cell : np.ndarray
+        An array of periods for each dimension of the grid.
+    grid_pos : np.ndarray
+        An array of vectors to be localized.
+    target_grid_pos : np.ndarray
+        An array of target vectors representing the grid.
+    grid_weight : np.ndarray
+        An array of weights for each target vector.
+    s2 : float
+        The scaling factor for the squared distance.
+
+
+    Returns
+    -------
+    tuple
+        A tuple containing two numpy arrays:
+        wl : np.ndarray
+            An array of localized weights for each vector.
+        num : np.ndarray
+            The sum of the localized weights.
+
+    """
+
+    xy = grid_pos - target_grid_pos
+    if cell is not None:
+        xy -= np.round(xy / cell) * cell
+
+    wl = np.exp(-0.5 / s2 * np.sum(xy**2, axis=1)) * grid_weight
+    num = np.sum(wl)
+
+    return wl, num

@@ -5,6 +5,7 @@ import numpy as np
 from skmatter.datasets import (
     load_csd_1000r,
     load_degenerate_CH4_manifold,
+    load_hbond_dataset,
     load_nice_dataset,
     load_roy_dataset,
     load_who_dataset,
@@ -146,6 +147,22 @@ class ROYTests(unittest.TestCase):
                     rtol=1e-6,
                 )
             )
+
+
+class HBondTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.size = 27233
+        cls.shape = (27233, 3)
+        cls.hbond = load_hbond_dataset()
+
+    def test_dataset_size_and_shape(self):
+        """
+        Check if the correct number of datapoints are present in the dataset.
+        Also check if the size of the dataset is correct.
+        """
+        self.assertEqual(self.hbond["descriptors"].shape, self.shape)
+        self.assertEqual(self.hbond["weights"].size, self.size)
 
 
 if __name__ == "__main__":
