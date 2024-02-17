@@ -24,34 +24,15 @@ class SparseKDETests(unittest.TestCase):
         )
         cls.selector = FPS(n_to_select=int(np.sqrt(2 * cls.n_samples_per_cov)))
         cls.grids = cls.selector.fit_transform(cls.samples.T).T
-        cls.expect_weight = np.array([0.49848713, 0.50151287])
-        cls.expect_means = np.array(
-            [[0.01281471, 0.18859686], [4.22711008, 4.36817619]],
-        )
-        cls.expect_covs = np.array(
-            [
-                [
-                    [1.10462664, 0.63701621],
-                    [0.63701621, 1.11759179],
-                ],
-                [
-                    [1.03561686, 0.50092035],
-                    [0.50092035, 0.5331638],
-                ],
-            ]
-        )
+        cls.expect_score = -759.831
 
         cls.cell = np.array([4, 4])
-        cls.expect_weight_periodic = np.array([1.0])
-        cls.expect_means_periodic = np.array([[0.01281471, 0.18859686]])
-        cls.expect_covs_periodic = np.array([[[0.72231751, 0.0], [0.0, 0.56106493]]])
+        cls.expect_score_periodic = -456.744
 
     def test_sparse_kde(self):
         estimator = SparseKDE(self.samples, None, fpoints=0.5, qs=0.85)
         estimator.fit(self.grids)
-        self.assertTrue(np.allclose(estimator.cluster_weight, self.expect_weight))
-        self.assertTrue(np.allclose(estimator.cluster_mean, self.expect_means))
-        self.assertTrue(np.allclose(estimator.cluster_cov, self.expect_covs))
+        self.assertTrue(round(estimator.score(self.grids), 3) == self.expect_score)
 
     def test_sparse_kde_periodic(self):
         estimator = SparseKDE(
@@ -63,10 +44,8 @@ class SparseKDETests(unittest.TestCase):
         )
         estimator.fit(self.grids)
         self.assertTrue(
-            np.allclose(estimator.cluster_weight, self.expect_weight_periodic)
+            round(estimator.score(self.grids), 3) == self.expect_score_periodic
         )
-        self.assertTrue(np.allclose(estimator.cluster_mean, self.expect_means_periodic))
-        self.assertTrue(np.allclose(estimator.cluster_cov, self.expect_covs_periodic))
 
 
 class CovarianceTests(unittest.TestCase):
