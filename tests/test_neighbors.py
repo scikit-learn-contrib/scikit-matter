@@ -4,7 +4,8 @@ import numpy as np
 
 from skmatter.feature_selection import FPS
 from skmatter.neighbors import SparseKDE
-from skmatter.utils import covariance, effdim, oas
+from skmatter.neighbors._sparsekde import covariance
+from skmatter.utils import effdim, oas
 
 
 class SparseKDETests(unittest.TestCase):
@@ -30,7 +31,7 @@ class SparseKDETests(unittest.TestCase):
         cls.expect_score_periodic = -456.744
 
     def test_sparse_kde(self):
-        estimator = SparseKDE(self.samples, None, fpoints=0.5, qs=0.85)
+        estimator = SparseKDE(self.samples, None, fpoints=0.5)
         estimator.fit(self.grids)
         self.assertTrue(round(estimator.score(self.grids), 3) == self.expect_score)
 
@@ -40,7 +41,6 @@ class SparseKDETests(unittest.TestCase):
             None,
             metric_params={"cell": self.cell},
             fpoints=0.5,
-            qs=0.85,
         )
         estimator.fit(self.grids)
         self.assertTrue(

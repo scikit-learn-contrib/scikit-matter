@@ -8,12 +8,61 @@ from ..metrics import DIST_METRICS
 
 
 class QuickShift(BaseEstimator):
-    """TODO"""
+    """This class is used to implement the quick shift clustering algorithm,
+    which is used in probabilistic analysis of molecular motifs (PAMM). There
+    are two ways of searching the next point: (1) search for the point within the given
+    distance cutoff and (2) search for the point within the given number of neighbor
+    shell of the gabriel graph. If both of them are not set, the distance cutoff
+    is used.
+
+    Parameters
+    ----------
+    dist_cutoff2 : float, default=None
+        The squared distance cutoff for searching for the next point. If None, the
+        Gabriel graph is used.
+    gabriel_shell : int, default=None
+        The number of neighbor shell of gabriel graph. If None, the distance cutoff
+        is used.
+    scale : float, default=1.0
+        Distance cutoff scaling factor used during the QS clustering. It will be squared
+        since we are using the squared distance.
+    metric : str, default='periodic_euclidean'
+        The metric to use. Currently only one.
+    metric_params : dict, default=None
+        Additional parameters to be passed to the use of
+        metric.  i.e. the cell dimension for `periodic_euclidean`
+        {'cell': [2, 2]}
+
+    Attributes
+    ----------
+    labels_ : numpy.ndarray
+        An array of labels for each input data.
+    cluster_centers_idx_ : numpy.ndarray
+        An array of indices of cluster centers.
+    cluster_centers_ : numpy.ndarray
+        An array of cluster centers.
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> from skmatter.clustering import QuickShift
+    >>> feature1 = np.array([-1.72, -4.44, 0.54, 3.19, -1.13, 0.55])
+    >>> feature2 = np.array([-1.32, -2.13, -2.43, -0.49, 2.33, 0.18])
+    >>> points = np.vstack((feature1, feature2)).T
+    >>> cuts = np.array([6.99, 8.80, 7.68, 9.51, 8.07, 6.22])
+    >>> weights = np.array([-3.94, -12.68, -7.07, -9.03, -8.26, -2.61])
+    >>> model = QuickShift(cuts).fit(points, samples_weight=weights)
+    >>> model.labels_
+    array([0, 0, 0, 5, 5, 5])
+    >>> model.cluster_centers_idx_
+    array([0, 5])
+    """
 
     def __init__(
         self,
         dist_cutoff2: Union[float, None] = None,
         gabriel_shell: Union[int, None] = None,
+        scale: float = 1.0,
         metric: str = "periodic_euclidean",
         metric_params: Union[dict, None] = None,
     ):
@@ -21,6 +70,9 @@ class QuickShift(BaseEstimator):
             raise ValueError("Either dist_cutoff or gabriel_depth must be set.")
         self.dist_cutoff2 = dist_cutoff2
         self.gabriel_shell = gabriel_shell
+        self.scale = scale
+        if self.dist_cutoff2 is not None:
+            self.dist_cutoff2 *= self.scale**2
         self.metric = metric
         self.metric_params = metric_params
         if isinstance(self.metric_params, dict):
@@ -29,6 +81,19 @@ class QuickShift(BaseEstimator):
             self.cell = None
 
     def fit(self, X, y=None, samples_weight=None):
+        """Fit the model using X as training data and y as target values.
+
+        Parameters
+        ----------
+        X : array-like of shape (n_samples, n_features)
+            Training data, where `n_samples` is the number of samples
+            and `n_features` is the number of features.
+        Y : None
+            Ignored. This parameter exists only for compatibility with
+            :class:`~sklearn.pipeline.Pipeline`.
+        samples_weight : array-like of shape (n_samples,), default=None
+            List of sample weights attached to the data X. This parameter
+            must be given in order to do the quick shift clustering."""
 
         dist_matrix = DIST_METRICS[self.metric](X, X, squared=True, cell=self.cell)
         if self.dist_cutoff2 is None:
