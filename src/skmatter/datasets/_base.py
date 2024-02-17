@@ -168,7 +168,11 @@ def load_hbond_dataset():
     target_filename = join(module_path, "data", "h2o-blyp-piglet.npz")
     raw_data = np.load(target_filename)
 
+    with open(join(module_path, "descr", "h2o-blyp-piglet.rst")) as rst_file:
+        fdescr = rst_file.read()
+
     return Bunch(
         descriptors=raw_data["descriptors"],
         weights=raw_data["weights"],
+        DESCR=fdescr,
     )

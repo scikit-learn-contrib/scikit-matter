@@ -6,6 +6,12 @@ References
     "Principal covariates regression: Part I. Theory", Chemom. intell. lab. syst. 14
     (1992) 155-164 https://doi.org/10.1016/0169-7439(92)80100-I
 
+.. [Ceriotti2014]
+    Piero Gasparotto, Michele Ceriotti,
+    "Recognizing molecular patterns by machine learning: An agnostic structural
+    definition of the hydrogen bond", J. Chem. Phys., 141 (17): 174110.
+    https://doi.org/10.1063/1.4900655.
+
 .. [Imbalzano2018]
     Giulio Imbalzano, Andrea Anelli, Daniele Giofré,Sinja Klees, Jörg Behler, and
     Michele Ceriotti, “Automatic selection of atomic fingerprints and reference

@@ -20,9 +20,6 @@ from ._progress_bar import (
 )
 
 from ._sparsekde import (
-    NearestGridAssigner,
-    covariance,
-    local_population,
     effdim,
     oas,
 )
@@ -37,9 +34,6 @@ __all__ = [
     "X_orthogonalizer",
     "Y_sample_orthogonalizer",
     "Y_feature_orthogonalizer",
-    "NearestGridAssigner",
-    "covariance",
-    "local_population",
     "effdim",
     "oas",
 ]
