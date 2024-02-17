@@ -1,6 +1,5 @@
 """This file holds utility functions and classes for the sparse KDE."""
 
-from dataclasses import dataclass
 from typing import Union
 
 import numpy as np
@@ -111,87 +110,6 @@ class NearestGridAssigner:
             self.grid_neighbour[key] = np.array(self.grid_neighbour[key])
 
         return self.labels_
-
-
-@dataclass
-class GaussianMixtureModel:
-    weights: np.ndarray
-    means: np.ndarray
-    covariances: np.ndarray
-    cell: Union[np.ndarray, None] = None
-    """
-    A Gaussian Mixture Model for clustering and density estimation.
-
-    Parameters
-    ----------
-    weights : np.ndarray
-        The weights of the Gaussian components.
-    means : np.ndarray
-        The means of the Gaussian components.
-    covariances : np.ndarray
-        The covariance matrices of the Gaussian components.
-    cell : Optional[np.ndarray], optional
-        The cell size for periodic boundary conditions. Default is None.
-
-    Attributes
-    ----------
-    dimension : int
-        The dimension of the Gaussian Mixture Model.
-    cov_invs : np.ndarray
-        The inverses of the covariance matrices.
-    cov_dets : np.ndarray
-        The determinants of the covariance matrices.
-    norms : np.ndarray
-        The normalization constants.
-
-    """
-
-    def __post_init__(self):
-        self.dimension = self.means.shape[1]
-        self.cov_invs = np.linalg.inv(self.covariances)
-        self.cov_dets = np.linalg.det(self.covariances)
-        self.norms = 1 / np.sqrt((2 * np.pi) ** self.dimension * self.cov_dets)
-
-    def __call__(self, x: np.ndarray, i: Union[int, list, None] = None):
-        """
-        Calculate the probability density function (PDF) value for a given input array.
-
-        Parameters
-        ----------
-        x : np.ndarray
-            The input array for which the PDF is calculated. Once a point.
-        i : int, list[int], optional, default=None
-            The index of the element inthe PDF array to return.
-            If None, the sum of all elements is returned.
-
-        Returns
-        -------
-        float or np.ndarray
-            The PDF value(s) for the given input(s).
-            If i is None, the sum of all PDF values is returned.
-            If i is specified, the normalized value of the corresponding
-            gaussian is returned.
-        """
-
-        if len(x.shape) == 1:
-            x = x[np.newaxis, :]
-        if self.cell is not None:
-            xij = np.zeros(self.means.shape)
-            xij = rij(self.cell, x, self.means)
-        else:
-            xij = x - self.means
-        p = (
-            self.weights
-            * self.norms
-            * np.exp(
-                -0.5 * (xij[:, np.newaxis, :] @ self.cov_invs @ xij[:, :, np.newaxis])
-            ).reshape(-1)
-        )
-        sum_p = np.sum(p)
-        if i is None:
-            return sum_p
-
-        return np.sum(p[i]) / sum_p
 
 
 def covariance(X: np.ndarray, sample_weights: np.ndarray, cell: np.ndarray):
@@ -342,31 +260,3 @@ def oas(cov: np.ndarray, n: float, D: int) -> np.ndarray:
     phi = ((1 - 2 / D) * tr_cov2 + tr2) / ((n + 1 - 2 / D) * tr_cov2 - tr2 / D)
 
     return (1 - phi) * cov + phi * np.eye(D) * tr / D
-
-
-def rij(period: Union[np.ndarray, None], xi: np.ndarray, xj: np.ndarray) -> np.ndarray:
-    """
-    Calculate the position vector considering the periodic boundary conditions.
-
-    Parameters
-    ----------
-    period : np.ndarray, Optional
-        An array of periods for each dimension of the points.
-        None stands for not periodic.
-    xi : np.ndarray
-        An array of point coordinates. It can also contain many points.
-        Shape: (n_points, n_dimensions)
-    xj : np.ndarray
-        An array of point coordinates. It can only contain one point.
-
-    Returns
-    -------
-    np.ndarray
-        An array of position vectors. Shape: (n_points, n_dimensions)
-    """
-
-    xij = xi - xj
-    if period is not None:
-        xij -= np.round(xij / period) * period
-
-    return xij
