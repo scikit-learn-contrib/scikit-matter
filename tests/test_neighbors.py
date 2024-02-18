@@ -4,7 +4,7 @@ import numpy as np
 
 from skmatter.feature_selection import FPS
 from skmatter.neighbors import SparseKDE
-from skmatter.neighbors._sparsekde import covariance
+from skmatter.neighbors._sparsekde import _covariance
 from skmatter.utils import effdim, oas
 
 
@@ -61,11 +61,11 @@ class CovarianceTests(unittest.TestCase):
         cls.cell = np.array([3, 3])
 
     def test_covariance(self):
-        cov = covariance(self.X, np.full(len(self.X), 1 / len(self.X)), None)
+        cov = _covariance(self.X, np.full(len(self.X), 1 / len(self.X)), None)
         self.assertTrue(np.allclose(cov, self.expected_cov))
 
     def test_covariance_periodic(self):
-        cov = covariance(self.X, np.full(len(self.X), 1 / len(self.X)), self.cell)
+        cov = _covariance(self.X, np.full(len(self.X), 1 / len(self.X)), self.cell)
         self.assertTrue(np.allclose(cov, self.expected_cov_periodic))
 
 

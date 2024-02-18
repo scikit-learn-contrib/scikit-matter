@@ -32,7 +32,12 @@ Random Partitioning with Overlaps
 .. autofunction:: skmatter.model_selection.train_test_split
 
 
-Nearest Grid Assigner
----------------------
+Effective Dimension of Covariance Matrix
+----------------------------------------
 
-.. autoclass:: skmatter.utils.NearestGridAssigner
+.. autofunction:: skmatter.utils.effdim
+
+Oracle Approximating Shrinkage
+------------------------------
+
+.. autofunction:: skmatter.utils.oas
