@@ -247,7 +247,7 @@ class SparseKDE(BaseEstimator):
 
     def _assign_descriptors_to_grids(self, X):
 
-        assigner = NearestGridAssigner(self.metric, self.metric_params)
+        assigner = _NearestGridAssigner(self.metric, self.metric_params)
         assigner.fit(X)
         labels = assigner.predict(self.descriptors, sample_weight=self.weights)
         grid_npoints = assigner.grid_npoints
@@ -259,7 +259,7 @@ class SparseKDE(BaseEstimator):
         self, X, sample_weights: np.ndarray, mindist: np.ndarray
     ):
 
-        cov = covariance(X, sample_weights, self.cell)
+        cov = _covariance(X, sample_weights, self.cell)
 
         if self.cell is not None:
             tune = sum(self.cell**2)
@@ -279,7 +279,7 @@ class SparseKDE(BaseEstimator):
         h_invs = np.zeros((len(X), X.shape[1], X.shape[1]))
 
         for i in tqdm(range(len(X)), desc="Estimating kernel density bandwidths"):
-            wlocal, flocal[i] = local_population(
+            wlocal, flocal[i] = _local_population(
                 self.cell, X, X[i], sample_weights, sigma2[i]
             )
             if self.fpoints > 0:
@@ -312,7 +312,7 @@ class SparseKDE(BaseEstimator):
             )
         while flocal[idx] < lim:
             sigma2[idx] += tune
-            wlocal, flocal[idx] = local_population(
+            wlocal, flocal[idx] = _local_population(
                 self.cell, X, X[idx], sample_weights, sigma2[idx]
             )
         j = 1
@@ -321,7 +321,7 @@ class SparseKDE(BaseEstimator):
                 sigma2[idx] -= tune / 2**j
             else:
                 sigma2[idx] += tune / 2**j
-            wlocal, flocal[idx] = local_population(
+            wlocal, flocal[idx] = _local_population(
                 self.cell, X, X[idx], sample_weights, sigma2[idx]
             )
             if abs(flocal[idx] - lim) < delta:
@@ -336,7 +336,7 @@ class SparseKDE(BaseEstimator):
         """Used in cases where one expects the spatial extentof clusters to be
         relatively homogeneous"""
         sigma2[idx] = mindist[idx]
-        wlocal, flocal[idx] = local_population(
+        wlocal, flocal[idx] = _local_population(
             self.cell, self.descriptors, X, sample_weights, sigma2[idx]
         )
 
@@ -344,7 +344,7 @@ class SparseKDE(BaseEstimator):
 
     def _bandwidth_estimation_from_localization(self, X, wlocal, flocal, idx):
 
-        cov_i = covariance(X, wlocal, self.cell)
+        cov_i = _covariance(X, wlocal, self.cell)
         nlocal = flocal[idx] * self.nsamples
         local_dimension = effdim(cov_i)
         cov_i = oas(cov_i, nlocal, X.shape[1])
@@ -401,7 +401,7 @@ class SparseKDE(BaseEstimator):
         return prob
 
 
-class NearestGridAssigner:
+class _NearestGridAssigner:
     """Assign descriptor to its nearest grid. This is an auxilirary class.
 
     Parameters
@@ -505,7 +505,7 @@ class NearestGridAssigner:
         return self.labels_
 
 
-def covariance(X: np.ndarray, sample_weights: np.ndarray, cell: np.ndarray):
+def _covariance(X: np.ndarray, sample_weights: np.ndarray, cell: np.ndarray):
     """
     Calculate the covariance matrix for a given set of grid positions and weights.
 
@@ -556,7 +556,7 @@ def covariance(X: np.ndarray, sample_weights: np.ndarray, cell: np.ndarray):
     return cov
 
 
-def local_population(
+def _local_population(
     cell: np.ndarray,
     grid_pos: np.ndarray,
     target_grid_pos: np.ndarray,
