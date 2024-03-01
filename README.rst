@@ -87,8 +87,8 @@ Citing scikit-matter
 
 If you use scikit-matter for your work, please cite:
 
-Goscinski A, Principe VP, Fraux G et al. scikit-matter : 
-A Suite of Generalisable Machine Learning Methods Born out of Chemistry 
+Goscinski A, Principe VP, Fraux G et al. scikit-matter :
+A Suite of Generalisable Machine Learning Methods Born out of Chemistry
 and Materials Science. Open Res Europe 2023, 3:81.
 `10.12688/openreseurope.15789.2 <https://doi.org/10.12688/openreseurope.15789.2>`_
 
