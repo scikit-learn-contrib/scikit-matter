@@ -82,6 +82,13 @@ Writing code is not the only way to contribute to the project. You can also:
 
 .. marker-contributors
 
+Citing scikit-matter
+--------------------
+
+If you use scikit-matter for your work, please cite:
+
+Goscinski A, Principe VP, Fraux G et al. scikit-matter : A Suite of Generalisable Machine Learning Methods Born out of Chemistry and Materials Science [version 2; peer review: 3 approved, 1 approved with reservations]. Open Res Europe 2023, 3:81 `10.12688/openreseurope.15789.2 <https://doi.org/10.12688/openreseurope.15789.2>`_
+
 Contributors
 ------------
 
