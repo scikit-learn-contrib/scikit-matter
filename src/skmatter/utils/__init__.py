@@ -19,6 +19,11 @@ from ._progress_bar import (
     no_progress_bar,
 )
 
+from ._sparsekde import (
+    effdim,
+    oas,
+)
+
 __all__ = [
     "get_progress_bar",
     "no_progress_bar",
@@ -29,4 +34,6 @@ __all__ = [
     "X_orthogonalizer",
     "Y_sample_orthogonalizer",
     "Y_feature_orthogonalizer",
+    "effdim",
+    "oas",
 ]
