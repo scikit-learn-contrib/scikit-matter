@@ -236,8 +236,6 @@ class GreedySelector(SelectorMixin, MetaEstimatorMixin, BaseEstimator):
         n_to_select_from = X.shape[self._axis]
         self.n_samples_in_, self.n_features_in_ = X.shape
 
-        self.n_samples_in_, self.n_features_in_ = X.shape
-
         error_msg = (
             "n_to_select must be either None, an "
             f"integer in [1, n_{self.selection_type}s] "
