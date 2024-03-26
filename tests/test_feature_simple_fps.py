@@ -1,5 +1,6 @@
 import unittest
 
+import numpy as np
 from sklearn.datasets import load_diabetes as get_dataset
 from sklearn.utils.validation import NotFittedError
 
@@ -61,6 +62,22 @@ class TestFPS(unittest.TestCase):
         with self.assertRaises(NotFittedError):
             selector = FPS(n_to_select=7)
             _ = selector.get_select_distance()
+
+    def test_unique_selected_idx_zero_score(self):
+        """
+        Tests that the selected idxs are unique, which may not be the
+        case when the score is numerically zero
+        """
+        np.random.seed(0)
+        n_samples = 10
+        n_features = 15
+        X = np.random.rand(n_samples, n_features)
+        X[:, 3] = np.random.rand(10) * 1e-13
+        X[:, 4] = np.random.rand(10) * 1e-13
+        selector_problem = FPS(n_to_select=len(X.T)).fit(X)
+        assert len(selector_problem.selected_idx_) == len(
+            set(selector_problem.selected_idx_)
+        )
 
 
 if __name__ == "__main__":
