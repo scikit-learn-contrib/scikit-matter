@@ -934,7 +934,7 @@ class _FPS(GreedySelector):
     Parameters
     ----------
 
-    initialize: int, list of int, or 'random', default=0
+    initialize: int, list of int, ndarray of int, or 'random', default=0
         Index of the first selection(s). If 'random', picks a random
         value when fit starts. Stored in :py:attr:`self.initialize`.
 
@@ -1048,6 +1048,12 @@ class _FPS(GreedySelector):
             self.selected_idx_[0] = initialize
             self._update_post_selection(X, y, self.selected_idx_[0])
         elif isinstance(self.initialize, list) and all(
+            [isinstance(i, numbers.Integral) for i in self.initialize]
+        ):
+            for i, val in enumerate(self.initialize):
+                self.selected_idx_[i] = val
+                self._update_post_selection(X, y, self.selected_idx_[i])
+        elif isinstance(self.initialize, np.ndarray) and all(
             [isinstance(i, numbers.Integral) for i in self.initialize]
         ):
             for i, val in enumerate(self.initialize):
