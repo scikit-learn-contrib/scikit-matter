@@ -1038,7 +1038,14 @@ class _FPS(GreedySelector):
         self.hausdorff_ = np.full(X.shape[self._axis], np.inf)
         self.hausdorff_at_select_ = np.full(X.shape[self._axis], np.inf)
 
-        if self.initialize == "random":
+        if isinstance(self.initialize, np.ndarray):
+            if all(isinstance(i, numbers.Integral) for i in self.initialize):
+                for i, val in enumerate(self.initialize):
+                    self.selected_idx_[i] = val
+                    self._update_post_selection(X, y, self.selected_idx_[i])
+            else:
+                raise ValueError("Initialize parameter must contain only int")
+        elif self.initialize == "random":
             random_state = check_random_state(self.random_state)
             initialize = random_state.randint(X.shape[self._axis])
             self.selected_idx_[0] = initialize
@@ -1053,12 +1060,7 @@ class _FPS(GreedySelector):
             for i, val in enumerate(self.initialize):
                 self.selected_idx_[i] = val
                 self._update_post_selection(X, y, self.selected_idx_[i])
-        elif isinstance(self.initialize, np.ndarray) and all(
-            [isinstance(i, numbers.Integral) for i in self.initialize]
-        ):
-            for i, val in enumerate(self.initialize):
-                self.selected_idx_[i] = val
-                self._update_post_selection(X, y, self.selected_idx_[i])
+
         else:
             raise ValueError("Invalid value of the initialize parameter")
 
