@@ -1,7 +1,6 @@
 import unittest
 
 import numpy as np
-
 from sklearn.datasets import load_diabetes as get_dataset
 from sklearn.utils.validation import NotFittedError
 
