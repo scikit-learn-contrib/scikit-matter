@@ -32,7 +32,7 @@ means = np.array([[0, 0], [4, 4], [6, -2]])
 covariances = np.array(
     [[[1, 0.5], [0.5, 1]], [[1, 0.5], [0.5, 0.5]], [[1, -0.5], [-0.5, 1]]]
 )
-N_SAMPLES = 100000
+N_SAMPLES = 100_000
 samples = np.concatenate(
     [
         np.random.multivariate_normal(means[0], covariances[0], N_SAMPLES),
