@@ -6,6 +6,6 @@ Neighbors
 .. _quick-shift-api:
 
 Quick Shift
---------------------------------
+------------
 
 .. autoclass:: skmatter.clustering.QuickShift
