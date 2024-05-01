@@ -75,7 +75,7 @@ estimator = SparseKDE(samples, None, fpoints=0.5)
 estimator.fit(grids)
 
 # %% [markdown]
-# We can have a comparasion with the original sampling result by plotting them:
+# We can have a comparison with the original sampling result by plotting them:
 #
 #
 
