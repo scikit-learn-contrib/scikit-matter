@@ -18,7 +18,7 @@ class QuickShift(BaseEstimator):
     Parameters
     ----------
     dist_cutoff2 : float, default=None
-        The squared distance cutoff for searching for the next point. If None, the
+        The squared distance cutoff for searching for the next point. If ``None``, the
         Gabriel graph is used.
     gabriel_shell : int, default=None
         The number of neighbor shell of gabriel graph. If None, the distance cutoff
