@@ -3,7 +3,7 @@
 
 """
 Sparse KDE examples
-================================================================
+===================
 
 Example for the usage of the :class:`skmatter.neighbors.SparseKDE` class. Here we show
 how to use the sparse KDE model to fit the probability distribution based on sampled
