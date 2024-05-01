@@ -157,9 +157,9 @@ def pairwise_mahalanobis_distances(
     observations from the same distribution.
 
     Parameters:
-        x : np.ndarray of shape (n_samples_X, n_features)
+        X : np.ndarray of shape (n_samples_X, n_features)
             An array where each row is a sample and each column is a feature.
-        y : np.ndarray of shape (n_samples_Y, n_features)
+        Y : np.ndarray of shape (n_samples_Y, n_features)
             An array where each row is a sample and each column is a feature.
         cov_inv : np.ndarray
             The inverse covariance matrix of shape (n_features, n_features).
