@@ -145,8 +145,9 @@ def pairwise_mahalanobis_distances(
     squared: bool = False,
 ):
     r"""
-    Calculate the pairwise Mahalanobis distance between two arrays. This metric is used
-    for calculating the distances between observations from Gaussian distributions. It
+    Calculate the pairwise Mahalanobis distance between two arrays.
+    
+    This metric is used for calculating the distances between observations from Gaussian distributions. It
     is defined as:
 
     .. math::
