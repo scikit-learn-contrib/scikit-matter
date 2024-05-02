@@ -47,6 +47,12 @@ class SparseKDETests(unittest.TestCase):
             round(estimator.score(self.grids), 3) == self.expect_score_periodic
         )
 
+    def test_dimension_check(self):
+        estimator = SparseKDE(
+            self.samples, None, metric_params={"cell": self.cell}, fpoints=0.5
+        )
+        self.assertRaises(ValueError, estimator.fit, np.array([[4]]))
+
 
 class CovarianceTests(unittest.TestCase):
     @classmethod

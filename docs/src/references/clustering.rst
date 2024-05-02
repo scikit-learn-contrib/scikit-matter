@@ -1,5 +1,5 @@
-Neighbors
-=========
+Clustering
+==========
 
 .. automodule:: skmatter.clustering
 

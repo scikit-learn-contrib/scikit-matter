@@ -5,13 +5,23 @@
 Sparse KDE examples
 ===================
 
-Example for the usage of the :class:`skmatter.neighbors.SparseKDE` class. Here we show
-how to use the sparse KDE model to fit the probability distribution based on sampled
-data and how to conduct pobabilistic analysis of molecular motifs.
+Example for the usage of the :class:`skmatter.neighbors.SparseKDE` class. This class is
+specifically designed for conducting pobabilistic analysis of molecular motifs
+([PAMM](https://doi.org/10.1063/1.4900655)),
+which is quiet useful for analyzing motifs like H-bonds, coordination polyhedra, and
+protein secondary structure.
 
-We start from a simple case. Here we first sample from two gaussians.
+Here we show how to use the sparse KDE model to fit the probability distribution based
+on sampled data and how to use PAMM to analyze the H-bond.
+
+We start from a simple system, which is consist of three 2D gaussians. Our task is to
+estimate the parameters of these gaussians from our sampled data.
+
+Here we first sample from these three gaussians.
 """
 
+
+from typing import Union
 
 # %%
 import matplotlib.pyplot as plt
@@ -21,13 +31,13 @@ from scipy.special import logsumexp
 from skmatter.clustering import QuickShift
 from skmatter.datasets import load_hbond_dataset
 from skmatter.feature_selection import FPS
-from skmatter.metrics import DIST_METRICS, pairwise_mahalanobis_distances
+from skmatter.metrics import DIST_METRICS
 from skmatter.neighbors import SparseKDE
 from skmatter.neighbors._sparsekde import _covariance
 from skmatter.utils import oas
 
 
-np.random.seed(0)
+# %%
 means = np.array([[0, 0], [4, 4], [6, -2]])
 covariances = np.array(
     [[[1, 0.5], [0.5, 1]], [[1, 0.5], [0.5, 0.5]], [[1, -0.5], [-0.5, 1]]]
@@ -41,7 +51,7 @@ samples = np.concatenate(
     ]
 )
 
-# %% [markdown]
+# %%
 # We can visualize our sample result:
 #
 #
@@ -50,8 +60,10 @@ samples = np.concatenate(
 fig, ax = plt.subplots()
 ax.scatter(samples[:, 0], samples[:, 1], alpha=0.05, s=1)
 ax.scatter(means[:, 0], means[:, 1], marker="+", color="red", s=100)
+ax.set_xlabel("x")
+ax.set_ylabel("y")
 
-# %% [markdown]
+# %%
 # The perquisite of conducting sparse KDE is to partition the sample set. Here, we use
 # the FPS method to generate grid points in the sample space:
 #
@@ -64,9 +76,11 @@ fig, ax = plt.subplots()
 ax.scatter(samples[:, 0], samples[:, 1], alpha=0.05, s=1)
 ax.scatter(means[:, 0], means[:, 1], marker="+", color="red", s=100)
 ax.scatter(grids[:, 0], grids[:, 1], color="orange", s=1)
+ax.set_xlabel("x")
+ax.set_ylabel("y")
 
-# %% [markdown]
-# Now we can do sparse KDE
+# %%
+# Now we can do sparse KDE (usually takes tens of seconds):
 #
 #
 
@@ -74,10 +88,15 @@ ax.scatter(grids[:, 0], grids[:, 1], color="orange", s=1)
 estimator = SparseKDE(samples, None, fpoints=0.5)
 estimator.fit(grids)
 
-# %% [markdown]
+# %%
 # We can have a comparison with the original sampling result by plotting them:
 #
 #
+
+
+# %%
+# For the convenience, we create a class for the Gaussian mixture model to help us plot
+# the result.
 
 
 # %%
@@ -105,7 +124,7 @@ class GaussianMixtureModel:
             x = x[np.newaxis, :]
         if self.period is not None:
             xij = np.zeros(self.means.shape)
-            xij = rij(self.period, xij, x, self.means)
+            xij = rij(self.period, xij, x)
         else:
             xij = x - self.means
         p = (
@@ -122,6 +141,7 @@ class GaussianMixtureModel:
         return np.sum(p[i]) / sum_p
 
 
+# %%
 def rij(period: np.ndarray, xi: np.ndarray, xj: np.ndarray) -> np.ndarray:
 
     xij = xi - xj
@@ -132,13 +152,16 @@ def rij(period: np.ndarray, xi: np.ndarray, xj: np.ndarray) -> np.ndarray:
 
 
 # %%
+# The original model that we want to fit:
 original_model = GaussianMixtureModel(np.full(3, 1 / 3), means, covariances)
+# The fitted model:
 fitted_model = GaussianMixtureModel(
     estimator._sample_weights, estimator._grids, estimator._h
 )
+
+# To plot the probability density contour, we need to create a grid of points:
 x, y = np.meshgrid(np.linspace(-6, 12, 100), np.linspace(-8, 8))
 points = np.concatenate(np.stack([x, y], axis=-1))
-
 probs = np.array([original_model(point) for point in points])
 fitted_probs = np.array([fitted_model(point) for point in points])
 
@@ -151,18 +174,30 @@ ax.legend(
     [h1[0], h2[0]],
     ["original", "fitted"],
 )
+ax.set_xlabel("x")
+ax.set_ylabel("y")
 
-# %% [markdown]
+
+# %%
+# We can see that the fitted model can perfectly capture the original one. Eventhough we
+# #have not specified the number of the gaussians, it can still perform well. This
+# ability enables us to analyze the distribution of the data objectively, which is
+# important and also hard to do in analyzing the molecular simulation data.
+
+# %%
 # Probabilistic Analysis of Molecular Motifs (PAMM)
 # -------------------------------------------------
 #
 
-# %% [markdown]
+# %%
 # Probabilistic analysis of molecular motifs is a method identifying molecular patterns
 # based on an analysis of the probability distribution of fragments observed in an
 # atomistic simulation. With the help of sparse KDE, it can be easily conducted. Here
-# we define some functions to help us.
-#
+# we define some functions to help us. `quick_shift_refinement` is used to refine the
+# clusters generated by `QuickShift` by merging outlier clusters into their nearest
+# neighbours. `generate_probability_model` is to interpret the quick shift results into
+# a probability model. `cluster_distribution_3D` is to plot the probability model
+# of the H-bond motif.
 #
 
 
@@ -174,7 +209,7 @@ def quick_shift_refinement(
     probs: np.ndarray,
     normpks: float,
     metric: str,
-    cell: np.ndarray = None,
+    metric_params: Union[dict, None] = None,
     thrpcl: float = 0.0,
 ):
     """
@@ -190,11 +225,19 @@ def quick_shift_refinement(
         Norm of the probability
     metric : str
         The metric to use.
-    cell : np.ndarray, default=None
-        Cell dimension for distance metrics
+    metric_params : dict, default=None
+        Additional parameters to be passed to the use of
+        metric.  i.e. the cell dimension for `periodic_euclidean`
+        {'cell': [2, 2]}
     thrpcl : float, default=0.0
         Clusters with a pk lower than this value are merged with the nearest cluster."""
 
+    if metric_params is not None:
+        cell = metric_params["cell"]
+        if len(cell) != X.shape[1]:
+            raise ValueError("Cell dimension does not match the data dimension.")
+    else:
+        cell = None
     nk = len(cluster_centers_idx)
     to_merge = np.full(nk, False)
     for k in range(nk):
@@ -229,6 +272,7 @@ def quick_shift_refinement(
     return cluster_centers_idx, labels
 
 
+# %%
 def generate_probability_model(
     cluster_center_idx: np.ndarray,
     labels: np.ndarray,
@@ -236,12 +280,9 @@ def generate_probability_model(
     descriptors: np.ndarray,
     descriptor_labels: np.ndarray,
     descriptor_weights: np.ndarray,
-    normkernels: np.ndarray,
-    h_invs: np.ndarray,
     probs: np.ndarray,
     normpks: float,
     cell: np.ndarray = None,
-    nmsopt: int = 0,
 ):
     """
     Generates a probability model based on the given inputs.
@@ -257,7 +298,7 @@ def generate_probability_model(
     descriptors : np.ndarray
         Descriptors from original data set
     descriptor_labels : np.ndarray
-        Labels of the descriptors, generated by 
+        Labels of the descriptors, generated by
         `skmatter.neighbors._sparsekde._NearestGridAssigner`
     descriptor_weights : np.ndarray
         Weights of the descriptors
@@ -271,37 +312,7 @@ def generate_probability_model(
         Norm of the probability
     cell : np.ndarray
         Cell dimension for distance metrics
-    nmsopt : int
-        Number of rounds of mean shift optimization
     """
-
-    def _mean_shift_optimizaton(
-        mean: np.ndarray,
-        X: np.array,
-        h_inv: np.ndarray,
-        normkernel: float,
-        probs: np.ndarray,
-    ):
-        # Never tested and not used in any available example cases
-        grid = np.copy(mean)
-        for _ in range(nmsopt):
-            # Mean shift optimization
-            msmu = np.zeros(X.shape[1], dtype=float)
-            tmppks = -np.inf
-            dummd1s = pairwise_mahalanobis_distances(
-                X,
-                grid[np.newaxis, ...],
-                h_inv,
-                cell,
-                squared=True,
-            )[0]
-            msws = -0.5 * (normkernel + dummd1s) + probs
-            tmpmsmu = rij(cell, X, grid)
-            msmu += np.sum(np.exp(msws) * tmpmsmu, axis=1)
-            tmppks = logsumexp(np.concatenate([tmppks, msws]))
-            mean += msmu / np.exp(tmppks)
-
-        return mean
 
     def _update_cluster_cov(
         X: np.ndarray,
@@ -390,6 +401,8 @@ def generate_probability_model(
 
         return cov
 
+    if cell is not None and (X.shape[1] != len(cell)):
+        raise ValueError("Cell dimension does not match the data dimension.")
     nclusters = len(cluster_center_idx)
     nsamples = len(descriptors)
     dimension = X.shape[1]
@@ -400,13 +413,6 @@ def generate_probability_model(
 
     for k in range(nclusters):
         cluster_weight[k] = np.exp(logsumexp(probs[labels == center_idx[k]]) - normpks)
-        cluster_mean[k] = _mean_shift_optimizaton(
-            X[center_idx[k]],
-            X,
-            h_invs[center_idx[k]],
-            normkernels[center_idx[k]],
-            probs,
-        )
         cluster_cov[k] = _update_cluster_cov(
             X, k, descriptor_labels, probs, labels, center_idx
         )
@@ -416,6 +422,7 @@ def generate_probability_model(
     return cluster_weight, cluster_mean, cluster_cov, labels
 
 
+# %%
 def cluster_distribution_3D(
     grids: np.ndarray,
     grid_weights: np.ndarray,
@@ -466,7 +473,7 @@ def cluster_distribution_3D(
     return fig, ax
 
 
-# %% [markdown]
+# %%
 # We first load our dataset:
 #
 #
@@ -475,6 +482,12 @@ def cluster_distribution_3D(
 hbond_data = load_hbond_dataset()
 descriptors = hbond_data["descriptors"]
 weights = hbond_data["weights"]
+
+# %%
+# We use the `FPS` class to select the `ngrid` descriptors with the highest. It is
+# recommended to set the number of grids as the square root of the number of
+# descriptors.
+
 
 # %%
 ngrid = int(len(descriptors) ** 0.5)
@@ -487,7 +500,7 @@ grids = descriptors[selector.selected_idx_]
 estimator = SparseKDE(descriptors, weights)
 estimator.fit(grids)
 
-# %% [markdown]
+# %%
 # Now we visualize the distribution and the weight of clusters.
 # %%
 #
@@ -498,7 +511,7 @@ cluster_distribution_3D(
     grids, estimator._sample_weights, label_text=[r"$\nu$", r"$\mu$", r"r"]
 )
 
-# %% [markdown]
+# %%
 # We need to estimate the probability at each grid point to do quick shift, which can
 # further partition the set of grid points in to several clusters. The resulting
 # clusters can be interpreted as (meta-)stable states of the system.
@@ -527,7 +540,7 @@ cluster_centers, labels = quick_shift_refinement(
     estimator.cell,
 )
 
-# %% [markdown]
+# %%
 # Based on the results, the gaussian mixture model of the system can be generated:
 #
 #
@@ -540,17 +553,17 @@ cluster_weights, cluster_means, cluster_covs, labels = generate_probability_mode
     estimator.descriptors,
     estimator._sample_labels_,
     estimator.weights,
-    estimator._normkernels,
-    estimator._h_invs,
     probs,
     normpks,
     estimator.cell,
 )
 
-# %% [markdown]
+# %%
 # The final result shows seven (meta-)stable states of hydrogen bond. Here we also show
 # the reference hydrogen bond descriptor. The gaussian with the largest weight locates
-# closest to the reference point.
+# closest to the reference point. This result shows that, with the help of the
+# `SparseKDE` and `QuickShift` algorithm, we can easily identify the (meta-)stable
+# states of the system objectively and without any prior knowledge about the system.
 #
 #
 

@@ -7,7 +7,7 @@ This dataset contains 27233 hydrogen bond descriptors and corresponding weights 
 trajectory of a classical simulation performed with a BLYP exchange-correlation
 functional and a DZVP basis set. The simulation box contined 64 water molecules. This
 dataset was originally published in
-[Ceriotti2014]_.
+[Gasparotto2014]_.
 
 Function Call
 -------------
