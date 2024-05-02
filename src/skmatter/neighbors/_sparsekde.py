@@ -27,7 +27,7 @@ class SparseKDE(BaseEstimator):
     selected by FPS). First, the probability density is estimated for
     each sampled point. Then, quick shift clustering is applied to the
     grid points. Finally, a kernel density estimator is built based on
-    the clustering results.
+    the clustering results. Currently only the Gaussian kernel is supported.
 
     Parameters
     ----------
