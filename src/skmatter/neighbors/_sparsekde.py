@@ -37,8 +37,6 @@ class SparseKDE(BaseEstimator):
     weights: np.ndarray, default=None
         Weights of the descriptors.
         If None, all weights are set to `1/n_descriptors`.
-    kernel : {'gaussian'}, default='gaussian'
-        The kernel to use. Currentlty only one.
     metric : str, default='periodic_euclidean'
         The metric to use. Currently only one.
     metric_params : dict, default=None
@@ -116,14 +114,12 @@ class SparseKDE(BaseEstimator):
         self,
         descriptors: np.ndarray,
         weights: Union[np.ndarray, None] = None,
-        kernel: str = "gaussian",
         metric: str = "periodic_euclidean",
         metric_params: Union[dict, None] = None,
         fspread: float = -1.0,
         fpoints: float = 0.15,
         verbose: bool = False,
     ):
-        self.kernel = kernel
         self.metric = metric
         self.metric_params = metric_params
         self.cell = metric_params["cell"] if metric_params is not None else None
