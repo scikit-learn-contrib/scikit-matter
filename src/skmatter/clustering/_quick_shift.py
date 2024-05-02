@@ -63,10 +63,10 @@ class QuickShift(BaseEstimator):
     Do the clustering
 
     >>> model = QuickShift(cuts).fit(points, samples_weight=weights)
-    >>> model.labels_
-    array([0, 0, 0, 5, 5, 5])
-    >>> model.cluster_centers_idx_
-    array([0, 5], dtype=int64)
+    >>> print(model.labels_)
+    [0 0 0 5 5 5]
+    >>> print(model.cluster_centers_idx_)
+    [0 5]
     """
 
     def __init__(
