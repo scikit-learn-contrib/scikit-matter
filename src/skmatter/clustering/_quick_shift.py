@@ -66,7 +66,7 @@ class QuickShift(BaseEstimator):
     >>> model.labels_
     array([0, 0, 0, 5, 5, 5])
     >>> model.cluster_centers_idx_
-    array([0, 5])
+    array([0, 5], dtype=int64)
     """
 
     def __init__(
