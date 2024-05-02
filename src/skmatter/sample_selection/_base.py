@@ -58,7 +58,7 @@ class FPS(_FPS):
     Parameters
     ----------
 
-    initialize: int, list of int, ndarray of int, or 'random', default=0
+    initialize: int, list of int, numpy.ndarray of int, or 'random', default=0
         Index of the first selection(s). If 'random', picks a random
         value when fit starts. Stored in :py:attr:`self.initialize`.
 
