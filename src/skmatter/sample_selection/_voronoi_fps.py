@@ -40,11 +40,9 @@ class VoronoiFPS(GreedySelector):
 
     Parameters
     ----------
-
-    n_trial_calculation: integer, default=4
+    n_trial_calculation: int, default=4
         Number of calculations used for the switching point between Voronoi FPS
         and traditional FPS (for detail look at full_fraction).
-
     full_fraction: float, default=None
         Proportion of calculated distances from the total number of features at
         which the switch from Voronoi FPS to FPS occurs.
@@ -69,7 +67,7 @@ class VoronoiFPS(GreedySelector):
     ...     full_fraction=0.45,
     ...     # int or 'random', default=0
     ...     # Index of the first selection.
-    ...     # If ‘random’, picks a random value when fit starts.
+    ...     # If 'random', picks a random value when fit starts.
     ...     initialize=0,
     ... )
     >>> X = np.array(
@@ -111,43 +109,36 @@ class VoronoiFPS(GreedySelector):
         return self.hausdorff_
 
     def get_distance(self):
-        """
-
-        Traditional FPS employs a column-wise Euclidean
-        distance for feature selection, which can be expressed using the covariance
-        matrix :math:`\\mathbf{C} = \\mathbf{X} ^ T \\mathbf{X}`
+        r"""Traditional FPS employs a column-wise Euclidean distance for feature
+        selection, which can be expressed using the covariance matrix
+        :math:`\\mathbf{C} = \\mathbf{X} ^ T \\mathbf{X}`.
 
         .. math::
-            \\operatorname{d}_c(i, j) = C_{ii} - 2 C_{ij} + C_{jj}.
+            \operatorname{d}_c(i, j) = C_{ii} - 2 C_{ij} + C_{jj}.
 
         For sample selection, this is a row-wise Euclidean distance, which can be
         expressed in terms of the Gram matrix
         :math:`\\mathbf{K} = \\mathbf{X} \\mathbf{X} ^ T`
 
         .. math::
-            \\operatorname{d}_r(i, j) = K_{ii} - 2 K_{ij} + K_{jj}.
+            \operatorname{d}_r(i, j) = K_{ii} - 2 K_{ij} + K_{jj}.
 
         Returns
         -------
-
-        hausdorff : ndarray of shape (`n_to_select_from_`)
-                     the minimum distance from each point to the set of selected
-                     points. once a point is selected, the distance is not updated;
-                     the final list will reflect the distances when selected.
-
+        hausdorff : numpy.ndarray of shape (`n_to_select_from_`)
+            the minimum distance from each point to the set of selected points. once a
+            point is selected, the distance is not updated; the final list will reflect
+            the distances when selected.
         """
         return self.hausdorff_
 
     def get_select_distance(self):
         """
-
         Returns
         -------
-
-        hausdorff_at_select : ndarray of shape (`n_to_select`)
-                     at the time of selection, the minimum distance from each
-                     selected point to the set of previously selected points.
-
+        hausdorff_at_select : numpy.ndarray of shape (`n_to_select`)
+            at the time of selection, the minimum distance from each selected point to
+            the set of previously selected points.
         """
         mask = self.get_support(indices=True, ordered=True)
         return self.hausdorff_at_select_[mask]
@@ -163,7 +154,6 @@ class VoronoiFPS(GreedySelector):
         large number of distances, it is more advantageous to run simple
         calculation along the whole matrix.
         """
-
         n_to_select_from = X.shape[0]
         self.vlocation_of_idx = np.full(n_to_select_from, 1)
         # index of the voronoi cell associated with each of the columns of X
@@ -239,8 +229,8 @@ class VoronoiFPS(GreedySelector):
 
     def _continue_greedy_search(self, X, y, n_to_select):
         """Continues the search. Prepares an array to store the selected
-        features."""
-
+        features.
+        """
         super()._continue_greedy_search(X, y, n_to_select)
 
         n_pad = n_to_select - self.n_selected_
@@ -271,7 +261,6 @@ class VoronoiFPS(GreedySelector):
         |d(X,S) - d(S,L)|>= d(X,S) to know that we don't need to check X.
         but |d(X,S) - d(S,L)|^2>= d(X,S)^2 if and only if d(S,L)/2 > d(S,X)
         """
-
         if not hasattr(self, "n_selected_") or self.n_selected_ == 0:
             return np.arange(X.shape[0], dtype=int)
 
@@ -290,19 +279,17 @@ class VoronoiFPS(GreedySelector):
             return active_points
 
     def _update_post_selection(self, X, y, last_selected):
-        """
-        Saves the most recently selected feature, increments the feature counter
+        """Saves the most recently selected feature, increments the feature counter
         and update the hausdorff distances
-        Let:
-        L is the last point selected;
-        S are the selected points from before this iteration;
-        X is the one active point;
-        This function calculates d(L, X) and checks the condition
-        d(L, X)< min d(X, S_i). If so, we move X to a new polyhedron.
-        If the number of active points is too high, it is faster to calculate
-        the distances between L and all the points in the dataset.
-        """
 
+        Let:
+
+        L is the last point selected; S are the selected points from before this
+        iteration; X is the one active point; This function calculates d(L, X) and
+        checks the condition d(L, X)< min d(X, S_i). If so, we move X to a new
+        polyhedron. If the number of active points is too high, it is faster to
+        calculate the distances between L and all the points in the dataset.
+        """
         self.hausdorff_at_select_[last_selected] = self.hausdorff_[last_selected]
         active_points = self._get_active(X, last_selected)
 

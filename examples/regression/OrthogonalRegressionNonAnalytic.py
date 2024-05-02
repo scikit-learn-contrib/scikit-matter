@@ -3,7 +3,6 @@
 r"""
 Regression with orthogonal projector/matrices
 =============================================
-
 In this example, we explain how when using
 :class:`skmatter.linear_model.OrthogonalRegression` the option
 ``use_orthogonal_projector`` can result in non-analytic behavior. In

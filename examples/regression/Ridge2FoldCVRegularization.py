@@ -1,16 +1,14 @@
 # %%
 
 r"""
- Ridge2FoldCV for data with low effective rank
- =======================================================
- In this notebook we explain in more detail how
- :class:`skmatter.linear_model.Ridge2FoldCV` speeds up the
- cross-validation optimizing the regularitzation parameter :param alpha: and
- compare it with existing solution for that in scikit-learn
- :class:`slearn.linear_model.RidgeCV`.
- :class:`skmatter.linear_model.Ridge2FoldCV` was designed to predict
- efficiently feature matrices, but it can be also useful for the prediction
- single targets.
+Ridge2FoldCV for data with low effective rank
+=============================================
+In this notebook we explain in more detail how
+:class:`skmatter.linear_model.Ridge2FoldCV` speeds up the cross-validation optimizing
+the regularitzation parameter :param alpha: and compare it with existing solution for
+that in scikit-learn :class:`slearn.linear_model.RidgeCV`.
+:class:`skmatter.linear_model.Ridge2FoldCV` was designed to predict efficiently feature
+matrices, but it can be also useful for the prediction single targets.
 """
 # %%
 #
@@ -128,6 +126,7 @@ sklearn_ridge_loocv_tikhonov = RidgeCV(
 
 
 def micro_bench(ridge):
+    """A small benchmark function."""
     global N_REPEAT_MICRO_BENCH, X, y
     timings = []
     train_mse = []
@@ -177,6 +176,7 @@ X_train, X_test, y_train, y_test = train_test_split(
 
 
 def get_train_test_error(estimator):
+    """The train tets error based on the estimator."""
     global X_train, y_train, X_test, y_test
     estimator = estimator.fit(X_train, y_train)
     return (

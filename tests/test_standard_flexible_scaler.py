@@ -15,7 +15,8 @@ class ScalerTests(unittest.TestCase):
     def test_sample_weights(self):
         """Checks that sample weights of one are equal to the unweighted case.
 
-        Also, that the nonuniform weights are different from the unweighted case"""
+        Also, that the nonuniform weights are different from the unweighted case
+        """
         X = self.random_state.uniform(0, 100, size=(3, 3))
         equal_wts = np.ones(len(X))
         nonequal_wts = self.random_state.uniform(0, 100, size=(len(X),))
@@ -33,7 +34,8 @@ class ScalerTests(unittest.TestCase):
 
     def test_invalid_sample_weights(self):
         """Checks that weights must be 1D array with the same length as the number of
-        samples"""
+        samples
+        """
         X = self.random_state.uniform(0, 100, size=(3, 3))
         wts_len = np.ones(len(X) + 1)
         wts_dim = np.ones((len(X), 2))
@@ -106,17 +108,18 @@ class ScalerTests(unittest.TestCase):
         self.assertTrue((np.isclose(Y, Y_inv, atol=1e-12)).all())
 
     def test_NotFittedError_transform(self):
-        """Checks that an error is returned when
-        trying to use the transform function
-        before the fit function"""
+        """Checks that an error is returned when trying to use the transform function
+        before the fit function.
+        """
         X = self.random_state.uniform(0, 100, size=(3, 3))
         model = StandardFlexibleScaler(column_wise=True)
         with self.assertRaises(sklearn.exceptions.NotFittedError):
             model.transform(X)
 
     def test_shape_inconsistent_transform(self):
-        """Checks that an error is returned when attempting
-        to use the transform function with mismatched matrix sizes."""
+        """Checks that an error is returned when attempting to use the transform
+        function with mismatched matrix sizes.
+        """
         X = self.random_state.uniform(0, 100, size=(3, 3))
         X_test = self.random_state.uniform(0, 100, size=(4, 4))
         model = StandardFlexibleScaler(column_wise=True)
@@ -125,8 +128,9 @@ class ScalerTests(unittest.TestCase):
             model.transform(X_test)
 
     def test_shape_inconsistent_inverse(self):
-        """Checks that an error is returned when attempting
-        to use the inverse transform function with mismatched matrix sizes."""
+        """Checks that an error is returned when attempting to use the inverse transform
+        function with mismatched matrix sizes.
+        """
         X = self.random_state.uniform(0, 100, size=(3, 3))
         X_test = self.random_state.uniform(0, 100, size=(4, 4))
         model = StandardFlexibleScaler(column_wise=True)
@@ -135,17 +139,18 @@ class ScalerTests(unittest.TestCase):
             model.inverse_transform(X_test)
 
     def test_NotFittedError_inverse(self):
-        """Checks that an error is returned when
-        trying to use the inverse transform function
-        before the fit function"""
+        """Checks that an error is returned when trying to use the inverse transform
+        function before the fit function.
+        """
         X = self.random_state.uniform(0, 100, size=(3, 3))
         model = StandardFlexibleScaler()
         with self.assertRaises(sklearn.exceptions.NotFittedError):
             model.inverse_transform(X)
 
     def test_ValueError_column_wise(self):
-        """Checks that the matrix cannot be normalized
-        across columns if there is a zero variation column."""
+        """Checks that the matrix cannot be normalized across columns if there is a zero
+        variation column.
+        """
         X = self.random_state.uniform(0, 100, size=(3, 3))
         X[0][0] = X[1][0] = X[2][0] = 2
         model = StandardFlexibleScaler(column_wise=True)
@@ -154,7 +159,8 @@ class ScalerTests(unittest.TestCase):
 
     def test_atol(self):
         """Checks that we can define absolute tolerance and it control the
-        minimal variance of columns ot the whole matrix"""
+        minimal variance of columns ot the whole matrix.
+        """
         X = self.random_state.uniform(0, 100, size=(3, 3))
         atol = ((X[:, 0] - X[:, 0].mean(axis=0)) ** 2).mean(axis=0) + 1e-8
         model = StandardFlexibleScaler(column_wise=True, atol=atol, rtol=0)
@@ -167,7 +173,8 @@ class ScalerTests(unittest.TestCase):
 
     def test_rtol(self):
         """Checks that we can define relative tolerance and it control the
-        minimal variance of columns or the whole matrix"""
+        minimal variance of columns or the whole matrix.
+        """
         X = self.random_state.uniform(0, 100, size=(3, 3))
         mean = X[:, 0].mean(axis=0)
         rtol = ((X[:, 0] - mean) ** 2).mean(axis=0) / mean + 1e-8
@@ -181,16 +188,16 @@ class ScalerTests(unittest.TestCase):
             model.fit(X)
 
     def test_ValueError_full(self):
-        """Checks that the matrix cannot be normalized
-        if there is a zero variation matrix."""
+        """Checks that the matrix cannot be normalized if there is a zero variation
+        matrix.
+        """
         X = np.array([2, 2, 2]).reshape(-1, 1)
         model = StandardFlexibleScaler(column_wise=False)
         with self.assertRaises(ValueError):
             model.fit(X)
 
     def test_not_w_mean(self):
-        """Checks that the matrix normalized `with_mean=False`
-        does not have a mean."""
+        """Checks that the matrix normalized `with_mean=False` does not have a mean."""
         X = np.array([2, 2, 3]).reshape(-1, 1)
         model = StandardFlexibleScaler(with_mean=False)
         model.fit(X)

@@ -1,6 +1,5 @@
-"""
-This module contains a set of metrics that can be used for an enhanced
-understanding of your machine learning model.
+"""Set of metrics that can be used for an enhanced understanding of your machine
+learning model.
 
 First are the easily-interpretable error measures of the relative information
 capacity of feature space `F` with respect to feature space `F'`. The methods

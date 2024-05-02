@@ -23,4 +23,5 @@ from skmatter.preprocessing import KernelNormalizer, StandardFlexibleScaler
     ]
 )
 def test_sklearn_compatible_estimator(estimator, check):
+    """Test of the estimators are compatible with sklearn."""
     check(estimator)

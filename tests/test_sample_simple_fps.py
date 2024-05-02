@@ -13,11 +13,9 @@ class TestFPS(unittest.TestCase):
         self.idx = [0, 123, 441, 187, 117, 276, 261, 281, 251, 193]
 
     def test_restart(self):
+        """Checks that the model can be restarted with a new number of samples and
+        `warm_start`.
         """
-        This test checks that the model can be restarted with a new number of
-        samples and `warm_start`
-        """
-
         selector = FPS(n_to_select=1, initialize=self.idx[0])
         selector.fit(self.X)
 
@@ -27,11 +25,9 @@ class TestFPS(unittest.TestCase):
             self.assertEqual(selector.selected_idx_[i - 1], self.idx[i - 1])
 
     def test_initialize(self):
+        """Checks that the model can be initialized in all applicable manners and throws
+        an error otherwise.
         """
-        This test checks that the model can be initialized in all applicable manners
-        and throws an error otherwise
-        """
-
         for initialize in [self.idx[0], "random"]:
             with self.subTest(initialize=initialize):
                 selector = FPS(n_to_select=1, initialize=initialize)
@@ -75,9 +71,7 @@ class TestFPS(unittest.TestCase):
         self.assertEqual(str(cm.exception), "Invalid value of the initialize parameter")
 
     def test_get_distances(self):
-        """
-        This test checks that the hausdorff distances are returnable after fitting
-        """
+        """Checks that the hausdorff distances are returnable after fitting."""
         selector = FPS(n_to_select=1)
         selector.fit(self.X)
         _ = selector.get_select_distance()

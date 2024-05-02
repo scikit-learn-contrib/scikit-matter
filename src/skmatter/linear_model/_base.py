@@ -41,7 +41,7 @@ class OrthogonalRegression(MultiOutputMixin, RegressorMixin):
         dimension, when `use_orthogonal_projector` is set to False. This attribute
         is set to the maximum of the feature and target dimension.
 
-    coef_ : ndarray of shape (n_features,) or (n_targets, n_features) or (max_components, max_components)
+    coef_ : numpy.ndarray of shape (n_features,) or (n_targets, n_features) or (max_components, max_components)
         Weight matrix. The shape (max_components, max_components) is used if
         `use_orthogonal_projector` is set to False.
     """  # NoQa: E501
@@ -54,15 +54,13 @@ class OrthogonalRegression(MultiOutputMixin, RegressorMixin):
         """
         Parameters
         ----------
-        X : ndarray of shape (n_samples, n_features)
-            Training data, where n_samples is the number of samples
-            and n_features is the number of features.
-
-        y : ndarray of shape (n_samples, n_targets)
-            Training data, where n_samples is the number of samples
-            and n_targets is the number of target properties.
+        X : numpy.ndarray of shape (n_samples, n_features)
+            Training data, where ``n_samples`` is the number of samples and
+            ``n_features`` is the number of features.
+        y : numpy.ndarray of shape (n_samples, n_targets)
+            Training data, where ``n_samples`` is the number of samples and
+            ``n_targets`` is the number of target properties.
         """
-
         X, y = check_X_y(
             X,
             y,
@@ -103,9 +101,9 @@ class OrthogonalRegression(MultiOutputMixin, RegressorMixin):
         """
         Parameters
         ----------
-        X : ndarray of shape (n_samples, n_features)
-            Training data, where n_samples is the number of samples
-            and n_features is the number of features.
+        X : numpy.ndarray of shape (n_samples, n_features)
+            Training data, where n_samples is the number of samples and n_features is
+            the number of features.
         """
         X = check_array(X, ensure_min_features=1, ensure_min_samples=1)
         check_is_fitted(self, ["coef_"])

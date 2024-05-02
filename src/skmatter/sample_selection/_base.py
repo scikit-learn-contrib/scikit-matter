@@ -1,6 +1,4 @@
-"""
-Sequential sample selection
-"""
+"""Sequential sample selection"""
 
 import warnings
 
@@ -19,18 +17,18 @@ def _linear_interpolator(points, values):
     set to N-D simplices, and interpolate linearly on each simplex. See
     ``LinearNDInterpolator`` for more details.
 
-    points : 2-D ndarray of floats with shape (n, D), or length D tuple of 1-D ndarrays with shape (n,).
+    Parameters
+    ----------
+    points : 1- or 2-D numpy.ndarray of shape (n,) or (n, D)
         Data point coordinates.
-    values : ndarray of float or complex, shape (n,)
+    values : numpy.ndarray of float or complex, shape (n, )
         Data values.
-
 
     Reference:
     ---------
     The code is an adapted excerpt from
     https://github.com/scipy/scipy/blob/dde50595862a4f9cede24b5d1c86935c30f1f88a/scipy/interpolate/_ndgriddata.py#L119-L273
     """  # NoQa: E501
-
     points = _ndim_coords_from_arrays(points)
 
     if points.ndim < 2:
@@ -52,60 +50,48 @@ def _linear_interpolator(points, values):
 
 
 class FPS(_FPS):
-    """
-    Transformer that performs Greedy Sample Selection using Farthest Point Sampling.
+    """Transformer performing Greedy Sample Selection using Farthest Point Sampling.
 
     Parameters
     ----------
-
     initialize: int, list of int, numpy.ndarray of int, or 'random', default=0
         Index of the first selection(s). If 'random', picks a random
         value when fit starts. Stored in :py:attr:`self.initialize`.
 
     n_to_select : int or float, default=None
-        The number of selections to make. If `None`, half of the samples are
-        selected. If integer, the parameter is the absolute number of selections
-        to make. If float between 0 and 1, it is the fraction of the total dataset to
-        select. Stored in :py:attr:`self.n_to_select`.
-
+        The number of selections to make. If `None`, half of the samples are selected.
+        If integer, the parameter is the absolute number of selections to make. If float
+        between 0 and 1, it is the fraction of the total dataset to select. Stored in
+        :py:attr:`self.n_to_select`.
     score_threshold : float, default=None
-        Threshold for the score. If `None` selection will continue until the
-        n_to_select is chosen. Otherwise will stop when the score falls below the
-        threshold. Stored in :py:attr:`self.score_threshold`.
-
+        Threshold for the score. If `None` selection will continue until the n_to_select
+        is chosen. Otherwise will stop when the score falls below the threshold. Stored
+        in :py:attr:`self.score_threshold`.
     score_threshold_type : str, default="absolute"
         How to interpret the ``score_threshold``. When "absolute", the score used by the
         selector is compared to the threshold directly. When "relative", at each
         iteration, the score used by the selector is compared proportionally to the
-        score of the first selection, i.e. the selector quits when
-        ``current_score / first_score < threshold``. Stored in
-        :py:attr:`self.score_threshold_type`.
-
+        score of the first selection, i.e. the selector quits when ``current_score /
+        first_score < threshold``. Stored in :py:attr:`self.score_threshold_type`.
     progress_bar: bool, default=False
-              option to use `tqdm <https://tqdm.github.io/>`_ progress bar to monitor
-              selections. Stored in :py:attr:`self.report_progress`.
-
+        option to use `tqdm <https://tqdm.github.io/>`_ progress bar to monitor
+        selections. Stored in :py:attr:`self.report_progress`.
     full : bool, default=False
-        In the case that all non-redundant selections are exhausted, choose
-        randomly from the remaining samples. Stored in :py:attr:`self.full`.
-
-    random_state: int or RandomState instance, default=0
+        In the case that all non-redundant selections are exhausted, choose randomly
+        from the remaining samples. Stored in :py:attr:`self.full`.
+    random_state : int or :class:`numpy.random.RandomState` instance, default=0
 
     Attributes
     ----------
-
     n_selected_ : int
-                  Counter tracking the number of selections that have been made
-
-    X_selected_ : ndarray,
-                  Matrix containing the selected samples, for use in fitting
-
-    y_selected_ : ndarray,
-                  In sample selection, the matrix containing the selected targets, for
-                  use in fitting
-
-    selected_idx_ : ndarray
-                  indices of selected samples
+        Counter tracking the number of selections that have been made
+    X_selected_ :numpy.ndarray,
+        Matrix containing the selected samples, for use in fitting
+    y_selected_ : numpy.ndarray,
+        In sample selection, the matrix containing the selected targets, for
+        use in fitting.
+    selected_idx_ : numpy.ndarray
+        indices of selected samples
 
     Examples
     --------
@@ -115,7 +101,7 @@ class FPS(_FPS):
     ...     n_to_select=2,
     ...     # int or 'random', default=0
     ...     # Index of the first selection.
-    ...     # If ‘random’, picks a random value when fit starts.
+    ...     # If "random", picks a random value when fit starts.
     ...     initialize=0,
     ... )
     >>> X = np.array(
@@ -154,64 +140,51 @@ class FPS(_FPS):
 
 
 class PCovFPS(_PCovFPS):
-    """Transformer that performs Greedy Sample Selection using PCovR-weighted
-    Farthest Point Sampling.
+    r"""Transformer performing Greedy Sample Selection using PCovR-weighted Farthest
+    Point Sampling.
 
     Parameters
     ----------
-
     mixing: float, default=0.5
-            The PCovR mixing parameter, as described in PCovR as
-            :math:`{\\alpha}`
-
+        The PCovR mixing parameter, as described in PCovR as
+        :math:`{\\alpha}`
     initialize: int or 'random', default=0
-        Index of the first selection. If 'random', picks a random
-        value when fit starts.
-
+        Index of the first selection. If 'random', picks a random value when fit starts.
     n_to_select : int or float, default=None
-        The number of selections to make. If `None`, half of the samples are
-        selected. If integer, the parameter is the absolute number of selections
-        to make. If float between 0 and 1, it is the fraction of the total dataset to
-        select. Stored in :py:attr:`self.n_to_select`.
-
+        The number of selections to make. If `None`, half of the samples are selected.
+        If integer, the parameter is the absolute number of selections to make. If float
+        between 0 and 1, it is the fraction of the total dataset to select. Stored in
+        :py:attr:`self.n_to_select`.
     score_threshold : float, default=None
         Threshold for the score. If `None` selection will continue until the n_to_select
         is chosen. Otherwise will stop when the score falls below the threshold. Stored
         in :py:attr:`self.score_threshold`.
-
     score_threshold_type : str, default="absolute"
         How to interpret the ``score_threshold``. When "absolute", the score used by the
         selector is compared to the threshold directly. When "relative", at each
         iteration, the score used by the selector is compared proportionally to the
-        score of the first selection, i.e. the selector quits when
-        ``current_score / first_score < threshold``. Stored in
-        :py:attr:`self.score_threshold_type`.
-
+        score of the first selection, i.e. the selector quits when ``current_score /
+        first_score < threshold``. Stored in :py:attr:`self.score_threshold_type`.
     progress_bar: bool, default=False
-              option to use `tqdm <https://tqdm.github.io/>`_ progress bar to monitor
-              selections. Stored in :py:attr:`self.report_progress`.
-
+        option to use `tqdm <https://tqdm.github.io/>`_ progress bar to monitor
+        selections. Stored in :py:attr:`self.report_progress`.
     full : bool, default=False
         In the case that all non-redundant selections are exhausted, choose
         randomly from the remaining samples. Stored in :py:attr:`self.full`.
-
-    random_state: int or RandomState instance, default=0
+    random_state : int or :class:`numpy.random.RandomState` instance, default=0
 
     Attributes
     ----------
-
     n_selected_ : int
-                  Counter tracking the number of selections that have been made
+        Counter tracking the number of selections that have been made
+    X_selected_ : numpy.ndarray,
+        Matrix containing the selected samples, for use in fitting
 
-    X_selected_ : ndarray,
-                  Matrix containing the selected samples, for use in fitting
-
-    y_selected_ : ndarray,
-                  In sample selection, the matrix containing the selected targets, for
-                  use in fitting
-
-    selected_idx_ : ndarray
-                  indices of selected samples
+    y_selected_ : numpy.ndarray,
+        In sample selection, the matrix containing the selected targets, for use in
+        fitting
+    selected_idx_ : numpy.ndarray
+        indices of selected samples
 
     Examples
     --------
@@ -221,7 +194,7 @@ class PCovFPS(_PCovFPS):
     ...     n_to_select=2,
     ...     # int or 'random', default=0
     ...     # Index of the first selection.
-    ...     # If ‘random’, picks a random value when fit starts.
+    ...     # If "random", picks a random value when fit starts.
     ...     initialize=0,
     ... )
     >>> X = np.array(
@@ -264,71 +237,56 @@ class PCovFPS(_PCovFPS):
 
 class CUR(_CUR):
     """Transformer that performs Greedy Sample Selection by choosing samples
-    which maximize the magnitude of the left singular vectors, consistent with
-    classic CUR matrix decomposition.
+    which maximize the magnitude of the left singular vectors, consistent with classic
+    CUR matrix decomposition.
 
     Parameters
     ----------
     recompute_every : int
-                      number of steps after which to recompute the pi score
-                      defaults to 1, if 0 no re-computation is done
-
+        number of steps after which to recompute the pi score defaults to 1, if 0 no
+        re-computation is done
     k : int
         number of eigenvectors to compute the importance score with, defaults to 1
-
     tolerance: float
          threshold below which scores will be considered 0, defaults to 1E-12
-
     n_to_select : int or float, default=None
-        The number of selections to make. If `None`, half of the samples are
-        selected. If integer, the parameter is the absolute number of selections
-        to make. If float between 0 and 1, it is the fraction of the total dataset to
-        select. Stored in :py:attr:`self.n_to_select`.
-
+        The number of selections to make. If `None`, half of the samples are selected.
+        If integer, the parameter is the absolute number of selections to make. If float
+        between 0 and 1, it is the fraction of the total dataset to select. Stored in
+        :py:attr:`self.n_to_select`.
     score_threshold : float, default=None
-        Threshold for the score. If `None` selection will continue until the
-        n_to_select is chosen. Otherwise will stop when the score falls below the
-        threshold. Stored in :py:attr:`self.score_threshold`.
-
+        Threshold for the score. If `None` selection will continue until the n_to_select
+        is chosen. Otherwise will stop when the score falls below the threshold. Stored
+        in :py:attr:`self.score_threshold`.
     score_threshold_type : str, default="absolute"
-        How to interpret the ``score_threshold``. When "absolute", the score used by
-        the selector is compared to the threshold directly. When "relative", at each
+        How to interpret the ``score_threshold``. When "absolute", the score used by the
+        selector is compared to the threshold directly. When "relative", at each
         iteration, the score used by the selector is compared proportionally to the
-        score of the first selection, i.e. the selector quits when
-        ``current_score / first_score < threshold``. Stored in
-        :py:attr:`self.score_threshold_type`.
-
+        score of the first selection, i.e. the selector quits when ``current_score /
+        first_score < threshold``. Stored in :py:attr:`self.score_threshold_type`.
     progress_bar: bool, default=False
               option to use `tqdm <https://tqdm.github.io/>`_ progress bar to monitor
               selections. Stored in :py:attr:`self.report_progress`.
-
     full : bool, default=False
         In the case that all non-redundant selections are exhausted, choose
         randomly from the remaining samples. Stored in :py:attr:`self.full`.
-
-    random_state: int or RandomState instance, default=0
+    random_state : int or :class:`numpy.random.RandomState` instance, default=0
 
     Attributes
     ----------
-
-    X_current_ : ndarray (n_samples, n_features)
-                  The original matrix orthogonalized by previous selections
-
+    X_current_ : numpy.ndarray (n_samples, n_features)
+        The original matrix orthogonalized by previous selections
     n_selected_ : int
-                  Counter tracking the number of selections that have been made
-
-    X_selected_ : ndarray,
-                  Matrix containing the selected samples, for use in fitting
-
-    y_selected_ : ndarray,
-                  In sample selection, the matrix containing the selected targets, for
-                  use in fitting
-
-    pi_ : ndarray (n_features),
-                  the importance score see :func:`_compute_pi`
-
+        Counter tracking the number of selections that have been made
+    X_selected_ : numpy.ndarray,
+        Matrix containing the selected samples, for use in fitting
+    y_selected_ : numpy.ndarray,
+        In sample selection, the matrix containing the selected targets, for use in
+        fitting
+    pi_ : numpy.ndarray (n_features),
+        the importance score see :func:`_compute_pi`
     selected_idx_ : ndarray
-                  indices of selected features
+        indices of selected features
 
     Examples
     --------
@@ -391,33 +349,25 @@ class PCovCUR(_PCovCUR):
 
     Parameters
     ----------
-
     mixing: float, default=0.5
-            The PCovR mixing parameter, as described in PCovR as
-            :math:`{\\alpha}`. Stored in :py:attr:`self.mixing`.
-
+        The PCovR mixing parameter, as described in PCovR as :math:`{\\alpha}`. Stored
+        in :py:attr:`self.mixing`.
     recompute_every : int
-                      number of steps after which to recompute the pi score
-                      defaults to 1, if 0 no re-computation is done
-
-
+        number of steps after which to recompute the pi score defaults to 1, if 0 no
+        re-computation is done
     k : int
         number of eigenvectors to compute the importance score with, defaults to 1
-
     tolerance: float
-         threshold below which scores will be considered 0, defaults to 1E-12
-
+        threshold below which scores will be considered 0, defaults to 1E-12
     n_to_select : int or float, default=None
         The number of selections to make. If `None`, half of the samples are
         selected. If integer, the parameter is the absolute number of selections
         to make. If float between 0 and 1, it is the fraction of the total dataset to
         select. Stored in :py:attr:`self.n_to_select`.
-
     score_threshold : float, default=None
         Threshold for the score. If `None` selection will continue until the
         n_to_select is chosen. Otherwise will stop when the score falls below the
         threshold. Stored in :py:attr:`self.score_threshold`.
-
     score_threshold_type : str, default="absolute"
         How to interpret the ``score_threshold``. When "absolute", the score used by
         the selector is compared to the threshold directly. When "relative", at each
@@ -425,43 +375,31 @@ class PCovCUR(_PCovCUR):
         score of the first selection, i.e. the selector quits when
         ``current_score / first_score < threshold``. Stored in
         :py:attr:`self.score_threshold_type`.
-
     progress_bar: bool, default=False
-              option to use `tqdm <https://tqdm.github.io/>`_
-              progress bar to monitor selections.
-              Stored in :py:attr:`self.report_progress`.
-
+        option to use `tqdm <https://tqdm.github.io/>`_ progress bar to monitor
+        selections. Stored in :py:attr:`self.report_progress`.
     full : bool, default=False
         In the case that all non-redundant selections are exhausted, choose
         randomly from the remaining samples. Stored in :py:attr:`self.full`.
-
-    random_state: int or RandomState instance, default=0
+    random_state : int or :class`numpy.random.RandomState` instance, default=0
 
     Attributes
     ----------
-
-    X_current_ : ndarray (n_samples, n_features)
-                  The original matrix orthogonalized by previous selections
-
-    y_current_ : ndarray (n_samples, n_properties)
-                The targets orthogonalized by a regression on
-                the previous selections.
-
+    X_current_ : numpy.ndarray (n_samples, n_features)
+        The original matrix orthogonalized by previous selections
+    y_current_ : numpy.ndarray (n_samples, n_properties)
+        The targets orthogonalized by a regression on the previous selections.
     n_selected_ : int
-                  Counter tracking the number of selections that have been made
-
-    X_selected_ : ndarray,
-                  Matrix containing the selected samples, for use in fitting
-
-    y_selected_ : ndarray,
-                  In sample selection, the matrix containing the selected targets, for
-                  use in fitting
-
-    pi_ : ndarray (n_features),
-                  the importance score see :func:`_compute_pi`
-
-    selected_idx_ : ndarray
-                  indices of selected features
+        Counter tracking the number of selections that have been made
+    X_selected_ : numpy.ndarray
+        Matrix containing the selected samples, for use in fitting
+    y_selected_ : numpy.ndarray,
+        In sample selection, the matrix containing the selected targets, for use in
+        fitting
+    pi_ : numpy.ndarray (n_features),
+        the importance score see :func:`_compute_pi`
+    selected_idx_ : numpy.ndarray
+        indices of selected features
 
     Examples
     --------
@@ -520,22 +458,22 @@ class PCovCUR(_PCovCUR):
 
 def _directional_distance(equations, points):
     """
-    Computes the distance of the points to the planes defined by the equations
-    with respect to the direction of the first dimension.
+    Computes the distance of the points to the planes defined by the equations with
+    respect to the direction of the first dimension.
 
-    equations : ndarray of shape (n_facets, n_dim)
-                each row contains the coefficienst for the plane equation of the form
-                equations[i, 0]*x_1 + ...
-                    + equations[i, -2]*x_{n_dim} = equations[i, -1]
-                -equations[i, -1] is the offset
-    points    : ndarray of shape (n_samples, n_dim)
-                points to compute the directional distance from
+    equations : numpy.ndarray of shape (n_facets, n_dim)
+        each row contains the coefficienst for the plane equation of the form
+        .. math::
+            equations[i, 0]*x_1 + ... + equations[i, -2]*x_{n_dim}
+            = equations[i, -1] -equations[i, -1] is the offset
+    points : numpy.ndarray of shape (n_samples, n_dim)
+        points to compute the directional distance from
 
     Returns
     -------
-    directional_distance : ndarray of shape (nsamples, nequations)
-                closest distance wrt. the first dimension of the point to the planes
-                defined by the equations
+    directional_distance : numpy.ndarray of shape (nsamples, nequations)
+        closest distance wrt. the first dimension of the point to the planes defined by
+        the equations
     """
     orthogonal_distances = -(points @ equations[:, :-1].T) - equations[:, -1:].T
     return -orthogonal_distances / equations[:, :1].T
@@ -619,24 +557,22 @@ class DirectionalConvexHull:
         self.tolerance = tolerance
 
     def fit(self, X, y):
-        """
-        Learn the samples that form the convex hull.
+        """Learn the samples that form the convex hull.
 
         Parameters
         ----------
-        X        : ndarray of shape (n_samples, n_features)
-                   Feature matrix of samples to use for constructing the convex
-                   hull.
-        y        : ndarray of shape (n_samples,)
-                   Target values (property on which the convex hull should be
-                   constructed, e.g. Gibbs free energy)
+        X : numpy.ndarray of shape (n_samples, n_features)
+            Feature matrix of samples to use for constructing the convex
+            hull.
+        y : numpy.ndarray of shape (n_samples,)
+            Target values (property on which the convex hull should be
+            constructed, e.g. Gibbs free energy)
 
         Returns
         -------
         self : object
             Fitted scorer.
         """
-
         X, y = self._check_X_y(X, y)
         self.n_features_in_ = X.shape[1]
 
@@ -714,30 +650,27 @@ class DirectionalConvexHull:
         return True
 
     def score_samples(self, X, y):
-        """
-        Calculate the distance of the samples to the convex hull in the target
-        direction y. Samples with a distance > 0 lie above the convex surface.
-        Samples with a distance of zero lie on the convex surface. Samples with
-        a distance value < 0 lie below the convex surface.
+        """Calculate the distance of the samples to the convex hull in the target
+        direction y. Samples with a distance > 0 lie above the convex surface. Samples
+        with a distance of zero lie on the convex surface. Samples with a distance value
+        < 0 lie below the convex surface.
 
         Parameters
         ----------
-        X    : ndarray of shape (n_samples, n_features)
-               Feature matrix of samples to use for determining distance
-               to the convex hull. Please note that samples provided should
-               have the same dimensions (features) as used during fitting
-               of the convex hull. The same column indices will be used for
-               the low- and high-dimensional features.
-
-        y    : ndarray of shape (n_samples,)
-               Target values (property on which the convex hull should be
-               constructed, e.g. Gibbs free energy)
+        X : numpy.ndarray of shape (n_samples, n_features)
+            Feature matrix of samples to use for determining distance to the convex
+            hull. Please note that samples provided should have the same dimensions
+            (features) as used during fitting of the convex hull. The same column
+            indices will be used for the low- and high-dimensional features.
+        y : numpy.ndarray of shape (n_samples,)
+            Target values (property on which the convex hull should be constructed, e.g.
+            Gibbs free energy)
 
         Returns
         -------
-        dch_distance : ndarray of shape (n_samples, len(high_dim_idx_))
-            The distance (residuals)  of samples to the convex hull in
-            the higher-dimensional space.
+        dch_distance : numpy.ndarray of shape (n_samples, len(high_dim_idx_))
+            The distance (residuals)  of samples to the convex hull in the
+            higher-dimensional space.
         """
         X, y = self._check_X_y(X, y)
         self._check_is_fitted(X)
@@ -786,25 +719,21 @@ class DirectionalConvexHull:
         return directional_distances
 
     def score_feature_matrix(self, X):
-        """
-        Calculate the distance (or more specifically, the residuals) of the
-        samples to the convex hull in the high-dimensional space. Samples
-        with a distance value of zero in all the higher dimensions lie on
-        the convex hull.
-
+        """Calculate the distance (or more specifically, the residuals) of the
+        samples to the convex hull in the high-dimensional space. Samples with a
+        distance value of zero in all the higher dimensions lie on the convex hull.
 
         Parameters
         ----------
-        X    : ndarray of shape (n_samples, n_features)
-               Feature matrix of samples to use for determining distance
-               to the convex hull. Please note that samples provided should
-               have the same dimensions (features) as used during fitting
-               of the convex hull. The same column indices will be used for
-               the low- and high-dimensional features.
+        X : numpy.ndarray of shape (n_samples, n_features)
+            Feature matrix of samples to use for determining distance to the convex
+            hull. Please note that samples provided should have the same dimensions
+            (features) as used during fitting of the convex hull. The same column
+            indices will be used for the low- and high-dimensional features.
 
         Returns
         -------
-        dch_distance : numpy.array of shape (n_samples, len(high_dim_idx_))
+        dch_distance : numpy.ndarray of shape (n_samples, len(high_dim_idx_))
             The distance (residuals)  of samples to the convex hull in
             the higher-dimensional space.
         """
