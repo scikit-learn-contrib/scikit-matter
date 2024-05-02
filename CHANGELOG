@@ -18,6 +18,8 @@ The rules for CHANGELOG file:
 - Add an example on how to couduct PAMM algorithm with `SparseKDE` and `QuickShift`
   (#222)
 - Add H2O-BLYP-Piglet dataset (#222)
+- Add twi distance metrics that support the periodic boundry, 
+  `pairwise_euclidean_distances` and `pairwise_mahalanobis_distances` (#222)
 - Updating ``FPS`` to allow a numpy array of ints as an initialize parameter (#145)
 - Supported Python versions are now ranging from 3.9 - 3.12.
 - Updating ``skmatter.datasets`` submodule to support sklearn 1.5.0 (#229)
