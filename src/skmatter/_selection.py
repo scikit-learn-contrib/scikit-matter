@@ -934,7 +934,7 @@ class _FPS(GreedySelector):
     Parameters
     ----------
 
-    initialize: int, list of int, ndarray of int, or 'random', default=0
+    initialize: int, list of int, numpy.ndarray of int, or 'random', default=0
         Index of the first selection(s). If 'random', picks a random
         value when fit starts. Stored in :py:attr:`self.initialize`.
 
@@ -1038,14 +1038,7 @@ class _FPS(GreedySelector):
         self.hausdorff_ = np.full(X.shape[self._axis], np.inf)
         self.hausdorff_at_select_ = np.full(X.shape[self._axis], np.inf)
 
-        if isinstance(self.initialize, np.ndarray):
-            if all(isinstance(i, numbers.Integral) for i in self.initialize):
-                for i, val in enumerate(self.initialize):
-                    self.selected_idx_[i] = val
-                    self._update_post_selection(X, y, self.selected_idx_[i])
-            else:
-                raise ValueError("Initialize parameter must contain only int")
-        elif self.initialize == "random":
+        if self.initialize == "random":
             random_state = check_random_state(self.random_state)
             initialize = random_state.randint(X.shape[self._axis])
             self.selected_idx_[0] = initialize
@@ -1056,6 +1049,12 @@ class _FPS(GreedySelector):
             self._update_post_selection(X, y, self.selected_idx_[0])
         elif isinstance(self.initialize, list) and all(
             [isinstance(i, numbers.Integral) for i in self.initialize]
+        ):
+            for i, val in enumerate(self.initialize):
+                self.selected_idx_[i] = val
+                self._update_post_selection(X, y, self.selected_idx_[i])
+        elif isinstance(self.initialize, np.ndarray) and all(
+            isinstance(i, numbers.Integral) for i in self.initialize
         ):
             for i, val in enumerate(self.initialize):
                 self.selected_idx_[i] = val
