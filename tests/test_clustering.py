@@ -33,9 +33,14 @@ class QuickShiftTests(unittest.TestCase):
         )
         cls.labels_ = np.array([0, 0, 0, 5, 5, 5])
         cls.cluster_centers_idx_ = np.array([0, 5])
+        cls.cell = [3, 3]
 
     def test_fit(self):
         model = QuickShift(self.cuts)
         model.fit(self.points, samples_weight=self.weights)
         self.assertTrue(np.all(model.labels_ == self.labels_))
         self.assertTrue(np.all(model.cluster_centers_idx_ == self.cluster_centers_idx_))
+
+    def test_dimension_check(self):
+        model = QuickShift(self.cuts, metric_params={"cell": self.cell})
+        self.assertRaises(ValueError, model.fit, np.array([[2]]))

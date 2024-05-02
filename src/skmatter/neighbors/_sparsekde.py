@@ -51,6 +51,8 @@ class SparseKDE(BaseEstimator):
     fpoints : float, default=0.15
         The fractional number of points in the voronoi cell of each grid points. Use
         this when each cell has a similar number of points.
+    verbose : bool, default=False
+        Whether to print progress.
 
 
     Attributes
@@ -75,14 +77,23 @@ class SparseKDE(BaseEstimator):
     >>> from skmatter.neighbors import SparseKDE
     >>> from skmatter.feature_selection import FPS
     >>> np.random.seed(0)
-    >>> n_samples = 10000
+    >>> n_samples = 10_000
+
+    To create two gaussians with different means and covariance and sample from them
+
     >>> cov1 = [[1, 0.5], [0.5, 1]]
     >>> cov2 = [[1, 0.5], [0.5, 0.5]]
     >>> sample1 = np.random.multivariate_normal([0, 0], cov1, n_samples)
     >>> sample2 = np.random.multivariate_normal([4, 4], cov2, n_samples)
     >>> samples = np.concatenate([sample1, sample2])
+
+    To select grid points using FPS
+
     >>> selector = FPS(n_to_select=int(np.sqrt(2 * n_samples)))
     >>> result = selector.fit_transform(samples.T).T
+
+    Conduct sparse KDE based on the grid points
+
     >>> estimator = SparseKDE(samples, None, fpoints=0.5)
     >>> estimator.fit(result)
     SparseKDE(descriptors=array([[-1.72779275, -1.32763554],
@@ -94,6 +105,9 @@ class SparseKDE(BaseEstimator):
            [ 4.08667637,  3.42457743]]),
               fpoints=0.5,
               weights=array([5.e-05, 5.e-05, 5.e-05, ..., 5.e-05, 5.e-05, 5.e-05]))
+
+    The total log-likelihood under the model
+
     >>> round(estimator.score(result), 3)
     -759.831
     """
@@ -107,17 +121,20 @@ class SparseKDE(BaseEstimator):
         metric_params: Union[dict, None] = None,
         fspread: float = -1.0,
         fpoints: float = 0.15,
+        verbose: bool = False,
     ):
         self.kernel = kernel
         self.metric = metric
         self.metric_params = metric_params
         self.cell = metric_params["cell"] if metric_params is not None else None
+        self._check_dimension(descriptors)
         self.descriptors = descriptors
         self.weights = weights if weights is not None else np.ones(len(descriptors))
         self.weights /= np.sum(self.weights)
         self.nsamples = len(descriptors)
         self.fspread = fspread
         self.fpoints = fpoints
+        self.verbose = verbose
         self.kdecut2 = 9 * (np.sqrt(descriptors.shape[1]) + 1) ** 2
         self.model = None
         self.cluster_mean = None
@@ -152,6 +169,7 @@ class SparseKDE(BaseEstimator):
             Returns the instance itself.
         """
 
+        self._check_dimension(X)
         self._grids = X
         grid_dist_mat = DIST_METRICS[self.metric](X, X, squared=True, cell=self.cell)
         np.fill_diagonal(grid_dist_mat, np.inf)
@@ -245,9 +263,13 @@ class SparseKDE(BaseEstimator):
             ]
         )
 
+    def _check_dimension(self, X):
+        if (self.cell is not None) and (X.shape[1] != len(self.cell)):
+            raise ValueError("Cell dimension does not match the data dimension.")
+
     def _assign_descriptors_to_grids(self, X):
 
-        assigner = _NearestGridAssigner(self.metric, self.metric_params)
+        assigner = _NearestGridAssigner(self.metric, self.metric_params, self.verbose)
         assigner.fit(X)
         labels = assigner.predict(self.descriptors, sample_weight=self.weights)
         grid_npoints = assigner.grid_npoints
@@ -278,7 +300,11 @@ class SparseKDE(BaseEstimator):
         )
         h_invs = np.zeros((len(X), X.shape[1], X.shape[1]))
 
-        for i in tqdm(range(len(X)), desc="Estimating kernel density bandwidths"):
+        for i in tqdm(
+            range(len(X)),
+            desc="Estimating kernel density bandwidths",
+            disable=not self.verbose,
+        ):
             wlocal, flocal[i] = _local_population(
                 self.cell, X, X[i], sample_weights, sigma2[i]
             )
@@ -367,7 +393,9 @@ class SparseKDE(BaseEstimator):
             X, self._grids, self._h_invs, self.cell, squared=True
         )
         for i in tqdm(
-            range(len(X)), desc="Computing kernel density on reference points"
+            range(len(X)),
+            desc="Computing kernel density on reference points",
+            disable=not self.verbose,
         ):
             for j, dummd1 in enumerate(np.diagonal(dummd1s_mat[:, i, :])):
                 # The second point is the mean corresponding to the cov
@@ -409,9 +437,12 @@ class _NearestGridAssigner:
     metric :
         The metric to use.
         Currently only `sklearn.metrics.pairwise.pairwise_euclidean_distances`.
-    cell : np.ndarray
-        An array of periods for each dimension of the grid.
-
+    metric_params : dict, default=None
+        Additional parameters to be passed to the use of
+        metric.  i.e. the cell dimension for `periodic_euclidean`
+        {'cell': [2, 2]}
+    verbose : bool, default=False
+        Whether to print progress.
 
     Attributes
     ----------
@@ -431,11 +462,13 @@ class _NearestGridAssigner:
         self,
         metric,
         metric_params: Union[dict, None] = None,
+        verbose: bool = False,
     ) -> None:
 
         self.labels_ = None
         self.metric = metric
         self.metric_params = metric_params
+        self.verbose = verbose
         if isinstance(self.metric_params, dict):
             self.cell = self.metric_params["cell"]
         else:
@@ -489,7 +522,10 @@ class _NearestGridAssigner:
             sample_weight = np.ones(len(X)) / len(X)
         self.labels_ = []
         for i, point in tqdm(
-            enumerate(X), desc="Assigning samples to grids...", total=len(X)
+            enumerate(X),
+            desc="Assigning samples to grids...",
+            total=len(X),
+            disable=not self.verbose,
         ):
             descriptor2grid = DIST_METRICS[self.metric](
                 X=point.reshape(1, -1), Y=self.grid_pos, cell=self.cell

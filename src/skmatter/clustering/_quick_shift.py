@@ -8,7 +8,9 @@ from ..metrics import DIST_METRICS
 
 
 class QuickShift(BaseEstimator):
-    """This class is used to implement the quick shift clustering algorithm,
+    """Conducts quick shift clustering.
+
+    This class is used to implement the quick shift clustering algorithm,
     which is used in probabilistic analysis of molecular motifs (PAMM). There
     are two ways of searching the next point: (1) search for the point within the given
     distance cutoff and (2) search for the point within the given number of neighbor
@@ -17,8 +19,8 @@ class QuickShift(BaseEstimator):
 
     Parameters
     ----------
-    dist_cutoff2 : float, default=None
-        The squared distance cutoff for searching for the next point. If ``None``, the
+    dist_cutoff_sq : float, default=None
+        The squared distance cutoff for searching for the next point. If `None`, the
         Gabriel graph is used.
     gabriel_shell : int, default=None
         The number of neighbor shell of gabriel graph. If None, the distance cutoff
@@ -46,11 +48,20 @@ class QuickShift(BaseEstimator):
     --------
     >>> import numpy as np
     >>> from skmatter.clustering import QuickShift
+
+    Create some points and their weights for quick shift clustering
+
     >>> feature1 = np.array([-1.72, -4.44, 0.54, 3.19, -1.13, 0.55])
     >>> feature2 = np.array([-1.32, -2.13, -2.43, -0.49, 2.33, 0.18])
     >>> points = np.vstack((feature1, feature2)).T
-    >>> cuts = np.array([6.99, 8.80, 7.68, 9.51, 8.07, 6.22])
     >>> weights = np.array([-3.94, -12.68, -7.07, -9.03, -8.26, -2.61])
+
+    Set cutoffs for seraching
+
+    >>> cuts = np.array([6.99, 8.80, 7.68, 9.51, 8.07, 6.22])
+
+    Do the clustering
+
     >>> model = QuickShift(cuts).fit(points, samples_weight=weights)
     >>> model.labels_
     array([0, 0, 0, 5, 5, 5])
@@ -60,15 +71,15 @@ class QuickShift(BaseEstimator):
 
     def __init__(
         self,
-        dist_cutoff2: Union[float, None] = None,
+        dist_cutoff_sq: Union[float, None] = None,
         gabriel_shell: Union[int, None] = None,
         scale: float = 1.0,
         metric: str = "periodic_euclidean",
         metric_params: Union[dict, None] = None,
     ):
-        if (dist_cutoff2 is None) and (gabriel_shell is None):
+        if (dist_cutoff_sq is None) and (gabriel_shell is None):
             raise ValueError("Either dist_cutoff or gabriel_depth must be set.")
-        self.dist_cutoff2 = dist_cutoff2
+        self.dist_cutoff2 = dist_cutoff_sq
         self.gabriel_shell = gabriel_shell
         self.scale = scale
         if self.dist_cutoff2 is not None:
@@ -95,6 +106,8 @@ class QuickShift(BaseEstimator):
             List of sample weights attached to the data X. This parameter
             must be given in order to do the quick shift clustering."""
 
+        if (self.cell is not None) and (X.shape[1] != len(self.cell)):
+            raise ValueError("Cell dimension does not match the data dimension.")
         dist_matrix = DIST_METRICS[self.metric](X, X, squared=True, cell=self.cell)
         if self.dist_cutoff2 is None:
             gabrial = _get_gabriel_graph(dist_matrix)
@@ -182,13 +195,13 @@ class QuickShift(BaseEstimator):
         return next_idx
 
 
-def _get_gabriel_graph(dist_matrix2: np.ndarray):
+def _get_gabriel_graph(dist_matrix_sq: np.ndarray):
     """
     Generate the Gabriel graph based on the given squared distance matrix.
 
     Parameters
     ----------
-    dist_matrix2 : np.ndarray
+    dist_matrix_sq : np.ndarray
         The squared distance matrix of shape (n_points, n_points).
 
     Returns
@@ -197,12 +210,12 @@ def _get_gabriel_graph(dist_matrix2: np.ndarray):
         The Gabriel graph matrix of shape (n_points, n_points).
     """
 
-    n_points = dist_matrix2.shape[0]
+    n_points = dist_matrix_sq.shape[0]
     gabriel = np.full((n_points, n_points), True)
     for i in tqdm(range(n_points), desc="Calculating Gabriel graph"):
         gabriel[i, i] = False
         for j in range(i, n_points):
-            if np.sum(dist_matrix2[i] + dist_matrix2[j] < dist_matrix2[i, j]):
+            if np.sum(dist_matrix_sq[i] + dist_matrix_sq[j] < dist_matrix_sq[i, j]):
                 gabriel[i, j] = False
                 gabriel[j, i] = False
 

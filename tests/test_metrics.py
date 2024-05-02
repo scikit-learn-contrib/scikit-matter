@@ -220,8 +220,8 @@ class DistanceTests(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.X = [[1, 2], [3, 4], [5, 6]]
-        cls.Y = [[7, 8], [9, 10]]
+        cls.X = np.array([[1, 2], [3, 4], [5, 6]])
+        cls.Y = np.array([[7, 8], [9, 10]])
         cls.covs = np.array([[[1, 0.5], [0.5, 1]], [[1, 0.0], [0.0, 1]]])
         cls.cell = [5, 7]
         cls.distances = np.array(

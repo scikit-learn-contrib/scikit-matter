@@ -36,12 +36,12 @@ def pairwise_euclidean_distances(
 
     Parameters
     ----------
-    X : {array-like, sparse matrix} of shape (n_samples_X, n_features)
-        An array where each row is a sample and each column is a feature.
+    X : {array-like, sparse matrix} of shape (n_samples_X, n_components)
+        An array where each row is a sample and each column is a component.
 
-    Y : {array-like, sparse matrix} of shape (n_samples_Y, n_features), \
+    Y : {array-like, sparse matrix} of shape (n_samples_Y, n_components), \
             default=None
-        An array where each row is a sample and each column is a feature.
+        An array where each row is a sample and each column is a component.
         If `None`, method uses `Y=X`.
 
     Y_norm_squared : array-like of shape (n_samples_Y,) or (n_samples_Y, 1) \
@@ -59,7 +59,7 @@ def pairwise_euclidean_distances(
         ``(X**2).sum(axis=1)``)
         May be ignored in some cases, see the note below.
 
-    cell : array-like of shape (n_features,), default=None
+    cell : array-like of shape (n_components,), default=None
         The cell size for periodic boundary conditions.
         None for non-periodic boundary conditions.
 
@@ -81,18 +81,20 @@ def pairwise_euclidean_distances(
 
     Examples
     --------
+    >>> import numpy as np
     >>> from sklearn.metrics.pairwise import euclidean_distances
-    >>> X = [[0, 1], [1, 1]]
+    >>> X = np.array([[0, 1], [1, 1]])
     >>> # distance between rows of X
     >>> euclidean_distances(X, X)
     array([[0., 1.],
            [1., 0.]])
     >>> # get distance to origin
-    >>> euclidean_distances(X, [[0, 0]])
+    >>> euclidean_distances(X, np.array([[0, 0]]))
     array([[1.        ],
            [1.41421356]])
     """
 
+    _check_dimension(X, cell)
     X, Y = check_pairwise_arrays(X, Y)
 
     if X_norm_squared is not None:
@@ -146,9 +148,9 @@ def pairwise_mahalanobis_distances(
 ):
     r"""
     Calculate the pairwise Mahalanobis distance between two arrays.
-    
-    This metric is used for calculating the distances between observations from Gaussian distributions. It
-    is defined as:
+
+    This metric is used for calculating the distances between observations from Gaussian
+    distributions. It is defined as:
 
     .. math::
         d_{\Sigma}(x, y)^2 = (x - y)^T \Sigma^{-1} (x - y)
@@ -157,12 +159,12 @@ def pairwise_mahalanobis_distances(
     observations from the same distribution.
 
     Parameters:
-        X : np.ndarray of shape (n_samples_X, n_features)
-            An array where each row is a sample and each column is a feature.
-        Y : np.ndarray of shape (n_samples_Y, n_features)
-            An array where each row is a sample and each column is a feature.
+        X : np.ndarray of shape (n_samples_X, n_components)
+            An array where each row is a sample and each column is a component.
+        Y : np.ndarray of shape (n_samples_Y, n_components)
+            An array where each row is a sample and each column is a component.
         cov_inv : np.ndarray
-            The inverse covariance matrix of shape (n_features, n_features).
+            The inverse covariance matrix of shape (n_components, n_components).
         cell : np.ndarray, optinal
             The cell size for periodic boundary conditions.
         squared : bool
@@ -206,9 +208,15 @@ def pairwise_mahalanobis_distances(
             (cov_inv.shape[0], X.shape[0], Y.shape[0]), order="F"
         )
 
+    _check_dimension(X, cell)
     X, Y = check_pairwise_arrays(X, Y)
     cov_inv = _mahalanobis_preprocess(cov_inv)
     dists = _mahalanobis(cell, X, Y, cov_inv)
     if not squared:
         dists **= 0.5
     return dists
+
+
+def _check_dimension(X, cell):
+    if (cell is not None) and (X.shape[1] != len(cell)):
+        raise ValueError("Cell dimension does not match the data dimension.")
