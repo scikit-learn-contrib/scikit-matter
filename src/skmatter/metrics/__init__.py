@@ -40,7 +40,7 @@ These prediction rigidities are available:
 There are also two distance metrics compatible with the periodic boundary conditions
 available.
 .. note::
-  Currently only rectangular cells are supported.
+Currently only rectangular cells are supported.
 
 * :ref:`pairwise-euclidian-api` computes the euclidean distance between two sets
   of points. It is compatible with the periodic boundary conditions.
