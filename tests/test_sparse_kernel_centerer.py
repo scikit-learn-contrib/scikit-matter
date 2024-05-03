@@ -101,7 +101,7 @@ class SparseKernelTests(unittest.TestCase):
         model = model.fit(Knm, Kmm)
         with self.assertRaises(ValueError) as cm:
             model.transform(Knm2)
-        self.assertEquals(
+        self.assertEqual(
             str(cm.exception),
             "The reference kernel and received kernel have different shape",
         )
