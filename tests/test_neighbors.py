@@ -23,9 +23,13 @@ class SparseKDETests(unittest.TestCase):
                 ),
             ]
         )
+        cls.sample_results = np.array(
+            [[4.56393465, 4.20566218], [0.73562454, 1.11116178]]
+        )
         cls.selector = FPS(n_to_select=int(np.sqrt(2 * cls.n_samples_per_cov)))
         cls.grids = cls.selector.fit_transform(cls.samples.T).T
-        cls.expect_score = -759.831
+        cls.expect_score_fp = -759.831
+        cls.expect_score_fs - -781.567
 
         cls.cell = np.array([4, 4])
         cls.expect_score_periodic = -456.744
@@ -33,7 +37,13 @@ class SparseKDETests(unittest.TestCase):
     def test_sparse_kde(self):
         estimator = SparseKDE(self.samples, None, fpoints=0.5)
         estimator.fit(self.grids)
-        self.assertTrue(round(estimator.score(self.grids), 3) == self.expect_score)
+        self.assertTrue(round(estimator.score(self.grids), 3) == self.expect_score_fp)
+        self.assertTrue(np.allclose(estimator.sample(2), self.sample_results))
+
+    def test_sparce_kde_fs(self):
+        estimator = SparseKDE(self.samples, None, fspread=0.5)
+        estimator.fit(self.grids)
+        self.assertTrue(round(estimator.score(self.grids), 3) == self.expect_score_fs)
 
     def test_sparse_kde_periodic(self):
         estimator = SparseKDE(
@@ -52,6 +62,16 @@ class SparseKDETests(unittest.TestCase):
             self.samples, None, metric_params={"cell": self.cell}, fpoints=0.5
         )
         self.assertRaises(ValueError, estimator.fit, np.array([[4]]))
+
+    def test_fs_fp_imcompatibility(self):
+        estimator = SparseKDE(
+            self.samples,
+            None,
+            metric_params={"cell": self.cell},
+            fspread=2,
+            fpoints=0.5,
+        )
+        self.assertTrue(estimator.fpoints == -1)
 
 
 class CovarianceTests(unittest.TestCase):
