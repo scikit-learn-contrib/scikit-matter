@@ -56,7 +56,16 @@ class TestFPS(unittest.TestCase):
                 selector = FPS(n_to_select=len(self.idx) - 1, initialize=initialize)
                 selector.fit(self.X)
             self.assertEqual(
-                str(cm.exception), "Initialize parameter must contain only int"
+                str(cm.exception), "Invalid value of the initialize parameter"
+            )
+
+        initialize = np.array([[1, 5, 3], [2, 4, 6]])
+        with self.subTest(initialize=initialize):
+            with self.assertRaises(ValueError) as cm:
+                selector = FPS(n_to_select=len(self.idx) - 1, initialize=initialize)
+                selector.fit(self.X)
+            self.assertEqual(
+                str(cm.exception), "Invalid value of the initialize parameter"
             )
 
         with self.assertRaises(ValueError) as cm:

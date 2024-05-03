@@ -1044,7 +1044,7 @@ class _FPS(GreedySelector):
                     self.selected_idx_[i] = val
                     self._update_post_selection(X, y, self.selected_idx_[i])
             else:
-                raise ValueError("Initialize parameter must contain only int")
+                raise ValueError("Invalid value of the initialize parameter")
         elif self.initialize == "random":
             random_state = check_random_state(self.random_state)
             initialize = random_state.randint(X.shape[self._axis])
