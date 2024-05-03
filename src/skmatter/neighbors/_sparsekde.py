@@ -435,7 +435,7 @@ class _NearestGridAssigner:
         Currently only `sklearn.metrics.pairwise.pairwise_euclidean_distances`.
     metric_params : dict, default=None
         Additional parameters to be passed to the use of
-        metric.  i.e. the cell dimension for `periodic_euclidean`
+        metric.  i.e. the cell dimension for ``periodic_euclidean``
         {'cell': [2, 2]}
     verbose : bool, default=False
         Whether to print progress.
