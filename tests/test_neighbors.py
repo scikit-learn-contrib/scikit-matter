@@ -29,7 +29,7 @@ class SparseKDETests(unittest.TestCase):
         cls.selector = FPS(n_to_select=int(np.sqrt(2 * cls.n_samples_per_cov)))
         cls.grids = cls.selector.fit_transform(cls.samples.T).T
         cls.expect_score_fp = -759.831
-        cls.expect_score_fs - -781.567
+        cls.expect_score_fs = -781.567
 
         cls.cell = np.array([4, 4])
         cls.expect_score_periodic = -456.744

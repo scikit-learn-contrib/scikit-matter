@@ -1,10 +1,10 @@
-from typing import Union
+from typing import Callable, Union
 
 import numpy as np
 from sklearn.base import BaseEstimator
 from tqdm import tqdm
 
-from ..metrics import DIST_METRICS
+from ..metrics._pairwise import pairwise_euclidean_distances
 
 
 class QuickShift(BaseEstimator):
@@ -20,19 +20,19 @@ class QuickShift(BaseEstimator):
     Parameters
     ----------
     dist_cutoff_sq : float, default=None
-        The squared distance cutoff for searching for the next point. If :obj:`None`, the
-        Gabriel graph is used.
+        The squared distance cutoff for searching for the next point. If :obj:`None`,
+        the Gabriel graph is used.
     gabriel_shell : int, default=None
         The number of neighbor shell of gabriel graph. If None, the distance cutoff
         is used.
     scale : float, default=1.0
         Distance cutoff scaling factor used during the QS clustering. It will be squared
         since we are using the squared distance.
-    metric : str, default='periodic_euclidean'
+    metric : Callable, default=``pairwise_euclidean_distances``
         The metric to use. Currently only one.
     metric_params : dict, default=None
         Additional parameters to be passed to the use of
-        metric.  i.e. the cell dimension for `periodic_euclidean`
+        metric.  i.e. the cell dimension for ``pairwise_euclidean_distances``
         {'cell': [2, 2]}
 
     Attributes
@@ -74,7 +74,7 @@ class QuickShift(BaseEstimator):
         dist_cutoff_sq: Union[float, None] = None,
         gabriel_shell: Union[int, None] = None,
         scale: float = 1.0,
-        metric: str = "periodic_euclidean",
+        metric: Callable = pairwise_euclidean_distances,
         metric_params: Union[dict, None] = None,
     ):
         if (dist_cutoff_sq is None) and (gabriel_shell is None):
@@ -108,7 +108,7 @@ class QuickShift(BaseEstimator):
 
         if (self.cell is not None) and (X.shape[1] != len(self.cell)):
             raise ValueError("Cell dimension does not match the data dimension.")
-        dist_matrix = DIST_METRICS[self.metric](X, X, squared=True, cell=self.cell)
+        dist_matrix = self.metric(X, X, squared=True, cell=self.cell)
         if self.dist_cutoff2 is None:
             gabrial = _get_gabriel_graph(dist_matrix)
         idmindist = np.argmin(dist_matrix, axis=1)

@@ -1,5 +1,5 @@
 import warnings
-from typing import Union
+from typing import Callable, Union
 
 import numpy as np
 from scipy.special import logsumexp as LSE
@@ -14,11 +14,6 @@ from ..metrics._pairwise import (
 from ..utils._sparsekde import effdim, oas
 
 
-DIST_METRICS = {
-    "periodic_euclidean": pairwise_euclidean_distances,
-}
-
-
 class SparseKDE(BaseEstimator):
     """A sparse implementation of the Kernel Density Estimation.
     This class is used to build a sparse kernel density estimator.
@@ -27,20 +22,20 @@ class SparseKDE(BaseEstimator):
     selected by FPS). First, the probability density is estimated for
     each sampled point. Then, quick shift clustering is applied to the
     grid points. Finally, a kernel density estimator is built based on
-    the clustering results. 
-    
+    the clustering results.
+
     .. note::
         Currently only the Gaussian kernel is supported.
 
     Parameters
     ----------
-    descriptors: np.ndarray
+    descriptors: numpy.ndarray
         Descriptors of the system where you want to build a sparse KDE.
         It should be an array of shape `(n_descriptors, n_features)`.
-    weights: np.ndarray, default=None
+    weights: numpy.ndarray, default=None
         Weights of the descriptors.
         If None, all weights are set to `1/n_descriptors`.
-    metric : str, default='periodic_euclidean'
+    metric : Callable, default=``pairwise_euclidean_distances``
         The metric to use. Currently only one.
     metric_params : dict, default=None
         Additional parameters to be passed to the use of
@@ -117,7 +112,7 @@ class SparseKDE(BaseEstimator):
         self,
         descriptors: np.ndarray,
         weights: Union[np.ndarray, None] = None,
-        metric: str = "periodic_euclidean",
+        metric: Callable = pairwise_euclidean_distances,
         metric_params: Union[dict, None] = None,
         fspread: float = -1.0,
         fpoints: float = 0.15,
@@ -170,7 +165,7 @@ class SparseKDE(BaseEstimator):
 
         self._check_dimension(X)
         self._grids = X
-        grid_dist_mat = DIST_METRICS[self.metric](X, X, squared=True, cell=self.cell)
+        grid_dist_mat = self.metric(X, X, squared=True, cell=self.cell)
         np.fill_diagonal(grid_dist_mat, np.inf)
         min_grid_dist = np.min(grid_dist_mat, axis=1)
         _, self._grid_neighbour, self._sample_labels_, self._sample_weights = (
@@ -524,7 +519,7 @@ class _NearestGridAssigner:
             total=len(X),
             disable=not self.verbose,
         ):
-            descriptor2grid = DIST_METRICS[self.metric](
+            descriptor2grid = self.metric(
                 X=point.reshape(1, -1), Y=self.grid_pos, cell=self.cell
             )
             self.labels_.append(np.argmin(descriptor2grid))
