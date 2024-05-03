@@ -27,7 +27,10 @@ class SparseKDE(BaseEstimator):
     selected by FPS). First, the probability density is estimated for
     each sampled point. Then, quick shift clustering is applied to the
     grid points. Finally, a kernel density estimator is built based on
-    the clustering results. Currently only the Gaussian kernel is supported.
+    the clustering results. 
+    
+    .. note::
+        Currently only the Gaussian kernel is supported.
 
     Parameters
     ----------
@@ -226,8 +229,6 @@ class SparseKDE(BaseEstimator):
 
     def sample(self, n_samples=1, random_state=None):
         """Generate random samples from the model.
-
-        Currently, this is implemented only for gaussian and tophat kernels.
 
         Parameters
         ----------

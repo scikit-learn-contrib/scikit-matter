@@ -15,7 +15,7 @@ def pairwise_euclidean_distances(
     Compute the pairwise distance matrix between each pair from a vector array X and Y.
 
     .. math::
-        d = XXX
+        d_{i, j} = \\sqrt{\\sum_{k=1}^n (x_{i, k} - y_{j, k})^2}
 
     For efficiency reasons, the euclidean distance between a pair of row
     vector x and y is computed as::
