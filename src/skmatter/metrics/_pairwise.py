@@ -159,7 +159,7 @@ def pairwise_mahalanobis_distances(
     observations from the same distribution.
 
     Parameters:
-        X : np.ndarray of shape (n_samples_X, n_components)
+        X : numpy.ndarray of shape (n_samples_X, n_components)
             An array where each row is a sample and each column is a component.
         Y : np.ndarray of shape (n_samples_Y, n_components)
             An array where each row is a sample and each column is a component.
