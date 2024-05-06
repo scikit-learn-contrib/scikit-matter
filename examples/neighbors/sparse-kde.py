@@ -21,7 +21,7 @@ Here we first sample from these three gaussians.
 """
 
 
-from typing import Union, Callable
+from typing import Callable, Union
 
 # %%
 import matplotlib.pyplot as plt

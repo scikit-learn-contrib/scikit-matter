@@ -2,6 +2,7 @@ import warnings
 from typing import Callable, Union
 
 import numpy as np
+from numpy.typing import ArrayLike
 from scipy.special import logsumexp as LSE
 from sklearn.base import BaseEstimator
 from sklearn.utils.validation import check_is_fitted, check_random_state
@@ -35,12 +36,19 @@ class SparseKDE(BaseEstimator):
     weights: numpy.ndarray, default=None
         Weights of the descriptors.
         If None, all weights are set to `1/n_descriptors`.
-    metric : Callable, default=``pairwise_euclidean_distances``
-        The metric to use. Currently only one.
+    metric : Callable[[ArrayLike, ArrayLike, bool, dict], ArrayLike],
+        default=:func:`skmatter.metrics.pairwise_euclidean_distances()`
+        The metric to use. Your metric should be able to take at least three arguments
+        in secquence: `X`, `Y`, and `squared=True`. Here, `X` and `Y` are two array-like
+        of shape (n_samples, n_components). The return of the metric is an array-like of
+        shape (n_samples, n_samples). If you want to use periodic boundary
+        conditions, be sure to provide the cell size in the metric_params and
+        provide a metric that can take the cell argument.
     metric_params : dict, default=None
         Additional parameters to be passed to the use of
-        metric.  i.e. the cell dimension for `periodic_euclidean`
-        {'cell': [2, 2]}
+        metric.  i.e. the cell dimension for
+        :func:`skmatter.metrics.pairwise_euclidean_distances()`
+        `{'cell': [side_length_1, ..., side_length_n]}`
     fspread : float, default=-1.0
         The fractional "space" occupied by the voronoi cell of each grid. Use this when
         each cell is of a similar size.
@@ -91,16 +99,7 @@ class SparseKDE(BaseEstimator):
     Conduct sparse KDE based on the grid points
 
     >>> estimator = SparseKDE(samples, None, fpoints=0.5)
-    >>> estimator.fit(result)
-    SparseKDE(descriptors=array([[-1.72779275, -1.32763554],
-           [-1.96805856,  0.27283464],
-           [-1.12871372, -2.1059916 ],
-           ...,
-           [ 3.75859454,  3.10217702],
-           [ 1.6544348 ,  3.41851374],
-           [ 4.08667637,  3.42457743]]),
-              fpoints=0.5,
-              weights=array([5.e-05, 5.e-05, 5.e-05, ..., 5.e-05, 5.e-05, 5.e-05]))
+    >>> _ = estimator.fit(result)
 
     The total log-likelihood under the model
 
@@ -112,14 +111,18 @@ class SparseKDE(BaseEstimator):
         self,
         descriptors: np.ndarray,
         weights: Union[np.ndarray, None] = None,
-        metric: Callable = pairwise_euclidean_distances,
+        metric: Callable[
+            [ArrayLike, ArrayLike, bool, dict], ArrayLike
+        ] = pairwise_euclidean_distances,
         metric_params: Union[dict, None] = None,
         fspread: float = -1.0,
         fpoints: float = 0.15,
         verbose: bool = False,
     ):
-        self.metric = metric
-        self.metric_params = metric_params
+        self.metric_params = (
+            metric_params if metric_params is not None else {"cell": None}
+        )
+        self.metric = lambda X, Y: metric(X, Y, squared=True, **self.metric_params)
         self.cell = metric_params["cell"] if metric_params is not None else None
         self._check_dimension(descriptors)
         self.descriptors = descriptors
@@ -165,7 +168,7 @@ class SparseKDE(BaseEstimator):
 
         self._check_dimension(X)
         self._grids = X
-        grid_dist_mat = self.metric(X, X, squared=True, cell=self.cell)
+        grid_dist_mat = self.metric(X, X)
         np.fill_diagonal(grid_dist_mat, np.inf)
         min_grid_dist = np.min(grid_dist_mat, axis=1)
         _, self._grid_neighbour, self._sample_labels_, self._sample_weights = (
@@ -519,9 +522,7 @@ class _NearestGridAssigner:
             total=len(X),
             disable=not self.verbose,
         ):
-            descriptor2grid = self.metric(
-                X=point.reshape(1, -1), Y=self.grid_pos, cell=self.cell
-            )
+            descriptor2grid = self.metric(point.reshape(1, -1), self.grid_pos)
             self.labels_.append(np.argmin(descriptor2grid))
             self.grid_npoints[self.labels_[-1]] += 1
             self.grid_weight[self.labels_[-1]] += sample_weight[i]

@@ -35,7 +35,7 @@ class QuickShift(BaseEstimator):
         Distance cutoff scaling factor used during the QS clustering. It will be squared
         since the squared distance is used in this class.
     metric : Callable[[ArrayLike, ArrayLike, bool, dict], ArrayLike],
-    default=``pairwise_euclidean_distances``
+        default=:func:`skmatter.metrics.pairwise_euclidean_distances()`
         The metric to use. Your metric should be able to take at least three arguments
         in secquence: `X`, `Y`, and `squared=True`. Here, `X` and `Y` are two array-like
         of shape (n_samples, n_components). The return of the metric is an array-like of
@@ -44,8 +44,9 @@ class QuickShift(BaseEstimator):
         provide a metric that can take the cell argument.
     metric_params : dict, default=None
         Additional parameters to be passed to the use of
-        metric.  i.e. the cell dimension for ``pairwise_euclidean_distances``
-        {'cell': [2, 2]}
+        metric.  i.e. the cell dimension
+        for :func:`skmatter.metrics.pairwise_euclidean_distances()`
+        `{'cell': [side_length_1, ..., side_length_n]}`
 
     Attributes
     ----------
@@ -98,8 +99,10 @@ class QuickShift(BaseEstimator):
         self.scale = scale
         if self.dist_cutoff2 is not None:
             self.dist_cutoff2 *= self.scale**2
-        self.metric = metric
-        self.metric_params = metric_params
+        self.metric_params = (
+            metric_params if metric_params is not None else {"cell": None}
+        )
+        self.metric = lambda X, Y: metric(X, Y, squared=True, **self.metric_params)
         if isinstance(self.metric_params, dict):
             self.cell = self.metric_params["cell"]
         else:
@@ -122,7 +125,7 @@ class QuickShift(BaseEstimator):
 
         if (self.cell is not None) and (X.shape[1] != len(self.cell)):
             raise ValueError("Cell dimension does not match the data dimension.")
-        dist_matrix = self.metric(X, X, squared=True, cell=self.cell)
+        dist_matrix = self.metric(X, X)
         if self.dist_cutoff2 is None:
             gabrial = _get_gabriel_graph(dist_matrix)
         idmindist = np.argmin(dist_matrix, axis=1)

@@ -62,6 +62,9 @@ def pairwise_euclidean_distances(
     cell : array-like of shape (n_components,), default=None
         The cell size for periodic boundary conditions.
         None for non-periodic boundary conditions.
+    .. note::
+        Only cubic cells are supported.
+        Cell format: `[side_length_1, ..., side_length_n]`
 
     Returns
     -------
@@ -165,9 +168,14 @@ def pairwise_mahalanobis_distances(
             An array where each row is a sample and each column is a component.
         cov_inv : np.ndarray
             The inverse covariance matrix of shape (n_components, n_components).
-        cell : np.ndarray, optinal
+        cell : np.ndarray, optinal, default=None
             The cell size for periodic boundary conditions.
-        squared : bool
+            None for non-periodic boundary conditions.
+        .. note::
+            Only cubic cells are supported.
+            Cell format: `[side_length_1, ..., side_length_n]`
+
+        squared : bool, default=False
             Whether to return the squared distance.
 
     Returns
