@@ -1,6 +1,7 @@
 from typing import Callable, Union
 
 import numpy as np
+from numpy.typing import ArrayLike
 from sklearn.base import BaseEstimator
 from tqdm import tqdm
 
@@ -20,16 +21,27 @@ class QuickShift(BaseEstimator):
     Parameters
     ----------
     dist_cutoff_sq : float, default=None
-        The squared distance cutoff for searching for the next point. If :obj:`None`,
-        the Gabriel graph is used.
+        The squared distance cutoff for searching for the next point. Two points are
+        considered as neighbors if they are within this distance. If :obj:`None`,
+        the scheme of Gabriel graph is used.
     gabriel_shell : int, default=None
-        The number of neighbor shell of gabriel graph. If None, the distance cutoff
-        is used.
+        The number of neighbor shell of gabriel graph for searching for the next point.
+        For example, if the number is 1, two points will be considered as neighbors if
+        they have at least one common neighbor, like for the case "A-B-C", we will
+        consider "A-C" as neighbors. If the number is 2, for the case "A-B-C-D",
+        we will consider "A-D" as neighbors. If :obj:`None`, the scheme of distance
+        cutoff is used.
     scale : float, default=1.0
         Distance cutoff scaling factor used during the QS clustering. It will be squared
-        since we are using the squared distance.
-    metric : Callable, default=``pairwise_euclidean_distances``
-        The metric to use. Currently only one.
+        since the squared distance is used in this class.
+    metric : Callable[[ArrayLike, ArrayLike, bool, dict], ArrayLike],
+    default=``pairwise_euclidean_distances``
+        The metric to use. Your metric should be able to take at least three arguments
+        in secquence: `X`, `Y`, and `squared=True`. Here, `X` and `Y` are two array-like
+        of shape (n_samples, n_components). The return of the metric is an array-like of
+        shape (n_samples, n_samples). If you want to use periodic boundary
+        conditions, be sure to provide the cell size in the metric_params and
+        provide a metric that can take the cell argument.
     metric_params : dict, default=None
         Additional parameters to be passed to the use of
         metric.  i.e. the cell dimension for ``pairwise_euclidean_distances``
@@ -74,7 +86,9 @@ class QuickShift(BaseEstimator):
         dist_cutoff_sq: Union[float, None] = None,
         gabriel_shell: Union[int, None] = None,
         scale: float = 1.0,
-        metric: Callable = pairwise_euclidean_distances,
+        metric: Callable[
+            [ArrayLike, ArrayLike, bool, dict], ArrayLike
+        ] = pairwise_euclidean_distances,
         metric_params: Union[dict, None] = None,
     ):
         if (dist_cutoff_sq is None) and (gabriel_shell is None):
