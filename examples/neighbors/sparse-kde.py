@@ -518,7 +518,6 @@ cluster_distribution_3D(
 probs = estimator.score_samples(grids)
 clustering = QuickShift(
     estimator._qscut2,
-    metric=estimator.metric,
     metric_params=estimator.metric_params,
 )
 clustering.fit(grids, samples_weight=probs)

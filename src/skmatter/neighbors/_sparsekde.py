@@ -123,7 +123,7 @@ class SparseKDE(BaseEstimator):
             metric_params if metric_params is not None else {"cell": None}
         )
         self.metric = lambda X, Y: metric(
-            X, Y, **{"squared": True}, **self.metric_params
+            X, Y, squared=True, **self.metric_params
         )
         self.cell = metric_params["cell"] if metric_params is not None else None
         self._check_dimension(descriptors)
