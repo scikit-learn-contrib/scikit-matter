@@ -1038,7 +1038,7 @@ class _FPS(GreedySelector):
         self.hausdorff_ = np.full(X.shape[self._axis], np.inf)
         self.hausdorff_at_select_ = np.full(X.shape[self._axis], np.inf)
 
-        if isinstance(self.initialize, np.ndarray):
+        if isinstance(self.initialize, (np.ndarray, list)):
             if all(isinstance(i, numbers.Integral) for i in self.initialize):
                 for i, val in enumerate(self.initialize):
                     self.selected_idx_[i] = val
@@ -1054,13 +1054,6 @@ class _FPS(GreedySelector):
             initialize = self.initialize
             self.selected_idx_[0] = initialize
             self._update_post_selection(X, y, self.selected_idx_[0])
-        elif isinstance(self.initialize, list) and all(
-            [isinstance(i, numbers.Integral) for i in self.initialize]
-        ):
-            for i, val in enumerate(self.initialize):
-                self.selected_idx_[i] = val
-                self._update_post_selection(X, y, self.selected_idx_[i])
-
         else:
             raise ValueError("Invalid value of the initialize parameter")
 
