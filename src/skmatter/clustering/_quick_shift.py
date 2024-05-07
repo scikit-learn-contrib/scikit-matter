@@ -102,7 +102,9 @@ class QuickShift(BaseEstimator):
         self.metric_params = (
             metric_params if metric_params is not None else {"cell": None}
         )
-        self.metric = lambda X, Y: metric(X, Y, squared=True, **self.metric_params)
+        self.metric = lambda X, Y: metric(
+            X, Y, **{"squared": True}, **self.metric_params
+        )
         if isinstance(self.metric_params, dict):
             self.cell = self.metric_params["cell"]
         else:
