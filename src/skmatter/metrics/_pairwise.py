@@ -60,8 +60,8 @@ def pairwise_euclidean_distances(
         May be ignored in some cases, see the note below.
 
     cell : array-like of shape (n_components,), default=None
-        The cell size for periodic boundary conditions.
-        None for non-periodic boundary conditions.
+        The side length of cubic cell used for periodic boundary conditions.
+        ``None`` for non-periodic boundary conditions.
     .. note::
         Only cubic cells are supported.
         Cell format: `[side_length_1, ..., side_length_n]`
