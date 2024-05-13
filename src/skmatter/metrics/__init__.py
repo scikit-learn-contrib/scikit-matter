@@ -46,7 +46,7 @@ available.
 
 * :ref:`pairwise-euclidian-api` computes the euclidean distance between two sets
   of points. It is compatible with the periodic boundary conditions.
-  If the cell is not provided, it will fall back to the scikit-learn version of the
+  If the cell length is not provided, it will fall back to the ``scikit-learn`` version of the
   euclidean distance :func:`sklearn.metrics.pairwise.euclidean_distances`.
 * :ref:`pairwise-mahalanobis-api` computes the Mahalanobis distance between two sets
   of points. It is compatible with the periodic boundary conditions.
