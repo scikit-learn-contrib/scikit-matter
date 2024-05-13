@@ -39,9 +39,7 @@ class TestVoronoiFPS(TestFPS):
         with self.assertRaises(ValueError) as cm:
             selector = VoronoiFPS(n_to_select=1, initialize="bad")
             selector.fit(self.X)
-        self.assertEquals(
-            str(cm.exception), "Invalid value of the initialize parameter"
-        )
+        self.assertEqual(str(cm.exception), "Invalid value of the initialize parameter")
 
     def test_switching_point(self):
         """

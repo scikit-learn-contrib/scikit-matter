@@ -31,7 +31,7 @@ class TestPCovFPS(unittest.TestCase):
 
         with self.assertRaises(ValueError) as cm:
             _ = PCovFPS(n_to_select=1, mixing=1.0)
-        self.assertEquals(
+        self.assertEqual(
             str(cm.exception),
             "Mixing = 1.0 corresponds to traditional FPS." "Please use the FPS class.",
         )

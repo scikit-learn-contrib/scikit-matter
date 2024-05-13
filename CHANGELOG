@@ -13,10 +13,10 @@ The rules for CHANGELOG file:
 
 0.3.0 (XXXX/XX/XX)
 ------------------
+- Supported Python versions are now ranging from 3.9 - 3.12.
 
 0.2.0 (2023/08/24)
 ------------------
-
 - Add this ``CHANGELOG`` file (#198)
 - Update example of WHO feature selection (#212)
 - Rename ``RidgeRegression2FoldCV`` -> ``Ridge2FoldCV`` (#211)
@@ -40,14 +40,12 @@ The rules for CHANGELOG file:
 
 0.1.4 (2023/03/14)
 ------------------
-
 - documentation formatting fixes for math and datasets (#161, #163)
 - changing the way the distance to the convex hull is computed in the
   ``DirectionalConvexHull`` due to numerical issues with the old method (#165)
 
 0.1.3 (2023/03/02)
 ------------------
-
 - Refactor ``scikit-cosmo`` to ``scikit-matter`` (#157, #151)
 - Deprecation warning was added to link to renamed package (#154)
 - dropped Python `<3.8` support, because we are now using ``scikit-learn`` version
@@ -62,7 +60,6 @@ The rules for CHANGELOG file:
 
 0.1.2 (2022/07/04)
 ------------------
-
 - fixed a bug in the orthonormalization step of ``PCov-CUR`` (#118)
 - users can now initialize ``FPS`` selecting using a list of selected points, allowing
   to restart the selection in the middle (#116)
@@ -71,7 +68,6 @@ The rules for CHANGELOG file:
 
 0.1.1 (2021/11/30)
 ------------------
-
 - fixed a bug in the ``orthonormalization`` step of ``PCov-CUR`` (#118)
 - users can now initialize ``FPS`` selecting using a list of selected points, allowing to
   restart the selection in the middle (#116)
@@ -79,7 +75,6 @@ The rules for CHANGELOG file:
 
 0.1.0 (2021/05/12)
 ------------------
-
 - first release out of the lab
 
 .. inclusion-marker-changelog-end
