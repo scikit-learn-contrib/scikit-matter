@@ -38,27 +38,22 @@ def pairwise_euclidean_distances(
     ----------
     X : {array-like, sparse matrix} of shape (n_samples_X, n_components)
         An array where each row is a sample and each column is a component.
-
     Y : {array-like, sparse matrix} of shape (n_samples_Y, n_components), \
             default=None
         An array where each row is a sample and each column is a component.
         If `None`, method uses `Y=X`.
-
     Y_norm_squared : array-like of shape (n_samples_Y,) or (n_samples_Y, 1) \
             or (1, n_samples_Y), default=None
         Pre-computed dot-products of vectors in Y (e.g.,
         ``(Y**2).sum(axis=1)``)
         May be ignored in some cases, see the note below.
-
     squared : bool, default=False
         Return squared Euclidean distances.
-
     X_norm_squared : array-like of shape (n_samples_X,) or (n_samples_X, 1) \
             or (1, n_samples_X), default=None
         Pre-computed dot-products of vectors in X (e.g.,
         ``(X**2).sum(axis=1)``)
         May be ignored in some cases, see the note below.
-
     cell : array-like of shape (n_components,), default=None
         The side length of cubic cell used for periodic boundary conditions.
         ``None`` for non-periodic boundary conditions.
@@ -225,6 +220,6 @@ def pairwise_mahalanobis_distances(
     return dists
 
 
-def _check_dimension(X, cell):
-    if (cell is not None) and (X.shape[1] != len(cell)):
+def _check_dimension(X, cell_length):
+    if (cell_length is not None) and (X.shape[1] != len(cell_length)):
         raise ValueError("Cell dimension does not match the data dimension.")
