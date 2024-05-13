@@ -258,7 +258,7 @@ class DistanceTests(unittest.TestCase):
         )
 
     def test_periodic_euclidean_distance(self):
-        distances = pairwise_euclidean_distances(self.X, self.Y, cell=self.cell)
+        distances = pairwise_euclidean_distances(self.X, self.Y, cell_length=self.cell)
         self.assertTrue(
             np.allclose(distances, self.periodic_distances),
             f"Calculated distance does not match expected value"

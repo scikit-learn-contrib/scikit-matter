@@ -42,5 +42,5 @@ class QuickShiftTests(unittest.TestCase):
         self.assertTrue(np.all(model.cluster_centers_idx_ == self.cluster_centers_idx_))
 
     def test_dimension_check(self):
-        model = QuickShift(self.cuts, metric_params={"cell": self.cell})
+        model = QuickShift(self.cuts, metric_params={"cell_length": self.cell})
         self.assertRaises(ValueError, model.fit, np.array([[2]]))

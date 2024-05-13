@@ -9,7 +9,13 @@ from sklearn.metrics.pairwise import (
 
 
 def pairwise_euclidean_distances(
-    X, Y=None, *, Y_norm_squared=None, squared=False, X_norm_squared=None, cell_length=None
+    X,
+    Y=None,
+    *,
+    Y_norm_squared=None,
+    squared=False,
+    X_norm_squared=None,
+    cell_length=None,
 ):
     """
     Compute the pairwise distance matrix between each pair from a vector array X and Y.
@@ -44,19 +50,17 @@ def pairwise_euclidean_distances(
         If `None`, method uses `Y=X`.
     Y_norm_squared : array-like of shape (n_samples_Y,) or (n_samples_Y, 1) \
             or (1, n_samples_Y), default=None
-        Pre-computed dot-products of vectors in Y (e.g.,
-        ``(Y**2).sum(axis=1)``)
+        Pre-computed dot-products of vectors in Y (e.g., `(Y**2).sum(axis=1)`)
         May be ignored in some cases, see the note below.
     squared : bool, default=False
         Return squared Euclidean distances.
     X_norm_squared : array-like of shape (n_samples_X,) or (n_samples_X, 1) \
             or (1, n_samples_X), default=None
-        Pre-computed dot-products of vectors in X (e.g.,
-        ``(X**2).sum(axis=1)``)
+        Pre-computed dot-products of vectors in X (e.g., `(X**2).sum(axis=1)`)
         May be ignored in some cases, see the note below.
-    cell : array-like of shape (n_components,), default=None
+    cell_length : array-like of shape (n_components,), default=None
         The side length of cubic cell used for periodic boundary conditions.
-        ``None`` for non-periodic boundary conditions.
+        `None` for non-periodic boundary conditions.
     .. note::
         Only side lengths of cubic cells are supported.
         Cell format: `[side_length_1, ..., side_length_n]`
@@ -92,7 +96,7 @@ def pairwise_euclidean_distances(
            [1.41421356]])
     """
 
-    _check_dimension(X, cell)
+    _check_dimension(X, cell_length)
     X, Y = check_pairwise_arrays(X, Y)
 
     if X_norm_squared is not None:
@@ -121,10 +125,10 @@ def pairwise_euclidean_distances(
                 f"Y_norm_squared of shape {original_shape}."
             )
 
-    if cell is None:
+    if cell_length is None:
         return _euclidean_distances(X, Y, X_norm_squared, Y_norm_squared, squared)
     else:
-        return _periodic_euclidean_distances(X, Y, squared=squared, cell=cell)
+        return _periodic_euclidean_distances(X, Y, squared=squared, cell=cell_length)
 
 
 def _periodic_euclidean_distances(X, Y=None, *, squared=False, cell=None):
@@ -141,7 +145,7 @@ def pairwise_mahalanobis_distances(
     X: np.ndarray,
     Y: np.ndarray,
     cov_inv: np.ndarray,
-    cell: Union[np.ndarray, None] = None,
+    cell_length: Union[np.ndarray, None] = None,
     squared: bool = False,
 ):
     r"""
@@ -163,7 +167,7 @@ def pairwise_mahalanobis_distances(
             An array where each row is a sample and each column is a component.
         cov_inv : np.ndarray
             The inverse covariance matrix of shape (n_components, n_components).
-        cell : np.ndarray, optinal, default=None
+        cell_length : np.ndarray, optinal, default=None
             The cell size for periodic boundary conditions.
             None for non-periodic boundary conditions.
         .. note::
@@ -211,10 +215,10 @@ def pairwise_mahalanobis_distances(
             (cov_inv.shape[0], X.shape[0], Y.shape[0]), order="F"
         )
 
-    _check_dimension(X, cell)
+    _check_dimension(X, cell_length)
     X, Y = check_pairwise_arrays(X, Y)
     cov_inv = _mahalanobis_preprocess(cov_inv)
-    dists = _mahalanobis(cell, X, Y, cov_inv)
+    dists = _mahalanobis(cell_length, X, Y, cov_inv)
     if not squared:
         dists **= 0.5
     return dists

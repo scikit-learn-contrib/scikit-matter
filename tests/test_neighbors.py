@@ -49,7 +49,7 @@ class SparseKDETests(unittest.TestCase):
         estimator = SparseKDE(
             self.samples,
             None,
-            metric_params={"cell": self.cell},
+            metric_params={"cell_length": self.cell},
             fpoints=0.5,
         )
         estimator.fit(self.grids)
@@ -59,7 +59,7 @@ class SparseKDETests(unittest.TestCase):
 
     def test_dimension_check(self):
         estimator = SparseKDE(
-            self.samples, None, metric_params={"cell": self.cell}, fpoints=0.5
+            self.samples, None, metric_params={"cell_length": self.cell}, fpoints=0.5
         )
         self.assertRaises(ValueError, estimator.fit, np.array([[4]]))
 
@@ -67,7 +67,7 @@ class SparseKDETests(unittest.TestCase):
         estimator = SparseKDE(
             self.samples,
             None,
-            metric_params={"cell": self.cell},
+            metric_params={"cell_length": self.cell},
             fspread=2,
             fpoints=0.5,
         )

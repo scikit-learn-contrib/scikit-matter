@@ -46,7 +46,7 @@ class QuickShift(BaseEstimator):
         Additional parameters to be passed to the use of
         metric.  i.e. the dimension of a cubic cell of side length :math`a`
         for :func:`skmatter.metrics.pairwise_euclidean_distances()`
-        `{'cell': [a_1, a_2, ..., a_n]}`
+        `{'cell_length': [a_1, a_2, ..., a_n]}`
 
     Attributes
     ----------
@@ -100,13 +100,11 @@ class QuickShift(BaseEstimator):
         if self.dist_cutoff2 is not None:
             self.dist_cutoff2 *= self.scale**2
         self.metric_params = (
-            metric_params if metric_params is not None else {"cell": None}
+            metric_params if metric_params is not None else {"cell_length": None}
         )
-        self.metric = lambda X, Y: metric(
-            X, Y, squared=True, **self.metric_params
-        )
+        self.metric = lambda X, Y: metric(X, Y, squared=True, **self.metric_params)
         if isinstance(self.metric_params, dict):
-            self.cell = self.metric_params["cell"]
+            self.cell = self.metric_params["cell_length"]
         else:
             self.cell = None
 
@@ -126,7 +124,9 @@ class QuickShift(BaseEstimator):
             must be given in order to do the quick shift clustering."""
 
         if (self.cell is not None) and (X.shape[1] != len(self.cell)):
-            raise ValueError("Dimension of the cell length does not match the data dimension.")
+            raise ValueError(
+                "Dimension of the cell length does not match the data dimension."
+            )
         dist_matrix = self.metric(X, X)
         if self.dist_cutoff2 is None:
             gabrial = _get_gabriel_graph(dist_matrix)

@@ -48,7 +48,7 @@ class SparseKDE(BaseEstimator):
         Additional parameters to be passed to the use of
         metric.  i.e. the cell dimension for
         :func:`skmatter.metrics.pairwise_euclidean_distances()`
-        `{'cell': [side_length_1, ..., side_length_n]}`
+        `{'cell_length': [side_length_1, ..., side_length_n]}`
     fspread : float, default=-1.0
         The fractional "space" occupied by the voronoi cell of each grid. Use this when
         each cell is of a similar size.
@@ -120,12 +120,10 @@ class SparseKDE(BaseEstimator):
         verbose: bool = False,
     ):
         self.metric_params = (
-            metric_params if metric_params is not None else {"cell": None}
+            metric_params if metric_params is not None else {"cell_length": None}
         )
-        self.metric = lambda X, Y: metric(
-            X, Y, squared=True, **self.metric_params
-        )
-        self.cell = metric_params["cell"] if metric_params is not None else None
+        self.metric = lambda X, Y: metric(X, Y, squared=True, **self.metric_params)
+        self.cell = metric_params["cell_length"] if metric_params is not None else None
         self._check_dimension(descriptors)
         self.descriptors = descriptors
         self.weights = weights if weights is not None else np.ones(len(descriptors))
@@ -437,7 +435,7 @@ class _NearestGridAssigner:
     metric_params : dict, default=None
         Additional parameters to be passed to the use of
         metric.  i.e. the cell dimension for ``periodic_euclidean``
-        {'cell': [2, 2]}
+        {'cell_length': [2, 2]}
     verbose : bool, default=False
         Whether to print progress.
 
@@ -467,7 +465,7 @@ class _NearestGridAssigner:
         self.metric_params = metric_params
         self.verbose = verbose
         if isinstance(self.metric_params, dict):
-            self.cell = self.metric_params["cell"]
+            self.cell = self.metric_params["cell_length"]
         else:
             self.cell = None
         self.grid_pos = None

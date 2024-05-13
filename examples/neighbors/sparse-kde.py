@@ -232,7 +232,7 @@ def quick_shift_refinement(
         Clusters with a pk lower than this value are merged with the nearest cluster."""
 
     if metric_params is not None:
-        cell = metric_params["cell"]
+        cell = metric_params["cell_length"]
         if len(cell) != X.shape[1]:
             raise ValueError("Cell dimension does not match the data dimension.")
     else:
