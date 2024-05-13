@@ -40,7 +40,7 @@ class QuickShift(BaseEstimator):
         in secquence: `X`, `Y`, and `squared=True`. Here, `X` and `Y` are two array-like
         of shape (n_samples, n_components). The return of the metric is an array-like of
         shape (n_samples, n_samples). If you want to use periodic boundary
-        conditions, be sure to provide the cell size in the metric_params and
+        conditions, be sure to provide the cell length in the ``metric_params`` and
         provide a metric that can take the cell argument.
     metric_params : dict, default=None
         Additional parameters to be passed to the use of
