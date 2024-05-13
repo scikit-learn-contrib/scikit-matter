@@ -9,7 +9,7 @@ from sklearn.metrics.pairwise import (
 
 
 def pairwise_euclidean_distances(
-    X, Y=None, *, Y_norm_squared=None, squared=False, X_norm_squared=None, cell=None
+    X, Y=None, *, Y_norm_squared=None, squared=False, X_norm_squared=None, cell_length=None
 ):
     """
     Compute the pairwise distance matrix between each pair from a vector array X and Y.
