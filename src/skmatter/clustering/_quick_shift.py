@@ -126,7 +126,7 @@ class QuickShift(BaseEstimator):
             must be given in order to do the quick shift clustering."""
 
         if (self.cell is not None) and (X.shape[1] != len(self.cell)):
-            raise ValueError("Cell dimension does not match the data dimension.")
+            raise ValueError("Dimension of the cell length does not match the data dimension.")
         dist_matrix = self.metric(X, X)
         if self.dist_cutoff2 is None:
             gabrial = _get_gabriel_graph(dist_matrix)
