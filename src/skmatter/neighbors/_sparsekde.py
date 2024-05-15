@@ -174,8 +174,8 @@ class SparseKDE(BaseEstimator):
         _, self._grid_neighbour, self._sample_labels_, self._sample_weights = (
             self._assign_descriptors_to_grids(X)
         )
-        self._h_invs, self._normkernels, self._qscut2 = self._computes_localization(
-            X, self._sample_weights, min_grid_dist
+        self._h_invs, self._normkernels, self._qscut2 = (
+            self._computes_localized_bandwidth(X, self._sample_weights, min_grid_dist)
         )
         self._h = np.array([np.linalg.inv(h_inv) for h_inv in self._h_invs])
 
@@ -272,10 +272,11 @@ class SparseKDE(BaseEstimator):
 
         return grid_npoints, grid_neighbour, labels, assigner.grid_weight
 
-    def _computes_localization(
+    def _computes_localized_bandwidth(
         self, X, sample_weights: np.ndarray, mindist: np.ndarray
     ):
-
+        """Compute the localized bandwidth of the kernel density estimator
+        on grid points."""
         cov = _covariance(X, sample_weights, self.cell)
 
         if self.cell is not None:
@@ -304,12 +305,16 @@ class SparseKDE(BaseEstimator):
                 self.cell, X, X[i], sample_weights, sigma2[i]
             )
             if self.fpoints > 0:
-                sigma2, flocal, wlocal = self._localization_based_on_fraction_of_points(
-                    X, sample_weights, sigma2, flocal, i, 1 / self.nsamples, tune
+                sigma2, flocal, wlocal = (
+                    self._tune_localization_factor_based_on_fraction_of_points(
+                        X, sample_weights, sigma2, flocal, i, 1 / self.nsamples, tune
+                    )
                 )
             elif sigma2[i] < flocal[i]:
-                sigma2, flocal, wlocal = self._localization_based_on_fraction_of_spread(
-                    X, sample_weights, sigma2, flocal, i, mindist
+                sigma2, flocal, wlocal = (
+                    self._tune_localization_factor_based_on_fraction_of_spread(
+                        X, sample_weights, sigma2, flocal, i, mindist
+                    )
                 )
             h_invs[i], normkernels[i], qscut2[i], h_tr_normed[i] = (
                 self._bandwidth_estimation_from_localization(X, wlocal, flocal, i)
@@ -317,7 +322,7 @@ class SparseKDE(BaseEstimator):
 
         return h_invs, normkernels, qscut2
 
-    def _localization_based_on_fraction_of_points(
+    def _tune_localization_factor_based_on_fraction_of_points(
         self, X, sample_weights, sigma2, flocal, idx, delta, tune
     ):
         """Used in cases where one expects clusters with very different spreads,
@@ -351,7 +356,7 @@ class SparseKDE(BaseEstimator):
 
         return sigma2, flocal, wlocal
 
-    def _localization_based_on_fraction_of_spread(
+    def _tune_localization_factor_based_on_fraction_of_spread(
         self, X, sample_weights, sigma2, flocal, idx, mindist
     ):
         """Used in cases where one expects the spatial extentof clusters to be
@@ -364,6 +369,9 @@ class SparseKDE(BaseEstimator):
         return sigma2, flocal, wlocal
 
     def _bandwidth_estimation_from_localization(self, X, wlocal, flocal, idx):
+        """
+        Compute the bandwidth based on localized version of Silverman's rule
+        """
 
         cov_i = _covariance(X, wlocal, self.cell)
         nlocal = flocal[idx] * self.nsamples
@@ -587,26 +595,40 @@ def _covariance(X: np.ndarray, sample_weights: np.ndarray, cell: np.ndarray):
 
 def _local_population(
     cell: np.ndarray,
-    grid_pos: np.ndarray,
-    target_grid_pos: np.ndarray,
-    grid_weight: np.ndarray,
-    s2: float,
+    grid_j: np.ndarray,
+    grid_i: np.ndarray,
+    grid_j_weight: np.ndarray,
+    sigma_squared: float,
 ):
     """
-    Calculates the local population of a set of vectors in a grid.
+    Calculates the local population of a selected grid. The local population is defined
+    as a sum of the weighting factors for each other grid arond it.
+
+    .. math::
+        N_i = \\sum_j u_{ij}
+
+    where :math:`u_{ij}` is the weighting factor. The weighting factor is calculated
+    from an spherical Gaussian
+
+    .. math::
+        u_{ij} = \\exp\\left[-\\frac{(x_i - x_j)^2}{2\\sigma^2}  \\right] N w_j /
+        \\sum_j w_j
+
+    where :math:`w_j` is the weighting factor for each other grid, :math:`N` is the
+    number of grid points, and :math:`\\sigma` is the localization factor.
 
     Parameters
     ----------
     cell : np.ndarray
         An array of periods for each dimension of the grid.
-    grid_pos : np.ndarray
-        An array of vectors to be localized.
-    target_grid_pos : np.ndarray
-        An array of target vectors representing the grid.
-    grid_weight : np.ndarray
+    grid_j : np.ndarray
+        An array of vectors of the grid around the selected grid.
+    grid_i : np.ndarray
+        An array of the vector of the selected grid.
+    grid_j_weight : np.ndarray
         An array of weights for each target vector.
-    s2 : float
-        The scaling factor for the squared distance.
+    sigma_squared : float
+        The localization factor for the spherical Gaussian.
 
 
     Returns
@@ -620,11 +642,11 @@ def _local_population(
 
     """
 
-    xy = grid_pos - target_grid_pos
+    xy = grid_j - grid_i
     if cell is not None:
         xy -= np.round(xy / cell) * cell
 
-    wl = np.exp(-0.5 / s2 * np.sum(xy**2, axis=1)) * grid_weight
+    wl = np.exp(-0.5 / sigma_squared * np.sum(xy**2, axis=1)) * grid_j_weight
     num = np.sum(wl)
 
     return wl, num
