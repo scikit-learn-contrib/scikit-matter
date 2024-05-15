@@ -61,18 +61,13 @@ class SparseKDE(BaseEstimator):
 
     Attributes
     ----------
-    kdecut2 : float
-        The cut-off value for the KDE.
+    n_samples : int
+        The number of descriptors.
+    kdecut_squared : float
+        The cut-off value for the KDE. If the mahalanobis distance between two grid
+        points is larger than kdecut2, they are considered to be far away.
     cell : numpy.ndarray
         The cell dimension for the metric.
-    model : :class:`skmatter.utils.GaussianMixtureModel`
-        The model of the KDE.
-    cluster_mean : numpy.ndarray of shape (n_clusters, n_features)
-        The mean of each gaussian.
-    cluster_cov : numpy.ndarray of shape (n_clusters, n_features)
-        The covariance matrix of each gaussian.
-    cluster_weight : numpy.ndarray of shape (n_clusters, n_features)
-        The weight of each gaussian.
 
 
     Examples
@@ -128,18 +123,24 @@ class SparseKDE(BaseEstimator):
         self.descriptors = descriptors
         self.weights = weights if weights is not None else np.ones(len(descriptors))
         self.weights /= np.sum(self.weights)
-        self.nsamples = len(descriptors)
         self.fspread = fspread
         self.fpoints = fpoints
         self.verbose = verbose
-        self.kdecut2 = 9 * (np.sqrt(descriptors.shape[1]) + 1) ** 2
-        self.model = None
-        self.cluster_mean = None
-        self.cluster_cov = None
-        self.cluster_weight = None
 
         if self.fspread > 0:
             self.fpoints = -1.0
+
+    @property
+    def nsamples(self):
+        if not hasattr(self, "_nsamples"):
+            self._nsamples = len(self.descriptors)
+        return self._nsamples
+
+    @property
+    def kdecut_squared(self):
+        if not hasattr(self, "_kdecut_squared"):
+            self._kdecut_squared = (3 * (np.sqrt(self.descriptors.shape[1]) + 1)) ** 2
+        return self._kdecut_squared
 
     def fit(self, X, y=None, sample_weight=None):
         """Fit the Kernel Density model on the data.
@@ -402,7 +403,7 @@ class SparseKDE(BaseEstimator):
         ):
             for j, dummd1 in enumerate(np.diagonal(dummd1s_mat[:, i, :])):
                 # The second point is the mean corresponding to the cov
-                if dummd1 > self.kdecut2:
+                if dummd1 > self.kdecut_squared:
                     lnk = -0.5 * (self._normkernels[j] + dummd1) + np.log(
                         self._sample_weights[j]
                     )
