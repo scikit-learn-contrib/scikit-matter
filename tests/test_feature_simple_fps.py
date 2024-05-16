@@ -1,5 +1,6 @@
 import unittest
 
+import numpy as np
 from sklearn.datasets import load_diabetes as get_dataset
 from sklearn.utils.validation import NotFittedError
 
@@ -41,6 +42,31 @@ class TestFPS(unittest.TestCase):
             selector.fit(self.X)
             for i in range(4):
                 self.assertEqual(selector.selected_idx_[i], self.idx[i])
+
+        initialize = np.array(self.idx[:4])
+        with self.subTest(initialize=initialize):
+            selector = FPS(n_to_select=len(self.idx) - 1, initialize=initialize)
+            selector.fit(self.X)
+            for i in range(4):
+                self.assertEqual(selector.selected_idx_[i], self.idx[i])
+
+        initialize = np.array([1, 5, 3, 0.25])
+        with self.subTest(initialize=initialize):
+            with self.assertRaises(ValueError) as cm:
+                selector = FPS(n_to_select=len(self.idx) - 1, initialize=initialize)
+                selector.fit(self.X)
+            self.assertEqual(
+                str(cm.exception), "Invalid value of the initialize parameter"
+            )
+
+        initialize = np.array([[1, 5, 3], [2, 4, 6]])
+        with self.subTest(initialize=initialize):
+            with self.assertRaises(ValueError) as cm:
+                selector = FPS(n_to_select=len(self.idx) - 1, initialize=initialize)
+                selector.fit(self.X)
+            self.assertEqual(
+                str(cm.exception), "Invalid value of the initialize parameter"
+            )
 
         with self.assertRaises(ValueError) as cm:
             selector = FPS(n_to_select=1, initialize="bad")
