@@ -132,15 +132,38 @@ class SparseKDE(BaseEstimator):
 
     @property
     def nsamples(self):
-        if not hasattr(self, "_nsamples"):
-            self._nsamples = len(self.descriptors)
-        return self._nsamples
+        if not hasattr(self, "__nsamples"):
+            self.__nsamples = len(self.descriptors)
+        return self.__nsamples
+
+    @property
+    def ndimension(self):
+        return self.descriptors.shape[1]
 
     @property
     def kdecut_squared(self):
-        if not hasattr(self, "_kdecut_squared"):
-            self._kdecut_squared = (3 * (np.sqrt(self.descriptors.shape[1]) + 1)) ** 2
-        return self._kdecut_squared
+        if not hasattr(self, "__kdecut_squared"):
+            self.__kdecut_squared = (3 * (np.sqrt(self.descriptors.shape[1]) + 1)) ** 2
+        return self.__kdecut_squared
+
+    @property
+    def _h(self):
+        if not hasattr(self, "_h_invs"):
+            raise ValueError("Please run fitting first")
+        if not hasattr(self, "__h"):
+            self.__h = np.array([np.linalg.inv(h_inv) for h_inv in self._h_invs])
+        return self.__h
+
+    @property
+    def _normkernels(self):
+        if not hasattr(self, "__normkernels"):
+            self.__normkernels = np.array(
+                [
+                    self.ndimension * np.log(2 * np.pi) + np.linalg.slogdet(h)[1]
+                    for h in self._h
+                ]
+            )
+        return self.__normkernels
 
     def fit(self, X, y=None, sample_weight=None):
         """Fit the Kernel Density model on the data.
@@ -175,10 +198,9 @@ class SparseKDE(BaseEstimator):
         _, self._grid_neighbour, self._sample_labels_, self._sample_weights = (
             self._assign_descriptors_to_grids(X)
         )
-        self._h_invs, self._normkernels, self._qscut2 = (
-            self._computes_localized_bandwidth(X, self._sample_weights, min_grid_dist)
+        self._h_invs, self._qscut2 = self._computes_localized_bandwidth(
+            X, self._sample_weights, min_grid_dist
         )
-        self._h = np.array([np.linalg.inv(h_inv) for h_inv in self._h_invs])
 
         self.fitted_ = True
 
@@ -289,12 +311,7 @@ class SparseKDE(BaseEstimator):
         # initialize the localization based on fraction of data spread
         if self.fspread > 0:
             sigma2 *= self.fspread**2
-        flocal, normkernels, qscut2, h_tr_normed = (
-            np.zeros(len(X)),
-            np.zeros(len(X)),
-            np.zeros(len(X)),
-            np.zeros(len(X)),
-        )
+        flocal, qscut2 = np.zeros(len(X)), np.zeros(len(X))
         h_invs = np.zeros((len(X), X.shape[1], X.shape[1]))
 
         for i in tqdm(
@@ -317,11 +334,11 @@ class SparseKDE(BaseEstimator):
                         X, sample_weights, sigma2, flocal, i, mindist
                     )
                 )
-            h_invs[i], normkernels[i], qscut2[i], h_tr_normed[i] = (
-                self._bandwidth_estimation_from_localization(X, wlocal, flocal, i)
+            h_invs[i], qscut2[i] = self._bandwidth_estimation_from_localization(
+                X, wlocal, flocal, i
             )
 
-        return h_invs, normkernels, qscut2
+        return h_invs, qscut2
 
     def _tune_localization_factor_based_on_fraction_of_points(
         self, X, sample_weights, sigma2, flocal, idx, delta, tune
@@ -382,13 +399,10 @@ class SparseKDE(BaseEstimator):
         h = (4.0 / nlocal / (local_dimension + 2.0)) ** (
             2.0 / (local_dimension + 4.0)
         ) * cov_i
-        h_tr_normed = np.trace(h) / h.shape[0]
         h_inv = np.linalg.inv(h)
-        _, logdet_h = np.linalg.slogdet(h)
-        normkernel = X.shape[1] * np.log(2 * np.pi) + logdet_h
         qscut2 = np.trace(cov_i)
 
-        return h_inv, normkernel, qscut2, h_tr_normed
+        return h_inv, qscut2
 
     def _computes_kernel_density_estimation(self, X: np.ndarray):
 
