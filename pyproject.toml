@@ -86,3 +86,34 @@ indent = 4
 include_trailing_comma = true
 lines_after_imports = 2
 known_first_party = "skmatter"
+
+[tool.ruff]
+exclude = ["docs/src/examples/"]
+lint.ignore = [
+    "F401",
+    "E203",
+    "D100",
+    "D101",
+    "D102",
+    "D205",
+    "D400",
+    "D401",
+    "D410",
+    "D411",
+]
+line-length = 88
+lint.select = [
+    "D",
+    "E",
+    "F",
+    "W",
+]
+
+[tool.ruff.lint.pydocstyle]
+convention = "numpy"
+
+[tool.ruff.lint.per-file-ignores]
+"examples/**" = [
+    "D205",
+    "D400",
+]
