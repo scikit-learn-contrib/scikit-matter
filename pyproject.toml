@@ -98,8 +98,6 @@ lint.ignore = [
     "D205",
     "D400",
     "D401",
-    "D410",
-    "D411",
 ]
 line-length = 88
 lint.select = [

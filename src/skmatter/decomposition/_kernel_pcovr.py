@@ -465,6 +465,7 @@ class KernelPCovR(_BasePCA, LinearModel):
             independent (predictor) variable
         Y : numpy.ndarray
             dependent (response) variable
+
         Returns
         -------
         L : float
