@@ -27,6 +27,7 @@ from typing import Callable, Union
 import matplotlib.pyplot as plt
 import numpy as np
 from scipy.special import logsumexp
+from scipy.stats import gaussian_kde
 
 from skmatter.clustering import QuickShift
 from skmatter.datasets import load_hbond_dataset
@@ -177,12 +178,34 @@ ax.legend(
 ax.set_xlabel("x")
 ax.set_ylabel("y")
 
+# %%
+# The performance of the probability density estimation can be characterized by the
+# Mean Integrated Squared Error (MISE), which is defined as:
+# $$ \text{MISE}=\text{E}[\int (\hat{P}(\textbf{x})-P(\textbf{x}))^2 d\textbf{x}]$$
+
+# %%
+RMSE = np.sum((probs - fitted_probs) ** 2 * (x[0][1] - x[0][0]) * (y[1][0] - y[0][0]))
+print(f"RMSE = {RMSE:.2e}")
+
+# %%
+# We can compare the result with the KDE class from scikit-learn. (Usually takes
+# several minutes to run)
+
+# %%
+kde = gaussian_kde(samples.T)
+sklearn_probs = kde(np.vstack([x.ravel(), y.ravel()])).T
+RMSE_kde = np.sum(
+    (probs - sklearn_probs) ** 2 * (x[0][1] - x[0][0]) * (y[1][0] - y[0][0])
+)
+print(f"RMSE_kde = {RMSE_kde:.2e}")
 
 # %%
 # We can see that the fitted model can perfectly capture the original one. Eventhough we
-# #have not specified the number of the gaussians, it can still perform well. This
+# have not specified the number of the gaussians, it can still perform well. This
 # ability enables us to analyze the distribution of the data objectively, which is
-# important and also hard to do in analyzing the molecular simulation data.
+# important and also hard to do in analyzing the molecular simulation data. Also, we
+# see that our method is slightly better than the one from scikit-learn, but within a
+# much shorter time.
 
 # %%
 # Probabilistic Analysis of Molecular Motifs (PAMM)
