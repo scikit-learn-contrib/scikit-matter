@@ -1,7 +1,15 @@
 from os.path import dirname, join
 
 import numpy as np
-from sklearn.utils import Bunch, check_pandas_support
+import sklearn
+
+
+if sklearn.__version__ >= "1.5.0":
+    from sklearn.utils._optional_dependencies import check_pandas_support
+else:
+    from sklearn.utils import check_pandas_support
+
+from sklearn.utils import Bunch
 
 
 def load_nice_dataset():
