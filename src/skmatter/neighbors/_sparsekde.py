@@ -206,9 +206,7 @@ class SparseKDE(BaseEstimator):
         _, self._grid_neighbour, self._sample_labels_, self._sample_weights = (
             self._assign_descriptors_to_grids(X)
         )
-        self._qscut2 = self._computes_localized_bandwidth(
-            X, self._sample_weights, min_grid_dist
-        )
+        self._computes_localized_bandwidth(X, self._sample_weights, min_grid_dist)
 
         self.fitted_ = True
 
@@ -230,9 +228,7 @@ class SparseKDE(BaseEstimator):
             probability densities, so values will be low for high-dimensional
             data.
         """
-        return self._computes_kernel_density_estimation(
-            X
-        )  # np.array([self.model(x) for x in X])
+        return self._computes_kernel_density_estimation(X)
 
     def score(self, X, y=None):
         """Compute the total log-likelihood under the model.
@@ -322,7 +318,7 @@ class SparseKDE(BaseEstimator):
         # initialize the localization based on fraction of data spread
         if self.fspread > 0:
             sigma2 *= self.fspread**2
-        flocal, qscut2 = np.zeros(len(X)), np.zeros(len(X))
+        flocal = np.zeros(len(X))
         self.bandwidth_ = np.zeros((len(X), X.shape[1], X.shape[1]))
         self._covariance = np.zeros((len(X), X.shape[1], X.shape[1]))
 
@@ -349,8 +345,6 @@ class SparseKDE(BaseEstimator):
             self.bandwidth_[i], self._covariance[i] = (
                 self._bandwidth_estimation_from_localization(X, wlocal, flocal, i)
             )
-
-        return qscut2
 
     def _tune_localization_factor_based_on_fraction_of_points(
         self, X, sample_weights, sigma2, flocal, idx, delta, tune

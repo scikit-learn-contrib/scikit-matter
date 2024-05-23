@@ -128,6 +128,7 @@ class QuickShift(BaseEstimator):
                 "Dimension of the cell length does not match the data dimension."
             )
         dist_matrix = self.metric(X, X)
+        np.fill_diagonal(dist_matrix, np.inf)
         if self.dist_cutoff2 is None:
             gabrial = _get_gabriel_graph(dist_matrix)
         idmindist = np.argmin(dist_matrix, axis=1)
