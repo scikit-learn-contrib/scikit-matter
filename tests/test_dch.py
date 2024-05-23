@@ -30,7 +30,8 @@ class TestDirectionalConvexHull(unittest.TestCase):
         selector.fit(self.T, self.y)
         self.assertTrue(np.allclose(selector.selected_idx_, self.idx))
 
-        feature_residuals = selector.score_feature_matrix(self.T)
+        # takes abs to avoid numerical noise changing the sign of PCA projections
+        feature_residuals = np.abs(selector.score_feature_matrix(self.T))
         val = np.max(
             np.abs(
                 (self.feature_residuals_100 - feature_residuals[100])
