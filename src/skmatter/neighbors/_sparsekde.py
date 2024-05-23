@@ -68,6 +68,8 @@ class SparseKDE(BaseEstimator):
         points is larger than kdecut2, they are considered to be far away.
     cell : numpy.ndarray
         The cell dimension for the metric.
+    bandwidth_: numpy.ndarray
+        The bandwidth of the KDE.
 
 
     Examples
@@ -130,6 +132,9 @@ class SparseKDE(BaseEstimator):
         if self.fspread > 0:
             self.fpoints = -1.0
 
+        self.bandwidth_ = None
+        self._covariance = None
+
     @property
     def nsamples(self):
         if not hasattr(self, "__nsamples"):
@@ -147,12 +152,15 @@ class SparseKDE(BaseEstimator):
         return self.__kdecut_squared
 
     @property
-    def _h(self):
-        if not hasattr(self, "_h_invs"):
-            raise ValueError("Please run fitting first")
-        if not hasattr(self, "__h"):
-            self.__h = np.array([np.linalg.inv(h_inv) for h_inv in self._h_invs])
-        return self.__h
+    def _bandwidth_inv(self):
+        if self.fitted_:
+            if not hasattr(self, "__bandwidth_inv"):
+                self.__bandwidth_inv = np.array(
+                    [np.linalg.inv(h) for h in self.bandwidth_]
+                )
+        else:
+            raise ValueError("The model is not fitted yet.")
+        return self.__bandwidth_inv
 
     @property
     def _normkernels(self):
@@ -160,7 +168,7 @@ class SparseKDE(BaseEstimator):
             self.__normkernels = np.array(
                 [
                     self.ndimension * np.log(2 * np.pi) + np.linalg.slogdet(h)[1]
-                    for h in self._h
+                    for h in self.bandwidth_
                 ]
             )
         return self.__normkernels
@@ -198,7 +206,7 @@ class SparseKDE(BaseEstimator):
         _, self._grid_neighbour, self._sample_labels_, self._sample_weights = (
             self._assign_descriptors_to_grids(X)
         )
-        self._h_invs, self._qscut2 = self._computes_localized_bandwidth(
+        self._qscut2 = self._computes_localized_bandwidth(
             X, self._sample_weights, min_grid_dist
         )
 
@@ -276,7 +284,9 @@ class SparseKDE(BaseEstimator):
 
         return np.concatenate(
             [
-                np.atleast_2d(rng.multivariate_normal(self._grids[i], self._h[i]))
+                np.atleast_2d(
+                    rng.multivariate_normal(self._grids[i], self.bandwidth_[i])
+                )
                 for i in idxs
             ]
         )
@@ -300,19 +310,21 @@ class SparseKDE(BaseEstimator):
     ):
         """Compute the localized bandwidth of the kernel density estimator
         on grid points."""
-        cov = _covariance(X, sample_weights, self.cell)
 
+        # estimate the sigma
+        cov = _covariance(X, sample_weights, self.cell)
         if self.cell is not None:
             tune = sum(self.cell**2)
         else:
             tune = np.trace(cov)
-
         sigma2 = np.full(len(X), tune, dtype=float)
+
         # initialize the localization based on fraction of data spread
         if self.fspread > 0:
             sigma2 *= self.fspread**2
         flocal, qscut2 = np.zeros(len(X)), np.zeros(len(X))
-        h_invs = np.zeros((len(X), X.shape[1], X.shape[1]))
+        self.bandwidth_ = np.zeros((len(X), X.shape[1], X.shape[1]))
+        self._covariance = np.zeros((len(X), X.shape[1], X.shape[1]))
 
         for i in tqdm(
             range(len(X)),
@@ -334,11 +346,11 @@ class SparseKDE(BaseEstimator):
                         X, sample_weights, sigma2, flocal, i, mindist
                     )
                 )
-            h_invs[i], qscut2[i] = self._bandwidth_estimation_from_localization(
-                X, wlocal, flocal, i
+            self.bandwidth_[i], self._covariance[i] = (
+                self._bandwidth_estimation_from_localization(X, wlocal, flocal, i)
             )
 
-        return h_invs, qscut2
+        return qscut2
 
     def _tune_localization_factor_based_on_fraction_of_points(
         self, X, sample_weights, sigma2, flocal, idx, delta, tune
@@ -377,7 +389,7 @@ class SparseKDE(BaseEstimator):
     def _tune_localization_factor_based_on_fraction_of_spread(
         self, X, sample_weights, sigma2, flocal, idx, mindist
     ):
-        """Used in cases where one expects the spatial extentof clusters to be
+        """Used in cases where one expects the spatial extent of clusters to be
         relatively homogeneous"""
         sigma2[idx] = mindist[idx]
         wlocal, flocal[idx] = _local_population(
@@ -391,24 +403,22 @@ class SparseKDE(BaseEstimator):
         Compute the bandwidth based on localized version of Silverman's rule
         """
 
-        cov_i = _covariance(X, wlocal, self.cell)
+        cov = _covariance(X, wlocal, self.cell)
         nlocal = flocal[idx] * self.nsamples
-        local_dimension = effdim(cov_i)
-        cov_i = oas(cov_i, nlocal, X.shape[1])
+        local_dimension = effdim(cov)
+        cov = oas(cov, nlocal, X.shape[1])
         # localized version of Silverman's rule
         h = (4.0 / nlocal / (local_dimension + 2.0)) ** (
             2.0 / (local_dimension + 4.0)
-        ) * cov_i
-        h_inv = np.linalg.inv(h)
-        qscut2 = np.trace(cov_i)
+        ) * cov
 
-        return h_inv, qscut2
+        return h, cov
 
     def _computes_kernel_density_estimation(self, X: np.ndarray):
 
         prob = np.full(len(X), -np.inf)
         dummd1s_mat = pairwise_mahalanobis_distances(
-            X, self._grids, self._h_invs, self.cell, squared=True
+            X, self._grids, self._bandwidth_inv, self.cell, squared=True
         )
         for i in tqdm(
             range(len(X)),
@@ -433,7 +443,7 @@ class SparseKDE(BaseEstimator):
                     dummd1s = pairwise_mahalanobis_distances(
                         self.descriptors[neighbours],
                         X[i][np.newaxis, ...],
-                        self._h_invs[j],
+                        self._bandwidth_inv[j],
                         self.cell,
                         squared=True,
                     ).reshape(-1)

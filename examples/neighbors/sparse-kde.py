@@ -157,7 +157,7 @@ def rij(period: np.ndarray, xi: np.ndarray, xj: np.ndarray) -> np.ndarray:
 original_model = GaussianMixtureModel(np.full(3, 1 / 3), means, covariances)
 # The fitted model:
 fitted_model = GaussianMixtureModel(
-    estimator._sample_weights, estimator._grids, estimator._h
+    estimator._sample_weights, estimator._grids, estimator.bandwidth_
 )
 
 # To plot the probability density contour, we need to create a grid of points:
@@ -539,8 +539,9 @@ cluster_distribution_3D(
 
 # %%
 probs = estimator.score_samples(grids)
+qscuts = np.array([np.trace(cov) for cov in estimator._covariance])
 clustering = QuickShift(
-    estimator._qscut2,
+    qscuts**2,
     metric_params=estimator.metric_params,
 )
 clustering.fit(grids, samples_weight=probs)
