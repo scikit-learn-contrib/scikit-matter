@@ -15,6 +15,7 @@ The rules for CHANGELOG file:
 ------------------
 - Updating ``FPS`` to allow a numpy array of ints as an initialize parameter (#145)
 - Supported Python versions are now ranging from 3.9 - 3.12.
+- Updating ``skmatter.datasets`` submodule to support sklearn 1.5.0 (#229)
 
 0.2.0 (2023/08/24)
 ------------------
