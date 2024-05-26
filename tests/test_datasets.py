@@ -77,9 +77,7 @@ class WHOTests(unittest.TestCase):
             cls.has_pandas = False
 
     def test_load_dataset_without_pandas(self):
-        """
-        Check if the correct exception occurs when pandas isn't present.
-        """
+        """Check if the correct exception occurs when pandas isn't present."""
         with unittest.mock.patch.dict("sys.modules", {"pandas": None}):
             with self.assertRaises(ImportError) as cm:
                 _ = load_who_dataset()
@@ -95,9 +93,7 @@ class WHOTests(unittest.TestCase):
             self.assertEqual(self.who["data"].shape, self.shape)
 
     def test_datapoint_value(self):
-        """
-        Check if the value of a datapoint at a certain location is correct.
-        """
+        """Check if the value of a datapoint at a certain location is correct."""
         if self.has_pandas is True:
             self.assertTrue(
                 np.allclose(
@@ -120,9 +116,7 @@ class ROYTests(unittest.TestCase):
             cls.has_ase = False
 
     def test_load_dataset_without_ase(self):
-        """
-        Check if the correct exception occurs when ase isn't present.
-        """
+        """Check if the correct exception occurs when ase isn't present."""
         with unittest.mock.patch.dict("sys.modules", {"ase.io": None}):
             with self.assertRaises(ImportError) as cm:
                 _ = load_roy_dataset()
@@ -131,8 +125,8 @@ class ROYTests(unittest.TestCase):
             )
 
     def test_dataset_content(self):
-        """
-        Check if the correct number of datapoints are present in the dataset.
+        """Check if the correct number of datapoints are present in the dataset.
+
         Also check if the size of the dataset is correct.
         """
         if self.has_ase is True:
@@ -141,8 +135,8 @@ class ROYTests(unittest.TestCase):
             self.assertEqual(len(self.roy["energies"]), self.size)
 
     def test_dataset_consistency(self):
-        """
-        Check if the energies in the structures are the same as in the explicit array.
+        """Check if the energies in the structures are the same as in the explicit
+        array.
         """
         if self.has_ase is True:
             self.assertTrue(

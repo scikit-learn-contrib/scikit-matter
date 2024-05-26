@@ -16,20 +16,14 @@ class TestPCovCUR(unittest.TestCase):
         self.idx = [256, 304, 41, 408, 311, 364, 152, 78, 359, 102]
 
     def test_known(self):
-        """
-        This test checks that the model returns a known set of indices
-        """
-
+        """Check that the model returns a known set of indices."""
         selector = PCovCUR(n_to_select=10, mixing=0.5)
         selector.fit(self.X, self.y)
 
         self.assertTrue(np.allclose(selector.selected_idx_, self.idx))
 
     def test_restart(self):
-        """
-        This test checks that the model can be restarted with a new instance
-        """
-
+        """Check that the model can be restarted with a new instance."""
         selector = PCovCUR(n_to_select=1, mixing=0.5)
         selector.fit(self.X, self.y)
 
@@ -49,9 +43,7 @@ class TestPCovCUR(unittest.TestCase):
                 )
 
     def test_non_it(self):
-        """
-        This test checks that the model can be run non-iteratively
-        """
+        """Check that the model can be run non-iteratively."""
         self.idx = [256, 32, 138, 290, 362, 141, 359, 428, 254, 9]
         selector = PCovCUR(n_to_select=10, recompute_every=0)
         selector.fit(self.X, self.y)
@@ -59,10 +51,7 @@ class TestPCovCUR(unittest.TestCase):
         self.assertTrue(np.allclose(selector.selected_idx_, self.idx))
 
     def test_multiple_k(self):
-        """
-        This test checks that the model can be run with multiple k's
-        """
-
+        """Check that the model can be run with multiple k's."""
         for k in list(set(np.logspace(0, np.log10(min(self.X.shape)), 4, dtype=int))):
             selector = PCovCUR(n_to_select=10, k=k)
             selector.fit(self.X, self.y)

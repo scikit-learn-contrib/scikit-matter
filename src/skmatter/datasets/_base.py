@@ -14,6 +14,7 @@ from sklearn.utils import Bunch
 
 def load_nice_dataset():
     """Load and returns NICE dataset.
+
     Returns
     -------
     nice_data : sklearn.utils.Bunch
@@ -24,7 +25,6 @@ def load_nice_dataset():
       DESCR: `str` --
         The full description of the dataset.
     """
-
     module_path = dirname(__file__)
     target_filename = join(module_path, "data", "nice_dataset.npz")
     raw_data = np.load(target_filename)
@@ -100,6 +100,7 @@ def load_csd_1000r(return_X_y=False):
 
 def load_who_dataset():
     """Load and returns WHO dataset.
+
     Returns
     -------
     who_dataset : sklearn.utils.Bunch
@@ -108,7 +109,6 @@ def load_who_dataset():
                   as a Pandas dataframe.
           DESCR: `str` -- The full description of the dataset.
     """
-
     module_path = dirname(__file__)
     target_filename = join(module_path, "data", "who_dataset.csv")
     pd = check_pandas_support("load_who_dataset")
@@ -120,8 +120,8 @@ def load_who_dataset():
 
 def load_roy_dataset():
     """Load and returns the ROY dataset, which contains structures,
-    energies and SOAP-derived descriptors for 264 polymorphs of ROY,
-    from [Beran et Al, Chemical Science (2022)](https://doi.org/10.1039/D1SC06074K)
+    energies and SOAP-derived descriptors for 264 polymorphs of ROY, from [Beran et Al,
+    Chemical Science (2022)](https://doi.org/10.1039/D1SC06074K)
 
     Returns
     -------
@@ -131,7 +131,6 @@ def load_roy_dataset():
           features: `np.array` -- SOAP-derived descriptors for the structures
           energies: `np.array` -- energies of the structures
     """
-
     module_path = dirname(__file__)
     target_structures = join(module_path, "data", "beran_roy_structures.xyz.bz2")
 

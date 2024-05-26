@@ -19,17 +19,15 @@ from ..utils import check_krr_fit, pcovr_kernel
 
 
 class KernelPCovR(_BasePCA, LinearModel):
-    r"""
-    Kernel Principal Covariates Regression, as described in [Helfrecht2020]_
-    determines a latent-space projection :math:`\mathbf{T}` which
-    minimizes a combined loss in supervised and unsupervised tasks in the
-    reproducing kernel Hilbert space (RKHS).
+    r"""Kernel Principal Covariates Regression, as described in [Helfrecht2020]_
+    determines a latent-space projection :math:`\mathbf{T}` which minimizes a combined
+    loss in supervised and unsupervised tasks in the reproducing kernel Hilbert space
+    (RKHS).
 
-    This projection is determined by the eigendecomposition of a modified gram
-    matrix :math:`\mathbf{\tilde{K}}`
+    This projection is determined by the eigendecomposition of a modified gram matrix
+    :math:`\mathbf{\tilde{K}}`
 
     .. math::
-
       \mathbf{\tilde{K}} = \alpha \mathbf{K} +
             (1 - \alpha) \mathbf{\hat{Y}}\mathbf{\hat{Y}}^T
 
@@ -40,15 +38,13 @@ class KernelPCovR(_BasePCA, LinearModel):
 
     Parameters
     ----------
-    mixing: float, default=0.5
+    mixing : float, default=0.5
         mixing parameter, as described in PCovR as :math:`{\\alpha}`
-
-    n_components: int, float or str, default=None
+    n_components : int, float or str, default=None
         Number of components to keep.
         if n_components is not set all components are kept::
 
             n_components == n_samples
-
     svd_solver : {'auto', 'full', 'arpack', 'randomized'}, default='auto'
         If auto :
             The solver is selected by a default policy based on `X.shape` and
@@ -66,7 +62,6 @@ class KernelPCovR(_BasePCA, LinearModel):
             0 < n_components < min(X.shape)
         If randomized :
             run randomized SVD by the method of Halko et al.
-
     regressor : {instance of `sklearn.kernel_ridge.KernelRidge`, `precomputed`, None}, default=None
         The regressor to use for computing
         the property predictions :math:`\\hat{\\mathbf{Y}}`.
@@ -77,76 +72,58 @@ class KernelPCovR(_BasePCA, LinearModel):
 
         If `precomputed`, we assume that the `y` passed to the `fit` function
         is the regressed form of the targets :math:`{\mathbf{\hat{Y}}}`.
-
-
-    kernel: "linear" | "poly" | "rbf" | "sigmoid" | "cosine" | "precomputed"
+    kernel : "linear" | "poly" | "rbf" | "sigmoid" | "cosine" | "precomputed"
         Kernel. Default="linear".
-
-    gamma: float, default=None
+    gamma : float, default=None
         Kernel coefficient for rbf, poly and sigmoid kernels. Ignored by other
         kernels.
-
-    degree: int, default=3
+    degree : int, default=3
         Degree for poly kernels. Ignored by other kernels.
-
-    coef0: float, default=1
+    coef0 : float, default=1
         Independent term in poly and sigmoid kernels.
         Ignored by other kernels.
-
-    kernel_params: mapping of str to any, default=None
+    kernel_params : mapping of str to any, default=None
         Parameters (keyword arguments) and values for kernel passed as
         callable object. Ignored by other kernels.
-
-    center: bool, default=False
+    center : bool, default=False
             Whether to center any computed kernels
-
-    fit_inverse_transform: bool, default=False
+    fit_inverse_transform : bool, default=False
         Learn the inverse transform for non-precomputed kernels.
         (i.e. learn to find the pre-image of a point)
-
-    tol: float, default=1e-12
+    tol : float, default=1e-12
         Tolerance for singular values computed by svd_solver == 'arpack'
         and for matrix inversions.
         Must be of range [0.0, infinity).
-
-    n_jobs: int, default=None
+    n_jobs : int, default=None
         The number of parallel jobs to run.
         :obj:`None` means 1 unless in a :obj:`joblib.parallel_backend` context.
         ``-1`` means using all processors.
-
     iterated_power : int or 'auto', default='auto'
         Number of iterations for the power method computed by
         svd_solver == 'randomized'.
         Must be of range [0, infinity).
-
-    random_state : int, RandomState instance or None, default=None
+    random_state : int, :class:`numpy.random.RandomState` instance or None, default=None
         Used when the 'arpack' or 'randomized' solvers are used. Pass an int
         for reproducible results across multiple function calls.
 
     Attributes
     ----------
-
-    pt__: ndarray of size :math:`({n_{components}, n_{components}})`
+    pt__: numpy.darray of size :math:`({n_{components}, n_{components}})`
            pseudo-inverse of the latent-space projection, which
            can be used to contruct projectors from latent-space
-
-    pkt_: ndarray of size :math:`({n_{samples}, n_{components}})`
+    pkt_: numpy.ndarray of size :math:`({n_{samples}, n_{components}})`
            the projector, or weights, from the input kernel :math:`\\mathbf{K}`
            to the latent-space projection :math:`\\mathbf{T}`
-
-    pky_: ndarray of size :math:`({n_{samples}, n_{properties}})`
+    pky_: numpy.ndarray of size :math:`({n_{samples}, n_{properties}})`
            the projector, or weights, from the input kernel :math:`\\mathbf{K}`
            to the properties :math:`\\mathbf{Y}`
-
-    pty_: ndarray of size :math:`({n_{components}, n_{properties}})`
+    pty_: numpy.ndarray of size :math:`({n_{components}, n_{properties}})`
           the projector, or weights, from the latent-space projection
           :math:`\\mathbf{T}` to the properties :math:`\\mathbf{Y}`
-
-    ptx_: ndarray of size :math:`({n_{components}, n_{features}})`
+    ptx_: numpy.ndarray of size :math:`({n_{components}, n_{features}})`
          the projector, or weights, from the latent-space projection
          :math:`\\mathbf{T}` to the feature matrix :math:`\\mathbf{X}`
-
-    X_fit_: ndarray of shape (n_samples, n_features)
+    X_fit_: numpy.ndarray of shape (n_samples, n_features)
         The data used to fit the model. This attribute is used to build kernels
         from new data.
 
@@ -235,10 +212,7 @@ class KernelPCovR(_BasePCA, LinearModel):
         )
 
     def _fit(self, K, Yhat, W):
-        """
-        Fit the model with the computed kernel and approximated properties.
-        """
-
+        """Fit the model with the computed kernel and approximated properties."""
         K_tilde = pcovr_kernel(mixing=self.mixing, X=K, Y=Yhat, kernel="precomputed")
 
         if self._fit_svd_solver == "full":
@@ -262,22 +236,19 @@ class KernelPCovR(_BasePCA, LinearModel):
         self.pt__ = np.linalg.lstsq(T, np.eye(T.shape[0]), rcond=self.tol)[0]
 
     def fit(self, X, Y, W=None):
-        """
-
-        Fit the model with X and Y.
+        r"""Fit the model with X and Y.
 
         Parameters
         ----------
-        X:  ndarray, shape (n_samples, n_features)
+        X : numpy.ndarray, shape (n_samples, n_features)
             Training data, where n_samples is the number of samples and
             n_features is the number of features.
 
-            It is suggested that :math:`\\mathbf{X}` be centered by its column-
+            It is suggested that :math:`\mathbf{X}` be centered by its column-
             means and scaled. If features are related, the matrix should be scaled
             to have unit variance, otherwise :math:`\\mathbf{X}` should be
             scaled so that each feature has a variance of 1 / n_features.
-
-        Y:  ndarray, shape (n_samples, n_properties)
+        Y : numpy.ndarray, shape (n_samples, n_properties)
             Training data, where n_samples is the number of samples and
             n_properties is the number of properties
 
@@ -285,8 +256,7 @@ class KernelPCovR(_BasePCA, LinearModel):
             means and scaled. If features are related, the matrix should be scaled
             to have unit variance, otherwise :math:`\\mathbf{Y}` should be
             scaled so that each feature has a variance of 1 / n_features.
-
-        W : ndarray, shape (n_samples, n_properties)
+        W : numpy.ndarray, shape (n_samples, n_properties)
             Regression weights, optional when regressor=`precomputed`. If not
             passed, it is assumed that `W = np.linalg.lstsq(K, Y, self.tol)[0]`
 
@@ -294,9 +264,7 @@ class KernelPCovR(_BasePCA, LinearModel):
         -------
         self: object
             Returns the instance itself.
-
         """
-
         if self.regressor not in ["precomputed", None] and not isinstance(
             self.regressor, KernelRidge
         ):
@@ -417,7 +385,6 @@ class KernelPCovR(_BasePCA, LinearModel):
 
     def predict(self, X=None):
         """Predicts the property values"""
-
         check_is_fitted(self, ["pky_", "pty_"])
 
         X = check_array(X)
@@ -428,20 +395,17 @@ class KernelPCovR(_BasePCA, LinearModel):
         return K @ self.pky_
 
     def transform(self, X):
-        """
-        Apply dimensionality reduction to X.
+        """Apply dimensionality reduction to X.
 
-        X is projected on the first principal components as determined by the
+        ``X`` is projected on the first principal components as determined by the
         modified Kernel PCovR distances.
 
         Parameters
         ----------
-        X: ndarray, shape (n_samples, n_features)
+        X : numpy.ndarray, shape (n_samples, n_features)
             New data, where n_samples is the number of samples
             and n_features is the number of features.
-
         """
-
         check_is_fitted(self, ["pkt_", "X_fit_"])
 
         X = check_array(X)
@@ -453,13 +417,11 @@ class KernelPCovR(_BasePCA, LinearModel):
         return K @ self.pkt_
 
     def inverse_transform(self, T):
-        """Transform input data back to its original space.
+        r"""Transform input data back to its original space.
 
         .. math::
-
-            \\mathbf{\\hat{X}} = \\mathbf{T} \\mathbf{P}_{TX}
-                              = \\mathbf{K} \\mathbf{P}_{KT} \\mathbf{P}_{TX}
-
+            \mathbf{\\hat{X}} = \mathbf{T} \mathbf{P}_{TX}
+                              = \mathbf{K} \mathbf{P}_{KT} \mathbf{P}_{TX}
 
         Similar to KPCA, the original features are not always recoverable,
         as the projection is computed from the kernel features, not the original
@@ -468,29 +430,25 @@ class KernelPCovR(_BasePCA, LinearModel):
 
         Parameters
         ----------
-        T: ndarray, shape (n_samples, n_components)
-            Projected data, where n_samples is the number of samples
-            and n_components is the number of components.
+        T : numpy.ndarray, shape (n_samples, n_components)
+            Projected data, where n_samples is the number of samples and n_components is
+            the number of components.
 
         Returns
         -------
-        X_original ndarray, shape (n_samples, n_features)
+        X_original : numpy.ndarray, shape (n_samples, n_features)
         """
-
         return T @ self.ptx_
 
     def score(self, X, Y):
-        r"""
-        Computes the (negative) loss values for KernelPCovR on the given predictor and
-        response variables. The loss in :math:`\mathbf{K}`, as explained in
+        r"""Computes the (negative) loss values for KernelPCovR on the given predictor
+        and response variables. The loss in :math:`\mathbf{K}`, as explained in
         [Helfrecht2020]_ does not correspond to a traditional Gram loss
-        :math:`\mathbf{K} - \mathbf{TT}^T`. Indicating the kernel between set
-        A and B as :math:`\mathbf{K}_{AB}`,
-        the projection of set A as :math:`\mathbf{T}_A`, and with N and V as the
-        train and validation/test set, one obtains
+        :math:`\mathbf{K} - \mathbf{TT}^T`. Indicating the kernel between set A and B as
+        :math:`\mathbf{K}_{AB}`, the projection of set A as :math:`\mathbf{T}_A`, and
+        with N and V as the train and validation/test set, one obtains
 
         .. math::
-
             \ell=\frac{\operatorname{Tr}\left[\mathbf{K}_{VV} - 2
             \mathbf{K}_{VN} \mathbf{T}_N
                 (\mathbf{T}_N^T \mathbf{T}_N)^{-1} \mathbf{T}_V^T
@@ -498,21 +456,22 @@ class KernelPCovR(_BasePCA, LinearModel):
             \mathbf{K}_{NN} \mathbf{T}_N (\mathbf{T}_N^T \mathbf{T}_N)^{-1}
             \mathbf{T}_V^T\right]}{\operatorname{Tr}(\mathbf{K}_{VV})}
 
-        The negative loss is returned for easier use in sklearn pipelines, e.g., a
-        grid search, where methods named 'score' are meant to be maximized.
+        The negative loss is returned for easier use in sklearn pipelines, e.g., a grid
+        search, where methods named 'score' are meant to be maximized.
 
-        Arguments
-        ---------
-        X:              independent (predictor) variable
-        Y:              dependent (response) variable
+        Parameters
+        ----------
+        X : numpy.ndarray
+            independent (predictor) variable
+        Y : numpy.ndarray
+            dependent (response) variable
 
         Returns
         -------
-        L:             Negative sum of the KPCA and KRR losses, with the KPCA loss
-                       determined by the reconstruction of the kernel
-
+        L : float
+            Negative sum of the KPCA and KRR losses, with the KPCA loss determined by
+            the reconstruction of the kernel
         """
-
         check_is_fitted(self, ["pkt_", "X_fit_"])
 
         X = check_array(X)

@@ -136,7 +136,7 @@ class TestXOrth(unittest.TestCase):
             str(cm.exception),
             "You can only orthogonalize a matrix using a vector with the same number "
             f"of rows. Matrix X has {self.n_samples} rows, whereas the "
-            f"orthogonalizing matrix has {self.n_samples+4} rows.",
+            f"orthogonalizing matrix has {self.n_samples + 4} rows.",
         )
 
     def test_warning(self):

@@ -12,11 +12,9 @@ class TestVoronoiFPS(TestFPS):
         super().setUp()
 
     def test_restart(self):
-        """
-        This test checks that the model can be restarted with a new number of
+        """Checks that the model can be restarted with a new number of
         features and `warm_start`
         """
-
         selector = VoronoiFPS(n_to_select=1, initialize=self.idx[0])
         selector.fit(self.X)
 
@@ -26,11 +24,9 @@ class TestVoronoiFPS(TestFPS):
             self.assertEqual(selector.selected_idx_[i - 1], self.idx[i - 1])
 
     def test_initialize(self):
-        """
-        This test checks that the model can be initialized in all applicable manners
+        """Checks that the model can be initialized in all applicable manners
         and throws an error otherwise
         """
-
         for initialize in [self.idx[0], "random"]:
             with self.subTest(initialize=initialize):
                 selector = VoronoiFPS(n_to_select=1, initialize=initialize)
@@ -42,8 +38,7 @@ class TestVoronoiFPS(TestFPS):
         self.assertEqual(str(cm.exception), "Invalid value of the initialize parameter")
 
     def test_switching_point(self):
-        """
-        This test check work of the switching point calculator into the
+        """Check work of the switching point calculator into the
         _init_greedy_search function
         """
         selector = VoronoiFPS(n_to_select=1)
@@ -92,9 +87,7 @@ class TestVoronoiFPS(TestFPS):
             )
 
     def test_get_distances(self):
-        """
-        This test checks that the hausdorff distances are returnable after fitting
-        """
+        """Checks that the hausdorff distances are returnable after fitting"""
         selector = VoronoiFPS(n_to_select=1)
         selector.fit(self.X)
         _ = selector.get_select_distance()
@@ -104,8 +97,7 @@ class TestVoronoiFPS(TestFPS):
             _ = selector.get_select_distance()
 
     def test_comparison(self):
-        """
-        This test checks that the voronoi FPS strictly computes less distances
+        """Checks that the voronoi FPS strictly computes less distances
         than its normal FPS counterpart.
         """
         vselector = VoronoiFPS(n_to_select=self.X.shape[0] - 1)
@@ -117,9 +109,8 @@ class TestVoronoiFPS(TestFPS):
         self.assertTrue(np.allclose(vselector.selected_idx_, selector.selected_idx_))
 
     def test_nothing_updated_points(self):
-        """
-        This test checks that in the case where we have no points to update,
-        the code still works fine
+        """Checks that in the case where we have no points to update, the code
+        still works fine
         """
         X = np.array([[1, 1], [4, 4], [10, 10], [100, 100]])
         selector = VoronoiFPS(n_to_select=3, initialize=0)
@@ -163,7 +154,7 @@ class TestVoronoiFPS(TestFPS):
         )
 
     def test_score(self):
-        """This test check that function score return hausdorff distance"""
+        """Check that function score return hausdorff distance"""
         selector = VoronoiFPS(n_to_select=3, initialize=0)
         selector.fit(self.X)
 

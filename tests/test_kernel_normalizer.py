@@ -13,7 +13,8 @@ class KernelTests(unittest.TestCase):
 
     def test_sample_weights(self):
         """Checks that sample weights of one are equal to the unweighted case and
-        that nonuniform weights are different from the unweighted case"""
+        that nonuniform weights are different from the unweighted case.
+        """
         K = self.random_state.uniform(0, 100, size=(3, 3))
         equal_wts = np.ones(len(K))
         nonequal_wts = self.random_state.uniform(0, 100, size=(len(K),))
@@ -31,7 +32,8 @@ class KernelTests(unittest.TestCase):
 
     def test_invalid_sample_weights(self):
         """Checks that weights must be 1D array with the same length as the number of
-        samples"""
+        samples.
+        """
         K = self.random_state.uniform(0, 100, size=(3, 3))
         wts_len = np.ones(len(K) + 1)
         wts_dim = np.ones((len(K), 2))
@@ -49,8 +51,9 @@ class KernelTests(unittest.TestCase):
             model.fit(K)
 
     def test_reference_ValueError(self):
-        """Checks that it is impossible to normalize
-        a matrix with a non-coincident size with the reference."""
+        """Checks that it is impossible to normalize a matrix with a non-coincident
+        size with the reference.
+        """
         K = self.random_state.uniform(0, 100, size=(3, 3))
         K_2 = self.random_state.uniform(0, 100, size=(2, 2))
         model = KernelNormalizer()
@@ -59,9 +62,9 @@ class KernelTests(unittest.TestCase):
             model.transform(K_2)
 
     def test_NotFittedError_transform(self):
-        """Checks that an error is returned when
-        trying to use the transform function
-        before the fit function"""
+        """Checks that an error is returned when trying to use the transform function
+        before the fit function.
+        """
         K = self.random_state.uniform(0, 100, size=(3, 3))
         model = KernelNormalizer()
         with self.assertRaises(sklearn.exceptions.NotFittedError):
@@ -69,8 +72,8 @@ class KernelTests(unittest.TestCase):
 
     def test_fit_transform(self):
         """Checks that the kernel is correctly normalized.
-        Compare with the value calculated
-        directly from the equation.
+
+        Compare with the value calculated directly from the equation.
         """
         K = self.random_state.uniform(0, 100, size=(3, 3))
         model = KernelNormalizer()

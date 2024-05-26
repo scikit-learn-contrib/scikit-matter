@@ -1,13 +1,13 @@
 """
-This module contains data sub-selection modules primarily corresponding to methods
-derived from CUR matrix decomposition and Farthest Point Sampling. In their classical
-form, CUR and FPS determine a data subset that maximizes the variance (CUR) or
-distribution (FPS) of the features or samples. These methods can be modified to combine
-supervised target information denoted by the methods `PCov-CUR` and `PCov-FPS`. For
-further reading, refer to [Imbalzano2018]_ and [Cersonsky2021]_. These selectors can be
-used for both feature and sample selection, with similar instantiations. All
-sub-selection methods  scores each feature or sample (without an estimator) and chooses
-that with the maximum score. A simple example of usage:
+Data sub-selection modules primarily corresponding to methods derived from CUR matrix
+decomposition and Farthest Point Sampling. In their classical form, CUR and FPS
+determine a data subset that maximizes the variance (CUR) or distribution (FPS) of the
+features or samples. These methods can be modified to combine supervised target
+information denoted by the methods `PCov-CUR` and `PCov-FPS`. For further reading, refer
+to [Imbalzano2018]_ and [Cersonsky2021]_. These selectors can be used for both feature
+and sample selection, with similar instantiations. All sub-selection methods  scores
+each feature or sample (without an estimator) and chooses that with the maximum score. A
+simple example of usage:
 
 .. doctest::
 
@@ -98,60 +98,49 @@ from .utils import (
 
 
 class GreedySelector(SelectorMixin, MetaEstimatorMixin, BaseEstimator):
-    """
-
-    Transformer that adds, via greedy forward selection,
+    """Transformer that adds, via greedy forward selection,
     features or samples to form a subset. At each stage, the model scores each
     feature or sample (without an estimator) and chooses that with the maximum score.
 
     Parameters
     ----------
-
     selection_type : str, {'feature', 'sample'}
         whether to choose a subset of columns ('feature') or rows ('sample').
         Stored in :py:attr:`self._axis_name` (as text) and :py:attr:`self._axis`
         (as 0 or 1 for 'sample' or 'feature', respectively).
-
     n_to_select : int or float, default=None
         The number of selections to make. If `None`, half of the features or samples are
         selected. If integer, the parameter is the absolute number of selections
         to make. If float between 0 and 1, it is the fraction of the total dataset to
         select. Stored in :py:attr:`self.n_to_select`.
-
     score_threshold : float, default=None
         Threshold for the score. If `None` selection will continue until the
         n_to_select is chosen. Otherwise will stop when the score falls below the
         threshold. Stored in :py:attr:`self.score_threshold`.
-
     score_threshold_type : str, default="absolute"
         How to interpret the ``score_threshold``. When "absolute", the score used by
         the selector is compared to the threshold directly. When "relative", at each
         iteration, the score used by the selector is compared proportionally to the
         score of the first selection, i.e. the selector quits when ``current_score /
         first_score < threshold``. Stored in :py:attr:`self.score_threshold_type`.
-
     progress_bar: bool, default=False
               option to use `tqdm <https://tqdm.github.io/>`_
               progress bar to monitor selections. Stored in
               :py:attr:`self.report_progress_`.
-
     full : bool, default=False
         In the case that all non-redundant selections are exhausted, choose
         randomly from the remaining features. Stored in :py:attr:`self.full`.
-
-    random_state: int or RandomState instance, default=0
+    random_state : int or :class:`numpy.random`RandomState` instance, default=0
 
     Attributes
     ----------
     n_selected_ : int
-                  Counter tracking the number of selections that have been made
-    X_selected_ : ndarray,
-                  Matrix containing the selected samples or features, for use in fitting
-    y_selected_ : ndarray,
-                  In sample selection, the matrix containing the selected targets, for
-                  use in fitting
-
-
+        Counter tracking the number of selections that have been made
+    X_selected_ : numpy.ndarray,
+        Matrix containing the selected samples or features, for use in fitting
+    y_selected_ : numpy.ndarray,
+        In sample selection, the matrix containing the selected targets, for use in
+        fitting
     """
 
     def __init__(
@@ -182,9 +171,9 @@ class GreedySelector(SelectorMixin, MetaEstimatorMixin, BaseEstimator):
 
         Parameters
         ----------
-        X : ndarray of shape (n_samples, n_features)
+        X : numpy.ndarray of shape (n_samples, n_features)
             Training vectors.
-        y : ndarray of shape (n_samples,), default=None
+        y : numpy.ndarray of shape (n_samples,), default=None
             Target values.
         warm_start : bool
             Whether the fit should continue after having already
@@ -195,7 +184,6 @@ class GreedySelector(SelectorMixin, MetaEstimatorMixin, BaseEstimator):
         -------
         self : object
         """
-
         if self.selection_type == "feature":
             self._axis = 1
         elif self.selection_type == "sample":
@@ -302,16 +290,15 @@ class GreedySelector(SelectorMixin, MetaEstimatorMixin, BaseEstimator):
 
         Parameters
         ----------
-        X : ndarray of shape [n_samples, n_features]
+        X : numpy.ndarray of shape [n_samples, n_features]
             The input samples.
         y : ignored
 
         Returns
         -------
-        X_r : ndarray
+        X_r : numpy.ndarray
             The selected subset of the input.
         """
-
         check_is_fitted(self, ["_axis", "selected_idx_", "n_selected_"])
 
         if self._axis == 0:
@@ -352,13 +339,13 @@ class GreedySelector(SelectorMixin, MetaEstimatorMixin, BaseEstimator):
 
         Parameters
         ----------
-        X : ndarray of shape [n_samples, n_features]
+        X : numpy.ndarray of shape [n_samples, n_features]
             The input samples.
         y : ignored
 
         Returns
         -------
-        score : ndarray of (n_to_select_from_)
+        score : numpy.ndarray of (n_to_select_from_)
             Scores of the given features or samples
         """
         pass
@@ -396,7 +383,6 @@ class GreedySelector(SelectorMixin, MetaEstimatorMixin, BaseEstimator):
 
     def _init_greedy_search(self, X, y, n_to_select):
         """Initializes the search. Prepares an array to store the selected features."""
-
         self.n_selected_ = 0
         self.first_score_ = None
 
@@ -413,7 +399,6 @@ class GreedySelector(SelectorMixin, MetaEstimatorMixin, BaseEstimator):
 
     def _continue_greedy_search(self, X, y, n_to_select):
         """Continues the search. Prepares an array to store the selected features."""
-
         n_pad = [(0, 0), (0, 0)]
         n_pad[self._axis] = (0, n_to_select - self.n_selected_)
 
@@ -455,10 +440,9 @@ class GreedySelector(SelectorMixin, MetaEstimatorMixin, BaseEstimator):
         return max_score_idx
 
     def _update_post_selection(self, X, y, last_selected):
+        """Saves the most recently selected feature and increments the feature
+        counter.
         """
-        Saves the most recently selected feature and increments the feature counter
-        """
-
         if self._axis == 1:
             self.X_selected_[:, self.n_selected_] = np.take(
                 X, last_selected, axis=self._axis
@@ -485,7 +469,7 @@ class GreedySelector(SelectorMixin, MetaEstimatorMixin, BaseEstimator):
 
         Returns
         -------
-        support : bool ndarray of shape [# input]
+        support : bool or numpy.ndarray of shape [# input]
             An element is True iff its corresponding feature or sample is selected for
             retention.
         """
@@ -508,30 +492,26 @@ class _CUR(GreedySelector):
     which maximize the magnitude of the right or left singular vectors, consistent with
     classic CUR matrix decomposition.
 
-    **WARNING**: This base class should never be directly instantiated.
-    Instead, use :py:class:`skmatter.feature_selection.CUR` and
-    :py:class:`skmatter.sample_selection.CUR`,
-    which have the same constructor signature.
+    .. warning::
+        This base class should never be directly instantiated. Instead, use
+        :py:class:`skmatter.feature_selection.CUR` and
+        :py:class:`skmatter.sample_selection.CUR`, which have the same constructor
+        signature.
 
     Parameters
     ----------
     recompute_every : int
-                      number of steps after which to recompute the pi score
-                      defaults to 1, if 0 no re-computation is done
-
+        number of steps after which to recompute the pi score
+        defaults to 1, if 0 no re-computation is done
     k : int
         number of eigenvectors to compute the importance score with, defaults to 1
-
     tolerance: float
-         threshold below which scores will be considered 0, defaults to 1E-12
-
+        threshold below which scores will be considered 0, defaults to 1E-12
 
     Attributes
     ----------
-
-    X_current_ : ndarray (n_samples, n_features)
-                  The original matrix orthogonalized by previous selections
-
+    X_current_ : numpy.ndarray (n_samples, n_features)
+        The original matrix orthogonalized by previous selections
     """
 
     def __init__(
@@ -562,47 +542,40 @@ class _CUR(GreedySelector):
         )
 
     def score(self, X, y=None):
-        r"""
-        Returns the importance score of the given samples or features.
+        r"""Returns the importance score of the given samples or features.
 
-        NOTE: This function does not compute the importance score each time it
-        is called, in order to avoid unnecessary computations. This is done
-        by :py:func:`self._compute_pi`.
+        .. note::
+            This function does not compute the importance score each time it is called,
+            in order to avoid unnecessary computations. This is done by
+            :py:func:`self._compute_pi`.
 
         Parameters
         ----------
-        X : ndarray of shape [n_samples, n_features]
+        X : numpy.ndarray of shape [n_samples, n_features]
             The input samples.
-
         y : ignored
 
         Returns
         -------
-        score : ndarray of (n_to_select_from_)
+        score : numpy.ndarray of (n_to_select_from_)
             :math:`\pi` importance for the given samples or features
-
         """
-
         return self.pi_
 
     def _init_greedy_search(self, X, y, n_to_select):
-        """
-        Initializes the search. Prepares an array to store the selected
+        """Initializes the search. Prepares an array to store the selected
         features and computes their initial importance score.
         """
-
         self.X_current_ = as_float_array(X.copy())
         self.pi_ = self._compute_pi(self.X_current_)
 
         super()._init_greedy_search(X, y, n_to_select)
 
     def _continue_greedy_search(self, X, y, n_to_select):
+        """Continues the search. Prepares an array to store the selected features,
+        orthogonalizes the features by those already selected, and computes their
+        initial importance.
         """
-        Continues the search. Prepares an array to store the selected
-        features, orthogonalizes the features by those already selected,
-        and computes their initial importance.
-        """
-
         for c in self.selected_idx_:
             if self.recompute_every != 0 and (
                 np.linalg.norm(np.take(self.X_current_, [c], axis=self._axis))
@@ -615,22 +588,19 @@ class _CUR(GreedySelector):
         super()._continue_greedy_search(X, y, n_to_select)
 
     def _compute_pi(self, X, y=None):
-        """
-        For feature selection, the importance score :math:`\\pi` is the sum over
+        r"""For feature selection, the importance score :math:`\pi` is the sum over
         the squares of the first :math:`k` components of the right singular vectors
 
         .. math::
-
             \\pi_j =
             \\sum_i^k \\left(\\mathbf{U}_\\mathbf{C}\\right)_{ij}^2.
 
         where :math:`\\mathbf{C} = \\mathbf{X}^T\\mathbf{X}`.
 
-        For sample selection, the importance score :math:`\\pi` is the sum over
-        the squares of the first :math:`k` components of the right singular vectors
+        For sample selection, the importance score :math:`\\pi` is the sum over the
+        squares of the first :math:`k` components of the right singular vectors
 
         .. math::
-
             \\pi_j =
             \\sum_i^k \\left(\\mathbf{U}_\\mathbf{K}\\right)_{ij}^2.
 
@@ -638,17 +608,15 @@ class _CUR(GreedySelector):
 
         Parameters
         ----------
-        X : ndarray of shape [n_samples, n_features]
+        X : numpy.ndarray of shape [n_samples, n_features]
             The input samples.
-
         y : ignored
 
         Returns
         -------
-        pi : ndarray of (n_to_select_from_)
+        pi : numpy.ndarray of (n_to_select_from_)
             :math:`\\pi` importance for the given samples or features
         """
-
         svd_kwargs = dict(k=self.k, random_state=self.random_state)
         if self._axis == 0:
             svd_kwargs["return_singular_vectors"] = "u"
@@ -690,7 +658,7 @@ class _CUR(GreedySelector):
 
 
 class _PCovCUR(GreedySelector):
-    """Transformer that performs Greedy Selection by choosing features
+    r"""Transformer that performs Greedy Selection by choosing features
     which maximize the magnitude of the right or left augmented singular vectors.
     This is done by employing the augmented kernel and covariance matrices,
 
@@ -702,29 +670,22 @@ class _PCovCUR(GreedySelector):
     Parameters
     ----------
     recompute_every : int
-                      number of steps after which to recompute the pi score
-                      defaults to 1, if 0 no re-computation is done
-
+        number of steps after which to recompute the pi score defaults to 1, if 0 no
+        re-computation is done
     k : int
         number of eigenvectors to compute the importance score with, defaults to 1
-
     tolerance: float
-         threshold below which scores will be considered 0, defaults to 1E-12
-
+        threshold below which scores will be considered 0, defaults to 1E-12
     mixing: float, default=0.5
-            The PCovR mixing parameter, as described in PCovR as
-            :math:`{\\alpha}`. Stored in :py:attr:`self.mixing`.
+        The PCovR mixing parameter, as described in PCovR as
+        :math:`{\alpha}`. Stored in :py:attr:`self.mixing`.
 
     Attributes
     ----------
-
-    X_current_ : ndarray (n_samples, n_features)
-                  The original matrix orthogonalized by previous selections
-
-    y_current_ : ndarray (n_samples, n_properties)
-                The targets orthogonalized by a regression on
-                the previous selections.
-
+    X_current_ : numpy.ndarray (n_samples, n_features)
+        The original matrix orthogonalized by previous selections
+    y_current_ : numpy.ndarray (n_samples, n_properties)
+        The targets orthogonalized by a regression on the previous selections.
     """
 
     def __init__(
@@ -758,34 +719,29 @@ class _PCovCUR(GreedySelector):
         )
 
     def score(self, X, y=None):
-        """
-        Returns the importance score of the given samples or features.
+        r"""Returns the importance score of the given samples or features.
 
-        NOTE: This function does not compute the importance score each time it
-        is called, in order to avoid unnecessary computations. This is done
-        by :py:func:`self._compute_pi`.
+        .. note::
+            This function does not compute the importance score each time it is called,
+            in order to avoid unnecessary computations. This is done by
+            :py:func:`self._compute_pi`.
 
         Parameters
         ----------
         X : ignored
-
         y : ignored
 
         Returns
         -------
-        score : ndarray of (n_to_select_from_)
-            :math:`\\pi` importance for the given samples or features
-
+        score : numpy.ndarray of (n_to_select_from_)
+            :math:`\pi` importance for the given samples or features
         """
-
         return self.pi_
 
     def _init_greedy_search(self, X, y, n_to_select):
-        """
-        Initializes the search. Prepares an array to store the selected
+        """Initializes the search. Prepares an array to store the selected
         features and computes their initial importance score.
         """
-
         self.X_ref_ = X
         self.y_ref_ = y
         self.X_current_ = X.copy()
@@ -798,12 +754,10 @@ class _PCovCUR(GreedySelector):
         super()._init_greedy_search(X, y, n_to_select)
 
     def _continue_greedy_search(self, X, y, n_to_select):
+        """Continues the search. Prepares an array to store the selected
+        features, orthogonalizes the features by those already selected, and computes
+        their initial importance.
         """
-        Continues the search. Prepares an array to store the selected
-        features, orthogonalizes the features by those already selected,
-        and computes their initial importance.
-        """
-
         for c in self.selected_idx_:
             if self.recompute_every != 0 and (
                 np.linalg.norm(np.take(self.X_current_, [c], axis=self._axis))
@@ -832,12 +786,10 @@ class _PCovCUR(GreedySelector):
         self.pi_[last_selected] = 0.0
 
     def _compute_pi(self, X, y=None):
-        r"""
-        For feature selection, the importance score :math:`\pi` is the sum over
-        the squares of the first :math:`k` components of the right singular vectors
+        r"""For feature selection, the importance score :math:`\pi` is the sum over
+        the squares of the first :math:`k` components of the right singular vectors.
 
         .. math::
-
             \pi_j =
             \sum_i^k \left(\mathbf{U}_\mathbf{\tilde{C}}\right)_{ij}^2.
 
@@ -852,7 +804,6 @@ class _PCovCUR(GreedySelector):
         the squares of the first :math:`k` components of the right singular vectors
 
         .. math::
-
             \pi_j =
             \sum_i^k \left(\mathbf{U}_\mathbf{\tilde{K}}\right)_{ij}^2.
 
@@ -863,17 +814,15 @@ class _PCovCUR(GreedySelector):
 
         Parameters
         ----------
-        X : ndarray of shape [n_samples, n_features]
+        X : numpy.ndarray of shape [n_samples, n_features]
             The input samples.
-
         y : ignored
 
         Returns
         -------
-        pi : ndarray of (n_to_select_from_)
+        pi : numpy.ndarray of (n_to_select_from_)
             :math:`\pi` importance for the given samples or features
         """
-
         if self._axis == 0:
             pcovr_distance = pcovr_kernel(
                 self.mixing,
@@ -923,17 +872,16 @@ class _PCovCUR(GreedySelector):
 
 
 class _FPS(GreedySelector):
-    """
-    Transformer that performs Greedy Selection using Farthest Point Sampling.
+    """Transformer that performs Greedy Selection using Farthest Point Sampling.
 
-    **WARNING**: This base class should never be directly instantiated.
-    Instead, use :py:class:`skmatter.feature_selection.FPS` and
-    :py:class:`skmatter.sample_selection.FPS`,
-    which have the same constructor signature.
+    .. warning::
+        This base class should never be directly instantiated. Instead, use
+        :py:class:`skmatter.feature_selection.FPS` and
+        :py:class:`skmatter.sample_selection.FPS`, which have the same constructor
+        signature.
 
     Parameters
     ----------
-
     initialize: int, list of int, numpy.ndarray of int, or 'random', default=0
         Index of the first selection(s). If 'random', picks a random
         value when fit starts. Stored in :py:attr:`self.initialize`.
@@ -984,54 +932,45 @@ class _FPS(GreedySelector):
         return self.hausdorff_
 
     def get_distance(self):
-        """
-
-        Traditional FPS employs a column-wise Euclidean
+        r"""Traditional FPS employs a column-wise Euclidean
         distance for feature selection, which can be expressed using the covariance
-        matrix :math:`\\mathbf{C} = \\mathbf{X} ^ T \\mathbf{X}`
+        matrix :math:`\mathbf{C} = \mathbf{X} ^ T \mathbf{X}`
 
         .. math::
-            \\operatorname{d}_c(i, j) = C_{ii} - 2 C_{ij} + C_{jj}.
+            \operatorname{d}_c(i, j) = C_{ii} - 2 C_{ij} + C_{jj}.
 
         For sample selection, this is a row-wise Euclidean distance, which can be
         expressed in terms of the Gram matrix
-        :math:`\\mathbf{K} = \\mathbf{X} \\mathbf{X} ^ T`
+        :math:`\\mathbf{K} = \mathbf{X} \\mathbf{X} ^ T`
 
         .. math::
-            \\operatorname{d}_r(i, j) = K_{ii} - 2 K_{ij} + K_{jj}.
+            \operatorname{d}_r(i, j) = K_{ii} - 2 K_{ij} + K_{jj}.
 
         Returns
         -------
-
-        hausdorff : ndarray of shape (`n_to_select_from_`)
-                     the minimum distance from each point to the set of selected
-                     points. once a point is selected, the distance is not updated;
-                     the final list will reflect the distances when selected.
-
+        hausdorff : numpy.ndarray of shape (`n_to_select_from_`)
+            the minimum distance from each point to the set of selected points. once a
+            point is selected, the distance is not updated; the final list will reflect
+            the distances when selected.
         """
         return self.hausdorff_
 
     def get_select_distance(self):
         """
-
         Returns
         -------
-
-        hausdorff_at_select : ndarray of shape (`n_to_select`)
-                     at the time of selection, the minimum distance from each
-                     selected point to the set of previously selected points.
-
+        hausdorff_at_select : numpy.ndarray of shape (`n_to_select`)
+            at the time of selection, the minimum distance from each selected point to
+            the set of previously selected points.
         """
         mask = self.get_support(indices=True, ordered=True)
         return self.hausdorff_at_select_[mask]
 
     def _init_greedy_search(self, X, y, n_to_select):
+        """Initializes the search. Prepares an array to store the selections,
+        makes the initial selection (unless provided), and computes the starting
+        hausdorff distances.
         """
-        Initializes the search. Prepares an array to store the selections,
-        makes the initial selection (unless provided), and
-        computes the starting hausdorff distances.
-        """
-
         super()._init_greedy_search(X, y, n_to_select)
 
         self.norms_ = (X**2).sum(axis=abs(self._axis - 1))
@@ -1083,25 +1022,20 @@ class _FPS(GreedySelector):
 
 
 class _PCovFPS(GreedySelector):
-    """
-    Transformer that performs Greedy Selection using PCovR-weighted
-    Farthest Point Sampling.
-    In PCov-FPS, a modified covariance or Gram matrix
-    is used to express the distances.
+    r"""Transformer that performs Greedy Selection using PCovR-weighted
+    Farthest Point Sampling. In PCov-FPS, a modified covariance or Gram matrix is used
+    to express the distances.
 
     For sample selection, this is a modified kernel matrix.
 
     Parameters
     ----------
-
     mixing: float, default=0.5
             The PCovR mixing parameter, as described in PCovR as
-            :math:`{\\alpha}`
-
+            :math:`{\alpha}`
     initialize: int or 'random', default=0
         Index of the first selection. If 'random', picks a random
         value when fit starts.
-
     """
 
     def __init__(
@@ -1136,8 +1070,7 @@ class _PCovFPS(GreedySelector):
         )
 
     def score(self, X, y=None):
-        """
-        Returns the Hausdorff distances of all samples to previous selections
+        """Returns the Hausdorff distances of all samples to previous selections.
 
         NOTE: This function does not compute the importance score each time it
         is called, in order to avoid unnecessary computations. The hausdorff
@@ -1156,39 +1089,31 @@ class _PCovFPS(GreedySelector):
 
     def get_distance(self):
         """
-
         Returns
         -------
-
-        hausdorff : ndarray of shape (`n_to_select_from_`)
-                     the minimum distance from each point to the set of selected
-                     points. once a point is selected, the distance is not updated;
-                     the final list will reflect the distances when selected.
-
+        hausdorff : numpy.ndarray of shape (`n_to_select_from_`)
+            the minimum distance from each point to the set of selected points. once a
+            point is selected, the distance is not updated; the final list will reflect
+            the distances when selected.
         """
         return self.hausdorff_
 
     def get_select_distance(self):
         """
-
         Returns
         -------
-
-        hausdorff_at_select : ndarray of shape (`n_to_select`)
-                     at the time of selection, the minimum distance from each
-                     selected point to the set of previously selected points.
-
+        hausdorff_at_select : numpy.ndarray of shape (`n_to_select`)
+            at the time of selection, the minimum distance from each selected point to
+            the set of previously selected points.
         """
         mask = self.get_support(indices=True, ordered=True)
         return self.hausdorff_at_select_[mask]
 
     def _init_greedy_search(self, X, y, n_to_select):
+        """Initializes the search. Prepares an array to store the selections,
+        makes the initial selection (unless provided), and computes the starting
+        hausdorff distances.
         """
-        Initializes the search. Prepares an array to store the selections,
-        makes the initial selection (unless provided), and
-        computes the starting hausdorff distances.
-        """
-
         super()._init_greedy_search(X, y, n_to_select)
 
         if self._axis == 1:
@@ -1225,17 +1150,14 @@ class _PCovFPS(GreedySelector):
         np.minimum(self.hausdorff_, new_dist, self.hausdorff_)
 
     def _update_post_selection(self, X, y, last_selected):
-        """
-        Saves the most recent selections, increments the counter,
-        and, recomputes hausdorff distances.
+        """Saves the most recent selections, increments the counter, and, recomputes
+        hausdorff distances.
         """
         self._update_hausdorff(X, y, last_selected)
         super()._update_post_selection(X, y, last_selected)
 
     def _more_tags(self):
-        """
-        Pass that this method requires a target vector
-        """
+        """Pass that this method requires a target vector"""
         return {
             "requires_y": True,
         }
