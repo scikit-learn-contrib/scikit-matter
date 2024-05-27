@@ -87,3 +87,7 @@ __all__ = [
     "pairwise_euclidean_distances",
     "pairwise_mahalanobis_distances",
 ]
+
+DIST_METRICS = {
+    "periodic_euclidean": pairwise_euclidean_distances,
+}
