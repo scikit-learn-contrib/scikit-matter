@@ -1,6 +1,5 @@
 scikit-matter
 =============
-
 |tests| |codecov| |pypi| |conda| |docs| |doi|
 
 A collection of scikit-learn compatible utilities that implement methods born out of the
@@ -14,13 +13,11 @@ For details, tutorials, and examples, please have a look at our `documentation`_
 
 Installation
 ------------
-
 You can install *scikit-matter* either via pip using
 
 .. code-block:: bash
 
     pip install skmatter
-
 
 or conda
 
@@ -28,27 +25,23 @@ or conda
 
     conda install -c conda-forge skmatter
 
-
 You can then ``import skmatter`` and use scikit-matter in your projects!
 
 .. marker-ci-tests
 
 Tests
 -----
+We are testing our code for Python 3.8 and 3.12 on  `Windows Server 2019`_, `macOS 11`_
+and `Ubuntu LTS 22.04`_.
 
-We are testing our code for Python 3.8 and 3.11 on  `Windows Server 2019
-<https://github.com/actions/runner-images/blob/main/images/win/Windows2019-Readme.md>`_,
-`macOS 11
-<https://github.com/actions/runner-images/blob/main/images/macos/macos-11-Readme.md>`_
-and `Ubuntu LTS 22.04
-<https://github.com/actions/runner-images/
-blob/main/images/linux/Ubuntu2204-Readme.md>`_.
+.. _`Windows Server 2019`: https://github.com/actions/runner-images/blob/main/images/win/Windows2019-Readme.md
+.. _`macOS 11`: https://github.com/actions/runner-images/blob/main/images/macos/macos-11-Readme.md
+.. _`Ubuntu LTS 22.04`: https://github.com/actions/runner-images/blob/main/images/linux/Ubuntu2204-Readme.md
 
 .. marker-issues
 
 Having problems or ideas?
 -------------------------
-
 Having a problem with scikit-matter? Please let us know by `submitting an issue
 <https://github.com/scikit-learn-contrib/scikit-matter/issues>`_.
 
@@ -59,7 +52,6 @@ Submit new features or bug fixes through a `pull request
 
 Call for Contributions
 ----------------------
-
 We always welcome new contributors. If you want to help us take a look at our
 `contribution guidelines`_ and afterwards you may start with an open issue marked as
 `good first issue`_.
@@ -84,8 +76,7 @@ Writing code is not the only way to contribute to the project. You can also:
 
 Citing scikit-matter
 --------------------
-
-If you use scikit-matter for your work, please cite:
+If you use *scikit-matter* for your work, please cite:
 
 Goscinski A, Principe VP, Fraux G et al. scikit-matter :
 A Suite of Generalisable Machine Learning Methods Born out of Chemistry
@@ -94,7 +85,6 @@ and Materials Science. Open Res Europe 2023, 3:81.
 
 Contributors
 ------------
-
 Thanks goes to all people that make scikit-matter possible:
 
 .. image:: https://contrib.rocks/image?repo=scikit-learn-contrib/scikit-matter
