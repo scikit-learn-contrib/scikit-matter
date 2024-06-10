@@ -15,7 +15,7 @@ Here we show how to use the sparse KDE model to fit the probability distribution
 on sampled data and how to use PAMM to analyze the H-bond.
 
 We start from a simple system, which is consist of three 2D gaussians. Our task is to
-estimate the parameters of these gaussians from our sampled data.
+estimate the parameters of these Gaussians from our sampled data.
 
 Here we first sample from these three gaussians.
 """
