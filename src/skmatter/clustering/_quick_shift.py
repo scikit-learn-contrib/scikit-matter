@@ -25,7 +25,7 @@ class QuickShift(BaseEstimator):
         considered as neighbors if they are within this distance. If :obj:`None`,
         the scheme of Gabriel graph is used.
     gabriel_shell : int, default=None
-        The number of neighbor shell of gabriel graph for searching for the next point.
+        The number of neighbor shell of Gabriel graph for searching for the next point.
         For example, if the number is 1, two points will be considered as neighbors if
         they have at least one common neighbor, like for the case "A-B-C", we will
         consider "A-C" as neighbors. If the number is 2, for the case "A-B-C-D",
