@@ -7,7 +7,7 @@ Sparse KDE examples
 
 Example for the usage of the :class:`skmatter.neighbors.SparseKDE` class. This class is
 specifically designed for conducting pobabilistic analysis of molecular motifs
-([PAMM](https://doi.org/10.1063/1.4900655)),
+(`PAMM<https://doi.org/10.1063/1.4900655>`_),
 which is quiet useful for analyzing motifs like H-bonds, coordination polyhedra, and
 protein secondary structure.
 
