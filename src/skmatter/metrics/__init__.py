@@ -69,7 +69,7 @@ from ._prediction_rigidities import (
 )
 
 from ._pairwise import (
-    pairwise_euclidean_distances,
+    periodic_pairwise_euclidean_distances,
     pairwise_mahalanobis_distances,
 )
 
@@ -84,10 +84,10 @@ __all__ = [
     "check_local_reconstruction_measures_input",
     "local_prediction_rigidity",
     "componentwise_prediction_rigidity",
-    "pairwise_euclidean_distances",
+    "periodic_pairwise_euclidean_distances",
     "pairwise_mahalanobis_distances",
 ]
 
 DIST_METRICS = {
-    "periodic_euclidean": pairwise_euclidean_distances,
+    "periodic_euclidean": periodic_pairwise_euclidean_distances,
 }

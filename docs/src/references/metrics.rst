@@ -47,7 +47,7 @@ Component-wise Prediction Rigidity
 Pairwise Euclidean Distances
 ----------------------------
 
-.. autofunction:: skmatter.metrics.pairwise_euclidean_distances
+.. autofunction:: skmatter.metrics.periodic_pairwise_euclidean_distances
 
 .. _pairwise-mahalanobis-api:
 

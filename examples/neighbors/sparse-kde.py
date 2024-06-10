@@ -32,7 +32,7 @@ from scipy.stats import gaussian_kde
 from skmatter.clustering import QuickShift
 from skmatter.datasets import load_hbond_dataset
 from skmatter.feature_selection import FPS
-from skmatter.metrics import pairwise_euclidean_distances
+from skmatter.metrics import periodic_pairwise_euclidean_distances
 from skmatter.neighbors import SparseKDE
 from skmatter.neighbors._sparsekde import _covariance
 from skmatter.utils import oas
@@ -230,7 +230,7 @@ def quick_shift_refinement(
     cluster_centers_idx: np.ndarray,
     labels: np.ndarray,
     probs: np.ndarray,
-    metric: Callable = pairwise_euclidean_distances,
+    metric: Callable = periodic_pairwise_euclidean_distances,
     metric_params: Union[dict, None] = None,
     thrpcl: float = 0.0,
 ):

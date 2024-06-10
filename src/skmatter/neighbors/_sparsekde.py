@@ -9,7 +9,7 @@ from sklearn.utils.validation import check_is_fitted, check_random_state
 from tqdm import tqdm
 
 from ..metrics._pairwise import (
-    pairwise_euclidean_distances,
+    periodic_pairwise_euclidean_distances,
     pairwise_mahalanobis_distances,
 )
 from ..utils._sparsekde import effdim, oas
@@ -110,7 +110,7 @@ class SparseKDE(BaseEstimator):
         weights: Union[np.ndarray, None] = None,
         metric: Callable[
             [ArrayLike, ArrayLike, bool, dict], ArrayLike
-        ] = pairwise_euclidean_distances,
+        ] = periodic_pairwise_euclidean_distances,
         metric_params: Union[dict, None] = None,
         fspread: float = -1.0,
         fpoints: float = 0.15,

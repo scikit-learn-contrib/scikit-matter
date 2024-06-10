@@ -5,7 +5,7 @@ from numpy.typing import ArrayLike
 from sklearn.base import BaseEstimator
 from tqdm import tqdm
 
-from ..metrics._pairwise import pairwise_euclidean_distances
+from ..metrics._pairwise import periodic_pairwise_euclidean_distances
 
 
 class QuickShift(BaseEstimator):
@@ -102,7 +102,7 @@ class QuickShift(BaseEstimator):
         scale: float = 1.0,
         metric: Callable[
             [ArrayLike, ArrayLike, bool, dict], ArrayLike
-        ] = pairwise_euclidean_distances,
+        ] = periodic_pairwise_euclidean_distances,
         metric_params: Union[dict, None] = None,
     ):
         if (dist_cutoff_sq is None) and (gabriel_shell is None):

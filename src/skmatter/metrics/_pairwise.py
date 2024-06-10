@@ -8,7 +8,7 @@ from sklearn.metrics.pairwise import (
 )
 
 
-def pairwise_euclidean_distances(
+def periodic_pairwise_euclidean_distances(
     X,
     Y=None,
     *,
@@ -72,29 +72,20 @@ def pairwise_euclidean_distances(
         Returns the distances between the row vectors of `X`
         and the row vectors of `Y`.
 
-    See Also
-    --------
-    :func:`sklearn.metrics.pairwise.paired_distance` : Distances between pairs of
-        elements of X and Y.
-
-    Notes
-    -----
-    To achieve a better accuracy, `X_norm_squared` and `Y_norm_squared` may be
-    unused if they are passed as `np.float32`.
-
     Examples
     --------
     >>> import numpy as np
-    >>> from sklearn.metrics.pairwise import euclidean_distances
+    >>> from skmatter.metrics import periodic_pairwise_euclidean_distances
     >>> X = np.array([[0, 1], [1, 1]])
+    >>> origin = np.array([[0, 0]])
     >>> # distance between rows of X
-    >>> euclidean_distances(X, X)
+    >>> periodic_pairwise_euclidean_distances(X, X)
     array([[0., 1.],
            [1., 0.]])
     >>> # get distance to origin
-    >>> euclidean_distances(X, np.array([[0, 0]]))
-    array([[1.        ],
-           [1.41421356]])
+    >>> periodic_pairwise_euclidean_distances(X, origin, cell_length=[0.5, 0.7])
+    array([[0.3],
+           [0.3]])
     """
     _check_dimension(X, cell_length)
     X, Y = check_pairwise_arrays(X, Y)
