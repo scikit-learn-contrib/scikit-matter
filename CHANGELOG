@@ -28,7 +28,7 @@ The rules for CHANGELOG file:
 - Add an example on how to couduct PAMM algorithm with `SparseKDE` and `QuickShift`
   (#222)
 - Add H2O-BLYP-Piglet dataset (#222)
-- Add twi distance metrics that support the periodic boundry, 
+- Add two distance metrics that support the periodic boundry condition, 
   `pairwise_euclidean_distances` and `pairwise_mahalanobis_distances` (#222)
 
 0.2.0 (2023/08/24)
