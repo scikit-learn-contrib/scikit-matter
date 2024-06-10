@@ -80,6 +80,19 @@ class QuickShift(BaseEstimator):
     [0 0 0 5 5 5]
     >>> print(model.cluster_centers_idx_)
     [0 5]
+
+    We can also apply a periodic boundary condition
+
+    >>> model = QuickShift(cuts, metric_params={'cell_length': [3, 3]})
+    >>> model = model.fit(points, samples_weight=weights)
+    >>> print(model.labels_)
+    [5 5 5 5 5 5]
+    >>> print(model.cluster_centers_idx_)
+    [5]
+
+    Since the searching cuts are all larger than the maximum distance in the PBC box,
+    it can be expected that all points are assigned to the same cluster, of the center
+    that has the largest weight.
     """
 
     def __init__(
