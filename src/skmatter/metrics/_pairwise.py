@@ -133,9 +133,9 @@ def pairwise_euclidean_distances(
 
 def _periodic_euclidean_distances(X, Y=None, *, squared=False, cell=None):
     X, Y = np.array(X).astype(float), np.array(Y).astype(float)
-    XY = np.concatenate([X - y for y in Y])
+    XY = np.concatenate([x - Y for x in X])
     XY -= np.round(XY / cell) * cell
-    distance = np.linalg.norm(XY, axis=1).reshape(X.shape[0], Y.shape[0], order="F")
+    distance = np.linalg.norm(XY, axis=1).reshape(X.shape[0], Y.shape[0])
     if squared:
         distance **= 2
     return distance
@@ -201,12 +201,12 @@ def pairwise_mahalanobis_distances(
         cell: np.ndarray, X: np.ndarray, Y: np.ndarray, cov_inv: np.ndarray
     ):
 
-        XY = np.concatenate([X - y for y in Y])
+        XY = np.concatenate([x - Y for x in X])
         if cell is not None:
             XY -= np.round(XY / cell) * cell
 
         return np.sum(XY * np.transpose(cov_inv @ XY.T, (0, 2, 1)), axis=-1).reshape(
-            (cov_inv.shape[0], X.shape[0], Y.shape[0]), order="F"
+            (cov_inv.shape[0], X.shape[0], Y.shape[0])
         )
 
     _check_dimension(X, cell_length)
