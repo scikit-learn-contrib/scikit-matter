@@ -34,8 +34,8 @@ class QuickShift(BaseEstimator):
     scale : float, default=1.0
         Distance cutoff scaling factor used during the QS clustering. It will be squared
         since the squared distance is used in this class.
-    metric : Callable[[ArrayLike, ArrayLike, bool, dict], ArrayLike],
-        default=:func:`skmatter.metrics.pairwise_euclidean_distances()`
+    metric : Callable[[ArrayLike, ArrayLike, bool, dict], ArrayLike], \
+        default= :func:`skmatter.metrics.pairwise_euclidean_distances()`
         The metric to use. Your metric should be able to take at least three arguments
         in secquence: `X`, `Y`, and `squared=True`. Here, `X` and `Y` are two array-like
         of shape (n_samples, n_components). The return of the metric is an array-like of
@@ -121,8 +121,8 @@ class QuickShift(BaseEstimator):
             :class:`~sklearn.pipeline.Pipeline`.
         samples_weight : array-like of shape (n_samples,), default=None
             List of sample weights attached to the data X. This parameter
-            must be given in order to do the quick shift clustering."""
-
+        must be given in order to do the quick shift clustering.
+        """
         if (self.cell is not None) and (X.shape[1] != len(self.cell)):
             raise ValueError(
                 "Dimension of the cell length does not match the data dimension."
@@ -175,7 +175,6 @@ class QuickShift(BaseEstimator):
         gabriel: np.ndarray,
     ):
         """Find next cluster in Gabriel graph."""
-
         ngrid = len(probs)
         neighs = np.copy(gabriel[idx])
         for _ in range(1, self.gabriel_shell):
@@ -201,7 +200,6 @@ class QuickShift(BaseEstimator):
         self, idx: int, idxn: int, probs: np.ndarray, distmm: np.ndarray, cutoff: float
     ):
         """Find next cluster with respect to cutoff."""
-
         ngrid = len(probs)
         dmin = np.inf
         next_idx = idx
@@ -229,7 +227,6 @@ def _get_gabriel_graph(dist_matrix_sq: np.ndarray):
     np.ndarray
         The Gabriel graph matrix of shape (n_points, n_points).
     """
-
     n_points = dist_matrix_sq.shape[0]
     gabriel = np.full((n_points, n_points), True)
     for i in tqdm(range(n_points), desc="Calculating Gabriel graph"):
