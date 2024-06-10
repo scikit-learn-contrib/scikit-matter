@@ -44,7 +44,7 @@ class QuickShift(BaseEstimator):
         provide a metric that can take the cell argument.
     metric_params : dict, default=None
         Additional parameters to be passed to the use of
-        metric.  i.e. the dimension of a cubic cell of side length :math`a`
+        metric.  i.e. the dimension of a rectangular cell of side length :math:`a_i`
         for :func:`skmatter.metrics.pairwise_euclidean_distances()`
         `{'cell_length': [a_1, a_2, ..., a_n]}`
 

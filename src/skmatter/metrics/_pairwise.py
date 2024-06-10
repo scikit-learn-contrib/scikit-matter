@@ -59,11 +59,12 @@ def pairwise_euclidean_distances(
         Pre-computed dot-products of vectors in X (e.g., `(X**2).sum(axis=1)`)
         May be ignored in some cases, see the note below.
     cell_length : array-like of shape (n_components,), default=None
-        The side length of cubic cell used for periodic boundary conditions.
+        The side length of rectangular cell used for periodic boundary conditions.
         `None` for non-periodic boundary conditions.
-    .. note::
-        Only side lengths of cubic cells are supported.
-        Cell format: `[side_length_1, ..., side_length_n]`
+
+        .. note::
+            Only side lengths of rectangular cells are supported.
+            Cell format: `[side_length_1, ..., side_length_n]`
 
     Returns
     -------
@@ -170,9 +171,9 @@ def pairwise_mahalanobis_distances(
         cell_length : np.ndarray, optinal, default=None
             The cell size for periodic boundary conditions.
             None for non-periodic boundary conditions.
-        .. note::
-            Only cubic cells are supported.
-            Cell format: `[side_length_1, ..., side_length_n]`
+            .. note::
+                Only cubic cells are supported.
+                Cell format: `[side_length_1, ..., side_length_n]`
 
         squared : bool, default=False
             Whether to return the squared distance.
@@ -196,13 +197,6 @@ def pairwise_mahalanobis_distances(
             [1.73205081]]])
     """
 
-    def _mahalanobis_preprocess(cov_inv: np.ndarray):
-
-        if len(cov_inv.shape) == 2:
-            cov_inv = cov_inv[np.newaxis, :, :]
-
-        return cov_inv
-
     def _mahalanobis(
         cell: np.ndarray, X: np.ndarray, Y: np.ndarray, cov_inv: np.ndarray
     ):
@@ -217,7 +211,8 @@ def pairwise_mahalanobis_distances(
 
     _check_dimension(X, cell_length)
     X, Y = check_pairwise_arrays(X, Y)
-    cov_inv = _mahalanobis_preprocess(cov_inv)
+    if len(cov_inv.shape) == 2:
+        cov_inv = cov_inv[np.newaxis, :, :]
     dists = _mahalanobis(cell_length, X, Y, cov_inv)
     if not squared:
         dists **= 0.5
