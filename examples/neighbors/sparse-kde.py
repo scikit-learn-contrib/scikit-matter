@@ -17,7 +17,7 @@ on sampled data and how to use PAMM to analyze the H-bond.
 We start from a simple system, which is consist of three 2D Gaussians. Our task is to
 estimate the parameters of these Gaussians from our sampled data.
 
-Here we first sample from these three gaussians.
+Here we first sample from these three Gaussians.
 """
 
 
