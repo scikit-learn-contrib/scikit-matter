@@ -9,8 +9,8 @@ from sklearn.utils.validation import check_is_fitted, check_random_state
 from tqdm import tqdm
 
 from ..metrics._pairwise import (
-    periodic_pairwise_euclidean_distances,
     pairwise_mahalanobis_distances,
+    periodic_pairwise_euclidean_distances,
 )
 from ..utils._sparsekde import effdim, oas
 

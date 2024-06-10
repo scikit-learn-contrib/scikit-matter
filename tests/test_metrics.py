@@ -11,8 +11,8 @@ from skmatter.metrics import (
     global_reconstruction_error,
     local_prediction_rigidity,
     local_reconstruction_error,
-    periodic_pairwise_euclidean_distances,
     pairwise_mahalanobis_distances,
+    periodic_pairwise_euclidean_distances,
     pointwise_local_reconstruction_error,
 )
 
@@ -258,7 +258,9 @@ class DistanceTests(unittest.TestCase):
         )
 
     def test_periodic_euclidean_distance(self):
-        distances = periodic_pairwise_euclidean_distances(self.X, self.Y, cell_length=self.cell)
+        distances = periodic_pairwise_euclidean_distances(
+            self.X, self.Y, cell_length=self.cell
+        )
         self.assertTrue(
             np.allclose(distances, self.periodic_distances),
             f"Calculated distance does not match expected value"

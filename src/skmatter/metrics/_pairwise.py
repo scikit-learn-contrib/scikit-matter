@@ -162,7 +162,7 @@ def pairwise_mahalanobis_distances(
         cell_length : np.ndarray, optinal, default=None
             The cell size for periodic boundary conditions.
             None for non-periodic boundary conditions.
-            
+
             .. note::
                 Only cubic cells are supported.
                 Cell format: `[side_length_1, ..., side_length_n]`

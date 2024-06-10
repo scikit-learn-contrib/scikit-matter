@@ -83,7 +83,7 @@ class QuickShift(BaseEstimator):
 
     We can also apply a periodic boundary condition
 
-    >>> model = QuickShift(cuts, metric_params={'cell_length': [3, 3]})
+    >>> model = QuickShift(cuts, metric_params={"cell_length": [3, 3]})
     >>> model = model.fit(points, samples_weight=weights)
     >>> print(model.labels_)
     [5 5 5 5 5 5]
