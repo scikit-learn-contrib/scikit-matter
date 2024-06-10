@@ -15,7 +15,7 @@ class QuickShift(BaseEstimator):
     which is used in probabilistic analysis of molecular motifs (PAMM). There
     are two ways of searching the next point: (1) search for the point within the given
     distance cutoff and (2) search for the point within the given number of neighbor
-    shell of the gabriel graph. If both of them are set, the distance cutoff
+    shell of the Gabriel graph. If both of them are set, the distance cutoff
     is used.
 
     Parameters
