@@ -144,7 +144,7 @@ class GaussianMixtureModel:
 
 # %%
 def rij(period: np.ndarray, xi: np.ndarray, xj: np.ndarray) -> np.ndarray:
-
+    """Get the position vectors between two points. PBC are taken into account."""
     xij = xi - xj
     if period is not None:
         xij -= np.round(xij / period) * period
@@ -252,8 +252,8 @@ def quick_shift_refinement(
         metric.  i.e. the cell dimension for `periodic_euclidean`
         {'cell': [2, 2]}
     thrpcl : float, default=0.0
-        Clusters with a pk lower than this value are merged with the nearest cluster."""
-
+    Clusters with a pk lower than this value are merged with the nearest cluster.
+    """
     if metric_params is not None:
         cell = metric_params["cell_length"]
         if len(cell) != X.shape[1]:
@@ -311,8 +311,8 @@ def generate_probability_model(
     """
     Generates a probability model based on the given inputs.
 
-    Parameters:
-    -----------
+    Parameters
+    ----------
     cluster_center_idx : np.ndarray
         Index of the cluster centers in `X`
     labels : np.ndarray
@@ -454,7 +454,8 @@ def cluster_distribution_3D(
     """
     Generate a 3D scatter plot of the cluster distribution.
 
-    Parameters:
+    Parameters
+    ----------
         grids (numpy.ndarray): The array containing the grid data.
         use_index (Optional[list[int]]): The indices of the features to use for the
             scatter plot.
@@ -466,7 +467,8 @@ def cluster_distribution_3D(
             Default is 1e4.
         fig_size (tuple[int, int]): The size of the figure. Default is (12, 12)
 
-    Returns:
+    Returns
+    -------
         tuple[plt.Figure, plt.Axes]: A tuple containing the matplotlib
             Figure and Axes objects.
     """

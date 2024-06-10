@@ -17,7 +17,7 @@ def pairwise_euclidean_distances(
     X_norm_squared=None,
     cell_length=None,
 ):
-    """
+    r"""
     Compute the pairwise distance matrix between each pair from a vector array X and Y.
 
     .. math::
@@ -96,7 +96,6 @@ def pairwise_euclidean_distances(
     array([[1.        ],
            [1.41421356]])
     """
-
     _check_dimension(X, cell_length)
     X, Y = check_pairwise_arrays(X, Y)
 
@@ -161,7 +160,8 @@ def pairwise_mahalanobis_distances(
     where :math:`\Sigma` is the covariance matrix, :math:`x` and :math:`y` are
     observations from the same distribution.
 
-    Parameters:
+    Parameters
+    ----------
         X : numpy.ndarray of shape (n_samples_X, n_components)
             An array where each row is a sample and each column is a component.
         Y : np.ndarray of shape (n_samples_Y, n_components)

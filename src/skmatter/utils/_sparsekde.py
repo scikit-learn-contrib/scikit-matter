@@ -1,4 +1,4 @@
-"""This file holds utility functions and classes for the sparse KDE."""
+"""The file holds utility functions and classes for the sparse KDE."""
 
 import numpy as np
 
@@ -29,7 +29,6 @@ def effdim(cov):
     ----------
     https://ieeexplore.ieee.org/document/7098875
     """
-
     eigval = np.linalg.eigvals(cov)
     eigval /= sum(eigval)
     eigval *= np.log(eigval)
@@ -65,7 +64,6 @@ def oas(cov: np.ndarray, n: float, D: int) -> np.ndarray:
     np.ndarray
         Covariance matrix
     """
-
     tr = np.trace(cov)
     tr2 = tr**2
     tr_cov2 = np.trace(cov**2)

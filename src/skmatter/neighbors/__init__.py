@@ -1,5 +1,5 @@
 """
-This module implements the sparse kernel density estimator.
+The module implements the sparse kernel density estimator.
 
 A large dataset can be generated during the molecular dynamics sampling. The
 distribution of the sampled data reflects the (free) energetic stability of molecular

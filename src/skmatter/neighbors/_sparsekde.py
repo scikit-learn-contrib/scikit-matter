@@ -197,7 +197,6 @@ class SparseKDE(BaseEstimator):
         self : object
             Returns the instance itself.
         """
-
         self._check_dimension(X)
         self._grids = X
         grid_dist_mat = self.metric(X, X)
@@ -305,8 +304,8 @@ class SparseKDE(BaseEstimator):
         self, X, sample_weights: np.ndarray, mindist: np.ndarray
     ):
         """Compute the localized bandwidth of the kernel density estimator
-        on grid points."""
-
+        on grid points.
+        """
         # estimate the sigma
         cov = _covariance(X, sample_weights, self.cell)
         if self.cell is not None:
@@ -350,8 +349,8 @@ class SparseKDE(BaseEstimator):
         self, X, sample_weights, sigma2, flocal, idx, delta, tune
     ):
         """Used in cases where one expects clusters with very different spreads,
-        but similar populations"""
-
+        but similar populations
+        """
         lim = self.fpoints
         if lim <= sample_weights[idx]:
             lim = sample_weights[idx] + delta
@@ -384,7 +383,8 @@ class SparseKDE(BaseEstimator):
         self, X, sample_weights, sigma2, flocal, idx, mindist
     ):
         """Used in cases where one expects the spatial extent of clusters to be
-        relatively homogeneous"""
+        relatively homogeneous
+        """
         sigma2[idx] = mindist[idx]
         wlocal, flocal[idx] = _local_population(
             self.cell, self.descriptors, X, sample_weights, sigma2[idx]
@@ -393,10 +393,7 @@ class SparseKDE(BaseEstimator):
         return sigma2, flocal, wlocal
 
     def _bandwidth_estimation_from_localization(self, X, wlocal, flocal, idx):
-        """
-        Compute the bandwidth based on localized version of Silverman's rule
-        """
-
+        """Compute the bandwidth based on localized version of Silverman's rule"""
         cov = _covariance(X, wlocal, self.cell)
         nlocal = flocal[idx] * self.nsamples
         local_dimension = effdim(cov)
@@ -510,7 +507,6 @@ class _NearestGridAssigner:
             y : np.ndarray, optional, default=None
                 Igonred.
         """
-
         ngrid = len(X)
         self.grid_pos = X
         self.grid_npoints = np.zeros(ngrid, dtype=int)
@@ -573,10 +569,12 @@ def _covariance(X: np.ndarray, sample_weights: np.ndarray, cell: np.ndarray):
         An array of shape (nsample,) representing the weights of the grid positions.
     cell : np.ndarray
         An array of shape (dimension,) representing the periodicity of each dimension.
+
     Returns
     -------
     np.ndarray
         The covariance matrix of shape (dimension, dimension).
+
     Notes
     -----
     The function assumes that the grid positions, weights,
@@ -584,7 +582,6 @@ def _covariance(X: np.ndarray, sample_weights: np.ndarray, cell: np.ndarray):
     The function handles periodic and non-periodic dimensions differently to
     calculate the covariance matrix.
     """
-
     totw = np.sum(sample_weights)
 
     if cell is None:
@@ -619,7 +616,7 @@ def _local_population(
     grid_j_weight: np.ndarray,
     sigma_squared: float,
 ):
-    """
+    r"""
     Calculates the local population of a selected grid. The local population is defined
     as a sum of the weighting factors for each other grid arond it.
 
@@ -660,7 +657,6 @@ def _local_population(
             The sum of the localized weights.
 
     """
-
     xy = grid_j - grid_i
     if cell is not None:
         xy -= np.round(xy / cell) * cell

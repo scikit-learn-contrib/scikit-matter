@@ -163,7 +163,6 @@ def load_hbond_dataset():
           descriptors : `numpy.ndarray` -- the descriptors of hydrogen bond dataset
           weights : `numpy.ndarray` -- the weights of each sample in the dataset
     """
-
     module_path = dirname(__file__)
     target_filename = join(module_path, "data", "h2o-blyp-piglet.npz")
     raw_data = np.load(target_filename)
