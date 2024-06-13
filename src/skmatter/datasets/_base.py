@@ -132,19 +132,12 @@ def load_roy_dataset():
           energies: `np.array` -- energies of the structures
     """
     module_path = dirname(__file__)
-    target_structures = join(module_path, "data", "beran_roy_structures.xyz.bz2")
+    target_properties = join(module_path, "data", "beran_roy_properties.npz")
+    properties = np.load(target_properties)
 
-    try:
-        from ase.io import read
-    except ImportError:
-        raise ImportError("load_roy_dataset requires the ASE package.")
-
-    import bz2
-
-    structures = read(bz2.open(target_structures, "rt"), ":", format="extxyz")
-    energies = np.array([f.info["energy"] for f in structures])
-
-    target_features = join(module_path, "data", "beran_roy_features.npz")
-    features = np.load(target_features)["feats"]
-
-    return Bunch(structures=structures, features=features, energies=energies)
+    return Bunch(
+        densities=properties["densities"],
+        energies=properties["energies"],
+        structure_types=properties["structure_types"],
+        features=properties["feats"],
+    )
