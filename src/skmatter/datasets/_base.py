@@ -119,15 +119,17 @@ def load_who_dataset():
 
 
 def load_roy_dataset():
-    """Load and returns the ROY dataset, which contains structures,
-    energies and SOAP-derived descriptors for 264 polymorphs of ROY, from [Beran et Al,
-    Chemical Science (2022)](https://doi.org/10.1039/D1SC06074K)
+    """Load and returns the ROY dataset, which contains densities,
+    energies and SOAP-derived descriptors for 264 structures of polymorphs of ROY,
+    from [Beran et Al, Chemical Science (2022)](https://doi.org/10.1039/D1SC06074K)
+    Each structure is labeled as "Known" or "Unknown".
 
     Returns
     -------
     roy_dataset : sklearn.utils.Bunch
       Dictionary-like object, with the following attributes:
-          structures : `ase.Atoms` -- the roy structures as ASE objects
+          densities : `np.array` -- the densities of the structures
+          structure_types : `np.array` -- the type of the structures
           features: `np.array` -- SOAP-derived descriptors for the structures
           energies: `np.array` -- energies of the structures
     """
