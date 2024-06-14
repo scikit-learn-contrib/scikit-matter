@@ -130,8 +130,8 @@ def load_roy_dataset():
       Dictionary-like object, with the following attributes:
           densities : `np.array` -- the densities of the structures
           structure_types : `np.array` -- the type of the structures
-          features: `np.array` -- SOAP-derived descriptors for the structures
-          energies: `np.array` -- energies of the structures
+          features : `np.array` -- SOAP-derived descriptors for the structures
+          energies : `np.array` -- energies of the structures
     """
     module_path = dirname(__file__)
     target_properties = join(module_path, "data", "beran_roy_properties.npz")
