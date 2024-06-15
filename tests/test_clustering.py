@@ -31,15 +31,28 @@ class QuickShiftTests(unittest.TestCase):
                 -2.61132267,
             ]
         )
-        cls.labels_ = np.array([0, 0, 0, 5, 5, 5])
-        cls.cluster_centers_idx_ = np.array([0, 5])
+        cls.qs_labels_ = np.array([0, 0, 0, 5, 5, 5])
+        cls.qs_cluster_centers_idx_ = np.array([0, 5])
+        cls.gabriel_labels_ = np.array([5, 5, 5, 5, 5, 5])
+        cls.gabriel_cluster_centers_idx_ = np.array([5])
         cls.cell = [3, 3]
+        cls.gabriel_shell = 1
 
-    def test_fit(self):
-        model = QuickShift(self.cuts)
+    def test_fit_qs(self):
+        model = QuickShift(dist_cutoff_sq=self.cuts)
         model.fit(self.points, samples_weight=self.weights)
-        self.assertTrue(np.all(model.labels_ == self.labels_))
-        self.assertTrue(np.all(model.cluster_centers_idx_ == self.cluster_centers_idx_))
+        self.assertTrue(np.all(model.labels_ == self.qs_labels_))
+        self.assertTrue(
+            np.all(model.cluster_centers_idx_ == self.qs_cluster_centers_idx_)
+        )
+
+    def test_fit_garbriel(self):
+        model = QuickShift(gabriel_shell=self.gabriel_shell)
+        model.fit(self.points, samples_weight=self.weights)
+        self.assertTrue(np.all(model.labels_ == self.gabriel_labels_))
+        self.assertTrue(
+            np.all(model.cluster_centers_idx_ == self.gabriel_cluster_centers_idx_)
+        )
 
     def test_dimension_check(self):
         model = QuickShift(self.cuts, metric_params={"cell_length": self.cell})

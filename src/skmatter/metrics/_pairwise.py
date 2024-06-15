@@ -1,20 +1,14 @@
 from typing import Union
 
 import numpy as np
-from sklearn.metrics.pairwise import (
-    _euclidean_distances,
-    check_array,
-    check_pairwise_arrays,
-)
+from sklearn.metrics.pairwise import _euclidean_distances, check_pairwise_arrays
 
 
 def periodic_pairwise_euclidean_distances(
     X,
     Y=None,
     *,
-    Y_norm_squared=None,
     squared=False,
-    X_norm_squared=None,
     cell_length=None,
 ):
     r"""
@@ -48,16 +42,6 @@ def periodic_pairwise_euclidean_distances(
             default=None
         An array where each row is a sample and each column is a component.
         If `None`, method uses `Y=X`.
-    Y_norm_squared : array-like of shape (n_samples_Y,) or (n_samples_Y, 1) \
-            or (1, n_samples_Y), default=None
-        Pre-computed dot-products of vectors in Y (e.g., `(Y**2).sum(axis=1)`)
-        May be ignored in some cases, see the note below.
-    squared : bool, default=False
-        Return squared Euclidean distances.
-    X_norm_squared : array-like of shape (n_samples_X,) or (n_samples_X, 1) \
-            or (1, n_samples_X), default=None
-        Pre-computed dot-products of vectors in X (e.g., `(X**2).sum(axis=1)`)
-        May be ignored in some cases, see the note below.
     cell_length : array-like of shape (n_components,), default=None
         The side length of rectangular cell used for periodic boundary conditions.
         `None` for non-periodic boundary conditions.
@@ -90,34 +74,8 @@ def periodic_pairwise_euclidean_distances(
     _check_dimension(X, cell_length)
     X, Y = check_pairwise_arrays(X, Y)
 
-    if X_norm_squared is not None:
-        X_norm_squared = check_array(X_norm_squared, ensure_2d=False)
-        original_shape = X_norm_squared.shape
-        if X_norm_squared.shape == (X.shape[0],):
-            X_norm_squared = X_norm_squared.reshape(-1, 1)
-        if X_norm_squared.shape == (1, X.shape[0]):
-            X_norm_squared = X_norm_squared.T
-        if X_norm_squared.shape != (X.shape[0], 1):
-            raise ValueError(
-                f"Incompatible dimensions for X of shape {X.shape} and "
-                f"X_norm_squared of shape {original_shape}."
-            )
-
-    if Y_norm_squared is not None:
-        Y_norm_squared = check_array(Y_norm_squared, ensure_2d=False)
-        original_shape = Y_norm_squared.shape
-        if Y_norm_squared.shape == (Y.shape[0],):
-            Y_norm_squared = Y_norm_squared.reshape(1, -1)
-        if Y_norm_squared.shape == (Y.shape[0], 1):
-            Y_norm_squared = Y_norm_squared.T
-        if Y_norm_squared.shape != (1, Y.shape[0]):
-            raise ValueError(
-                f"Incompatible dimensions for Y of shape {Y.shape} and "
-                f"Y_norm_squared of shape {original_shape}."
-            )
-
     if cell_length is None:
-        return _euclidean_distances(X, Y, X_norm_squared, Y_norm_squared, squared)
+        return _euclidean_distances(X, Y, squared=squared)
     else:
         return _periodic_euclidean_distances(X, Y, squared=squared, cell=cell_length)
 

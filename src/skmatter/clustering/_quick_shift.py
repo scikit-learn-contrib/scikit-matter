@@ -107,11 +107,11 @@ class QuickShift(BaseEstimator):
     ):
         if (dist_cutoff_sq is None) and (gabriel_shell is None):
             raise ValueError("Either dist_cutoff or gabriel_depth must be set.")
-        self.dist_cutoff2 = dist_cutoff_sq
+        self.dist_cutoff_sq = dist_cutoff_sq
         self.gabriel_shell = gabriel_shell
         self.scale = scale
-        if self.dist_cutoff2 is not None:
-            self.dist_cutoff2 *= self.scale**2
+        if self.dist_cutoff_sq is not None:
+            self.dist_cutoff_sq *= self.scale**2
         self.metric_params = (
             metric_params if metric_params is not None else {"cell_length": None}
         )
@@ -142,7 +142,7 @@ class QuickShift(BaseEstimator):
             )
         dist_matrix = self.metric(X, X)
         np.fill_diagonal(dist_matrix, np.inf)
-        if self.dist_cutoff2 is None:
+        if self.dist_cutoff_sq is None:
             gabrial = _get_gabriel_graph(dist_matrix)
         idmindist = np.argmin(dist_matrix, axis=1)
         idxroot = np.full(dist_matrix.shape[0], -1, dtype=int)
@@ -163,7 +163,7 @@ class QuickShift(BaseEstimator):
                         idmindist[current],
                         samples_weight,
                         dist_matrix,
-                        self.dist_cutoff2[current],
+                        self.dist_cutoff_sq[current],
                     )
                 if idxroot[idxroot[current]] != -1:
                     # Found a path to a root
