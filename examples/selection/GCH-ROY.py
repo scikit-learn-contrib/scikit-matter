@@ -27,11 +27,9 @@ from skmatter.sample_selection import DirectionalConvexHull
 
 roy_data = load_roy_dataset()
 
-structures = roy_data["structures"]
-
-density = np.array([s.info["density"] for s in structures])
-energy = np.array([s.info["energy"] for s in structures])
-structype = np.array([s.info["type"] for s in structures])
+density = roy_data["densities"]
+energy = roy_data["energies"]
+structype = roy_data["structure_types"]
 iknown = np.where(structype == "known")[0]
 iothers = np.where(structype != "known")[0]
 
@@ -247,3 +245,5 @@ chemiscope.show(
     },
 )
 """
+
+# %%

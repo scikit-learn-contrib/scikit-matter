@@ -119,59 +119,27 @@ def load_who_dataset():
 
 
 def load_roy_dataset():
-    """Load and returns the ROY dataset, which contains structures,
-    energies and SOAP-derived descriptors for 264 polymorphs of ROY, from [Beran et Al,
-    Chemical Science (2022)](https://doi.org/10.1039/D1SC06074K)
+    """Load and returns the ROY dataset, which contains densities,
+    energies and SOAP-derived descriptors for 264 structures of polymorphs of ROY,
+    from [Beran et Al, Chemical Science (2022)](https://doi.org/10.1039/D1SC06074K)
+    Each structure is labeled as "Known" or "Unknown".
 
     Returns
     -------
     roy_dataset : sklearn.utils.Bunch
       Dictionary-like object, with the following attributes:
-          structures : `ase.Atoms` -- the roy structures as ASE objects
-          features: `np.array` -- SOAP-derived descriptors for the structures
-          energies: `np.array` -- energies of the structures
+          densities : `np.array` -- the densities of the structures
+          structure_types : `np.array` -- the type of the structures
+          features : `np.array` -- SOAP-derived descriptors for the structures
+          energies : `np.array` -- energies of the structures
     """
     module_path = dirname(__file__)
-    target_structures = join(module_path, "data", "beran_roy_structures.xyz.bz2")
-
-    try:
-        from ase.io import read
-    except ImportError:
-        raise ImportError("load_roy_dataset requires the ASE package.")
-
-    import bz2
-
-    structures = read(bz2.open(target_structures, "rt"), ":", format="extxyz")
-    energies = np.array([f.info["energy"] for f in structures])
-
-    target_features = join(module_path, "data", "beran_roy_features.npz")
-    features = np.load(target_features)["feats"]
-
-    return Bunch(structures=structures, features=features, energies=energies)
-
-
-def load_hbond_dataset():
-    """Load and returns the hydrogen bond dataset, which contains
-    a set of 3D descriptors for 27233 hydrogen bonds and corresponding
-    weights, from [Gasparotto et Al, The Journal of Chemical Physics]
-    (https://doi.org/10.1063/1.4900655)
-
-    Returns
-    -------
-    hbond_dataset : sklearn.utils.Bunch
-      Dictionary-like object, with the following attributes:
-          descriptors : `numpy.ndarray` -- the descriptors of hydrogen bond dataset
-          weights : `numpy.ndarray` -- the weights of each sample in the dataset
-    """
-    module_path = dirname(__file__)
-    target_filename = join(module_path, "data", "h2o-blyp-piglet.npz")
-    raw_data = np.load(target_filename)
-
-    with open(join(module_path, "descr", "h2o-blyp-piglet.rst")) as rst_file:
-        fdescr = rst_file.read()
+    target_properties = join(module_path, "data", "beran_roy_properties.npz")
+    properties = np.load(target_properties)
 
     return Bunch(
-        descriptors=raw_data["descriptors"],
-        weights=raw_data["weights"],
-        DESCR=fdescr,
+        densities=properties["densities"],
+        energies=properties["energies"],
+        structure_types=properties["structure_types"],
+        features=properties["feats"],
     )

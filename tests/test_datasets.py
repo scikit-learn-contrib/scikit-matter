@@ -108,45 +108,16 @@ class ROYTests(unittest.TestCase):
     def setUpClass(cls):
         cls.size = 264
         cls.shape = (264, 32)
-        try:
-            from ase.io import read  # NoQa: F401
-
-            cls.has_ase = True
-            cls.roy = load_roy_dataset()
-        except ImportError:
-            cls.has_ase = False
-
-    def test_load_dataset_without_ase(self):
-        """Check if the correct exception occurs when ase isn't present."""
-        with unittest.mock.patch.dict("sys.modules", {"ase.io": None}):
-            with self.assertRaises(ImportError) as cm:
-                _ = load_roy_dataset()
-            self.assertEqual(
-                str(cm.exception), "load_roy_dataset requires the ASE package."
-            )
+        cls.roy = load_roy_dataset()
 
     def test_dataset_content(self):
         """Check if the correct number of datapoints are present in the dataset.
 
         Also check if the size of the dataset is correct.
         """
-        if self.has_ase is True:
-            self.assertEqual(len(self.roy["structures"]), self.size)
-            self.assertEqual(self.roy["features"].shape, self.shape)
-            self.assertEqual(len(self.roy["energies"]), self.size)
-
-    def test_dataset_consistency(self):
-        """Check if the energies in the structures are the same as in the explicit
-        array.
-        """
-        if self.has_ase is True:
-            self.assertTrue(
-                np.allclose(
-                    self.roy["energies"],
-                    [f.info["energy"] for f in self.roy["structures"]],
-                    rtol=1e-6,
-                )
-            )
+        self.assertEqual(len(self.roy["structure_types"]), self.size)
+        self.assertEqual(self.roy["features"].shape, self.shape)
+        self.assertEqual(len(self.roy["energies"]), self.size)
 
 
 class HBondTests(unittest.TestCase):
