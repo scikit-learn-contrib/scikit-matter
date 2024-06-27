@@ -63,6 +63,7 @@ ax.scatter(samples[:, 0], samples[:, 1], alpha=0.05, s=1)
 ax.scatter(means[:, 0], means[:, 1], marker="+", color="red", s=100)
 ax.set_xlabel("x")
 ax.set_ylabel("y")
+plt.show()
 
 # %%
 # The perquisite of conducting sparse KDE is to partition the sample set. Here, we use
