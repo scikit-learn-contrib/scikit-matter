@@ -204,11 +204,9 @@ print(f"RMSE_kde = {RMSE_kde:.2e}")
 
 # %%
 # We can see that the fitted model can perfectly capture the original one. Eventhough we
-# have not specified the number of the gaussians, it can still perform well. This
-# ability enables us to analyze the distribution of the data objectively, which is
-# important and also hard to do in analyzing the molecular simulation data. Also, we
-# see that our method is slightly better than the one from scikit-learn, but within a
-# much shorter time.
+# have not specified the number of the Gaussians, it can still perform well. This
+# allows us to fit distributions of the data automatically at a comparable quality
+# within a much shorter time than scikit-matter
 
 # %%
 # Probabilistic Analysis of Molecular Motifs (PAMM)
