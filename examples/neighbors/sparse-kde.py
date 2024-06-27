@@ -184,7 +184,7 @@ plt.show()
 # %%
 # The performance of the probability density estimation can be characterized by the
 # Mean Integrated Squared Error (MISE), which is defined as:
-# $$ \text{MISE}=\text{E}[\int (\hat{P}(\textbf{x})-P(\textbf{x}))^2 d\textbf{x}]$$
+# :math:`\text{MISE}=\text{E}[\int (\hat{P}(\textbf{x})-P(\textbf{x}))^2 d\textbf{x}]`
 
 # %%
 RMSE = np.sum((probs - fitted_probs) ** 2 * (x[0][1] - x[0][0]) * (y[1][0] - y[0][0]))
