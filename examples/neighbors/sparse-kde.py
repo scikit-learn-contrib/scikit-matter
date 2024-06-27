@@ -179,6 +179,7 @@ ax.legend(
 )
 ax.set_xlabel("x")
 ax.set_ylabel("y")
+plt.show()
 
 # %%
 # The performance of the probability density estimation can be characterized by the
