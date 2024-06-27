@@ -80,6 +80,7 @@ ax.scatter(means[:, 0], means[:, 1], marker="+", color="red", s=100)
 ax.scatter(grids[:, 0], grids[:, 1], color="orange", s=1)
 ax.set_xlabel("x")
 ax.set_ylabel("y")
+plt.show()
 
 # %%
 # Now we can do sparse KDE (usually takes tens of seconds):
