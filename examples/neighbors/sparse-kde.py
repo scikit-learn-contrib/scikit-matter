@@ -526,9 +526,6 @@ estimator.fit(grids)
 
 # %%
 # Now we visualize the distribution and the weight of clusters.
-# %%
-#
-#
 
 # %%
 cluster_distribution_3D(
