@@ -100,7 +100,7 @@ class SparseKDE(BaseEstimator):
 
     The total log-likelihood under the model
 
-    >>> round(estimator.score(result), 3)
+    >>> print(round(estimator.score(result), 3))
     -759.831
     """
 

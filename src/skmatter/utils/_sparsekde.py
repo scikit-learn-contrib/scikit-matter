@@ -22,7 +22,7 @@ def effdim(cov):
     >>> import numpy as np
     >>> from skmatter.utils import effdim
     >>> cov = np.array([[1, 1, 0], [1, 1, 0], [0, 0, 1]])
-    >>> round(effdim(cov), 3)
+    >>> print(round(effdim(cov), 3))
     1.89
 
     References

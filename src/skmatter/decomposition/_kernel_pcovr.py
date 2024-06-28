@@ -159,7 +159,7 @@ class KernelPCovR(_BasePCA, LinearModel):
            [-0.18992219,  0.82064368],
            [ 1.11923584, -1.04798016],
            [-1.5635827 ,  1.11078662]])
-    >>> round(kpcovr.score(X, Y), 5)
+    >>> print(round(kpcovr.score(X, Y), 5))
     -0.52039
     """  # NoQa: E501
 
