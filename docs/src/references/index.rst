@@ -10,7 +10,9 @@ API Reference
   preprocessing
   selection
   linear_models
+  clustering
   decomposition
   metrics
+  neighbors
   datasets
   utils

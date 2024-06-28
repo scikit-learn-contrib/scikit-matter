@@ -54,7 +54,7 @@ extensions = [
     "sphinx_toggleprompt",
 ]
 
-example_subdirs = ["pcovr", "selection", "regression", "reconstruction"]
+example_subdirs = ["pcovr", "selection", "regression", "reconstruction", "neighbors"]
 sphinx_gallery_conf = {
     "filename_pattern": "/*",
     "examples_dirs": [f"../../examples/{p}" for p in example_subdirs],

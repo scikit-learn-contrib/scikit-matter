@@ -30,3 +30,14 @@ Random Partitioning with Overlaps
 ---------------------------------
 
 .. autofunction:: skmatter.model_selection.train_test_split
+
+
+Effective Dimension of Covariance Matrix
+----------------------------------------
+
+.. autofunction:: skmatter.utils.effdim
+
+Oracle Approximating Shrinkage
+------------------------------
+
+.. autofunction:: skmatter.utils.oas
