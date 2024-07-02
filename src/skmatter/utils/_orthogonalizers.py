@@ -87,15 +87,15 @@ def Y_feature_orthogonalizer(y, X, tol=1e-12, copy=True):
 
 
 def Y_sample_orthogonalizer(y, X, y_ref, X_ref, tol=1e-12, copy=True):
-    r"""Orthogonalizes a matrix of targets :math:`{\\mathbf{Y}}` given a reference
-    feature matrix :math:`{\\mathbf{X}_r}` and reference target matrix
-    :math:`{\\mathbf{Y}_r}`:
+    r"""Orthogonalizes a matrix of targets :math:`{\mathbf{Y}}` given a reference
+    feature matrix :math:`{\mathbf{X}_r}` and reference target matrix
+    :math:`{\mathbf{Y}_r}`:
 
     .. math::
-        \\mathbf{Y} \\leftarrow \\mathbf{Y} -
-        \\mathbf{X} \\left(\\mathbf{X}_{\\mathbf{r}}^T
-        \\mathbf{X}_{\\mathbf{r}}\\right)^{-1}\\mathbf{X}_{\\mathbf{r}}^T
-        \\mathbf{Y}_{\\mathbf{r}}
+        \mathbf{Y} \leftarrow \mathbf{Y} -
+        \mathbf{X} \left(\mathbf{X}_{\mathbf{r}}^T
+        \mathbf{X}_{\mathbf{r}}\right)^{-1}\mathbf{X}_{\mathbf{r}}^T
+        \mathbf{Y}_{\mathbf{r}}
 
     Parameters
     ----------

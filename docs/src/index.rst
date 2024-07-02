@@ -74,6 +74,13 @@
    :start-after: marker-issues
    :end-before: marker-contributing
 
+.. include:: ../../README.rst
+   :start-after: marker-citing
+   :end-before: marker-contributors
+
+If you would like to contribute to scikit-matter, check out our :ref:`contributing`
+page!
+
 .. toctree::
   :hidden:
 
@@ -84,6 +91,3 @@
   contributing
   changelog
   bibliography
-
-If you would like to contribute to scikit-matter, check out our :ref:`contributing`
-page!

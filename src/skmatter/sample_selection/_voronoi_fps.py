@@ -111,14 +111,14 @@ class VoronoiFPS(GreedySelector):
     def get_distance(self):
         r"""Traditional FPS employs a column-wise Euclidean distance for feature
         selection, which can be expressed using the covariance matrix
-        :math:`\\mathbf{C} = \\mathbf{X} ^ T \\mathbf{X}`.
+        :math:`\mathbf{C} = \mathbf{X} ^ T \mathbf{X}`.
 
         .. math::
             \operatorname{d}_c(i, j) = C_{ii} - 2 C_{ij} + C_{jj}.
 
         For sample selection, this is a row-wise Euclidean distance, which can be
         expressed in terms of the Gram matrix
-        :math:`\\mathbf{K} = \\mathbf{X} \\mathbf{X} ^ T`
+        :math:`\mathbf{K} = \mathbf{X} \mathbf{X} ^ T`
 
         .. math::
             \operatorname{d}_r(i, j) = K_{ii} - 2 K_{ij} + K_{jj}.
