@@ -2,8 +2,8 @@ scikit-matter
 =============
 |tests| |codecov| |pypi| |conda| |docs| |doi|
 
-A collection of scikit-learn compatible utilities that implement methods born out of the
-materials science and chemistry communities.
+A collection of ``scikit-learn`` compatible utilities that implement methods born out of
+the materials science and chemistry communities.
 
 For details, tutorials, and examples, please have a look at our `documentation`_.
 
@@ -72,7 +72,7 @@ Writing code is not the only way to contribute to the project. You can also:
 .. _`examples and tutorials`: https://scikit-matter.readthedocs.io/en/latest/contributing.html#contributing-new-examples
 .. _`new datasets`: https://scikit-matter.readthedocs.io/en/latest/contributing.html#contributing-datasets
 
-.. marker-contributors
+.. marker-citing
 
 Citing scikit-matter
 --------------------
@@ -81,7 +81,11 @@ If you use *scikit-matter* for your work, please cite:
 Goscinski A, Principe VP, Fraux G et al. scikit-matter :
 A Suite of Generalisable Machine Learning Methods Born out of Chemistry
 and Materials Science. Open Res Europe 2023, 3:81.
-`10.12688/openreseurope.15789.2 <https://doi.org/10.12688/openreseurope.15789.2>`_
+`10.12688/openreseurope.15789.2`_
+
+.. _`10.12688/openreseurope.15789.2`: https://doi.org/10.12688/openreseurope.15789.2
+
+.. marker-contributors
 
 Contributors
 ------------
@@ -90,10 +94,9 @@ Thanks goes to all people that make scikit-matter possible:
 .. image:: https://contrib.rocks/image?repo=scikit-learn-contrib/scikit-matter
    :target: https://github.com/scikit-learn-contrib/scikit-matter/graphs/contributors
 
-.. |tests| image:: https://github.com/scikit-learn-contrib/scikit-matter/workflows/Test/badge.svg
+.. |tests| image:: https://github.com/scikit-learn-contrib/scikit-matter/workflows/Tests/badge.svg
    :alt: Github Actions Tests Job Status
-   :target: (https://github.com/scikit-learn-contrib/scikit-matter/\
-                actions?query=workflow%3ATests)
+   :target: action_
 
 .. |codecov| image:: https://codecov.io/gh/scikit-learn-contrib/scikit-matter/branch/main/graph/badge.svg?token=UZJPJG34SM
    :alt: Code coverage
@@ -101,7 +104,7 @@ Thanks goes to all people that make scikit-matter possible:
 
 .. |docs| image:: https://img.shields.io/badge/documentation-latest-sucess
    :alt: Python
-   :target: https://scikit-matter.readthedocs.io
+   :target: documentation_
 
 .. |pypi| image:: https://img.shields.io/pypi/v/skmatter.svg
    :alt: Latest PYPI version
@@ -113,4 +116,6 @@ Thanks goes to all people that make scikit-matter possible:
 
 .. |doi| image:: https://img.shields.io/badge/DOI-10.12688-blue
    :alt: ORE Paper
-   :target: https://doi.org/10.12688/openreseurope.15789.2
+   :target: `10.12688/openreseurope.15789.2`_
+
+.. _`action`: https://github.com/scikit-learn-contrib/scikit-matter/actions?query=branch%3Amain
