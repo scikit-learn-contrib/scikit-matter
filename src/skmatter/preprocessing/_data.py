@@ -225,7 +225,7 @@ class KernelNormalizer(KernelCenterer):
     where :math:`\phi` is a function mapping x to a Hilbert space.
     KernelNormalizer centers (i.e., normalize to have zero mean) the data without
     explicitly computing :math:`\phi(x)`.
-    It is equivalent to centering and scaling :math:`\\phi(x)` with
+    It is equivalent to centering and scaling :math:`\phi(x)` with
     sklearn.preprocessing.StandardScaler(with_std=False).
 
     Parameters

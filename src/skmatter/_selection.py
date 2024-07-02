@@ -592,19 +592,17 @@ class _CUR(GreedySelector):
         the squares of the first :math:`k` components of the right singular vectors
 
         .. math::
-            \\pi_j =
-            \\sum_i^k \\left(\\mathbf{U}_\\mathbf{C}\\right)_{ij}^2.
+            \pi_j = \sum_i^k \left(\mathbf{U}_\mathbf{C}\right)_{ij}^2.
 
-        where :math:`\\mathbf{C} = \\mathbf{X}^T\\mathbf{X}`.
+        where :math:`\mathbf{C} = \mathbf{X}^T\mathbf{X}`.
 
-        For sample selection, the importance score :math:`\\pi` is the sum over the
+        For sample selection, the importance score :math:`\pi` is the sum over the
         squares of the first :math:`k` components of the right singular vectors
 
         .. math::
-            \\pi_j =
-            \\sum_i^k \\left(\\mathbf{U}_\\mathbf{K}\\right)_{ij}^2.
+            \pi_j = \sum_i^k \left(\mathbf{U}_\mathbf{K}\right)_{ij}^2.
 
-        where :math:`\\mathbf{K} = \\mathbf{X}\\mathbf{X}^T`.
+        where :math:`\mathbf{K} = \mathbf{X}\mathbf{X}^T`.
 
         Parameters
         ----------
@@ -615,7 +613,7 @@ class _CUR(GreedySelector):
         Returns
         -------
         pi : numpy.ndarray of (n_to_select_from_)
-            :math:`\\pi` importance for the given samples or features
+            :math:`\pi` importance for the given samples or features
         """
         svd_kwargs = dict(k=self.k, random_state=self.random_state)
         if self._axis == 0:
@@ -941,7 +939,7 @@ class _FPS(GreedySelector):
 
         For sample selection, this is a row-wise Euclidean distance, which can be
         expressed in terms of the Gram matrix
-        :math:`\\mathbf{K} = \mathbf{X} \\mathbf{X} ^ T`
+        :math:`\mathbf{K} = \mathbf{X} \mathbf{X} ^ T`
 
         .. math::
             \operatorname{d}_r(i, j) = K_{ii} - 2 K_{ij} + K_{jj}.
