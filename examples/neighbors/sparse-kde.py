@@ -191,8 +191,12 @@ print(f"RMSE = {RMSE:.2e}")
 # several minutes to run)
 
 # %%
+data = np.vstack([x.ravel(), y.ravel()])
+start = time.time()
 kde = gaussian_kde(samples.T)
-sklearn_probs = kde(np.vstack([x.ravel(), y.ravel()])).T
+sklearn_probs = kde(data).T
+end = time.time()
+print(f"Time sklearn: {end-start}s")
 RMSE_kde = np.sum(
     (probs - sklearn_probs) ** 2 * (x[0][1] - x[0][0]) * (y[1][0] - y[0][0])
 )
