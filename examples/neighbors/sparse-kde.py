@@ -186,7 +186,7 @@ print(f"Time sparse-kde: {end2 - start2} s")
 print(f"RMSE = {RMSE:.2e}")
 
 # %%
-# We can compare the result with the KDE class from scikit-learn. (Usually takes
+# We can compare the result with the KDE class from scipy. (Usually takes
 # several minutes to run)
 
 # %%
@@ -195,7 +195,7 @@ start = time.time()
 kde = gaussian_kde(samples.T)
 sklearn_probs = kde(data).T
 end = time.time()
-print(f"Time sklearn: {end - start} s")
+print(f"Time scipy: {end - start} s")
 RMSE_kde = np.sum(
     (probs - sklearn_probs) ** 2 * (x[0][1] - x[0][0]) * (y[1][0] - y[0][0])
 )
@@ -205,4 +205,4 @@ print(f"RMSE_kde = {RMSE_kde:.2e}")
 # We can see that the fitted model can perfectly capture the original one. Eventhough we
 # have not specified the number of the Gaussians, it can still perform well. This
 # allows us to fit distributions of the data automatically at a comparable quality
-# within a much shorter time than scikit-matter
+# within a much shorter time than scipy.
