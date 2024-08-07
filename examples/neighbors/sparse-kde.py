@@ -21,10 +21,9 @@ Here we first sample from these three Gaussians.
 """
 
 
-from typing import Callable, Union
-
 # %%
 import time
+from typing import Callable, Union
 
 import matplotlib.pyplot as plt
 import numpy as np
