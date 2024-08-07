@@ -114,6 +114,7 @@ class SparseKDE(BaseEstimator):
         metric_params: Union[dict, None] = None,
         fspread: float = -1.0,
         fpoints: float = 0.15,
+        kernel: str = "gaussian",
         verbose: bool = False,
     ):
         self.metric_params = (
@@ -127,6 +128,9 @@ class SparseKDE(BaseEstimator):
         self.weights /= np.sum(self.weights)
         self.fspread = fspread
         self.fpoints = fpoints
+        self.kernel = kernel
+        if self.kernel != "gaussian":
+            raise NotImplementedError
         self.verbose = verbose
 
         if self.fspread > 0:
