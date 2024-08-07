@@ -147,7 +147,7 @@ class PCovFPS(_PCovFPS):
     ----------
     mixing: float, default=0.5
         The PCovR mixing parameter, as described in PCovR as
-        :math:`{\\alpha}`
+        :math:`{\alpha}`
     initialize: int or 'random', default=0
         Index of the first selection. If 'random', picks a random value when fit starts.
     n_to_select : int or float, default=None
@@ -350,7 +350,7 @@ class PCovCUR(_PCovCUR):
     Parameters
     ----------
     mixing: float, default=0.5
-        The PCovR mixing parameter, as described in PCovR as :math:`{\\alpha}`. Stored
+        The PCovR mixing parameter, as described in PCovR as :math:`{\alpha}`. Stored
         in :py:attr:`self.mixing`.
     recompute_every : int
         number of steps after which to recompute the pi score defaults to 1, if 0 no

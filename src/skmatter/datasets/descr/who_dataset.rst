@@ -3,7 +3,7 @@
 WHO dataset
 ###########
 
-`who_dataset.csv` is a compilation of multiple publically-available datasets
+``who_dataset.csv`` is a compilation of multiple publically-available datasets
 through data.worldbank.org. Specifically, the following versioned datasets are used:
 
 - NY.GDP.PCAP.CD (v2_4770383) [1]_
@@ -17,7 +17,7 @@ through data.worldbank.org. Specifically, the following versioned datasets are u
 - SP.DYN.LE00.IN (v2_4770556) [9]_
 - SP.POP.TOTL (v2_4770385) [10]_
 
-where the corresponding file names are `API_{dataset}_DS2_excel_en_{version}.xls`.
+where the corresponding file names are ``API_{dataset}_DS2_excel_en_{version}.xls``.
 
 This dataset, intended only for demonstration, contains 2020 country-year pairings and
 the corresponding values above.

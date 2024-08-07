@@ -249,9 +249,9 @@ class CUR(_CUR):
     >>> Xr = selector.transform(X)
     >>> print(Xr.shape)
     (3, 2)
-    >>> np.round(selector.pi_, 2)  # importance scole
-    array([0.  , 0.  , 0.05])
-    >>> selector.selected_idx_  # importance scole
+    >>> np.round(selector.pi_)  # importance score
+    array([0., 0., 0.])
+    >>> selector.selected_idx_
     array([1, 0])
     """
 
@@ -332,6 +332,10 @@ class PCovCUR(_PCovCUR):
         Counter tracking the number of selections that have been made
     X_selected_ : numpy.ndarray,
         Matrix containing the selected features, for use in fitting
+    pi_ : numpy.ndarray (n_features),
+        the importance score see :func:`_compute_pi`
+    selected_idx_ : numpy.ndarray
+        indices of selected features
 
     Examples
     --------
@@ -351,9 +355,9 @@ class PCovCUR(_PCovCUR):
     >>> Xr = selector.transform(X)
     >>> print(Xr.shape)
     (3, 2)
-    >>> np.round(selector.pi_, 2)  # importance scole
-    array([0.  , 0.  , 0.05])
-    >>> selector.selected_idx_  # importance scole
+    >>> np.round(selector.pi_)  # importance score
+    array([0., 0., 0.])
+    >>> selector.selected_idx_
     array([1, 0])
     """
 

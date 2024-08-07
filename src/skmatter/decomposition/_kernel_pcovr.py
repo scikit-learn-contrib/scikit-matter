@@ -39,7 +39,7 @@ class KernelPCovR(_BasePCA, LinearModel):
     Parameters
     ----------
     mixing : float, default=0.5
-        mixing parameter, as described in PCovR as :math:`{\\alpha}`
+        mixing parameter, as described in PCovR as :math:`{\alpha}`
     n_components : int, float or str, default=None
         Number of components to keep.
         if n_components is not set all components are kept::
@@ -64,7 +64,7 @@ class KernelPCovR(_BasePCA, LinearModel):
             run randomized SVD by the method of Halko et al.
     regressor : {instance of `sklearn.kernel_ridge.KernelRidge`, `precomputed`, None}, default=None
         The regressor to use for computing
-        the property predictions :math:`\\hat{\\mathbf{Y}}`.
+        the property predictions :math:`\hat{\mathbf{Y}}`.
         A pre-fitted regressor may be provided.
         If the regressor is not `None`, its kernel parameters
         (`kernel`, `gamma`, `degree`, `coef0`, and `kernel_params`)
@@ -112,17 +112,17 @@ class KernelPCovR(_BasePCA, LinearModel):
            pseudo-inverse of the latent-space projection, which
            can be used to contruct projectors from latent-space
     pkt_: numpy.ndarray of size :math:`({n_{samples}, n_{components}})`
-           the projector, or weights, from the input kernel :math:`\\mathbf{K}`
-           to the latent-space projection :math:`\\mathbf{T}`
+           the projector, or weights, from the input kernel :math:`\mathbf{K}`
+           to the latent-space projection :math:`\mathbf{T}`
     pky_: numpy.ndarray of size :math:`({n_{samples}, n_{properties}})`
-           the projector, or weights, from the input kernel :math:`\\mathbf{K}`
-           to the properties :math:`\\mathbf{Y}`
+           the projector, or weights, from the input kernel :math:`\mathbf{K}`
+           to the properties :math:`\mathbf{Y}`
     pty_: numpy.ndarray of size :math:`({n_{components}, n_{properties}})`
           the projector, or weights, from the latent-space projection
-          :math:`\\mathbf{T}` to the properties :math:`\\mathbf{Y}`
+          :math:`\mathbf{T}` to the properties :math:`\mathbf{Y}`
     ptx_: numpy.ndarray of size :math:`({n_{components}, n_{features}})`
          the projector, or weights, from the latent-space projection
-         :math:`\\mathbf{T}` to the feature matrix :math:`\\mathbf{X}`
+         :math:`\mathbf{T}` to the feature matrix :math:`\mathbf{X}`
     X_fit_: numpy.ndarray of shape (n_samples, n_features)
         The data used to fit the model. This attribute is used to build kernels
         from new data.
@@ -159,8 +159,8 @@ class KernelPCovR(_BasePCA, LinearModel):
            [-0.18992219,  0.82064368],
            [ 1.11923584, -1.04798016],
            [-1.5635827 ,  1.11078662]])
-    >>> print(round(kpcovr.score(X, Y), 5))
-    -0.52039
+    >>> round(kpcovr.score(X, Y), 5)
+    np.float64(-0.52039)
     """  # NoQa: E501
 
     def __init__(
@@ -246,15 +246,15 @@ class KernelPCovR(_BasePCA, LinearModel):
 
             It is suggested that :math:`\mathbf{X}` be centered by its column-
             means and scaled. If features are related, the matrix should be scaled
-            to have unit variance, otherwise :math:`\\mathbf{X}` should be
+            to have unit variance, otherwise :math:`\mathbf{X}` should be
             scaled so that each feature has a variance of 1 / n_features.
         Y : numpy.ndarray, shape (n_samples, n_properties)
             Training data, where n_samples is the number of samples and
             n_properties is the number of properties
 
-            It is suggested that :math:`\\mathbf{X}` be centered by its column-
+            It is suggested that :math:`\mathbf{X}` be centered by its column-
             means and scaled. If features are related, the matrix should be scaled
-            to have unit variance, otherwise :math:`\\mathbf{Y}` should be
+            to have unit variance, otherwise :math:`\mathbf{Y}` should be
             scaled so that each feature has a variance of 1 / n_features.
         W : numpy.ndarray, shape (n_samples, n_properties)
             Regression weights, optional when regressor=`precomputed`. If not
@@ -420,7 +420,7 @@ class KernelPCovR(_BasePCA, LinearModel):
         r"""Transform input data back to its original space.
 
         .. math::
-            \mathbf{\\hat{X}} = \mathbf{T} \mathbf{P}_{TX}
+            \mathbf{\hat{X}} = \mathbf{T} \mathbf{P}_{TX}
                               = \mathbf{K} \mathbf{P}_{KT} \mathbf{P}_{TX}
 
         Similar to KPCA, the original features are not always recoverable,
