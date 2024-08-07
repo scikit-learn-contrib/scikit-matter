@@ -20,10 +20,7 @@ class SparseKDE(BaseEstimator):
     This class is used to build a sparse kernel density estimator.
     It takes a set of descriptors and a set of weights as input,
     and fit the KDE model on the sampled point (e.g. the grid point
-    selected by FPS). First, the probability density is estimated for
-    each sampled point. Then, quick shift clustering is applied to the
-    grid points. Finally, a kernel density estimator is built based on
-    the clustering results.
+    selected by FPS).
 
     .. note::
         Currently only the Gaussian kernel is supported.
@@ -55,6 +52,8 @@ class SparseKDE(BaseEstimator):
     fpoints : float, default=0.15
         The fractional number of points in the voronoi cell of each grid points. Use
         this when each cell has a similar number of points.
+    kernel : str, default=gaussian
+        The kernel used here. Now only the gaussian kernel is available.
     verbose : bool, default=False
         Whether to print progress.
 
