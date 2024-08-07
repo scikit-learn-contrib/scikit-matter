@@ -92,12 +92,8 @@ estimator = SparseKDE(samples, None, fpoints=0.5)
 estimator.fit(grids)
 
 # %%
-# We can have a comparison with the original sampling result by plotting them:
+# We can have a comparison with the original sampling result by plotting them.
 #
-#
-
-
-# %%
 # For the convenience, we create a class for the Gaussian mixture model to help us plot
 # the result.
 
