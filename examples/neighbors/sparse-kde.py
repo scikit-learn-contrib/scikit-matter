@@ -24,6 +24,8 @@ Here we first sample from these three Gaussians.
 from typing import Callable, Union
 
 # %%
+import time
+
 import matplotlib.pyplot as plt
 import numpy as np
 from scipy.special import logsumexp
@@ -72,8 +74,10 @@ plt.show()
 #
 
 # %%
+start1 = time.time()
 selector = FPS(n_to_select=int(np.sqrt(3 * N_SAMPLES)))
 grids = selector.fit_transform(samples.T).T
+end1 = time.time()
 fig, ax = plt.subplots()
 ax.scatter(samples[:, 0], samples[:, 1], alpha=0.05, s=1)
 ax.scatter(means[:, 0], means[:, 1], marker="+", color="red", s=100)
@@ -88,8 +92,10 @@ plt.show()
 #
 
 # %%
+start2 = time.time()
 estimator = SparseKDE(samples, None, fpoints=0.5)
 estimator.fit(grids)
+end2 = time.time()
 
 # %%
 # We can have a comparison with the original sampling result by plotting them.
@@ -184,6 +190,7 @@ plt.show()
 
 # %%
 RMSE = np.sum((probs - fitted_probs) ** 2 * (x[0][1] - x[0][0]) * (y[1][0] - y[0][0]))
+print(f"Time sparse-kde: {end2 - start2} s")
 print(f"RMSE = {RMSE:.2e}")
 
 # %%
@@ -196,7 +203,7 @@ start = time.time()
 kde = gaussian_kde(samples.T)
 sklearn_probs = kde(data).T
 end = time.time()
-print(f"Time sklearn: {end-start}s")
+print(f"Time sklearn: {end - start} s")
 RMSE_kde = np.sum(
     (probs - sklearn_probs) ** 2 * (x[0][1] - x[0][0]) * (y[1][0] - y[0][0])
 )
