@@ -3,7 +3,7 @@
 
 """
 Probabilistic Analysis of Molecular Motifs (PAMM)
-================================================
+=================================================
 
 Probabilistic analysis of molecular motifs (`PAMM <https://doi.org/10.1063/1.4900655>`_)
 is a method identifying molecular patterns based on an analysis of the probability
