@@ -36,7 +36,7 @@ class QuickShiftTests(unittest.TestCase):
         cls.gabriel_labels_ = np.array([5, 5, 5, 5, 5, 5])
         cls.gabriel_cluster_centers_idx_ = np.array([5])
         cls.cell = [3, 3]
-        cls.gabriel_shell = 1
+        cls.gabriel_shell = 2
 
     def test_fit_qs(self):
         model = QuickShift(dist_cutoff_sq=self.cuts)
