@@ -143,3 +143,30 @@ def load_roy_dataset():
         structure_types=properties["structure_types"],
         features=properties["feats"],
     )
+
+
+def load_hbond_dataset():
+    """Load and returns the hydrogen bond dataset, which contains
+    a set of 3D descriptors for 27233 hydrogen bonds and corresponding
+    weights, from [Gasparotto et Al, The Journal of Chemical Physics]
+    (https://doi.org/10.1063/1.4900655)
+
+    Returns
+    -------
+    hbond_dataset : sklearn.utils.Bunch
+      Dictionary-like object, with the following attributes:
+          descriptors : `numpy.ndarray` -- the descriptors of hydrogen bond dataset
+          weights : `numpy.ndarray` -- the weights of each sample in the dataset
+    """
+    module_path = dirname(__file__)
+    target_filename = join(module_path, "data", "h2o-blyp-piglet.npz")
+    raw_data = np.load(target_filename)
+
+    with open(join(module_path, "descr", "h2o-blyp-piglet.rst")) as rst_file:
+        fdescr = rst_file.read()
+
+    return Bunch(
+        descriptors=raw_data["descriptors"],
+        weights=raw_data["weights"],
+        DESCR=fdescr,
+    )
