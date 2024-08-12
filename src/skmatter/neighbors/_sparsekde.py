@@ -53,7 +53,7 @@ class SparseKDE(BaseEstimator):
         The fractional number of points in the voronoi cell of each grid points. Use
         this when each cell has a similar number of points.
     kernel : str, default=gaussian
-        The kernel used here. Now only the gaussian kernel is available.
+        The kernel used here. Now only the Gaussian kernel is available.
     verbose : bool, default=False
         Whether to print progress.
 
