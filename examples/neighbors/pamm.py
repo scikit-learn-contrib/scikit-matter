@@ -368,7 +368,7 @@ cluster_centers, labels = quick_shift_refinement(
 )
 
 # %%
-# Based on the results, the gaussian mixture model of the system can be generated:
+# Based on the results, the Gaussian mixture model of the system can be generated:
 #
 #
 
