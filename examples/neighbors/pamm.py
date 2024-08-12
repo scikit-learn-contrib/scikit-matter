@@ -402,4 +402,4 @@ fig, ax = cluster_distribution_3D(
 ax.scatter(REF_HB[0], REF_HB[1], REF_HB[2], marker="+", color="red", s=1000)
 
 # %%
-f"The gaussian with the highest probability is {np.argmax(cluster_weights) + 1}"
+f"The Gaussian with the highest probability is {np.argmax(cluster_weights) + 1}"
