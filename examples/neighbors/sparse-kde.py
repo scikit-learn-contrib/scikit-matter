@@ -8,7 +8,7 @@ Sparse KDE examples
 Example for the usage of the :class:`skmatter.neighbors.SparseKDE` class. This class is
 specifically designed for conducting pobabilistic analysis of molecular motifs
 (`PAMM <https://doi.org/10.1063/1.4900655>`_),
-which is quiet useful for analyzing motifs like H-bonds, coordination polyhedra, and
+which is quite useful for analyzing motifs like H-bonds, coordination polyhedra, and
 protein secondary structure.
 
 Here we show how to use the sparse KDE model to fit the probability distribution based
@@ -60,7 +60,7 @@ ax.set_ylabel("y")
 plt.show()
 
 # %%
-# The perquisite of conducting sparse KDE is to partition the sample set. Here, we use
+# Sparse KDE requires a discretization of the sample space. Here, we use
 # the FPS method to generate grid points in the sample space:
 #
 #

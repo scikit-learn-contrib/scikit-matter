@@ -53,7 +53,7 @@ class SparseKDE(BaseEstimator):
         The fractional number of points in the voronoi cell of each grid points. Use
         this when each cell has a similar number of points.
     kernel : str, default=gaussian
-        The kernel used here. Now only the gaussian kernel is available.
+        The kernel used here. Now only the Gaussian kernel is available.
     verbose : bool, default=False
         Whether to print progress.
 
@@ -79,7 +79,7 @@ class SparseKDE(BaseEstimator):
     >>> np.random.seed(0)
     >>> n_samples = 10_000
 
-    To create two gaussians with different means and covariance and sample from them
+    To create two Gaussians with different means and covariance and sample from them
 
     >>> cov1 = [[1, 0.5], [0.5, 1]]
     >>> cov2 = [[1, 0.5], [0.5, 0.5]]

@@ -341,7 +341,7 @@ cluster_distribution_3D(
 
 # %%
 # We need to estimate the probability at each grid point to do quick shift, which can
-# further partition the set of grid points in to several clusters. The resulting
+# further partition the set of grid points into several clusters. The resulting
 # clusters can be interpreted as (meta-)stable states of the system.
 #
 #
@@ -368,7 +368,7 @@ cluster_centers, labels = quick_shift_refinement(
 )
 
 # %%
-# Based on the results, the gaussian mixture model of the system can be generated:
+# Based on the results, the Gaussian mixture model of the system can be generated:
 #
 #
 
@@ -386,7 +386,7 @@ cluster_weights, cluster_means, cluster_covs, labels = generate_probability_mode
 
 # %%
 # The final result shows seven (meta-)stable states of hydrogen bond. Here we also show
-# the reference hydrogen bond descriptor. The gaussian with the largest weight locates
+# the reference hydrogen bond descriptor. The Gaussian with the largest weight locates
 # closest to the reference point. This result shows that, with the help of the
 # `SparseKDE` and `QuickShift` algorithm, we can easily identify the (meta-)stable
 # states of the system objectively and without any prior knowledge about the system.
@@ -402,4 +402,4 @@ fig, ax = cluster_distribution_3D(
 ax.scatter(REF_HB[0], REF_HB[1], REF_HB[2], marker="+", color="red", s=1000)
 
 # %%
-f"The gaussian with the highest probability is {np.argmax(cluster_weights) + 1}"
+f"The Gaussian with the highest probability is {np.argmax(cluster_weights) + 1}"
