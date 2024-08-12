@@ -60,7 +60,7 @@ ax.set_ylabel("y")
 plt.show()
 
 # %%
-# The perquisite of conducting sparse KDE is to partition the sample set. Here, we use
+# Sparse KDE requires a discretization of the sample space. Here, we use
 # the FPS method to generate grid points in the sample space:
 #
 #
