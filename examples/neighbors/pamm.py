@@ -341,7 +341,7 @@ cluster_distribution_3D(
 
 # %%
 # We need to estimate the probability at each grid point to do quick shift, which can
-# further partition the set of grid points in to several clusters. The resulting
+# further partition the set of grid points into several clusters. The resulting
 # clusters can be interpreted as (meta-)stable states of the system.
 #
 #
