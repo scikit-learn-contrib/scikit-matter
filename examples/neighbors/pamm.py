@@ -394,7 +394,7 @@ cluster_weights, cluster_means, cluster_covs, labels = generate_probability_mode
 #
 
 # %%
-REF_HB = np.array([0.82, 2.82, 2.74])
+REF_HB = np.array([0.82, 2.82, 2.74])  # The coordinate of the "standard" hydrogen bond
 
 fig, ax = cluster_distribution_3D(
     grids, estimator._sample_weights, labels, label_text=[r"$\nu$", r"$\mu$", r"r"]

@@ -140,9 +140,7 @@ class SparseKDE(BaseEstimator):
 
     @property
     def nsamples(self):
-        if not hasattr(self, "__nsamples"):
-            self.__nsamples = len(self.descriptors)
-        return self.__nsamples
+        return len(self.descriptors)
 
     @property
     def ndimension(self):
@@ -150,31 +148,32 @@ class SparseKDE(BaseEstimator):
 
     @property
     def kdecut_squared(self):
-        if not hasattr(self, "__kdecut_squared"):
-            self.__kdecut_squared = (3 * (np.sqrt(self.descriptors.shape[1]) + 1)) ** 2
-        return self.__kdecut_squared
+        return (3 * (np.sqrt(self.descriptors.shape[1]) + 1)) ** 2
 
     @property
     def _bandwidth_inv(self):
         if self.fitted_:
-            if not hasattr(self, "__bandwidth_inv"):
-                self.__bandwidth_inv = np.array(
+            if self._bandwidth_inv_ is None:
+                self._bandwidth_inv_ = np.array(
                     [np.linalg.inv(h) for h in self.bandwidth_]
                 )
         else:
             raise ValueError("The model is not fitted yet.")
-        return self.__bandwidth_inv
+        return self._bandwidth_inv_
 
     @property
     def _normkernels(self):
-        if not hasattr(self, "__normkernels"):
-            self.__normkernels = np.array(
-                [
-                    self.ndimension * np.log(2 * np.pi) + np.linalg.slogdet(h)[1]
-                    for h in self.bandwidth_
-                ]
-            )
-        return self.__normkernels
+        if self.fitted_:
+            if self._normkernels_ is None:
+                self._normkernels_ = np.array(
+                    [
+                        self.ndimension * np.log(2 * np.pi) + np.linalg.slogdet(h)[1]
+                        for h in self.bandwidth_
+                    ]
+                )
+        else:
+            raise ValueError("The model is not fitted yet.")
+        return self._normkernels_
 
     def fit(self, X, y=None, sample_weight=None):
         """Fit the Kernel Density model on the data.
@@ -200,6 +199,8 @@ class SparseKDE(BaseEstimator):
         self : object
             Returns the instance itself.
         """
+        self._bandwidth_inv_ = None
+        self._normkernels_ = None
         self._check_dimension(X)
         self._grids = X
         grid_dist_mat = self.metric(X, X)
