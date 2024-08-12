@@ -79,7 +79,7 @@ class SparseKDE(BaseEstimator):
     >>> np.random.seed(0)
     >>> n_samples = 10_000
 
-    To create two gaussians with different means and covariance and sample from them
+    To create two Gaussians with different means and covariance and sample from them
 
     >>> cov1 = [[1, 0.5], [0.5, 1]]
     >>> cov2 = [[1, 0.5], [0.5, 0.5]]
