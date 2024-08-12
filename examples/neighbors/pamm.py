@@ -386,7 +386,7 @@ cluster_weights, cluster_means, cluster_covs, labels = generate_probability_mode
 
 # %%
 # The final result shows seven (meta-)stable states of hydrogen bond. Here we also show
-# the reference hydrogen bond descriptor. The gaussian with the largest weight locates
+# the reference hydrogen bond descriptor. The Gaussian with the largest weight locates
 # closest to the reference point. This result shows that, with the help of the
 # `SparseKDE` and `QuickShift` algorithm, we can easily identify the (meta-)stable
 # states of the system objectively and without any prior knowledge about the system.
