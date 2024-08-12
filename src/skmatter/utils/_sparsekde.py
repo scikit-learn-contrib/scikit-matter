@@ -32,7 +32,9 @@ def effdim(cov):
     eigval = np.linalg.eigvals(cov)
     eigval /= sum(eigval)
     eigval *= np.log(eigval)
-    eigval[np.isnan(eigval)] = 0.0
+    if (lowest_eigval := np.min(eigval)) <= -np.max(X.shape)*np.finfo(X.dtype).eps:
+        raise np.linalg.LinAlgError(f"Matrix is not positive definite. Lowest eigenvalue {lowest_eigval} is above numerical threshold.")
+    eigval[eigval <= 0.] = 0.0
 
     return np.exp(-sum(eigval))
 
