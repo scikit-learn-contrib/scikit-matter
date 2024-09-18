@@ -98,8 +98,8 @@ class CovarianceTests(unittest.TestCase):
 class EffdimTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.cov = np.array([[1, 1, 0], [1, 1, 0], [0, 0, 1]])
-        cls.expected_effdim = 1.8898815748423097
+        cls.cov = np.array([[1, 1, 0], [1, 1.5, 0], [0, 0, 1]], dtype=np.float64)
+        cls.expected_effdim = 2.24909102090124
 
     def test_effdim(self):
         self.assertTrue(np.allclose(effdim(self.cov), self.expected_effdim))

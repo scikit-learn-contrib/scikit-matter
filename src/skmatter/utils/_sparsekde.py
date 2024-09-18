@@ -21,21 +21,26 @@ def effdim(cov):
     --------
     >>> import numpy as np
     >>> from skmatter.utils import effdim
-    >>> cov = np.array([[1, 1, 0], [1, 1, 0], [0, 0, 1]])
+    >>> cov = np.array([[25, 15, -5], [15, 18, 0], [-5, 0, 11]], dtype=np.float64)
     >>> print(round(effdim(cov), 3))
-    1.89
+    2.214
 
     References
     ----------
     https://ieeexplore.ieee.org/document/7098875
     """
     eigval = np.linalg.eigvals(cov)
+    if (lowest_eigval := np.min(eigval)) <= -np.max(cov.shape) * np.finfo(
+        cov.dtype
+    ).eps:
+        raise np.linalg.LinAlgError(
+            f"Matrix is not positive definite."
+            f"Lowest eigenvalue {lowest_eigval} is "
+            f"above numerical threshold."
+        )
+    eigval[eigval < 0.0] = 0.0
     eigval /= sum(eigval)
     eigval *= np.log(eigval)
-    if (lowest_eigval := np.min(eigval)) <= -np.max(cov.shape)*np.finfo(cov.dtype).eps:
-        raise np.linalg.LinAlgError(f"Matrix is not positive definite. Lowest eigenvalue "
-                                    f"{lowest_eigval} is above numerical threshold.")
-    eigval[eigval <= 0.] = 0.0
 
     return np.exp(-sum(eigval))
 
