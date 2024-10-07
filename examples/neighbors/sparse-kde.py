@@ -202,7 +202,7 @@ RMSE_kde = np.sum(
 print(f"RMSE_kde = {RMSE_kde:.2e}")
 
 # %%
-# We can see that the fitted model can perfectly capture the original one. Even though we
-# have not specified the number of the Gaussians, it can still perform well. This
+# We can see that the fitted model can perfectly capture the original one. Even though
+# we have not specified the number of the Gaussians, it can still perform well. This
 # allows us to fit distributions of the data automatically at a comparable quality
 # within a much shorter time than scipy.

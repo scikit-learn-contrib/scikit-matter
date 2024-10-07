@@ -199,6 +199,7 @@ class SparseKDE(BaseEstimator):
         self : object
             Returns the instance itself.
         """
+        # Initialize/reset the cached properties, _bandwidth_inv and _normkernels
         self._bandwidth_inv_ = None
         self._normkernels_ = None
         self._check_dimension(X)
