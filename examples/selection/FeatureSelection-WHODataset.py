@@ -120,7 +120,7 @@ n_select = X.shape[1]
 # ^^^^^^^^
 
 
-pcur = PCovCUR(n_to_select=n_select, progress_bar=True, mixing=0.0)
+pcur = PCovCUR(n_to_select=n_select, progress_bar=True, mixing=1e-3)
 pcur.fit(X_train, yp_train)
 
 # %%
