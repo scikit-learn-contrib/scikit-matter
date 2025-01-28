@@ -13,6 +13,8 @@ The rules for CHANGELOG file:
 
 0.3.0 (XXXX/XX/XX)
 ------------------
+- Fixed moved function import from scipy and bump scipy dependency to 1.15.0 (#236)
+- Fix rendering issues for `SparseKDE` and `QuickShift` (#236)
 - Updating ``FPS`` to allow a numpy array of ints as an initialize parameter (#145)
 - Supported Python versions are now ranging from 3.9 - 3.12.
 - Updating ``skmatter.datasets`` submodule to support sklearn 1.5.0 (#229)

@@ -1,8 +1,7 @@
 import warnings
-from typing import Callable, Union
+from typing import Callable, Optional, Union
 
 import numpy as np
-from numpy.typing import ArrayLike
 from scipy.special import logsumexp as LSE
 from sklearn.base import BaseEstimator
 from sklearn.utils.validation import check_is_fitted, check_random_state
@@ -33,19 +32,18 @@ class SparseKDE(BaseEstimator):
     weights: numpy.ndarray, default=None
         Weights of the descriptors.
         If None, all weights are set to `1/n_descriptors`.
-    metric : Callable[[ArrayLike, ArrayLike, bool, dict], ArrayLike],
-        default=:func:`skmatter.metrics.pairwise_euclidean_distances()`
+    metric : Callable, default=None
         The metric to use. Your metric should be able to take at least three arguments
         in secquence: `X`, `Y`, and `squared=True`. Here, `X` and `Y` are two array-like
         of shape (n_samples, n_components). The return of the metric is an array-like of
-        shape (n_samples, n_samples). If you want to use periodic boundary
-        conditions, be sure to provide the cell size in the metric_params and
-        provide a metric that can take the cell argument.
+        shape (n_samples, n_samples). If you want to use periodic boundary conditions,
+        be sure to provide the cell size in the metric_params and provide a metric that
+        can take the cell argument. If :obj:`None`, the
+        :func:`skmatter.metrics.periodic_pairwise_euclidean_distances()` is used.
     metric_params : dict, default=None
-        Additional parameters to be passed to the use of
-        metric.  i.e. the cell dimension for
-        :func:`skmatter.metrics.pairwise_euclidean_distances()`
-        `{'cell_length': [side_length_1, ..., side_length_n]}`
+        Additional parameters to be passed to the use of metric.  i.e. the cell
+        dimension for :func:`skmatter.metrics.periodic_pairwise_euclidean_distances()`
+        ``{'cell_length': [side_length_1, ..., side_length_n]}``
     fspread : float, default=-1.0
         The fractional "space" occupied by the voronoi cell of each grid. Use this when
         each cell is of a similar size.
@@ -106,11 +104,9 @@ class SparseKDE(BaseEstimator):
     def __init__(
         self,
         descriptors: np.ndarray,
-        weights: Union[np.ndarray, None] = None,
-        metric: Callable[
-            [ArrayLike, ArrayLike, bool, dict], ArrayLike
-        ] = periodic_pairwise_euclidean_distances,
-        metric_params: Union[dict, None] = None,
+        weights: Optional[np.ndarray] = None,
+        metric: Optional[Callable] = None,
+        metric_params: Optional[dict] = None,
         fspread: float = -1.0,
         fpoints: float = 0.15,
         kernel: str = "gaussian",
@@ -119,6 +115,10 @@ class SparseKDE(BaseEstimator):
         self.metric_params = (
             metric_params if metric_params is not None else {"cell_length": None}
         )
+
+        if metric is None:
+            metric = periodic_pairwise_euclidean_distances
+
         self.metric = lambda X, Y: metric(X, Y, squared=True, **self.metric_params)
         self.cell = metric_params["cell_length"] if metric_params is not None else None
         self._check_dimension(descriptors)

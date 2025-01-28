@@ -39,6 +39,7 @@ classifiers = [
 ]
 dependencies = [
     "scikit-learn>=1.1.0",
+    "scipy >= 1.15.0",  # explicit here since need a newer version as scikit-learn
 ]
 dynamic = ["version"]
 
