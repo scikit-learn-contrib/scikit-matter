@@ -221,7 +221,6 @@ class PCovR(_BasePCA, LinearModel):
             Regression weights, optional when regressor=`precomputed`. If not
             passed, it is assumed that `W = np.linalg.lstsq(X, Y, self.tol)[0]`
         """
-
         X, Y = validate_data(self, X, Y, y_numeric=True, multi_output=True)
 
         # saved for inverse transformations from the latent space,
@@ -636,7 +635,6 @@ class PCovR(_BasePCA, LinearModel):
             Negative sum of the loss in reconstructing X from the latent-space
             projection T and the loss in predicting Y from the latent-space projection T
         """
-
         X, y = validate_data(self, X, y, reset=False)
 
         if T is None:
