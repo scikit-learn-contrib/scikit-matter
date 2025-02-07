@@ -9,10 +9,10 @@ from sklearn.exceptions import NotFittedError
 from sklearn.kernel_ridge import KernelRidge
 from sklearn.linear_model._base import LinearModel
 from sklearn.metrics.pairwise import pairwise_kernels
-from sklearn.utils import check_array, check_random_state
+from sklearn.utils import check_random_state
 from sklearn.utils._arpack import _init_arpack_v0
 from sklearn.utils.extmath import randomized_svd, stable_cumsum, svd_flip
-from sklearn.utils.validation import check_is_fitted, check_X_y
+from sklearn.utils.validation import check_is_fitted, validate_data
 
 from ..preprocessing import KernelNormalizer
 from ..utils import check_krr_fit, pcovr_kernel
@@ -270,7 +270,7 @@ class KernelPCovR(_BasePCA, LinearModel):
         ):
             raise ValueError("Regressor must be an instance of `KernelRidge`")
 
-        X, Y = check_X_y(X, Y, y_numeric=True, multi_output=True)
+        X, Y = validate_data(self, X, Y, y_numeric=True, multi_output=True)
         self.X_fit_ = X.copy()
 
         if self.n_components is None:
@@ -387,7 +387,7 @@ class KernelPCovR(_BasePCA, LinearModel):
         """Predicts the property values"""
         check_is_fitted(self, ["pky_", "pty_"])
 
-        X = check_array(X)
+        X = validate_data(self, X, reset=False)
         K = self._get_kernel(X, self.X_fit_)
         if self.center:
             K = self.centerer_.transform(K)
@@ -408,7 +408,7 @@ class KernelPCovR(_BasePCA, LinearModel):
         """
         check_is_fitted(self, ["pkt_", "X_fit_"])
 
-        X = check_array(X)
+        X = validate_data(self, X, reset=False)
         K = self._get_kernel(X, self.X_fit_)
 
         if self.center:
@@ -440,7 +440,7 @@ class KernelPCovR(_BasePCA, LinearModel):
         """
         return T @ self.ptx_
 
-    def score(self, X, Y):
+    def score(self, X, y):
         r"""Computes the (negative) loss values for KernelPCovR on the given predictor
         and response variables. The loss in :math:`\mathbf{K}`, as explained in
         [Helfrecht2020]_ does not correspond to a traditional Gram loss
@@ -474,7 +474,7 @@ class KernelPCovR(_BasePCA, LinearModel):
         """
         check_is_fitted(self, ["pkt_", "X_fit_"])
 
-        X = check_array(X)
+        X, y = validate_data(self, X, y, reset=False)
 
         K_NN = self._get_kernel(self.X_fit_, self.X_fit_)
         K_VN = self._get_kernel(X, self.X_fit_)
@@ -485,8 +485,8 @@ class KernelPCovR(_BasePCA, LinearModel):
             K_VN = self.centerer_.transform(K_VN)
             K_VV = self.centerer_.transform(K_VV)
 
-        y = K_VN @ self.pky_
-        Lkrr = np.linalg.norm(Y - y) ** 2 / np.linalg.norm(Y) ** 2
+        ypred = K_VN @ self.pky_
+        Lkrr = np.linalg.norm(y - ypred) ** 2 / np.linalg.norm(y) ** 2
 
         t_n = K_NN @ self.pkt_
         t_v = K_VN @ self.pkt_
