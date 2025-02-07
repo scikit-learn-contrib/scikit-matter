@@ -570,7 +570,6 @@ class _CUR(GreedySelector):
         score : numpy.ndarray of (n_to_select_from_)
             :math:`\pi` importance for the given samples or features
         """
-
         X, y = validate_data(self, X, y, reset=False)
 
         return self.pi_
@@ -747,7 +746,6 @@ class _PCovCUR(GreedySelector):
         score : numpy.ndarray of (n_to_select_from_)
             :math:`\pi` importance for the given samples or features
         """
-
         X, y = validate_data(self, X, y, reset=False)
 
         return self.pi_
@@ -943,7 +941,6 @@ class _FPS(GreedySelector):
         -------
         hausdorff : Hausdorff distances
         """
-
         X, y = validate_data(self, X, y, reset=False)
 
         return self.hausdorff_
@@ -1107,7 +1104,6 @@ class _PCovFPS(GreedySelector):
         -------
         hausdorff : Hausdorff distances
         """
-
         X, y = validate_data(self, X, y, reset=False)
 
         return self.hausdorff_
