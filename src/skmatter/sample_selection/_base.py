@@ -509,7 +509,7 @@ class DirectionalConvexHull:
     selected_idx_ : numpy.ndarray
                     Indices of datapoints that form the vertices of the
                     convex hull
-    interpolator_high_dim_  : scipy.interpolate.interpnd.LinearNDInterpolator
+    interpolator_high_dim_  : scipy.interpolate._interpnd.LinearNDInterpolator
                     Interpolator for the features in the high-
                     dimensional space
 
