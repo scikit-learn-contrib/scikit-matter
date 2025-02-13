@@ -474,7 +474,7 @@ class KernelPCovR(_BasePCA, LinearModel):
         """
         check_is_fitted(self, ["pkt_", "X_fit_"])
 
-        X, y = validate_data(self, X, y, reset=False)
+        X = validate_data(self, X, reset=False)
 
         K_NN = self._get_kernel(self.X_fit_, self.X_fit_)
         K_VN = self._get_kernel(X, self.X_fit_)

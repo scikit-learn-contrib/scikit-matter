@@ -73,7 +73,7 @@ class TestGreedy(unittest.TestCase):
             _ = selector.transform(self.X[:, :3])
         self.assertEqual(
             str(cm.exception),
-            "X has a different shape than during fitting. Reshape your data.",
+            "X has 3 features, but GreedyTester is expecting 10 features as input.",
         )
 
     def test_no_nfeatures(self):
@@ -124,8 +124,8 @@ class TestGreedy(unittest.TestCase):
             selector_feature.fit(X)
         self.assertEqual(
             str(cm.exception),
-            f"Found array with 1 feature(s) (shape={X.shape})"
-            " while a minimum of 2 is required.",
+            f"Found array with 1 feature(s) (shape={X.shape}) while a minimum of 2 is "
+            "required by GreedyTester.",
         )
 
         X = X.reshape(1, -1)
@@ -135,7 +135,7 @@ class TestGreedy(unittest.TestCase):
         self.assertEqual(
             str(cm.exception),
             f"Found array with 1 sample(s) (shape={X.shape}) while a minimum of 2 is "
-            "required.",
+            "required by GreedyTester.",
         )
 
 

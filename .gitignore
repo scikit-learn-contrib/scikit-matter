@@ -1,3 +1,4 @@
+*.coverage*
 *.pyc
 *.ipynb_checkpoints*
 __pycache__

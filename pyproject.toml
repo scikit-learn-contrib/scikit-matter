@@ -19,7 +19,7 @@ authors = [
     {name = "Michele Ceriotti"}
 ]
 readme = "README.rst"
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 license = {text = "BSD-3-Clause"}
 classifiers = [
     "Development Status :: 4 - Beta",
@@ -74,9 +74,6 @@ include = [
 
 [tool.coverage.xml]
 output = 'tests/coverage.xml'
-
-[tool.pytest.ini_options]
-testpaths = "tests"
 
 [tool.isort]
 skip = "__init__.py"

@@ -561,8 +561,7 @@ class _CUR(GreedySelector):
 
         Parameters
         ----------
-        X : numpy.ndarray of shape [n_samples, n_features]
-            The input samples.
+        X : ignored
         y : ignored
 
         Returns
@@ -570,8 +569,7 @@ class _CUR(GreedySelector):
         score : numpy.ndarray of (n_to_select_from_)
             :math:`\pi` importance for the given samples or features
         """
-        X, y = validate_data(self, X, y, reset=False)
-
+        validate_data(self, X, y, reset=False)  # present for API consistency
         return self.pi_
 
     def _init_greedy_search(self, X, y, n_to_select):
@@ -746,8 +744,7 @@ class _PCovCUR(GreedySelector):
         score : numpy.ndarray of (n_to_select_from_)
             :math:`\pi` importance for the given samples or features
         """
-        X, y = validate_data(self, X, y, reset=False)
-
+        validate_data(self, X, y, reset=False)  # present for API consistency
         return self.pi_
 
     def _init_greedy_search(self, X, y, n_to_select):
@@ -941,8 +938,7 @@ class _FPS(GreedySelector):
         -------
         hausdorff : Hausdorff distances
         """
-        X, y = validate_data(self, X, y, reset=False)
-
+        validate_data(self, X, y, reset=False)
         return self.hausdorff_
 
     def get_distance(self):
@@ -1079,14 +1075,15 @@ class _PCovFPS(GreedySelector):
         )
 
     def fit(self, X, y=None, warm_start=False):
-
         if self.mixing == 1.0:
             raise ValueError(
-                "Mixing = 1.0 corresponds to traditional FPS."
-                "Please use the FPS class."
+                "Mixing = 1.0 corresponds to traditional FPS. Please use the FPS class."
             )
 
         return super().fit(X, y)
+
+    # docstring is inherited and set from the base class
+    fit.__doc__ = GreedySelector.fit.__doc__
 
     def score(self, X, y=None):
         """Returns the Hausdorff distances of all samples to previous selections.
@@ -1104,8 +1101,7 @@ class _PCovFPS(GreedySelector):
         -------
         hausdorff : Hausdorff distances
         """
-        X, y = validate_data(self, X, y, reset=False)
-
+        validate_data(self, X, y, reset=False)
         return self.hausdorff_
 
     def get_distance(self):

@@ -491,13 +491,12 @@ class PCovRInfrastructureTest(PCovRBaseTest):
 
         # Dimension mismatch
         with self.assertRaises(ValueError) as cm:
-            pcovr.fit(self.X, self.Y.squeeze())
+            pcovr.fit(self.X, np.zeros((self.Y.shape[0], 2)))
         self.assertEqual(
             str(cm.exception),
-            "The regressor coefficients have a dimension incompatible "
-            "with the supplied target space. "
-            "The coefficients have dimension %d and the targets "
-            "have dimension %d" % (regressor.coef_.ndim, self.Y.squeeze().ndim),
+            "The regressor coefficients have a dimension incompatible with the "
+            "supplied target space. The coefficients have dimension 1 and the targets "
+            "have dimension 2",
         )
 
         # Shape mismatch (number of targets)

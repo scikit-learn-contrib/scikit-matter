@@ -10,7 +10,7 @@ from sklearn.decomposition._base import _BasePCA
 from sklearn.decomposition._pca import _infer_dimension
 from sklearn.linear_model import LinearRegression, Ridge, RidgeCV
 from sklearn.linear_model._base import LinearModel
-from sklearn.utils import check_random_state
+from sklearn.utils import check_array, check_random_state
 from sklearn.utils._arpack import _init_arpack_v0
 from sklearn.utils.extmath import randomized_svd, stable_cumsum, svd_flip
 from sklearn.utils.validation import check_is_fitted, validate_data
@@ -585,7 +585,7 @@ class PCovR(_BasePCA, LinearModel):
             X = validate_data(self, X, reset=False)
             return X @ self.pxy_
         else:
-            T = validate_data(self, T, reset=False)
+            T = check_array(T)
             return T @ self.pty_
 
     def transform(self, X=None):
