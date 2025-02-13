@@ -84,6 +84,11 @@ include_trailing_comma = true
 lines_after_imports = 2
 known_first_party = "skmatter"
 
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = ["--cov"]
+filterwarnings = ["error"]
+
 [tool.ruff]
 exclude = ["docs/src/examples/"]
 lint.ignore = [

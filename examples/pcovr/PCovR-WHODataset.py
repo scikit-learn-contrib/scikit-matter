@@ -109,7 +109,7 @@ T_pcovr = pcovr.transform(X)
 r_pcovr = Ridge(alpha=1e-4, fit_intercept=False, random_state=0).fit(
     T_train_pcovr, y_train
 )
-yp_pcovr = r_pcovr.predict(T_test_pcovr).reshape(-1,1)
+yp_pcovr = r_pcovr.predict(T_test_pcovr).reshape(-1, 1)
 
 plt.scatter(y_scaler.inverse_transform(y_test), y_scaler.inverse_transform(yp_pcovr))
 r_pcovr.score(T_test_pcovr, y_test)
@@ -128,7 +128,7 @@ T_test_pca = pca.transform(X_test)
 T_pca = pca.transform(X)
 
 r_pca = Ridge(alpha=1e-4, fit_intercept=False, random_state=0).fit(T_train_pca, y_train)
-yp_pca = r_pca.predict(T_test_pca).reshape(-1,1)
+yp_pca = r_pca.predict(T_test_pca).reshape(-1, 1)
 
 plt.scatter(y_scaler.inverse_transform(y_test), y_scaler.inverse_transform(yp_pca))
 r_pca.score(T_test_pca, y_test)
