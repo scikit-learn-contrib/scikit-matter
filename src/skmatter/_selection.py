@@ -568,7 +568,10 @@ class _CUR(GreedySelector):
         score : numpy.ndarray of (n_to_select_from_)
             :math:`\pi` importance for the given samples or features
         """
-        validate_data(self, X, y, reset=False)  # present for API consistency
+        if y is not None:
+            validate_data(self, X, y.ravel(), reset=False)
+        else:
+            validate_data(self, X, reset=False)  # present for API consistency
         return self.pi_
 
     def _init_greedy_search(self, X, y, n_to_select):
@@ -743,7 +746,10 @@ class _PCovCUR(GreedySelector):
         score : numpy.ndarray of (n_to_select_from_)
             :math:`\pi` importance for the given samples or features
         """
-        validate_data(self, X, y, reset=False)  # present for API consistency
+        if y is not None:
+            validate_data(self, X, y.ravel(), reset=False)
+        else:
+            validate_data(self, X, reset=False)  # present for API consistency
         return self.pi_
 
     def _init_greedy_search(self, X, y, n_to_select):
@@ -937,7 +943,10 @@ class _FPS(GreedySelector):
         -------
         hausdorff : Hausdorff distances
         """
-        validate_data(self, X, y, reset=False)
+        if y is not None:
+            validate_data(self, X, y.ravel(), reset=False)
+        else:
+            validate_data(self, X, reset=False)
         return self.hausdorff_
 
     def get_distance(self):
@@ -1100,7 +1109,11 @@ class _PCovFPS(GreedySelector):
         -------
         hausdorff : Hausdorff distances
         """
-        validate_data(self, X, y, reset=False)
+        if y is not None:
+            validate_data(self, X, y.ravel(), reset=False)
+        else:
+            validate_data(self, X, reset=False)
+
         return self.hausdorff_
 
     def get_distance(self):
