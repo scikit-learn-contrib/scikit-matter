@@ -170,7 +170,7 @@ class Ridge2FoldCV(RegressorMixin, MultiOutputMixin, BaseEstimator):
                 "[0,1)"
             )
 
-        X, y = self._validate_data(X, y, y_numeric=True, multi_output=True)
+        X, y = validate_data(self, X, y, y_numeric=True, multi_output=True)
         self.n_samples_in_, self.n_features_in_ = X.shape
 
         # check_scoring uses estimators scoring function if the scorer is None, this is

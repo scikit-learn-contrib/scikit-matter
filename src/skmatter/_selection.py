@@ -209,8 +209,7 @@ class GreedySelector(SelectorMixin, MetaEstimatorMixin, BaseEstimator):
         params = dict(ensure_min_samples=2, ensure_min_features=2, dtype=FLOAT_DTYPES)
 
         if hasattr(self, "mixing") or y is not None:
-            X, y = self._validate_data(X, y, **params)
-            X, y = validate_data(self, X, y, multi_output=True)
+            X, y = validate_data(self, X, y, multi_output=True, **params)
 
             if len(y.shape) == 1:
                 # force y to have multi_output 2D format even when it's 1D, since

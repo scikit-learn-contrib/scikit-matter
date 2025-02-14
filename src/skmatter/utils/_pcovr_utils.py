@@ -5,7 +5,7 @@ from sklearn.base import clone
 from sklearn.exceptions import NotFittedError
 from sklearn.metrics.pairwise import pairwise_kernels
 from sklearn.utils.extmath import randomized_svd
-from sklearn.utils.validation import check_is_fitted
+from sklearn.utils.validation import check_is_fitted, validate_data
 
 
 def check_lr_fit(regressor, X, y):
@@ -39,7 +39,7 @@ def check_lr_fit(regressor, X, y):
         fitted_regressor = deepcopy(regressor)
 
         # Check compatibility with X
-        fitted_regressor._validate_data(X, y, reset=False, multi_output=True)
+        validate_data(fitted_regressor, X, y, reset=False, multi_output=True)
 
         # Check compatibility with y
         if fitted_regressor.coef_.ndim != y.ndim:
@@ -103,7 +103,7 @@ def check_krr_fit(regressor, K, X, y):
         fitted_regressor = deepcopy(regressor)
 
         # Check compatibility with K
-        fitted_regressor._validate_data(X, y, reset=False, multi_output=True)
+        validate_data(fitted_regressor, X, y, reset=False, multi_output=True)
 
         # Check compatibility with y
         if fitted_regressor.dual_coef_.ndim != y.ndim:
