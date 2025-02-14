@@ -398,7 +398,7 @@ class KernelNormalizer(KernelCenterer):
         return self.transform(K, copy)
 
 
-class SparseKernelCenterer(TransformerMixin):
+class SparseKernelCenterer(TransformerMixin, BaseEstimator):
     r"""Kernel centering method for sparse kernels, similar to
     :class:`KernelFlexibleCenterer`.
 
