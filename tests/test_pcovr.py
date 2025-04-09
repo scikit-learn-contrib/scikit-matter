@@ -226,6 +226,11 @@ class PCovRSpaceTest(PCovRBaseTest):
                 )
                 pcovr_fs.fit(self.X, self.Y)
 
+                # print(np.isclose(
+                #             pcovr_ss.pxt_, pcovr_fs.pxt_,
+                #             self.error_tol
+                #         ))
+                # print(" ")
                 self.assertTrue(
                     np.allclose(
                         pcovr_ss.inverse_transform(pcovr_ss.transform(self.X)),
@@ -482,7 +487,7 @@ class PCovRInfrastructureTest(PCovRBaseTest):
         self.assertTrue(pcovr.regressor_ is not None)
 
     def test_incompatible_coef_shape(self):
-        # self.Y is 2D with one target
+        # self.Y is 2D with one target. N
         # Don't need to test X shape, since this should
         # be caught by sklearn's _validate_data
         regressor = Ridge(alpha=1e-8, fit_intercept=False, tol=1e-12)

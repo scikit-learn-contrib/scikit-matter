@@ -409,7 +409,6 @@ class PCovR(_BasePCA, LinearModel):
                                \mathbf{U}_\mathbf{\tilde{K}}^T \mathbf{Y}
         """
         Kt = pcovr_kernel(mixing=self.mixing, X=X, Y=Yhat)
-        #This is the gram matrix K
 
         if self.fit_svd_solver_ == "full":
             U, S, Vt = self._decompose_full(Kt)
@@ -430,9 +429,9 @@ class PCovR(_BasePCA, LinearModel):
         S_sqrt_inv = np.diagflat([1.0 / np.sqrt(s) if s > self.tol else 0.0 for s in S])
         T = Vt.T @ S_sqrt_inv
 
-        self.pxt_ = P @ T # equation 1 in fit_sample_space read the docs
-        self.pty_ = T.T @ Y #equation 2 in fit_sample_space read the docs
-        self.ptx_ = T.T @ X # equation 3 in fit_sample_space read the docs
+        self.pxt_ = P @ T
+        self.pty_ = T.T @ Y
+        self.ptx_ = T.T @ X
 
     def _decompose_truncated(self, mat):
         if not 1 <= self.n_components_ <= min(self.n_samples_in_, self.n_features_in_):

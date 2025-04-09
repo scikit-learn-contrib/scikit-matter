@@ -1,3 +1,45 @@
+'''
+Option 1:
+Base PCov Class (contains all shared methods (same name) between PCovR and PCovC)
+- contains options for implementation depending on sub class type
+
+1. PCovR extends PCov 
+2. PCovC extends PCov (will contain some unique methods such as decision_function)
+
+This would prevent us from having to update all PCovR instances in examples, docs, etc 
+(since external method names and variables would remain the same).
+
+Bse KPCov Class (contains all shared methods (same name)) between KPCovR and KPCovC) 
+- contains options for implementation depending on sub class type
+1. KPCovR extends PCov 
+2. KPCovC extends PCov 
+This would prevent us from having to update all KPCovR instances in examples, docs, etc.
+
+
+Benefit of doing this would be that users can clearly see the differences between PCovR and PCovC 
+(how implementation differs just so slightly in base class)
+
+sklearn RidgeRegression / RidgeClassifier implementation has _BaseRidge as a private class.
+
+They have _BaseRidge
+1. Ridge Regression extends _BaseRidge
+2. Ridge Classifier extends _BaseRidge
+
+They have _BaseRidgeCV (uses grid search CV)
+1. Ridge RegressionCV extends _BaseRidgeCV
+2. Ridge ClassifierCV extends _BaseRidgeCV
+
+Kernel Ridge Regression is separate.
+
+
+Option 2:
+Simply have PCovC extend PCovR and override several methods (might lead to some redundancy)
+'''
+
+
+
+
+
 import numbers
 import warnings
 
@@ -8,25 +50,92 @@ from scipy.linalg import sqrtm as MatrixSqrt
 from scipy.sparse.linalg import svds
 from sklearn.decomposition._base import _BasePCA
 from sklearn.decomposition._pca import _infer_dimension
-from sklearn.linear_model import LinearRegression, Ridge, RidgeCV
+from sklearn.linear_model import (
+    RidgeClassifier,
+    RidgeClassifierCV,
+    LogisticRegression,
+    LogisticRegressionCV,
+    SGDClassifier,
+)
 from sklearn.linear_model._base import LinearModel
-from sklearn.utils import check_array, check_random_state
+from sklearn.utils import check_array, check_random_state, column_or_1d
 from sklearn.utils._arpack import _init_arpack_v0
 from sklearn.utils.extmath import randomized_svd, stable_cumsum, svd_flip
 from sklearn.utils.validation import check_is_fitted, check_X_y
+from sklearn.preprocessing import LabelBinarizer
+from sklearn.svm import LinearSVC
 
-from ..utils import check_lr_fit, pcovr_covariance, pcovr_kernel
+from skmatter.utils import pcovr_covariance, pcovr_kernel
+from sklearn.utils._array_api import get_namespace, indexing_dtype
+from copy import deepcopy
+
+import numpy as np
+from sklearn.base import clone
+from sklearn.exceptions import NotFittedError
+from sklearn.metrics.pairwise import pairwise_kernels
+from sklearn.utils.extmath import randomized_svd
+from sklearn.utils.validation import check_is_fitted
+
+from sklearn.multioutput import MultiOutputClassifier
 
 
-class PCovR(_BasePCA, LinearModel):
-    r"""Principal Covariates Regression, as described in [deJong1992]_
-    determines a latent-space projection :math:`\mathbf{T}` which
+def check_lr_fit(regressor, X, y):
+    r"""
+    Checks that a (linear) regressor is fitted, and if not,
+    fits it with the provided data
+
+    :param regressor: sklearn-style regressor
+    :type regressor: object
+    :param X: feature matrix with which to fit the regressor
+        if it is not already fitted
+    :type X: array
+    :param y: target values with which to fit the regressor
+        if it is not already fitted
+    :type y: array
+    """
+    try:
+        check_is_fitted(regressor)
+        fitted_regressor = deepcopy(regressor)
+
+        # Check compatibility with X
+        fitted_regressor._validate_data(X, y, reset=False, multi_output=True)
+        print()
+        # Check compatibility with y
+        if fitted_regressor.coef_.ndim != y.ndim:
+            raise ValueError(
+                "The regressor coefficients have a dimension incompatible "
+                "with the supplied target space. "
+                "The coefficients have dimension %d and the targets "
+                "have dimension %d" % (fitted_regressor.coef_.ndim, y.ndim)
+            )
+        elif y.ndim == 2:
+            if fitted_regressor.coef_.shape[0] != y.shape[1]:
+                raise ValueError(
+                    "The regressor coefficients have a shape incompatible "
+                    "with the supplied target space. "
+                    "The coefficients have shape %r and the targets "
+                    "have shape %r" % (fitted_regressor.coef_.shape, y.shape)
+                )
+
+    except NotFittedError:
+        fitted_regressor = clone(regressor)
+        fitted_regressor.fit(X, y)
+
+    return fitted_regressor
+
+
+class PCovC(_BasePCA, LinearModel):
+    r"""
+
+    Principal Covariates Classification.
+    Determines a latent-space projection :math:`\mathbf{T}` which
     minimizes a combined loss in supervised and unsupervised tasks.
 
     This projection is determined by the eigendecomposition of a modified gram
     matrix :math:`\mathbf{\tilde{K}}`
 
     .. math::
+
       \mathbf{\tilde{K}} = \alpha \mathbf{X} \mathbf{X}^T +
             (1 - \alpha) \mathbf{\hat{Y}}\mathbf{\hat{Y}}^T
 
@@ -39,6 +148,7 @@ class PCovR(_BasePCA, LinearModel):
     :math:`\mathbf{\tilde{C}}`
 
     .. math::
+
       \mathbf{\tilde{C}} = \alpha \mathbf{X}^T \mathbf{X} +
             (1 - \alpha) \left(\left(\mathbf{X}^T
             \mathbf{X}\right)^{-\frac{1}{2}} \mathbf{X}^T
@@ -65,86 +175,109 @@ class PCovR(_BasePCA, LinearModel):
     Parameters
     ----------
     mixing: float, default=0.5
-        mixing parameter, as described in PCovR as :math:`{\alpha}`, here named to avoid
-        confusion with regularization parameter `alpha`
+        mixing parameter, as described in PCovR as :math:`{\alpha}`, here named
+        to avoid confusion with regularization parameter `alpha`
+
     n_components : int, float or str, default=None
         Number of components to keep.
         if n_components is not set all components are kept::
 
             n_components == min(n_samples, n_features)
+
     svd_solver : {'auto', 'full', 'arpack', 'randomized'}, default='auto'
         If auto :
             The solver is selected by a default policy based on `X.shape` and
-            `n_components`: if the input data is larger than 500x500 and the number of
-            components to extract is lower than 80% of the smallest dimension of the
-            data, then the more efficient 'randomized' method is enabled. Otherwise the
-            exact full SVD is computed and optionally truncated afterwards.
+            `n_components`: if the input data is larger than 500x500 and the
+            number of components to extract is lower than 80% of the smallest
+            dimension of the data, then the more efficient 'randomized'
+            method is enabled. Otherwise the exact full SVD is computed and
+            optionally truncated afterwards.
         If full :
-            run exact full SVD calling the standard LAPACK solver via `scipy.linalg.svd`
-            and select the components by postprocessing
+            run exact full SVD calling the standard LAPACK solver via
+            `scipy.linalg.svd` and select the components by postprocessing
         If arpack :
             run SVD truncated to n_components calling ARPACK solver via
-            `scipy.sparse.linalg.svds`. It requires strictly 0 < n_components <
-            min(X.shape)
+            `scipy.sparse.linalg.svds`. It requires strictly
+            0 < n_components < min(X.shape)
         If randomized :
             run randomized SVD by the method of Halko et al.
+
     tol : float, default=1e-12
-        Tolerance for singular values computed by svd_solver == 'arpack'. Must be of
-        range [0.0, infinity).
+        Tolerance for singular values computed by svd_solver == 'arpack'.
+        Must be of range [0.0, infinity).
+
     space: {'feature', 'sample', 'auto'}, default='auto'
-        whether to compute the PCovR in `sample` or `feature` space default=`sample`
-        when :math:`{n_{samples} < n_{features}}` and `feature` when
-        :math:`{n_{features} < n_{samples}}`
-    regressor: {`Ridge`, `RidgeCV`, `LinearRegression`, `precomputed`}, default=None
-        regressor for computing approximated :math:`{\mathbf{\hat{Y}}}`. The regressor
-        should be one `sklearn.linear_model.Ridge`, `sklearn.linear_model.RidgeCV`, or
-        `sklearn.linear_model.LinearRegression`. If a pre-fitted regressor is provided,
-        it is used to compute :math:`{\mathbf{\hat{Y}}}`. Note that any pre-fitting of
-        the regressor will be lost if `PCovR` is within a composite estimator that
-        enforces cloning, e.g., `sklearn.compose.TransformedTargetRegressor` or
-        `sklearn.pipeline.Pipeline` with model caching. In such cases, the regressor
-        will be re-fitted on the same training data as the composite estimator. If
-        `precomputed`, we assume that the `y` passed to the `fit` function is the
-        regressed form of the targets :math:`{\mathbf{\hat{Y}}}`. If None,
-        ``sklearn.linear_model.Ridge('alpha':1e-6, 'fit_intercept':False, 'tol':1e-12)``
-        is used as the regressor.
+            whether to compute the PCovR in `sample` or `feature` space
+            default=`sample` when :math:`{n_{samples} < n_{features}}` and
+            `feature` when :math:`{n_{features} < n_{samples}}`
+
+    classifier: {`Ridge`, `RidgeCV`, `LinearRegression`, `precomputed`}, default=None
+             classifier for computing approximated :math:`{\mathbf{\hat{Y}}}`.
+             The classifier should be one `sklearn.linear_model.Ridge`,
+             `sklearn.linear_model.RidgeCV`, or `sklearn.linear_model.LinearRegression`.
+             If a pre-fitted classifier is provided, it is used to compute
+             :math:`{\mathbf{\hat{Y}}}`.
+             Note that any pre-fitting of the classifier will be lost if `PCovR` is
+             within a composite estimator that enforces cloning, e.g.,
+             `sklearn.compose.TransformedTargetclassifier` or
+             `sklearn.pipeline.Pipeline` with model caching.
+             In such cases, the classifier will be re-fitted on the same
+             training data as the composite estimator.
+             If `precomputed`, we assume that the `y` passed to the `fit` function
+             is the regressed form of the targets :math:`{\mathbf{\hat{Y}}}`.
+             If None, ``sklearn.linear_model.Ridge('alpha':1e-6, 'fit_intercept':False, 'tol':1e-12)``
+             is used as the classifier.
+
     iterated_power : int or 'auto', default='auto'
-         Number of iterations for the power method computed by svd_solver ==
-         'randomized'. Must be of range [0, infinity).
-    random_state : int, :class:`numpy.random.RandomState` instance or None, default=None
-         Used when the 'arpack' or 'randomized' solvers are used. Pass an int for
-         reproducible results across multiple function calls.
-    whiten : bool, deprecated
+         Number of iterations for the power method computed by
+         svd_solver == 'randomized'.
+         Must be of range [0, infinity).
+
+    random_state : int, RandomState instance or None, default=None
+         Used when the 'arpack' or 'randomized' solvers are used. Pass an int
+         for reproducible results across multiple function calls.
+
+    whiten : boolean, deprecated
 
     Attributes
     ----------
+
     mixing: float, default=0.5
         mixing parameter, as described in PCovR as :math:`{\alpha}`
+
     tol: float, default=1e-12
         Tolerance for singular values computed by svd_solver == 'arpack'.
         Must be of range [0.0, infinity).
+
     space: {'feature', 'sample', 'auto'}, default='auto'
-        whether to compute the PCovR in `sample` or `feature` space default=`sample`
-        when :math:`{n_{samples} < n_{features}}` and `feature` when
-        :math:`{n_{features} < n_{samples}}`
+            whether to compute the PCovR in `sample` or `feature` space
+            default=`sample` when :math:`{n_{samples} < n_{features}}` and
+            `feature` when :math:`{n_{features} < n_{samples}}`
+
     n_components_ : int
-        The estimated number of components, which equals the parameter n_components, or
-        the lesser value of n_features and n_samples if n_components is None.
-    pxt_ : numpy.ndarray of size :math:`({n_{samples}, n_{components}})`
-        the projector, or weights, from the input space :math:`\mathbf{X}` to the
-        latent-space projection :math:`\mathbf{T}`
-    pty_ : numpy.ndarray of size :math:`({n_{components}, n_{properties}})`
-        the projector, or weights, from the latent-space projection :math:`\mathbf{T}`
-        to the properties :math:`\mathbf{Y}`
-    pxy_ : numpy.ndarray of size :math:`({n_{samples}, n_{properties}})`
-        the projector, or weights, from the input space :math:`\mathbf{X}` to the
-        properties :math:`\mathbf{Y}`
-    explained_variance_ : numpy.ndarray of shape (n_components,)
+        The estimated number of components, which equals the parameter
+        n_components, or the lesser value of n_features and n_samples
+        if n_components is None.
+
+    pxt_ : ndarray of size :math:`({n_{samples}, n_{components}})`
+           the projector, or weights, from the input space :math:`\mathbf{X}`
+           to the latent-space projection :math:`\mathbf{T}`
+
+    pty_ : ndarray of size :math:`({n_{components}, n_{properties}})`
+          the projector, or weights, from the latent-space projection
+          :math:`\mathbf{T}` to the properties :math:`\mathbf{Y}`
+
+    pxy_ : ndarray of size :math:`({n_{samples}, n_{properties}})`
+           the projector, or weights, from the input space :math:`\mathbf{X}`
+           to the properties :math:`\mathbf{Y}`
+
+    explained_variance_ : ndarray of shape (n_components,)
         The amount of variance explained by each of the selected components.
 
         Equal to n_components largest eigenvalues
         of the PCovR-modified covariance matrix of :math:`\mathbf{X}`.
-    singular_values_ : numpy.ndarray of shape (n_components,)
+
+    singular_values_ : ndarray of shape (n_components,)
         The singular values corresponding to each of the selected components.
 
     Examples
@@ -166,7 +299,7 @@ class PCovR(_BasePCA, LinearModel):
            [-1.02805338,  1.06736871],
            [ 0.98166504, -4.98307078],
            [-2.9963189 ,  1.98238856]])
-    """
+    """  # NoQa: E501
 
     def __init__(
         self,
@@ -175,7 +308,7 @@ class PCovR(_BasePCA, LinearModel):
         svd_solver="auto",
         tol=1e-12,
         space="auto",
-        regressor=None,
+        classifier=None,
         iterated_power="auto",
         random_state=None,
         whiten=False,
@@ -190,38 +323,43 @@ class PCovR(_BasePCA, LinearModel):
         self.iterated_power = iterated_power
         self.random_state = random_state
 
-        self.regressor = regressor
+        self.classifier = classifier
 
-    def fit(self, X, Y, W=None):
-        r"""Fit the model with X and Y. Depending on the dimensions of X, calls either
-        `_fit_feature_space` or `_fit_sample_space`
+    def fit(self, X, y, W=None):
+        r"""
+
+        Fit the model with X and Y. Depending on the dimensions of X,
+        calls either `_fit_feature_space` or `_fit_sample_space`
 
         Parameters
         ----------
-        X : numpy.ndarray, shape (n_samples, n_features)
-            Training data, where n_samples is the number of samples and n_features is
-            the number of features.
+        X : ndarray, shape (n_samples, n_features)
+            Training data, where n_samples is the number of samples and
+            n_features is the number of features.
 
             It is suggested that :math:`\mathbf{X}` be centered by its column-
             means and scaled. If features are related, the matrix should be scaled
             to have unit variance, otherwise :math:`\mathbf{X}` should be
             scaled so that each feature has a variance of 1 / n_features.
-        Y : numpy.ndarray, shape (n_samples, n_properties)
-            Training data, where n_samples is the number of samples and n_properties is
-            the number of properties
 
-            It is suggested that :math:`\mathbf{X}` be centered by its column- means and
-            scaled. If features are related, the matrix should be scaled to have unit
-            variance, otherwise :math:`\mathbf{Y}` should be scaled so that each feature
-            has a variance of 1 / n_features.
+        Y : ndarray, shape (n_samples, n_properties)
+            Training data, where n_samples is the number of samples and
+            n_properties is the number of properties
 
-            If the passed regressor = `precomputed`, it is assumed that Y is the
+            It is suggested that :math:`\mathbf{X}` be centered by its column-
+            means and scaled. If features are related, the matrix should be scaled
+            to have unit variance, otherwise :math:`\mathbf{Y}` should be
+            scaled so that each feature has a variance of 1 / n_features.
+
+            If the passed classifier = `precomputed`, it is assumed that Y is the
             regressed form of the properties, :math:`{\mathbf{\hat{Y}}}`.
-        W : numpy.ndarray, shape (n_features, n_properties)
-            Regression weights, optional when regressor=`precomputed`. If not
+
+        W : ndarray, shape (n_features, n_properties)
+            Regression weights, optional when classifier=`precomputed`. If not
             passed, it is assumed that `W = np.linalg.lstsq(X, Y, self.tol)[0]`
+
         """
-        X, Y = check_X_y(X, Y, y_numeric=True, multi_output=True)
+        X, y = check_X_y(X, y, multi_output=True)
 
         # saved for inverse transformations from the latent space,
         # should be zero in the case that the features have been properly centered
@@ -252,37 +390,54 @@ class PCovR(_BasePCA, LinearModel):
 
         if not any(
             [
-                self.regressor is None,
-                self.regressor == "precomputed",
-                isinstance(self.regressor, LinearRegression),
-                isinstance(self.regressor, Ridge),
-                isinstance(self.regressor, RidgeCV),
+                self.classifier is None,
+                self.classifier == "precomputed",
+                isinstance(
+                    self.classifier,
+                    (
+                        RidgeClassifier,
+                        RidgeClassifierCV,
+                        LogisticRegression,
+                        LogisticRegressionCV,
+                        SGDClassifier,
+                        LinearSVC,
+                        MultiOutputClassifier,
+                    ),
+                ),
             ]
         ):
             raise ValueError(
-                "Regressor must be an instance of "
-                "`LinearRegression`, `Ridge`, `RidgeCV`, or `precomputed`"
+                "classifier must be an instance of "
+                "`RidgeClassifier`, `RidgeClassifierCV`, `LogisticRegression`,"
+                "`Logistic RegressionCV`, or `precomputed`"
             )
 
-        # Assign the default regressor
-        if self.regressor != "precomputed":
-            if self.regressor is None:
-                regressor = Ridge(
-                    alpha=1e-6,
-                    fit_intercept=False,
-                    tol=1e-12,
-                )
+        # Assign the default classifier
+        if self.classifier != "precomputed":
+            if self.classifier is None:
+                classifier = LogisticRegression()
             else:
-                regressor = self.regressor
+                classifier = self.classifier
 
-            self.regressor_ = check_lr_fit(regressor, X, y=Y)
+            yhat_classifier_ = check_lr_fit(classifier, X, y=y)  #change to z classifier, finds linear classifier  from x and y ()
 
-            W = self.regressor_.coef_.T.reshape(X.shape[1], -1)
-            Yhat = self.regressor_.predict(X).reshape(X.shape[0], -1)
+            if isinstance(yhat_classifier_, MultiOutputClassifier):
+                W = np.hstack([est_.coef_.T for est_ in yhat_classifier_.estimators_])
+                Yhat = X @ W #computes Z, basically Z=XPxz
+
+            else:
+                W = yhat_classifier_.coef_.T.reshape(X.shape[1], -1)
+                Yhat = yhat_classifier_.decision_function(X).reshape(X.shape[0], -1) #computes Z
+
         else:
-            Yhat = Y.copy()
+            Yhat = y.copy()
             if W is None:
-                W = np.linalg.lstsq(X, Yhat, self.tol)[0]
+                W = np.linalg.lstsq(X, Yhat, self.tol)[0]  #W = weights for Pxz
+
+        self._label_binarizer = LabelBinarizer(neg_label=-1, pos_label=1)
+        Y = self._label_binarizer.fit_transform(y)
+        if not self._label_binarizer.y_type_.startswith("multilabel"):
+            y = column_or_1d(y, warn=True)
 
         # Handle svd_solver
         self.fit_svd_solver_ = self.svd_solver
@@ -309,7 +464,24 @@ class PCovR(_BasePCA, LinearModel):
         else:
             self._fit_sample_space(X, Y.reshape(Yhat.shape), Yhat, W)
 
-        self.pxy_ = self.pxt_ @ self.pty_
+        # instead of using linear regression solution, refit with the classifier
+        # and steal weights to get ptz
+        #this is failing because self.classifier is never changed from None if None is passed as classifier
+        #change self.classifier to classifier and see what happens. if classifier is precomputed, there might be more errors so be careful.
+        # if classifier is precomputed, I don't think we need to check if the classifier is fit or not?
+
+        #most tests are passing if we change self.classifier to classifier (just like how PCovR has it for self.regressor = ...)
+        self.classifier_ = check_lr_fit(self.classifier, X @ self.pxt_, y=y) #Has Ptz as weights (change y to Z )
+     
+        if isinstance(self.classifier_, MultiOutputClassifier):
+            self.pty_ = np.hstack(
+                [est_.coef_.T for est_ in self.classifier_.estimators_]
+            )
+            self.pxy_ = self.pxt_ @ self.pty_
+        else:
+            self.pty_ = self.classifier_.coef_.T #self.ptz_ = self.classifier_.coef.T
+            self.pxy_ = self.pxt_ @ self.pty_ #self.pxz_ = self.pxt_ @ self.ptz_
+
         if len(Y.shape) == 1:
             self.pxy_ = self.pxy_.reshape(
                 X.shape[1],
@@ -322,9 +494,11 @@ class PCovR(_BasePCA, LinearModel):
         return self
 
     def _fit_feature_space(self, X, Y, Yhat):
-        r"""In feature-space PCovR, the projectors are determined by:
+        r"""
+        In feature-space PCovR, the projectors are determined by:
 
         .. math::
+
             \mathbf{\tilde{C}} = \alpha \mathbf{X}^T \mathbf{X} +
             (1 - \alpha) \left(\left(\mathbf{X}^T
             \mathbf{X}\right)^{-\frac{1}{2}} \mathbf{X}^T
@@ -334,21 +508,26 @@ class PCovR(_BasePCA, LinearModel):
         where
 
         .. math::
+
             \mathbf{P}_{XT} = (\mathbf{X}^T \mathbf{X})^{-\frac{1}{2}}
                                 \mathbf{U}_\mathbf{\tilde{C}}^T
                                 \mathbf{\Lambda}_\mathbf{\tilde{C}}^{\frac{1}{2}}
 
         .. math::
+
             \mathbf{P}_{TX} = \mathbf{\Lambda}_\mathbf{\tilde{C}}^{-\frac{1}{2}}
                                 \mathbf{U}_\mathbf{\tilde{C}}^T
                                 (\mathbf{X}^T \mathbf{X})^{\frac{1}{2}}
 
         .. math::
+
             \mathbf{P}_{TY} = \mathbf{\Lambda}_\mathbf{\tilde{C}}^{-\frac{1}{2}}
                                \mathbf{U}_\mathbf{\tilde{C}}^T (\mathbf{X}^T
                                \mathbf{X})^{-\frac{1}{2}} \mathbf{X}^T
                                \mathbf{Y}
+
         """
+
         Ct, iCsqrt = pcovr_covariance(
             mixing=self.mixing,
             X=X,
@@ -381,35 +560,42 @@ class PCovR(_BasePCA, LinearModel):
 
         S_sqrt = np.diagflat([np.sqrt(s) if s > self.tol else 0.0 for s in S])
         S_sqrt_inv = np.diagflat([1.0 / np.sqrt(s) if s > self.tol else 0.0 for s in S])
+       
         self.pxt_ = np.linalg.multi_dot([iCsqrt, Vt.T, S_sqrt])
         self.ptx_ = np.linalg.multi_dot([S_sqrt_inv, Vt, Csqrt])
-        self.pty_ = np.linalg.multi_dot([S_sqrt_inv, Vt, iCsqrt, X.T, Y])
+        # self.pty_ = np.linalg.multi_dot([S_sqrt_inv, Vt, iCsqrt, X.T, Y])
 
     def _fit_sample_space(self, X, Y, Yhat, W):
-        r"""In sample-space PCovR, the projectors are determined by:
+        r"""
+        In sample-space PCovR, the projectors are determined by:
 
         .. math::
+
             \mathbf{\tilde{K}} = \alpha \mathbf{X} \mathbf{X}^T +
             (1 - \alpha) \mathbf{\hat{Y}}\mathbf{\hat{Y}}^T
 
         where
 
         .. math::
+
             \mathbf{P}_{XT} = \left(\alpha \mathbf{X}^T + (1 - \alpha)
                                \mathbf{W} \mathbf{\hat{Y}}^T\right)
                                \mathbf{U}_\mathbf{\tilde{K}}
                                \mathbf{\Lambda}_\mathbf{\tilde{K}}^{-\frac{1}{2}}
 
         .. math::
+
             \mathbf{P}_{TX} = \mathbf{\Lambda}_\mathbf{\tilde{K}}^{-\frac{1}{2}}
                                 \mathbf{U}_\mathbf{\tilde{K}}^T \mathbf{X}
 
         .. math::
+
             \mathbf{P}_{TY} = \mathbf{\Lambda}_\mathbf{\tilde{K}}^{-\frac{1}{2}}
                                \mathbf{U}_\mathbf{\tilde{K}}^T \mathbf{Y}
+
         """
+
         Kt = pcovr_kernel(mixing=self.mixing, X=X, Y=Yhat)
-        #This is the gram matrix K
 
         if self.fit_svd_solver_ == "full":
             U, S, Vt = self._decompose_full(Kt)
@@ -430,9 +616,9 @@ class PCovR(_BasePCA, LinearModel):
         S_sqrt_inv = np.diagflat([1.0 / np.sqrt(s) if s > self.tol else 0.0 for s in S])
         T = Vt.T @ S_sqrt_inv
 
-        self.pxt_ = P @ T # equation 1 in fit_sample_space read the docs
-        self.pty_ = T.T @ Y #equation 2 in fit_sample_space read the docs
-        self.ptx_ = T.T @ X # equation 3 in fit_sample_space read the docs
+        self.pxt_ = P @ T
+        # self.pty_ = T.T @ Y
+        self.ptx_ = T.T @ X
 
     def _decompose_truncated(self, mat):
         if not 1 <= self.n_components_ <= min(self.n_samples_in_, self.n_features_in_):
@@ -552,8 +738,10 @@ class PCovR(_BasePCA, LinearModel):
         r"""Transform data back to its original space.
 
         .. math::
+
             \mathbf{\hat{X}} = \mathbf{T} \mathbf{P}_{TX}
                               = \mathbf{X} \mathbf{P}_{XT} \mathbf{P}_{TX}
+
 
         Parameters
         ----------
@@ -565,6 +753,7 @@ class PCovR(_BasePCA, LinearModel):
         -------
         X_original ndarray, shape (n_samples, n_features)
         """
+
         if np.max(np.abs(self.mean_)) > self.tol:
             warnings.warn(
                 "This class does not automatically un-center data, and your data mean "
@@ -575,9 +764,10 @@ class PCovR(_BasePCA, LinearModel):
 
         return T @ self.ptx_
 
-    def predict(self, X=None, T=None):
-        """Predicts the property values using regression on X or T."""
-        check_is_fitted(self, ["pxy_", "pty_"])
+    def decision_function(self, X=None, T=None):
+        """Predicts confidence score from X or T."""
+
+        check_is_fitted(self, attributes=["_label_binarizer", "pxy_", "pty_"])
 
         if X is None and T is None:
             raise ValueError("Either X or T must be supplied.")
@@ -589,18 +779,51 @@ class PCovR(_BasePCA, LinearModel):
             T = check_array(T)
             return T @ self.pty_
 
-    def transform(self, X=None):
-        """Apply dimensionality reduction to X.
+    def predict(self, X=None, T=None):
+        """Predicts class labels from X or T."""
 
-        ``X`` is projected on the first principal components as determined by the
+        check_is_fitted(self, attributes=["_label_binarizer", "pxy_", "pty_"])
+
+        if X is None and T is None:
+            raise ValueError("Either X or T must be supplied.")
+
+        # multiclass = self._label_binarizer.y_type_.startswith("multiclass")
+
+        if X is not None:
+            return self.classifier_.predict(X @ self.pxt_)
+            # xp, _ = get_namespace(X)
+            # scores = self.decision_function(X=X)
+            # if multiclass:
+            #     indices = xp.argmax(scores, axis=1)
+            # else:
+            #     indices = xp.astype(scores > 0, indexing_dtype(xp))
+            # return xp.take(self.classes_, indices, axis=0)
+
+        else:
+            return self.classifier_.predict(T)
+            # tp, _ = get_namespace(T)
+            # scores = self.decision_function(T=T)
+            # if multiclass:
+            #     indices = tp.argmax(scores, axis=1)
+            # else:
+            #     indices = tp.astype(scores > 0, indexing_dtype(tp))
+            # return tp.take(self.classes_, indices, axis=0)
+
+    def transform(self, X=None):
+        """
+        Apply dimensionality reduction to X.
+
+        X is projected on the first principal components as determined by the
         modified PCovR distances.
 
         Parameters
         ----------
-        X : numpy.ndarray, shape (n_samples, n_features)
+        X : ndarray, shape (n_samples, n_features)
             New data, where n_samples is the number of samples
             and n_features is the number of features.
+
         """
+
         check_is_fitted(self, ["pxt_", "mean_"])
 
         return super().transform(X)
@@ -610,12 +833,14 @@ class PCovR(_BasePCA, LinearModel):
         defined as:
 
         .. math::
+
             \ell_{X} = \frac{\lVert \mathbf{X} - \mathbf{T}\mathbf{P}_{TX} \rVert ^ 2}
                             {\lVert \mathbf{X}\rVert ^ 2}
 
         and
 
         .. math::
+
             \ell_{Y} = \frac{\lVert \mathbf{Y} - \mathbf{T}\mathbf{P}_{TY} \rVert ^ 2}
                             {\lVert \mathbf{Y}\rVert ^ 2}
 
@@ -623,26 +848,34 @@ class PCovR(_BasePCA, LinearModel):
         use in sklearn pipelines, e.g., a grid search, where methods named 'score' are
         meant to be maximized.
 
+
         Parameters
         ----------
-        X : numpy.ndarray of shape (n_samples, n_features)
+        X : ndarray of shape (n_samples, n_features)
             The data.
-        Y : numpy.ndarray of shape (n_samples, n_properties)
+
+        Y : ndarray of shape (n_samples, n_properties)
             The target.
 
         Returns
         -------
         loss : float
-            Negative sum of the loss in reconstructing X from the latent-space
-            projection T and the loss in predicting Y from the latent-space projection T
+             Negative sum of the loss in reconstructing X from the latent-space
+             projection T and the loss in predicting Y from the latent-space
+             projection T
         """
+
         if T is None:
             T = self.transform(X)
 
         x = self.inverse_transform(T)
-        y = self.predict(T=T)
+        y = self.decision_function(T=T)
 
         return -(
             np.linalg.norm(X - x) ** 2.0 / np.linalg.norm(X) ** 2.0
             + np.linalg.norm(Y - y) ** 2.0 / np.linalg.norm(Y) ** 2.0
         )
+
+    @property
+    def classes_(self):
+        return self._label_binarizer.classes_
