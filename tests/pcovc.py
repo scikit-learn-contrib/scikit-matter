@@ -4,30 +4,33 @@ Base PCov Class (contains all shared methods (same name) between PCovR and PCovC
 - contains options for implementation depending on sub class type
 1. PCovR extends PCov 
 2. PCovC extends PCov (will contain some unique methods such as decision_function)
+
 This would prevent us from having to update all PCovR instances in examples, docs, etc 
 (since external method names and variables would remain the same).
+
 Bse KPCov Class (contains all shared methods (same name)) between KPCovR and KPCovC) 
 - contains options for implementation depending on sub class type
 1. KPCovR extends PCov 
 2. KPCovC extends PCov 
+
 This would prevent us from having to update all KPCovR instances in examples, docs, etc.
 Benefit of doing this would be that users can clearly see the differences between PCovR and PCovC 
 (how implementation differs just so slightly in base class)
+
 sklearn RidgeRegression / RidgeClassifier implementation has _BaseRidge as a private class.
 They have _BaseRidge
 1. Ridge Regression extends _BaseRidge
 2. Ridge Classifier extends _BaseRidge
+
 They have _BaseRidgeCV (uses grid search CV)
 1. Ridge RegressionCV extends _BaseRidgeCV
 2. Ridge ClassifierCV extends _BaseRidgeCV
+
 Kernel Ridge Regression is separate.
+
 Option 2:
 Simply have PCovC extend PCovR and override several methods (might lead to some redundancy)
 '''
-
-
-
-
 
 import numbers
 import warnings
@@ -67,49 +70,48 @@ from sklearn.utils.validation import check_is_fitted
 
 from sklearn.multioutput import MultiOutputClassifier
 
-
-def check_lr_fit(regressor, X, y):
+def check_cl_fit(classifier, X, y):
     r"""
-    Checks that a (linear) regressor is fitted, and if not,
+    Checks that a (linear) classifier is fitted, and if not,
     fits it with the provided data
-    :param regressor: sklearn-style regressor
-    :type regressor: object
-    :param X: feature matrix with which to fit the regressor
+    :param regressor: sklearn-style classifier
+    :type classifier: object
+    :param X: feature matrix with which to fit the classifier
         if it is not already fitted
     :type X: array
-    :param y: target values with which to fit the regressor
+    :param y: target values with which to fit the classifier
         if it is not already fitted
     :type y: array
     """
     try:
-        check_is_fitted(regressor)
-        fitted_regressor = deepcopy(regressor)
+        check_is_fitted(classifier)
+        fitted_classifier = deepcopy(classifier)
 
         # Check compatibility with X
-        fitted_regressor._validate_data(X, y, reset=False, multi_output=True)
-        print()
+        fitted_classifier._validate_data(X, y, reset=False, multi_output=True)
+
         # Check compatibility with y
-        if fitted_regressor.coef_.ndim != y.ndim:
+        if fitted_classifier.coef_.ndim != y.ndim:
             raise ValueError(
-                "The regressor coefficients have a dimension incompatible "
+                "The classifier coefficients have a dimension incompatible "
                 "with the supplied target space. "
                 "The coefficients have dimension %d and the targets "
-                "have dimension %d" % (fitted_regressor.coef_.ndim, y.ndim)
+                "have dimension %d" % (fitted_classifier.coef_.ndim, y.ndim)
             )
         elif y.ndim == 2:
-            if fitted_regressor.coef_.shape[0] != y.shape[1]:
+            if fitted_classifier.coef_.shape[0] != y.shape[1]:
                 raise ValueError(
-                    "The regressor coefficients have a shape incompatible "
+                    "The classifier coefficients have a shape incompatible "
                     "with the supplied target space. "
                     "The coefficients have shape %r and the targets "
-                    "have shape %r" % (fitted_regressor.coef_.shape, y.shape)
+                    "have shape %r" % (fitted_classifier.coef_.shape, y.shape)
                 )
 
     except NotFittedError:
-        fitted_regressor = clone(regressor)
-        fitted_regressor.fit(X, y)
+        fitted_classifier = clone(classifier)
+        fitted_classifier.fit(X, y)
 
-    return fitted_regressor
+    return fitted_classifier
 
 
 class PCovC(_BasePCA, LinearModel):
@@ -368,7 +370,7 @@ class PCovC(_BasePCA, LinearModel):
             else:
                 classifier = self.classifier
 
-            yhat_classifier_ = check_lr_fit(classifier, X, y=y)  #change to z classifier, finds linear classifier  from x and y ()
+            yhat_classifier_ = check_cl_fit(classifier, X, y=y)  #change to z classifier, finds linear classifier  from x and y ()
 
             if isinstance(yhat_classifier_, MultiOutputClassifier):
                 W = np.hstack([est_.coef_.T for est_ in yhat_classifier_.estimators_])
@@ -420,7 +422,7 @@ class PCovC(_BasePCA, LinearModel):
         # if classifier is precomputed, I don't think we need to check if the classifier is fit or not?
 
         #most tests are passing if we change self.classifier to classifier (just like how PCovR has it for self.regressor = ...)
-        self.classifier_ = check_lr_fit(self.classifier, X @ self.pxt_, y=y) #Has Ptz as weights (change y to Z )
+        self.classifier_ = check_cl_fit(self.classifier, X @ self.pxt_, y=y) #Has Ptz as weights (change y to Z )
 
         if isinstance(self.classifier_, MultiOutputClassifier):
             self.pty_ = np.hstack(

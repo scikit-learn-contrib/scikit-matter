@@ -511,7 +511,7 @@ class PCovCInfrastructureTest(PCovCBaseTest):
             pcovc.fit(self.X, self.Y.squeeze())
         self.assertEqual(
             str(cm.exception),
-            "The regressor coefficients have a dimension incompatible "
+            "The classifier coefficients have a dimension incompatible "
             "with the supplied target space. "
             "The coefficients have dimension %d and the targets "
             "have dimension %d" % (classifier.coef_.ndim, self.Y.squeeze().ndim),
@@ -521,7 +521,7 @@ class PCovCInfrastructureTest(PCovCBaseTest):
             pcovc.fit(self.X, np.column_stack((self.Y, self.Y)))
         self.assertEqual(
            str(cm.exception),
-           "The regressor coefficients have a shape incompatible with the supplied "
+           "The classifier coefficients have a shape incompatible with the supplied "
            "target space. The coefficients have shape %r and the targets have shape %r"
             % (classifier.coef_.shape, np.column_stack((self.Y, self.Y)).shape),
         )
