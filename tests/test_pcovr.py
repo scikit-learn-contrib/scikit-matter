@@ -69,7 +69,7 @@ class PCovRErrorTest(PCovRBaseTest):
     def test_simple_prediction(self):
         """
         Check that PCovR with a full eigendecomposition at mixing=0
-        can fully reconstruct the input properties.
+        can reproduce a linear regression result.
         """
         for space in ["feature", "sample", "auto"]:
             with self.subTest(space=space):
@@ -91,13 +91,14 @@ class PCovRErrorTest(PCovRBaseTest):
         and that the prediction error increases with `mixing`
         """
         prev_error = -1.0
+        Ytrue = self.Y.ravel()
 
         for mixing in np.linspace(0, 1, 11):
             pcovr = self.model(mixing=mixing, n_components=2, tol=1e-12)
             pcovr.fit(self.X, self.Y)
 
             Yp = pcovr.predict(X=self.X)
-            error = np.linalg.norm(self.Y - Yp) ** 2.0 / np.linalg.norm(self.Y) ** 2.0
+            error = np.linalg.norm(Ytrue - Yp) ** 2.0 / np.linalg.norm(Ytrue) ** 2.0
 
             with self.subTest(error=error):
                 self.assertFalse(np.isnan(error))
@@ -111,6 +112,7 @@ class PCovRErrorTest(PCovRBaseTest):
         projection and that the prediction error increases with `mixing`.
         """
         prev_error = -1.0
+        Ytrue = self.Y.ravel()
 
         for mixing in np.linspace(0, 1, 11):
             pcovr = self.model(mixing=mixing, n_components=2, tol=1e-12)
@@ -118,7 +120,7 @@ class PCovRErrorTest(PCovRBaseTest):
 
             T = pcovr.transform(self.X)
             Yp = pcovr.predict(T=T)
-            error = np.linalg.norm(self.Y - Yp) ** 2.0 / np.linalg.norm(self.Y) ** 2.0
+            error = np.linalg.norm(Ytrue - Yp) ** 2.0 / np.linalg.norm(Ytrue) ** 2.0
 
             with self.subTest(error=error):
                 self.assertFalse(np.isnan(error))
@@ -481,10 +483,10 @@ class PCovRInfrastructureTest(PCovRBaseTest):
         self.assertTrue(pcovr.regressor is None)
         self.assertTrue(pcovr.regressor_ is not None)
 
-    def test_incompatible_coef_shape(self):
+    def test_incompatible_coef_dim(self):
         # self.Y is 2D with one target
         # Don't need to test X shape, since this should
-        # be caught by sklearn's _validate_data
+        # be caught by sklearn's validate_data
         regressor = Ridge(alpha=1e-8, fit_intercept=False, tol=1e-12)
         regressor.fit(self.X, self.Y)
         pcovr = self.model(mixing=0.5, regressor=regressor)
@@ -499,14 +501,23 @@ class PCovRInfrastructureTest(PCovRBaseTest):
             "have dimension 2",
         )
 
+    def test_incompatible_coef_shape(self):
         # Shape mismatch (number of targets)
+        Y_double = np.column_stack((self.Y, self.Y))
+        Y_triple = np.column_stack((Y_double, self.Y))
+
+        regressor = Ridge(alpha=1e-8, fit_intercept=False, tol=1e-12)
+        regressor.fit(self.X, Y_double)
+
+        pcovr = self.model(mixing=0.5, regressor=regressor)
+
         with self.assertRaises(ValueError) as cm:
-            pcovr.fit(self.X, np.column_stack((self.Y, self.Y)))
+            pcovr.fit(self.X, Y_triple)
         self.assertEqual(
             str(cm.exception),
             "The regressor coefficients have a shape incompatible with the supplied "
             "target space. The coefficients have shape %r and the targets have shape %r"
-            % (regressor.coef_.shape, np.column_stack((self.Y, self.Y)).shape),
+            % (regressor.coef_.shape, Y_triple.shape),
         )
 
 

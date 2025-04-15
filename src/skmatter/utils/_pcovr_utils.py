@@ -41,6 +41,10 @@ def check_lr_fit(regressor, X, y):
         # Check compatibility with X
         validate_data(fitted_regressor, X, y, reset=False, multi_output=True)
 
+        if y.ndim == 2:
+            if y.shape[1] == 1:
+                y = y.ravel()
+
         # Check compatibility with y
         if fitted_regressor.coef_.ndim != y.ndim:
             raise ValueError(
