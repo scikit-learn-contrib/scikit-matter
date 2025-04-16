@@ -24,7 +24,7 @@ class PCovRBaseTest(unittest.TestCase):
 
         self.X, self.Y = get_dataset(return_X_y=True)
         self.X = StandardScaler().fit_transform(self.X)
-        self.Y = StandardScaler().fit_transform(np.vstack(self.Y))
+        self.Y = StandardScaler().fit_transform(np.vstack(self.Y)).ravel()
 
     def setUp(self):
         pass
@@ -91,14 +91,13 @@ class PCovRErrorTest(PCovRBaseTest):
         and that the prediction error increases with `mixing`
         """
         prev_error = -1.0
-        Ytrue = self.Y.ravel()
 
         for mixing in np.linspace(0, 1, 11):
             pcovr = self.model(mixing=mixing, n_components=2, tol=1e-12)
             pcovr.fit(self.X, self.Y)
 
             Yp = pcovr.predict(X=self.X)
-            error = np.linalg.norm(Ytrue - Yp) ** 2.0 / np.linalg.norm(Ytrue) ** 2.0
+            error = np.linalg.norm(self.Y - Yp) ** 2.0 / np.linalg.norm(self.Y) ** 2.0
 
             with self.subTest(error=error):
                 self.assertFalse(np.isnan(error))
