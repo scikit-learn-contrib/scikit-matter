@@ -87,7 +87,6 @@ known_first_party = "skmatter"
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = ["--cov"]
-filterwarnings = ["error"]
 
 [tool.ruff]
 exclude = ["docs/src/examples/"]

@@ -5,7 +5,7 @@ from sklearn.base import clone
 from sklearn.exceptions import NotFittedError
 from sklearn.metrics.pairwise import pairwise_kernels
 from sklearn.utils.extmath import randomized_svd
-from sklearn.utils.validation import check_is_fitted
+from sklearn.utils.validation import check_is_fitted, validate_data
 
 
 def check_lr_fit(regressor, X, y):
@@ -39,10 +39,20 @@ def check_lr_fit(regressor, X, y):
         fitted_regressor = deepcopy(regressor)
 
         # Check compatibility with X
-        fitted_regressor._validate_data(X, y, reset=False, multi_output=True)
+        validate_data(fitted_regressor, X, y, reset=False, multi_output=True)
 
         # Check compatibility with y
+
+        # TO DO: This if statement is a band-aid for the case when we pass in a
+        # prefitted Ridge() or RidgeCV(), which, as of sklearn 1.6, will create
+        # coef_ with shape (n_features, ) even if fitted on a 2-D y with one target.
+        # In the future, we can optimize this block if LinearRegression() also changes.
+
         if fitted_regressor.coef_.ndim != y.ndim:
+            if y.ndim == 2:
+                if fitted_regressor.coef_.ndim == 1 and y.shape[1] == 1:
+                    return fitted_regressor
+
             raise ValueError(
                 "The regressor coefficients have a dimension incompatible with the "
                 "supplied target space. The coefficients have dimension "
@@ -103,7 +113,7 @@ def check_krr_fit(regressor, K, X, y):
         fitted_regressor = deepcopy(regressor)
 
         # Check compatibility with K
-        fitted_regressor._validate_data(X, y, reset=False, multi_output=True)
+        validate_data(fitted_regressor, X, y, reset=False, multi_output=True)
 
         # Check compatibility with y
         if fitted_regressor.dual_coef_.ndim != y.ndim:

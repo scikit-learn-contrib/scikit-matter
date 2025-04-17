@@ -12,7 +12,7 @@ from sklearn.metrics.pairwise import pairwise_kernels
 from sklearn.utils import check_random_state
 from sklearn.utils._arpack import _init_arpack_v0
 from sklearn.utils.extmath import randomized_svd, stable_cumsum, svd_flip
-from sklearn.utils.validation import check_is_fitted, validate_data
+from sklearn.utils.validation import _check_n_features, check_is_fitted, validate_data
 
 from ..preprocessing import KernelNormalizer
 from ..utils import check_krr_fit, pcovr_kernel
@@ -347,7 +347,7 @@ class KernelPCovR(_BasePCA, LinearModel):
             except NotFittedError:
                 self.regressor_.set_params(**regressor.get_params())
                 self.regressor_.X_fit_ = self.X_fit_
-                self.regressor_._check_n_features(self.X_fit_, reset=True)
+                _check_n_features(self.regressor_, self.X_fit_, reset=True)
         else:
             Yhat = Y.copy()
             if W is None:
