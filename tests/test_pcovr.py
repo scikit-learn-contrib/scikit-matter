@@ -111,7 +111,6 @@ class PCovRErrorTest(PCovRBaseTest):
         projection and that the prediction error increases with `mixing`.
         """
         prev_error = -1.0
-        Ytrue = self.Y.ravel()
 
         for mixing in np.linspace(0, 1, 11):
             pcovr = self.model(mixing=mixing, n_components=2, tol=1e-12)
@@ -119,7 +118,7 @@ class PCovRErrorTest(PCovRBaseTest):
 
             T = pcovr.transform(self.X)
             Yp = pcovr.predict(T=T)
-            error = np.linalg.norm(Ytrue - Yp) ** 2.0 / np.linalg.norm(Ytrue) ** 2.0
+            error = np.linalg.norm(self.Y - Yp) ** 2.0 / np.linalg.norm(self.Y) ** 2.0
 
             with self.subTest(error=error):
                 self.assertFalse(np.isnan(error))
@@ -483,21 +482,22 @@ class PCovRInfrastructureTest(PCovRBaseTest):
         self.assertTrue(pcovr.regressor_ is not None)
 
     def test_incompatible_coef_dim(self):
-        # self.Y is 2D with one target
+        # self.Y is 1D with one target
         # Don't need to test X shape, since this should
         # be caught by sklearn's validate_data
+        Y_2D = np.column_stack((self.Y, self.Y))
         regressor = Ridge(alpha=1e-8, fit_intercept=False, tol=1e-12)
-        regressor.fit(self.X, self.Y)
+        regressor.fit(self.X, Y_2D)
         pcovr = self.model(mixing=0.5, regressor=regressor)
 
         # Dimension mismatch
         with self.assertRaises(ValueError) as cm:
-            pcovr.fit(self.X, np.zeros((self.Y.shape[0], 2)))
+            pcovr.fit(self.X, self.Y)
         self.assertEqual(
             str(cm.exception),
             "The regressor coefficients have a dimension incompatible with the "
-            "supplied target space. The coefficients have dimension 1 and the targets "
-            "have dimension 2",
+            "supplied target space. The coefficients have dimension 2 and the targets "
+            "have dimension 1",
         )
 
     def test_incompatible_coef_shape(self):

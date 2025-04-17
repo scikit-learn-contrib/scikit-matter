@@ -57,7 +57,7 @@ Yp_unscaled = pcovr_unscaled.predict(X)
 
 pcovr_scaled = PCovR(mixing=0.5, n_components=4).fit(X_scaled, y_scaled)
 T_scaled = pcovr_scaled.transform(X_scaled)
-Yp_scaled = y_scaler.inverse_transform(pcovr_scaled.predict(X_scaled).reshape(-1, 1))
+Yp_scaled = y_scaler.inverse_transform(pcovr_scaled.predict(X_scaled))
 
 fig, ((ax1_T, ax2_T), (ax1_Y, ax2_Y)) = plt.subplots(2, 2, figsize=(8, 10))
 

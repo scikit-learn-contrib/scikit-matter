@@ -41,12 +41,18 @@ def check_lr_fit(regressor, X, y):
         # Check compatibility with X
         validate_data(fitted_regressor, X, y, reset=False, multi_output=True)
 
-        if y.ndim == 2:
-            if y.shape[1] == 1:
-                y = y.ravel()
-
         # Check compatibility with y
+
+        # TO DO: This if statement is a band-aid for the case when we pass in a
+        # prefitted Ridge() or RidgeCV(), which, as of sklearn 1.6, will create
+        # coef_ with shape (n_features, ) even if fitted on a 2-D y with one target.
+        # In the future, we can optimize this block if LinearRegression() also changes.
+
         if fitted_regressor.coef_.ndim != y.ndim:
+            if y.ndim == 2:
+                if fitted_regressor.coef_.ndim == 1 and y.shape[1] == 1:
+                    return fitted_regressor
+
             raise ValueError(
                 "The regressor coefficients have a dimension incompatible with the "
                 "supplied target space. The coefficients have dimension "

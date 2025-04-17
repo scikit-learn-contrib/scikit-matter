@@ -310,7 +310,7 @@ class PCovR(_BasePCA, LinearModel):
             self._fit_sample_space(X, Y.reshape(Yhat.shape), Yhat, W)
 
         self.pxy_ = self.pxt_ @ self.pty_
-        if len(Y.shape) == 1 or Y.shape[1] == 1:
+        if len(Y.shape) == 1:
             self.pxy_ = self.pxy_.reshape(
                 X.shape[1],
             )
@@ -636,10 +636,6 @@ class PCovR(_BasePCA, LinearModel):
             projection T and the loss in predicting Y from the latent-space projection T
         """
         X, y = validate_data(self, X, y, reset=False)
-
-        if y.ndim == 2:
-            if y.shape[1] == 1:
-                y = y.ravel()
 
         if T is None:
             T = self.transform(X)

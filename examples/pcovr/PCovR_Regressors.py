@@ -29,7 +29,7 @@ X_scaler = StandardScaler()
 X_scaled = X_scaler.fit_transform(X)
 
 y_scaler = StandardScaler()
-y_scaled = y_scaler.fit_transform(y.reshape(-1, 1)).ravel()
+y_scaled = y_scaler.fit_transform(y.reshape(-1, 1))
 
 
 # %%
