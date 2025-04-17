@@ -1,12 +1,12 @@
 import numpy as np
 from scipy.linalg import orthogonal_procrustes
-from sklearn.base import MultiOutputMixin, RegressorMixin
+from sklearn.base import BaseEstimator, MultiOutputMixin, RegressorMixin
 from sklearn.linear_model import LinearRegression
 from sklearn.utils import check_array, check_X_y
 from sklearn.utils.validation import check_is_fitted
 
 
-class OrthogonalRegression(MultiOutputMixin, RegressorMixin):
+class OrthogonalRegression(MultiOutputMixin, RegressorMixin, BaseEstimator):
     r"""Orthogonal regression by solving the Procrustes problem
 
     Linear regression with the additional constraint that the weight matrix

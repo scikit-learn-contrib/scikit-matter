@@ -78,7 +78,7 @@ ax1_Y.set_ylabel("Predicted Y, unscaled")
 ax1_Y.set_title("Regression\nWithout Scaling")
 
 ax2_Y.scatter(
-    Yp_scaled, y, c=np.abs(y.flatten() - Yp_scaled.flatten()), cmap="bone_r", ec="k"
+    Yp_scaled, y, c=np.abs(y.ravel() - Yp_scaled.ravel()), cmap="bone_r", ec="k"
 )
 ax2_Y.plot(ax2_Y.get_xlim(), ax2_Y.get_xlim(), "r--")
 ax2_Y.set_xlabel("True Y, unscaled")
