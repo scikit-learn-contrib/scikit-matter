@@ -19,7 +19,7 @@ class PCovCBaseTest(unittest.TestCase):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.model = lambda mixing=0.5, classifier=LogisticRegression(), **kwargs: PCovC(mixing, classifier=classifier, **kwargs)
+        self.model = lambda mixing=0.5, classifier=LogisticRegression(), **kwargs: PCovC(mixing=mixing, classifier=classifier, **kwargs)
         
         self.error_tol = 1e-5
 
@@ -38,6 +38,7 @@ class PCovCErrorTest(PCovCBaseTest):
         pcovc = PCovC(
             mixing=1.0, n_components=2, space="feature", svd_solver="full"
         ).fit(self.X, self.Y)
+        print(pcovc.score(self.X, self.Y))
         pca = PCA(n_components=2, svd_solver="full").fit(self.X)
 
         # tests that the SVD is equivalent
@@ -88,7 +89,7 @@ class PCovCErrorTest(PCovCBaseTest):
                     self.error_tol,
                 )
 
-    def test_lr_with_x_errors(self):
+    def test_cl_with_x_errors(self):
         """
         Check that PCovC returns a non-null property prediction
         and that the prediction error increases with `mixing`
@@ -109,7 +110,7 @@ class PCovCErrorTest(PCovCBaseTest):
 
             prev_error = error
 
-    def test_lr_with_t_errors(self):
+    def test_cl_with_t_errors(self):
         """Check that PCovc returns a non-null property prediction from the latent space
         projection and that the prediction error increases with `mixing`.
         """
@@ -419,10 +420,12 @@ class PCovCInfrastructureTest(PCovCBaseTest):
         self.Y = np.vstack(self.Y)
         pcovc.fit(self.X, self.Y)
 
-        self.assertEqual(pcovc.pxy_.shape[0], self.X.shape[1])
-        self.assertEqual(pcovc.pty_.shape[0], pcovc.n_components_)
+        self.assertEqual(pcovc.pxz_.shape[0], self.X.shape[1])
+        self.assertEqual(pcovc.ptz_.shape[0], pcovc.n_components_)
 
     def test_prefit_classifier(self):
+        print("Components")
+        print(self.Y.shape)
         classifier = LogisticRegression()
         classifier.fit(self.X, self.Y)
         pcovc = self.model(mixing=0.5, classifier=classifier)
@@ -453,7 +456,7 @@ class PCovCInfrastructureTest(PCovCBaseTest):
 
         self.assertTrue(np.linalg.norm(t1 - t2) < self.error_tol)
 
-    def test_regressor_modifications(self):
+    def test_classifier_modifications(self):
         classifier = LogisticRegression()
         pcovc = self.model(mixing=0.5, classifier=classifier)
 
@@ -472,7 +475,7 @@ class PCovCInfrastructureTest(PCovCBaseTest):
         # PCovC classifier doesn't change after fitting
         pcovc.fit(self.X, self.Y)
         classifier.set_params(alpha=1e-4)
-        self.assertTrue(hasattr(pcovc.regressor_, "coef_"))
+        self.assertTrue(hasattr(pcovc.classifier, "coef_"))
         self.assertTrue(classifier.get_params() != pcovc.classifier.get_params())
 
     def test_incompatible_classifier(self):
