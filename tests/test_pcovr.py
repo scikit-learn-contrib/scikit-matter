@@ -36,6 +36,7 @@ class PCovRErrorTest(PCovRBaseTest):
         pcovr = PCovR(
             mixing=1.0, n_components=3, space="sample", svd_solver="full"
         ).fit(self.X, self.Y)
+        print(pcovr.score(self.X, self.Y))
         pca = PCA(n_components=3, svd_solver="full").fit(self.X)
 
         # tests that the SVD is equivalent

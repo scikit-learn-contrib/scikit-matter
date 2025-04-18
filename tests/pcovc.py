@@ -370,20 +370,20 @@ class PCovC(_BasePCA, LinearModel):
             else:
                 classifier = self.classifier
 
-            yhat_classifier_ = check_cl_fit(classifier, X, y=y)  #change to z classifier, finds linear classifier  from x and y ()
+            z_classifier_ = check_cl_fit(classifier, X, y=y)  #change to z classifier, fits linear classifier on x and y to get Pxz
 
-            if isinstance(yhat_classifier_, MultiOutputClassifier):
-                W = np.hstack([est_.coef_.T for est_ in yhat_classifier_.estimators_])
-                Yhat = X @ W #computes Z, basically Z=XPxz
+            if isinstance(z_classifier_, MultiOutputClassifier):
+                W = np.hstack([est_.coef_.T for est_ in z_classifier_.estimators_])
+                Z = X @ W #computes Z, basically Z=XPxz
 
             else:
-                W = yhat_classifier_.coef_.T.reshape(X.shape[1], -1)
-                Yhat = yhat_classifier_.decision_function(X).reshape(X.shape[0], -1) #computes Z
+                W = z_classifier_.coef_.T.reshape(X.shape[1], -1)
+                Z = z_classifier_.decision_function(X).reshape(X.shape[0], -1) #computes Z
 
         else:
-            Yhat = y.copy()
+            Z = y.copy()
             if W is None:
-                W = np.linalg.lstsq(X, Yhat, self.tol)[0]  #W = weights for Pxz
+                W = np.linalg.lstsq(X, Z, self.tol)[0]  #W = weights for Pxz
 
         self._label_binarizer = LabelBinarizer(neg_label=-1, pos_label=1)
         Y = self._label_binarizer.fit_transform(y)
@@ -411,9 +411,9 @@ class PCovC(_BasePCA, LinearModel):
                 self.space_ = "sample"
 
         if self.space_ == "feature":
-            self._fit_feature_space(X, Y.reshape(Yhat.shape), Yhat)
+            self._fit_feature_space(X, Y.reshape(Z.shape), Z)
         else:
-            self._fit_sample_space(X, Y.reshape(Yhat.shape), Yhat, W)
+            self._fit_sample_space(X, Y.reshape(Z.shape), Z, W)
 
         # instead of using linear regression solution, refit with the classifier
         # and steal weights to get ptz
@@ -422,29 +422,29 @@ class PCovC(_BasePCA, LinearModel):
         # if classifier is precomputed, I don't think we need to check if the classifier is fit or not?
 
         #most tests are passing if we change self.classifier to classifier (just like how PCovR has it for self.regressor = ...)
-        self.classifier_ = check_cl_fit(self.classifier, X @ self.pxt_, y=y) #Has Ptz as weights (change y to Z )
-
+        self.classifier_ = check_cl_fit(self.classifier, X @ self.pxt_, y=y) #Has Ptz as weights 
+        #(self.classifier_.)
         if isinstance(self.classifier_, MultiOutputClassifier):
-            self.pty_ = np.hstack(
+            self.ptz_ = np.hstack(
                 [est_.coef_.T for est_ in self.classifier_.estimators_]
             )
-            self.pxy_ = self.pxt_ @ self.pty_
+            self.pxz_ = self.pxt_ @ self.ptz_
         else:
-            self.pty_ = self.classifier_.coef_.T #self.ptz_ = self.classifier_.coef.T
-            self.pxy_ = self.pxt_ @ self.pty_ #self.pxz_ = self.pxt_ @ self.ptz_
+            self.ptz_ = self.classifier_.coef_.T #self.ptz_ = self.classifier_.coef.T
+            self.pxz_ = self.pxt_ @ self.ptz_ #self.pxz_ = self.pxt_ @ self.ptz_
 
         if len(Y.shape) == 1:
-            self.pxy_ = self.pxy_.reshape(
+            self.pxz_ = self.pxz_.reshape(
                 X.shape[1],
             )
-            self.pty_ = self.pty_.reshape(
+            self.ptz_ = self.ptz_.reshape(
                 self.n_components_,
             )
 
         self.components_ = self.pxt_.T  # for sklearn compatibility
         return self
 
-    def _fit_feature_space(self, X, Y, Yhat):
+    def _fit_feature_space(self, X, Y, Z):
         r"""
         In feature-space PCovR, the projectors are determined by:
         .. math::
@@ -472,7 +472,7 @@ class PCovC(_BasePCA, LinearModel):
         Ct, iCsqrt = pcovr_covariance(
             mixing=self.mixing,
             X=X,
-            Y=Yhat,
+            Y=Z,
             rcond=self.tol,
             return_isqrt=True,
         )
@@ -506,7 +506,7 @@ class PCovC(_BasePCA, LinearModel):
         self.ptx_ = np.linalg.multi_dot([S_sqrt_inv, Vt, Csqrt])
         # self.pty_ = np.linalg.multi_dot([S_sqrt_inv, Vt, iCsqrt, X.T, Y])
 
-    def _fit_sample_space(self, X, Y, Yhat, W):
+    def _fit_sample_space(self, X, Y, Z, W):
         r"""
         In sample-space PCovR, the projectors are determined by:
         .. math::
@@ -526,7 +526,7 @@ class PCovC(_BasePCA, LinearModel):
                                \mathbf{U}_\mathbf{\tilde{K}}^T \mathbf{Y}
         """
 
-        Kt = pcovr_kernel(mixing=self.mixing, X=X, Y=Yhat)
+        Kt = pcovr_kernel(mixing=self.mixing, X=X, Y=Z)
 
         if self.fit_svd_solver_ == "full":
             U, S, Vt = self._decompose_full(Kt)
@@ -543,7 +543,7 @@ class PCovC(_BasePCA, LinearModel):
             self.explained_variance_ / self.explained_variance_.sum()
         )
 
-        P = (self.mixing * X.T) + (1.0 - self.mixing) * W @ Yhat.T
+        P = (self.mixing * X.T) + (1.0 - self.mixing) * W @ Z.T
         S_sqrt_inv = np.diagflat([1.0 / np.sqrt(s) if s > self.tol else 0.0 for s in S])
         T = Vt.T @ S_sqrt_inv
 
@@ -693,22 +693,22 @@ class PCovC(_BasePCA, LinearModel):
     def decision_function(self, X=None, T=None):
         """Predicts confidence score from X or T."""
 
-        check_is_fitted(self, attributes=["_label_binarizer", "pxy_", "pty_"])
+        check_is_fitted(self, attributes=["_label_binarizer", "pxz_", "ptz_"])
 
         if X is None and T is None:
             raise ValueError("Either X or T must be supplied.")
 
         if X is not None:
             X = check_array(X)
-            return X @ self.pxy_
+            return X @ self.pxz_
         else:
             T = check_array(T)
-            return T @ self.pty_
+            return T @ self.ptz_
 
     def predict(self, X=None, T=None):
         """Predicts class labels from X or T."""
 
-        check_is_fitted(self, attributes=["_label_binarizer", "pxy_", "pty_"])
+        check_is_fitted(self, attributes=["_label_binarizer", "pxz_", "ptz_"])
 
         if X is None and T is None:
             raise ValueError("Either X or T must be supplied.")
@@ -716,7 +716,7 @@ class PCovC(_BasePCA, LinearModel):
         # multiclass = self._label_binarizer.y_type_.startswith("multiclass")
 
         if X is not None:
-            return self.classifier_.predict(X @ self.pxt_)
+            return self.classifier_.predict(X @ self.pxt_) #Ptz(T) -> activation -> Y labels
             # xp, _ = get_namespace(X)
             # scores = self.decision_function(X=X)
             # if multiclass:
@@ -726,7 +726,7 @@ class PCovC(_BasePCA, LinearModel):
             # return xp.take(self.classes_, indices, axis=0)
 
         else:
-            return self.classifier_.predict(T)
+            return self.classifier_.predict(T) #Ptz(T) -> activation -> Y labels
             # tp, _ = get_namespace(T)
             # scores = self.decision_function(T=T)
             # if multiclass:
