@@ -13,7 +13,9 @@ from sklearn.naive_bayes import GaussianNB
 from sklearn.preprocessing import StandardScaler
 from sklearn.utils.validation import check_X_y
 
-from pcovc import PCovC
+import sys
+sys.path.append('scikit-matter')
+from src.skmatter.decomposition._pcovc import PCovC
 
 class PCovCBaseTest(unittest.TestCase):
     def __init__(self, *args, **kwargs):

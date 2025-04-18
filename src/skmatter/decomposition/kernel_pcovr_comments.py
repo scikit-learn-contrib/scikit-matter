@@ -6,33 +6,28 @@ from scipy.sparse.linalg import svds
 from sklearn.decomposition._base import _BasePCA
 from sklearn.decomposition._pca import _infer_dimension
 from sklearn.exceptions import NotFittedError
-from sklearn.linear_model import RidgeClassifier
+from sklearn.kernel_ridge import KernelRidge
 from sklearn.linear_model._base import LinearModel
 from sklearn.metrics.pairwise import pairwise_kernels
-from sklearn.utils import check_array, check_random_state, column_or_1d
+from sklearn.utils import check_array, check_random_state
 from sklearn.utils._arpack import _init_arpack_v0
 from sklearn.utils.extmath import randomized_svd, stable_cumsum, svd_flip
 from sklearn.utils.validation import check_is_fitted, check_X_y
-from sklearn.preprocessing import LabelBinarizer
-from sklearn.utils._array_api import get_namespace, indexing_dtype
-from sklearn.svm import SVC
 
-from skmatter.preprocessing import KernelNormalizer
-from skmatter.utils import check_krr_fit, pcovr_kernel
+from ..preprocessing import KernelNormalizer
+from ..utils import check_krr_fit, pcovr_kernel
 
 
-class KernelPCovC(_BasePCA, LinearModel):
-    r"""
-    Kernel Principal Covariates Regression, as described in [Helfrecht2020]_
-    determines a latent-space projection :math:`\mathbf{T}` which
-    minimizes a combined loss in supervised and unsupervised tasks in the
-    reproducing kernel Hilbert space (RKHS).
+class KernelPCovR(_BasePCA, LinearModel):
+    r"""Kernel Principal Covariates Regression, as described in [Helfrecht2020]_
+    determines a latent-space projection :math:`\mathbf{T}` which minimizes a combined
+    loss in supervised and unsupervised tasks in the reproducing kernel Hilbert space
+    (RKHS).
 
-    This projection is determined by the eigendecomposition of a modified gram
-    matrix :math:`\mathbf{\tilde{K}}`
+    This projection is determined by the eigendecomposition of a modified gram matrix
+    :math:`\mathbf{\tilde{K}}`
 
     .. math::
-
       \mathbf{\tilde{K}} = \alpha \mathbf{K} +
             (1 - \alpha) \mathbf{\hat{Y}}\mathbf{\hat{Y}}^T
 
@@ -43,15 +38,13 @@ class KernelPCovC(_BasePCA, LinearModel):
 
     Parameters
     ----------
-    mixing: float, default=0.5
-        mixing parameter, as described in PCovR as :math:`{\\alpha}`
-
-    n_components: int, float or str, default=None
+    mixing : float, default=0.5
+        mixing parameter, as described in PCovR as :math:`{\alpha}`
+    n_components : int, float or str, default=None
         Number of components to keep.
         if n_components is not set all components are kept::
 
             n_components == n_samples
-
     svd_solver : {'auto', 'full', 'arpack', 'randomized'}, default='auto'
         If auto :
             The solver is selected by a default policy based on `X.shape` and
@@ -69,94 +62,75 @@ class KernelPCovC(_BasePCA, LinearModel):
             0 < n_components < min(X.shape)
         If randomized :
             run randomized SVD by the method of Halko et al.
-
-    classifier : {instance of `SVC`, `precomputed`, None}, default=None
-        The classifier to use for computing
-        the property predictions :math:`\\hat{\\mathbf{Y}}`.
-        A pre-fitted classifier may be provided.
-        If the classifier is not `None`, its kernel parameters
+    regressor : {instance of `sklearn.kernel_ridge.KernelRidge`, `precomputed`, None}, default=None
+        The regressor to use for computing
+        the property predictions :math:`\hat{\mathbf{Y}}`.
+        A pre-fitted regressor may be provided.
+        If the regressor is not `None`, its kernel parameters
         (`kernel`, `gamma`, `degree`, `coef0`, and `kernel_params`)
-        must be identical to those passed directly to `KernelPCovC`.
+        must be identical to those passed directly to `KernelPCovR`.
 
         If `precomputed`, we assume that the `y` passed to the `fit` function
         is the regressed form of the targets :math:`{\mathbf{\hat{Y}}}`.
-
-
-    kernel: "linear" | "poly" | "rbf" | "sigmoid" | "cosine" | "precomputed"
+    kernel : "linear" | "poly" | "rbf" | "sigmoid" | "cosine" | "precomputed"
         Kernel. Default="linear".
-
-    gamma: float, default=None
+    gamma : float, default=None
         Kernel coefficient for rbf, poly and sigmoid kernels. Ignored by other
         kernels.
-
-    degree: int, default=3
+    degree : int, default=3
         Degree for poly kernels. Ignored by other kernels.
-
-    coef0: float, default=1
+    coef0 : float, default=1
         Independent term in poly and sigmoid kernels.
         Ignored by other kernels.
-
-    kernel_params: mapping of str to any, default=None
+    kernel_params : mapping of str to any, default=None
         Parameters (keyword arguments) and values for kernel passed as
         callable object. Ignored by other kernels.
-
-    center: bool, default=False
+    center : bool, default=False
             Whether to center any computed kernels
-
-    fit_inverse_transform: bool, default=False
+    fit_inverse_transform : bool, default=False
         Learn the inverse transform for non-precomputed kernels.
         (i.e. learn to find the pre-image of a point)
-
-    tol: float, default=1e-12
+    tol : float, default=1e-12
         Tolerance for singular values computed by svd_solver == 'arpack'
         and for matrix inversions.
         Must be of range [0.0, infinity).
-
-    n_jobs: int, default=None
+    n_jobs : int, default=None
         The number of parallel jobs to run.
         :obj:`None` means 1 unless in a :obj:`joblib.parallel_backend` context.
         ``-1`` means using all processors.
-
     iterated_power : int or 'auto', default='auto'
         Number of iterations for the power method computed by
         svd_solver == 'randomized'.
         Must be of range [0, infinity).
-
-    random_state : int, RandomState instance or None, default=None
+    random_state : int, :class:`numpy.random.RandomState` instance or None, default=None
         Used when the 'arpack' or 'randomized' solvers are used. Pass an int
         for reproducible results across multiple function calls.
 
     Attributes
     ----------
-
-    pt__: ndarray of size :math:`({n_{components}, n_{components}})`
+    pt__: numpy.darray of size :math:`({n_{components}, n_{components}})`
            pseudo-inverse of the latent-space projection, which
            can be used to contruct projectors from latent-space
-
-    pkt_: ndarray of size :math:`({n_{samples}, n_{components}})`
-           the projector, or weights, from the input kernel :math:`\\mathbf{K}`
-           to the latent-space projection :math:`\\mathbf{T}`
-
-    pky_: ndarray of size :math:`({n_{samples}, n_{properties}})`
-           the projector, or weights, from the input kernel :math:`\\mathbf{K}`
-           to the properties :math:`\\mathbf{Y}`
-
-    pty_: ndarray of size :math:`({n_{components}, n_{properties}})`
+    pkt_: numpy.ndarray of size :math:`({n_{samples}, n_{components}})`
+           the projector, or weights, from the input kernel :math:`\mathbf{K}`
+           to the latent-space projection :math:`\mathbf{T}`
+    pky_: numpy.ndarray of size :math:`({n_{samples}, n_{properties}})`
+           the projector, or weights, from the input kernel :math:`\mathbf{K}`
+           to the properties :math:`\mathbf{Y}`
+    pty_: numpy.ndarray of size :math:`({n_{components}, n_{properties}})`
           the projector, or weights, from the latent-space projection
-          :math:`\\mathbf{T}` to the properties :math:`\\mathbf{Y}`
-
-    ptx_: ndarray of size :math:`({n_{components}, n_{features}})`
+          :math:`\mathbf{T}` to the properties :math:`\mathbf{Y}`
+    ptx_: numpy.ndarray of size :math:`({n_{components}, n_{features}})`
          the projector, or weights, from the latent-space projection
-         :math:`\\mathbf{T}` to the feature matrix :math:`\\mathbf{X}`
-
-    X_fit_: ndarray of shape (n_samples, n_features)
+         :math:`\mathbf{T}` to the feature matrix :math:`\mathbf{X}`
+    X_fit_: numpy.ndarray of shape (n_samples, n_features)
         The data used to fit the model. This attribute is used to build kernels
         from new data.
 
     Examples
     --------
     >>> import numpy as np
-    >>> from skmatter.decomposition import KernelPCovC
+    >>> from skmatter.decomposition import KernelPCovR
     >>> from skmatter.preprocessing import StandardFlexibleScaler as SFS
     >>> from sklearn.kernel_ridge import KernelRidge
     >>>
@@ -165,16 +139,16 @@ class KernelPCovC(_BasePCA, LinearModel):
     >>> Y = np.array([[0, -5], [-1, 1], [1, -5], [-3, 2]])
     >>> Y = SFS(column_wise=True).fit_transform(Y)
     >>>
-    >>> kpcovr = KernelPCovC(
+    >>> kpcovr = KernelPCovR(
     ...     mixing=0.1,
     ...     n_components=2,
-    ...     classifier=KernelRidge(kernel="rbf", gamma=1),
+    ...     regressor=KernelRidge(kernel="rbf", gamma=1),
     ...     kernel="rbf",
     ...     gamma=1,
     ... )
     >>> kpcovr.fit(X, Y)
-    KernelPCovC(gamma=1, kernel='rbf', mixing=0.1, n_components=2,
-                classifier=KernelRidge(gamma=1, kernel='rbf'))
+    KernelPCovR(gamma=1, kernel='rbf', mixing=0.1, n_components=2,
+                regressor=KernelRidge(gamma=1, kernel='rbf'))
     >>> kpcovr.transform(X)
     array([[-0.61261285, -0.18937908],
            [ 0.45242098,  0.25453465],
@@ -186,7 +160,7 @@ class KernelPCovC(_BasePCA, LinearModel):
            [ 1.11923584, -1.04798016],
            [-1.5635827 ,  1.11078662]])
     >>> round(kpcovr.score(X, Y), 5)
-    -0.52039
+    np.float64(-0.52039)
     """  # NoQa: E501
 
     def __init__(
@@ -194,11 +168,11 @@ class KernelPCovC(_BasePCA, LinearModel):
         mixing=0.5,
         n_components=None,
         svd_solver="auto",
-        classifier=None,
-        kernel="rbf",
+        regressor=None,
+        kernel="linear",
         gamma="scale",
         degree=3,
-        coef0=0.0,
+        coef0=1,
         kernel_params=None,
         center=False,
         fit_inverse_transform=False,
@@ -226,7 +200,7 @@ class KernelPCovC(_BasePCA, LinearModel):
 
         self.fit_inverse_transform = fit_inverse_transform
 
-        self.classifier = classifier
+        self.regressor = regressor
 
     def _get_kernel(self, X, Y=None):
         if callable(self.kernel):
@@ -237,12 +211,9 @@ class KernelPCovC(_BasePCA, LinearModel):
             X, Y, metric=self.kernel, filter_params=True, n_jobs=self.n_jobs, **params
         )
 
-    def _fit(self, K, Z, W):
-        """
-        Fit the model with the computed kernel and approximated properties.
-        """
-
-        K_tilde = pcovr_kernel(mixing=self.mixing, X=K, Y=Z, kernel="precomputed")
+    def _fit(self, K, Yhat, W):
+        """Fit the model with the computed kernel and approximated properties."""
+        K_tilde = pcovr_kernel(mixing=self.mixing, X=K, Y=Yhat, kernel="precomputed")
 
         if self._fit_svd_solver == "full":
             _, S, Vt = self._decompose_full(K_tilde)
@@ -255,7 +226,7 @@ class KernelPCovC(_BasePCA, LinearModel):
 
         U = Vt.T
 
-        P = (self.mixing * np.eye(K.shape[0])) + (1.0 - self.mixing) * (W @ Z.T)
+        P = (self.mixing * np.eye(K.shape[0])) + (1.0 - self.mixing) * (W @ Yhat.T)
 
         S_inv = np.array([1.0 / s if s > self.tol else 0.0 for s in S])
 
@@ -264,51 +235,42 @@ class KernelPCovC(_BasePCA, LinearModel):
         T = K @ self.pkt_
         self.pt__ = np.linalg.lstsq(T, np.eye(T.shape[0]), rcond=self.tol)[0]
 
-    def fit(self, X, y, W=None):
-        """
-
-        Fit the model with X and Y.
+    def fit(self, X, Y, W=None):
+        r"""Fit the model with X and Y.
 
         Parameters
         ----------
-        X:  ndarray, shape (n_samples, n_features)
+        X : numpy.ndarray, shape (n_samples, n_features)
             Training data, where n_samples is the number of samples and
             n_features is the number of features.
 
-            It is suggested that :math:`\\mathbf{X}` be centered by its column-
+            It is suggested that :math:`\mathbf{X}` be centered by its column-
             means and scaled. If features are related, the matrix should be scaled
-            to have unit variance, otherwise :math:`\\mathbf{X}` should be
+            to have unit variance, otherwise :math:`\mathbf{X}` should be
             scaled so that each feature has a variance of 1 / n_features.
-
-        Y:  ndarray, shape (n_samples, n_properties)
+        Y : numpy.ndarray, shape (n_samples, n_properties)
             Training data, where n_samples is the number of samples and
             n_properties is the number of properties
 
-            It is suggested that :math:`\\mathbf{X}` be centered by its column-
+            It is suggested that :math:`\mathbf{X}` be centered by its column-
             means and scaled. If features are related, the matrix should be scaled
-            to have unit variance, otherwise :math:`\\mathbf{Y}` should be
+            to have unit variance, otherwise :math:`\mathbf{Y}` should be
             scaled so that each feature has a variance of 1 / n_features.
-
-        W : ndarray, shape (n_samples, n_properties)
-            Regression weights, optional when classifier=`precomputed`. If not
+        W : numpy.ndarray, shape (n_samples, n_properties)
+            Regression weights, optional when regressor=`precomputed`. If not
             passed, it is assumed that `W = np.linalg.lstsq(K, Y, self.tol)[0]`
 
         Returns
         -------
         self: object
             Returns the instance itself.
-
         """
-
-        if self.classifier not in ["precomputed", None] and not isinstance(
-            self.classifier, SVC
+        if self.regressor not in ["precomputed", None] and not isinstance(
+            self.regressor, KernelRidge
         ):
-            print(self.classifier)
-            raise ValueError(
-                "classifier must be an instance of `SVC`"
-            )
+            raise ValueError("Regressor must be an instance of `KernelRidge`")
 
-        X, y = check_X_y(X, y, multi_output=True)
+        X, Y = check_X_y(X, Y, y_numeric=True, multi_output=True)
         self.X_fit_ = X.copy()
 
         if self.n_components is None:
@@ -327,32 +289,32 @@ class KernelPCovC(_BasePCA, LinearModel):
 
         self.n_samples_in_, self.n_features_in_ = X.shape
 
-        if self.classifier != "precomputed":
-            if self.classifier is None:
-                classifier = SVC(
+        if self.regressor != "precomputed":
+            if self.regressor is None:
+                regressor = KernelRidge(
                     kernel=self.kernel,
                     gamma=self.gamma,
                     degree=self.degree,
                     coef0=self.coef0,
-                    #kernel_params=self.kernel_params,
+                    kernel_params=self.kernel_params,
                 )
             else:
-                classifier = self.classifier
-                kernel_attrs = ["kernel", "gamma", "degree", "coef0"]#, "kernel_params"]
+                regressor = self.regressor
+                kernel_attrs = ["kernel", "gamma", "degree", "coef0", "kernel_params"]
                 if not all(
                     [
-                        getattr(self, attr) == getattr(classifier, attr)
+                        getattr(self, attr) == getattr(regressor, attr)
                         for attr in kernel_attrs
                     ]
                 ):
                     raise ValueError(
-                        "Kernel parameter mismatch: the classifier has kernel "
-                        "parameters {%s} and KernelPCovC was initialized with kernel "
+                        "Kernel parameter mismatch: the regressor has kernel "
+                        "parameters {%s} and KernelPCovR was initialized with kernel "
                         "parameters {%s}"
                         % (
                             ", ".join(
                                 [
-                                    "%s: %r" % (attr, getattr(classifier, attr))
+                                    "%s: %r" % (attr, getattr(regressor, attr))
                                     for attr in kernel_attrs
                                 ]
                             ),
@@ -364,54 +326,32 @@ class KernelPCovC(_BasePCA, LinearModel):
                             ),
                         )
                     )
-                
-            '''
-            z_classifier_ = check_krr_fit(classifier, K, X, y) #fits classifier with K and Y, has Pkz as weights
 
-            if isinstance(z_classifier_, MultiOutputClassifier):
-                W = np.hstack([est_.coef_.T for est_ in z_classifier_.estimators_]) #Pkz
-                Z = K @ W #computes Z, basically Z=KPkz 
-
-            else:
-                W = z_classifier_.coef_.T.reshape(X.shape[1], -1) #Pkz
-                Z = z_classifier_.decision_function(X).reshape(X.shape[0], -1) #computes Z
-            '''
-
-            # Check if classifier is fitted; if not, fit with precomputed K
+            # Check if regressor is fitted; if not, fit with precomputed K
             # to avoid needing to compute the kernel a second time
+            self.regressor_ = check_krr_fit(regressor, K, X, Y)
 
+            W = self.regressor_.dual_coef_.reshape(self.n_samples_in_, -1)
 
-            '''
-            z_classifier_ = check_krr_fit(classifier, K, X, y)
-            '''
-            z_classifier_ = check_krr_fit(classifier, K, X, y) #Pkz as weights
-            
-            W = z_classifier_.dual_coef_.reshape(self.n_samples_in_, -1) #Pkz 
-
-            # Use this instead of `self.classifier_.predict(K)`
-            # so that we can handle the case of the pre-fitted classifier
-            Z = K @ W #K * PKZ 
-            # When we have an unfitted classifier,
+            # Use this instead of `self.regressor_.predict(K)`
+            # so that we can handle the case of the pre-fitted regressor
+            Yhat = K @ W
+            # When we have an unfitted regressor,
             # we fit it with a precomputed K
             # so we must subsequently "reset" it so that
             # it will work on the particular X
             # of the KPCovR call. The dual coefficients are kept.
-            # Can be bypassed if the classifier is pre-fitted.
+            # Can be bypassed if the regressor is pre-fitted.
             try:
-                check_is_fitted(classifier)
+                check_is_fitted(regressor)
             except NotFittedError:
-                z_classifier_.set_params(**classifier.get_params())
-                z_classifier_.X_fit_ = self.X_fit_
-                z_classifier_._check_n_features(self.X_fit_, reset=True)
+                self.regressor_.set_params(**regressor.get_params())
+                self.regressor_.X_fit_ = self.X_fit_
+                self.regressor_._check_n_features(self.X_fit_, reset=True)
         else:
-            Z = y.copy()
+            Yhat = Y.copy()
             if W is None:
-                W = np.linalg.lstsq(K, Z, self.tol)[0]
-
-        self._label_binarizer = LabelBinarizer(neg_label=-1, pos_label=1)
-        Y = self._label_binarizer.fit_transform(y)
-        if not self._label_binarizer.y_type_.startswith("multilabel"):
-            y = column_or_1d(y, warn=True)
+                W = np.linalg.lstsq(K, Yhat, self.tol)[0]
 
         # Handle svd_solver
         self._fit_svd_solver = self.svd_solver
@@ -430,96 +370,42 @@ class KernelPCovC(_BasePCA, LinearModel):
             else:
                 self._fit_svd_solver = "full"
 
-        self._fit(K, Z, W) #gives us T, Pkt, self.pt__
-
-        
-        '''
-        we now need Z = TPtz
-
-        self.classifier_ = check_cl_fit(classifier, K @ self.pkt, y) #Ptz as weights
-        Extract weights from self.classifier_ to get Ptz
-        Then, pxz_ = pxt @ ptz
-        
-        And so then maybe we change the below code 
-        (originally for KPCovR, with self.pty replaced with self.ptz and self.pky replaced with self.pkz)
-        '''
-
+        self._fit(K, Yhat, W)
 
         self.ptk_ = self.pt__ @ K
-        self.ptz_ = self.pt__ @ Y
+        self.pty_ = self.pt__ @ Y
 
         if self.fit_inverse_transform:
             self.ptx_ = self.pt__ @ X
 
-        #self.pkz_ = self.pkt_self.ptz_
-        self.pkz_ = self.pkt_ @ self.ptz_
+        self.pky_ = self.pkt_ @ self.pty_
 
         self.components_ = self.pkt_.T  # for sklearn compatibility
         return self
 
-    def decision_function(self, X=None, T=None):
-        """Predicts the confidence score for samples."""
+    def predict(self, X=None):
+        """Predicts the property values"""
+        check_is_fitted(self, ["pky_", "pty_"])
 
-        check_is_fitted(self, ["_label_binarizer", "pky_", "pty_"])
+        X = check_array(X)
+        K = self._get_kernel(X, self.X_fit_)
+        if self.center:
+            K = self.centerer_.transform(K)
 
-        if X is None and T is None:
-            raise ValueError("Either X or T must be supplied.")
-
-        if X is not None:
-            X = check_array(X)
-            K = self._get_kernel(X, self.X_fit_)
-            if self.center:
-                K = self.centerer_.transform(K)
-            return K @ self.pkz_
-
-        else:
-            T = check_array(T)
-            return T @ self.ptz_
-
-    #is there a reason why this predict function is different than the one in PCovc?
-    def predict(self, X=None, T=None):
-        """Predicts class values from X or T."""
-
-        check_is_fitted(self, ["_label_binarizer", "pky_", "pty_"])
-
-        if X is None and T is None:
-            raise ValueError("Either X or T must be supplied.")
-
-        multiclass = self._label_binarizer.y_type_.startswith("multiclass")
-
-        if X is not None:
-            xp, _ = get_namespace(X)
-            scores = self.decision_function(X=X)
-            if multiclass:
-                indices = xp.argmax(scores, axis=1)
-            else:
-                indices = xp.astype(scores > 0, indexing_dtype(xp))
-            return xp.take(self.classes_, indices, axis=0)
-
-        else:
-            tp, _ = get_namespace(T)
-            scores = self.decision_function(T=T)
-            if multiclass:
-                indices = tp.argmax(scores, axis=1)
-            else:
-                indices = tp.astype(scores > 0, indexing_dtype(tp))
-            return tp.take(self.classes_, indices, axis=0)
+        return K @ self.pky_
 
     def transform(self, X):
-        """
-        Apply dimensionality reduction to X.
+        """Apply dimensionality reduction to X.
 
-        X is projected on the first principal components as determined by the
+        ``X`` is projected on the first principal components as determined by the
         modified Kernel PCovR distances.
 
         Parameters
         ----------
-        X: ndarray, shape (n_samples, n_features)
+        X : numpy.ndarray, shape (n_samples, n_features)
             New data, where n_samples is the number of samples
             and n_features is the number of features.
-
         """
-
         check_is_fitted(self, ["pkt_", "X_fit_"])
 
         X = check_array(X)
@@ -531,13 +417,11 @@ class KernelPCovC(_BasePCA, LinearModel):
         return K @ self.pkt_
 
     def inverse_transform(self, T):
-        """Transform input data back to its original space.
+        r"""Transform input data back to its original space.
 
         .. math::
-
-            \\mathbf{\\hat{X}} = \\mathbf{T} \\mathbf{P}_{TX}
-                              = \\mathbf{K} \\mathbf{P}_{KT} \\mathbf{P}_{TX}
-
+            \mathbf{\hat{X}} = \mathbf{T} \mathbf{P}_{TX}
+                              = \mathbf{K} \mathbf{P}_{KT} \mathbf{P}_{TX}
 
         Similar to KPCA, the original features are not always recoverable,
         as the projection is computed from the kernel features, not the original
@@ -546,29 +430,25 @@ class KernelPCovC(_BasePCA, LinearModel):
 
         Parameters
         ----------
-        T: ndarray, shape (n_samples, n_components)
-            Projected data, where n_samples is the number of samples
-            and n_components is the number of components.
+        T : numpy.ndarray, shape (n_samples, n_components)
+            Projected data, where n_samples is the number of samples and n_components is
+            the number of components.
 
         Returns
         -------
-        X_original ndarray, shape (n_samples, n_features)
+        X_original : numpy.ndarray, shape (n_samples, n_features)
         """
-
         return T @ self.ptx_
 
     def score(self, X, Y):
-        r"""
-        Computes the (negative) loss values for KernelPCovC on the given predictor and
-        response variables. The loss in :math:`\mathbf{K}`, as explained in
+        r"""Computes the (negative) loss values for KernelPCovR on the given predictor
+        and response variables. The loss in :math:`\mathbf{K}`, as explained in
         [Helfrecht2020]_ does not correspond to a traditional Gram loss
-        :math:`\mathbf{K} - \mathbf{TT}^T`. Indicating the kernel between set
-        A and B as :math:`\mathbf{K}_{AB}`,
-        the projection of set A as :math:`\mathbf{T}_A`, and with N and V as the
-        train and validation/test set, one obtains
+        :math:`\mathbf{K} - \mathbf{TT}^T`. Indicating the kernel between set A and B as
+        :math:`\mathbf{K}_{AB}`, the projection of set A as :math:`\mathbf{T}_A`, and
+        with N and V as the train and validation/test set, one obtains
 
         .. math::
-
             \ell=\frac{\operatorname{Tr}\left[\mathbf{K}_{VV} - 2
             \mathbf{K}_{VN} \mathbf{T}_N
                 (\mathbf{T}_N^T \mathbf{T}_N)^{-1} \mathbf{T}_V^T
@@ -576,21 +456,22 @@ class KernelPCovC(_BasePCA, LinearModel):
             \mathbf{K}_{NN} \mathbf{T}_N (\mathbf{T}_N^T \mathbf{T}_N)^{-1}
             \mathbf{T}_V^T\right]}{\operatorname{Tr}(\mathbf{K}_{VV})}
 
-        The negative loss is returned for easier use in sklearn pipelines, e.g., a
-        grid search, where methods named 'score' are meant to be maximized.
+        The negative loss is returned for easier use in sklearn pipelines, e.g., a grid
+        search, where methods named 'score' are meant to be maximized.
 
-        Arguments
-        ---------
-        X:              independent (predictor) variable
-        Y:              dependent (response) variable
+        Parameters
+        ----------
+        X : numpy.ndarray
+            independent (predictor) variable
+        Y : numpy.ndarray
+            dependent (response) variable
 
         Returns
         -------
-        L:             Negative sum of the KPCA and KRR losses, with the KPCA loss
-                       determined by the reconstruction of the kernel
-
+        L : float
+            Negative sum of the KPCA and KRR losses, with the KPCA loss determined by
+            the reconstruction of the kernel
         """
-
         check_is_fitted(self, ["pkt_", "X_fit_"])
 
         X = check_array(X)
@@ -604,7 +485,7 @@ class KernelPCovC(_BasePCA, LinearModel):
             K_VN = self.centerer_.transform(K_VN)
             K_VV = self.centerer_.transform(K_VV)
 
-        y = K_VN @ self.pkz_
+        y = K_VN @ self.pky_
         Lkrr = np.linalg.norm(Y - y) ** 2 / np.linalg.norm(Y) ** 2
 
         t_n = K_NN @ self.pkt_
@@ -733,7 +614,3 @@ class KernelPCovC(_BasePCA, LinearModel):
             S[: self.n_components_],
             Vt[: self.n_components_],
         )
-
-    @property
-    def classes_(self):
-        return self._label_binarizer.classes_
