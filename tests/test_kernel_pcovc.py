@@ -6,13 +6,16 @@ from sklearn.datasets import load_breast_cancer as get_dataset
 from sklearn.kernel_ridge import KernelRidge
 from sklearn.linear_model import Ridge, RidgeCV
 from sklearn.utils.validation import check_X_y
+from sklearn.preprocessing import StandardScaler
+from sklearn.linear_model import LogisticRegression
 
 from sklearn.svm import SVC
 from sklearn.linear_model import RidgeClassifier
-from kernel_pcovc import KernelPCovC
-from pcovc import PCovC
-from sklearn.preprocessing import StandardScaler
-from sklearn.linear_model import LogisticRegression
+
+import sys
+sys.path.append('scikit-matter')
+from src.skmatter.decomposition._pcovc import PCovC
+from src.skmatter.decomposition._kernel_pcovc import KernelPCovC
 
 class KernelPCovCBaseTest(unittest.TestCase):
     def __init__(self, *args, **kwargs):
