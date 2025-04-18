@@ -382,11 +382,11 @@ class KernelPCovC(_BasePCA, LinearModel):
 
 
             '''
-            self.classifier_ = check_krr_fit(classifier, K, X)
+            z_classifier_ = check_krr_fit(classifier, K, X, y)
             '''
-            self.classifier_ = check_krr_fit(classifier, K, X, y) #Pkz as weights
+            z_classifier_ = check_krr_fit(classifier, K, X, y) #Pkz as weights
             
-            W = self.classifier_.dual_coef_.reshape(self.n_samples_in_, -1) #Pkz 
+            W = z_classifier_.dual_coef_.reshape(self.n_samples_in_, -1) #Pkz 
 
             # Use this instead of `self.classifier_.predict(K)`
             # so that we can handle the case of the pre-fitted classifier
@@ -400,9 +400,9 @@ class KernelPCovC(_BasePCA, LinearModel):
             try:
                 check_is_fitted(classifier)
             except NotFittedError:
-                self.classifier_.set_params(**classifier.get_params())
-                self.classifier_.X_fit_ = self.X_fit_
-                self.classifier_._check_n_features(self.X_fit_, reset=True)
+                z_classifier_.set_params(**classifier.get_params())
+                z_classifier_.X_fit_ = self.X_fit_
+                z_classifier_._check_n_features(self.X_fit_, reset=True)
         else:
             Z = y.copy()
             if W is None:
@@ -430,16 +430,29 @@ class KernelPCovC(_BasePCA, LinearModel):
             else:
                 self._fit_svd_solver = "full"
 
-        self._fit(K, Z, W)
- 
+        self._fit(K, Z, W) #gives us T, Pkt, self.pt__
+
+        
+        '''
+        we now need Z = TPtz
+
+        self.classifier_ = check_cl_fit(classifier, K @ self.pkt, y) #Ptz as weights
+        Extract weights from self.classifier_ to get Ptz
+        Then, pxz_ = pxt @ ptz
+        
+        And so then maybe we change the below code 
+        (originally for KPCovR, with self.pty replaced with self.ptz and self.pky replaced with self.pkz)
+        '''
+
+
         self.ptk_ = self.pt__ @ K
-        self.pty_ = self.pt__ @ Y
+        self.ptz_ = self.pt__ @ Y
 
         if self.fit_inverse_transform:
             self.ptx_ = self.pt__ @ X
 
         #self.pkz_ = self.pkt_self.ptz_
-        self.pky_ = self.pkt_ @ self.pty_
+        self.pkz_ = self.pkt_ @ self.ptz_
 
         self.components_ = self.pkt_.T  # for sklearn compatibility
         return self
@@ -457,12 +470,13 @@ class KernelPCovC(_BasePCA, LinearModel):
             K = self._get_kernel(X, self.X_fit_)
             if self.center:
                 K = self.centerer_.transform(K)
-            return K @ self.pky_
+            return K @ self.pkz_
 
         else:
             T = check_array(T)
-            return T @ self.pty_
+            return T @ self.ptz_
 
+    #is there a reason why this predict function is different than the one in PCovc?
     def predict(self, X=None, T=None):
         """Predicts class values from X or T."""
 
@@ -590,7 +604,7 @@ class KernelPCovC(_BasePCA, LinearModel):
             K_VN = self.centerer_.transform(K_VN)
             K_VV = self.centerer_.transform(K_VV)
 
-        y = K_VN @ self.pky_
+        y = K_VN @ self.pkz_
         Lkrr = np.linalg.norm(Y - y) ** 2 / np.linalg.norm(Y) ** 2
 
         t_n = K_NN @ self.pkt_
