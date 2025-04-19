@@ -422,13 +422,24 @@ class PCovC(_BasePCA, LinearModel):
 
         # instead of using linear regression solution, refit with the classifier
         # and steal weights to get ptz
-        #this is failing because self.classifier is never changed from None if None is passed as classifier
-        #change self.classifier to classifier and see what happens. if classifier is precomputed, there might be more errors so be careful.
+        # this is failing because self.classifier is never changed from None if None is passed as classifier
+        # change self.classifier to classifier and see what happens. if classifier is precomputed, there might be more errors so be careful.
         # if classifier is precomputed, I don't think we need to check if the classifier is fit or not?
 
         #most tests are passing if we change self.classifier to classifier (just like how PCovR has it for self.regressor = ...)
-        self.classifier_ = check_cl_fit(self.classifier, X @ self.pxt_, y=y) #Has Ptz as weights 
-        #(self.classifier_.)
+        #print(self.pxt_.shape)
+        #print((X @ self.pxt_).shape)
+        
+        
+
+        #cases:
+        #1. if classifier has been fit with X and Y already, we dont need to perform a check_cl_fit
+        #2. if classifier has not been fit with X or Y, we can perform check_cl_fit but don't need to
+        #3. if classifier has been fit with T and Y, we need to perform check_cl_fit (doesn't make sense actually, why would we fit with T and y)
+
+        # old: self.classifier_ = check_cl_fit(self.classifier, X @ self.pxt_, y=y) #Has Ptz as weights 
+        self.classifier_ = check_cl_fit(classifier, X @ self.pxt_, y=y) #Has Ptz as weights 
+
         if isinstance(self.classifier_, MultiOutputClassifier):
             self.ptz_ = np.hstack(
                 [est_.coef_.T for est_ in self.classifier_.estimators_]
