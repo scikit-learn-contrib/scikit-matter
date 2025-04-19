@@ -231,7 +231,8 @@ class PCovRSpaceTest(PCovRBaseTest):
                 #             pcovr_ss.pxt_, pcovr_fs.pxt_,
                 #             self.error_tol
                 #         ))
-                # print(" ")        
+                # print(" ")   
+
                 self.assertTrue(
                     np.allclose(
                         pcovr_ss.inverse_transform(pcovr_ss.transform(self.X)),

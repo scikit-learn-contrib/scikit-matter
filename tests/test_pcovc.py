@@ -40,7 +40,7 @@ class PCovCErrorTest(PCovCBaseTest):
         pcovc = PCovC(
             mixing=1.0, n_components=2, space="feature", svd_solver="full"
         ).fit(self.X, self.Y)
-        print(pcovc.score(self.X, self.Y))
+        
         pca = PCA(n_components=2, svd_solver="full").fit(self.X)
 
         # tests that the SVD is equivalent
@@ -78,7 +78,7 @@ class PCovCErrorTest(PCovCBaseTest):
         """
         for space in ["feature", "sample", "auto"]:
             with self.subTest(space=space):
-                # failing because check_lr_fit wei
+                print(self.X.shape)
                 pcovc = self.model(mixing=0.0, n_components=2, space=space)
 
                 pcovc.classifier.fit(self.X, self.Y)
@@ -240,6 +240,10 @@ class PCovCSpaceTest(PCovCBaseTest):
                 #         ))
 
                 #failing for all alpha values
+                # so these are similar (within approximately 0.001), but not exactly the same. 
+                # I think this is because transform and inverse_transform depend on Pxt and Ptx,
+                # which in turn depend on Z, which is a matrix of class likelihoods (so maybe there is some rounding problems)
+
                 self.assertTrue(
                     np.allclose(
                         pcovc_ss.inverse_transform(pcovc_ss.transform(self.X)),
@@ -476,9 +480,9 @@ class PCovCInfrastructureTest(PCovCBaseTest):
 
         # PCovC classifier doesn't change after fitting
         pcovc.fit(self.X, self.Y)
-        classifier.set_params(alpha=1e-4)
-        self.assertTrue(hasattr(pcovc.classifier, "coef_"))
-        self.assertTrue(classifier.get_params() != pcovc.classifier.get_params())
+        classifier.set_params(random_state=3)
+        self.assertTrue(hasattr(pcovc.classifier_, "coef_"))
+        self.assertTrue(classifier.get_params() != pcovc.classifier_.get_params())
 
     def test_incompatible_classifier(self):
         classifier = GaussianNB()

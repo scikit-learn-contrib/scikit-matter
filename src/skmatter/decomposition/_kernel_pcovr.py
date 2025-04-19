@@ -14,8 +14,8 @@ from sklearn.utils._arpack import _init_arpack_v0
 from sklearn.utils.extmath import randomized_svd, stable_cumsum, svd_flip
 from sklearn.utils.validation import _check_n_features, check_is_fitted, validate_data
 
-from ..preprocessing import KernelNormalizer
-from ..utils import check_krr_fit, pcovr_kernel
+from skmatter.preprocessing import KernelNormalizer
+from skmatter.utils import check_krr_fit, pcovr_kernel
 
 
 class KernelPCovR(_BasePCA, LinearModel):

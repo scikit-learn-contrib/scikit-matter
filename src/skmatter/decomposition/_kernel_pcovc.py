@@ -16,9 +16,59 @@ from sklearn.utils.validation import check_is_fitted, check_X_y
 from sklearn.preprocessing import LabelBinarizer
 from sklearn.utils._array_api import get_namespace, indexing_dtype
 from sklearn.svm import SVC
+from sklearn.base import clone
+from copy import deepcopy
 
-from ..preprocessing import KernelNormalizer
-from ..utils import check_krr_fit, pcovr_kernel
+from skmatter.preprocessing import KernelNormalizer
+from skmatter.utils import check_krr_fit, pcovr_kernel
+
+def check_cl_fit(classifier, X, y):
+    r"""
+    Checks that a (linear) classifier is fitted, and if not,
+    fits it with the provided data
+    :param regressor: sklearn-style classifier
+    :type classifier: object
+    :param X: feature matrix with which to fit the classifier
+        if it is not already fitted
+    :type X: array
+    :param y: target values with which to fit the classifier
+        if it is not already fitted
+    :type y: array
+    """
+    try:
+        check_is_fitted(classifier)
+        fitted_classifier = deepcopy(classifier)
+
+        # Check compatibility with X
+        fitted_classifier._validate_data(X, y, reset=False, multi_output=True)
+
+        # Check compatibility with y
+
+        # changed from if fitted_classifier.coef_.ndim != y.ndim:
+        # dimension of classifier coefficients is always 2, hence we don't need to check 
+        # for match with Y
+        if fitted_classifier.coef_.shape[1] != X.shape[1]:
+            raise ValueError(
+                "The classifier coefficients have a shape incompatible "
+                "with the supplied feature space. "
+                "The coefficients have shape %d and the features "
+                "have shape %d" % (fitted_classifier.coef_.shape, X.shape)
+            )
+        # LogisticRegression does not support multioutput, but RidgeClassifier does
+        elif y.ndim == 2:
+            if fitted_classifier.coef_.shape[0] != y.shape[1]:
+                raise ValueError(
+                    "The classifier coefficients have a shape incompatible "
+                    "with the supplied target space. "
+                    "The coefficients have shape %r and the targets "
+                    "have shape %r" % (fitted_classifier.coef_.shape, y.shape)
+                )
+
+    except NotFittedError:
+        fitted_classifier = clone(classifier)
+        fitted_classifier.fit(X, y)
+
+    return fitted_classifier
 
 
 class KernelPCovC(_BasePCA, LinearModel):
@@ -432,7 +482,8 @@ class KernelPCovC(_BasePCA, LinearModel):
 
         self._fit(K, Z, W) #gives us T, Pkt, self.pt__
 
-        
+        self.classifier_ = check_cl_fit(classifier, K @ self.pkt, y) #Ptz as weights
+
         '''
         we now need Z = TPtz
 
@@ -477,6 +528,7 @@ class KernelPCovC(_BasePCA, LinearModel):
             return T @ self.ptz_
 
     #is there a reason why this predict function is different than the one in PCovc?
+    #it can be the same
     def predict(self, X=None, T=None):
         """Predicts class values from X or T."""
 

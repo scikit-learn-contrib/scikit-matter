@@ -15,7 +15,7 @@ from sklearn.utils._arpack import _init_arpack_v0
 from sklearn.utils.extmath import randomized_svd, stable_cumsum, svd_flip
 from sklearn.utils.validation import check_is_fitted, validate_data
 
-from ..utils import check_lr_fit, pcovr_covariance, pcovr_kernel
+from skmatter.utils import check_lr_fit, pcovr_covariance, pcovr_kernel
 
 
 class PCovR(_BasePCA, LinearModel):
