@@ -1,31 +1,21 @@
-from copy import deepcopy
+import numbers
+import numpy as np
 import warnings
 from matplotlib.pylab import LinAlgError
-import numpy as np
-from sklearn import clone
-from sklearn.base import check_X_y
-from sklearn.calibration import LinearSVC, column_or_1d
-from sklearn.decomposition._base import _BasePCA
-from sklearn.exceptions import NotFittedError
-from sklearn.linear_model import LogisticRegression, Ridge
-from sklearn.linear_model._base import LinearModel
-from sklearn.multioutput import MultiOutputClassifier
+
 from scipy.linalg import sqrtm as MatrixSqrt
-from sklearn.naive_bayes import LabelBinarizer
-from skmatter.utils import check_lr_fit, pcovr_covariance, pcovr_kernel
-
-import numbers
-import warnings
-
-import numpy as np
-from numpy.linalg import LinAlgError
 from scipy import linalg
 from scipy.linalg import sqrtm as MatrixSqrt
 from scipy.sparse.linalg import svds
+
+from sklearn.base import check_X_y
+from sklearn.calibration import column_or_1d
 from sklearn.decomposition._base import _BasePCA
-from sklearn.decomposition._pca import _infer_dimension
-from sklearn.linear_model import LinearRegression, Ridge, RidgeCV
+from sklearn.linear_model import LogisticRegression, Ridge
 from sklearn.linear_model._base import LinearModel
+from sklearn.multioutput import MultiOutputClassifier
+from sklearn.naive_bayes import LabelBinarizer
+from sklearn.decomposition._pca import _infer_dimension
 from sklearn.utils import check_array, check_random_state
 from sklearn.utils._arpack import _init_arpack_v0
 from sklearn.utils.extmath import randomized_svd, stable_cumsum, svd_flip
@@ -33,11 +23,9 @@ from sklearn.utils.validation import check_is_fitted, check_X_y
 
 from skmatter.utils import check_lr_fit, pcovr_covariance, pcovr_kernel
 
-
 import sys
 sys.path.append('scikit-matter')
 from src.skmatter.utils._pcovc_utils import check_cl_fit
-from src.skmatter.decomposition._pcovr import PCovR
 
 class _BasePCov(_BasePCA, LinearModel):
     def __init__(
@@ -155,7 +143,6 @@ class _BasePCov(_BasePCA, LinearModel):
 
             self.components_ = self.pxt_.T  # for sklearn compatibility
 
-           
         else:
             # Assign the default classifier
             if self.classifier != "precomputed":
