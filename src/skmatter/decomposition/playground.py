@@ -9,31 +9,31 @@ from _pcovc import PCovC
 from sklearn.datasets import load_breast_cancer as get_dataset
 from sklearn.datasets import load_diabetes as get_dataset2
 from sklearn.metrics import accuracy_score
-from _pcovr import PCovR
+from pcovr_new import PCovR
 
-X, Y = get_dataset(return_X_y=True)
+X, Y = get_dataset2(return_X_y=True)
 
 scaler = StandardScaler()
 X = scaler.fit_transform(X)
-print(X.shape)
-print(Y.shape)
 
-pcovc = PCovC(mixing=0.0, classifier=LogisticRegression(), n_components=2, space="feature")
-
-#pcovc.classifier.fit(X, Y)
-#print(pcovc.classifier.coef_.shape)
-pcovc.fit(X, Y)
-T = pcovc.transform(X)
+model = PCovR(mixing=0.5, regressor=LinearRegression())
+model.fit(X,Y)
+print(isinstance(model, PCovR))
 
 
 
 
 
+# classifier = LogisticRegression()
+# classifier.fit(X, Y)
+# pcovc = PCovC(mixing=0.5, classifier=classifier, n_components=2)
+# pcovc.fit(X,Y)
 
 
-
-
-
+# X, Y = get_dataset2(return_X_y=True)
+# print(X.shape)
+# pcovr = PCovR(mixing = 0.5, regressor=LinearRegression())
+# pcovr.fit(X,Y)
 
 
 
