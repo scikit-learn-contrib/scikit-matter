@@ -15,7 +15,7 @@ from sklearn.utils.validation import check_X_y
 
 import sys
 sys.path.append('scikit-matter')
-from src.skmatter.decomposition._pcovc import PCovC
+from src.skmatter.decomposition.pcovc_new import PCovC
 
 class PCovCBaseTest(unittest.TestCase):
     def __init__(self, *args, **kwargs):
@@ -495,7 +495,8 @@ class PCovCInfrastructureTest(PCovCBaseTest):
             str(cm.exception),
             "classifier must be an instance of "
             "`RidgeClassifier`, `RidgeClassifierCV`, `LogisticRegression`,"
-            "`Logistic RegressionCV`, or `precomputed`",
+            "`Logistic RegressionCV`, `SGDClassifier`, `LinearSVC`,"
+            "`MultiOutputClassifier`, or `precomputed`",
         )
 
     def test_none_classifier(self):

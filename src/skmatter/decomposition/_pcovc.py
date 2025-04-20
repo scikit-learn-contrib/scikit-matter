@@ -89,7 +89,8 @@ def check_cl_fit(classifier, X, y):
 
         # Check compatibility with X
         fitted_classifier._validate_data(X, y, reset=False, multi_output=True)
-
+        print("X shape "+str(X.shape))
+        print("y shape " + str(y.shape))
         # Check compatibility with y
 
         # changed from if fitted_classifier.coef_.ndim != y.ndim:
@@ -124,11 +125,13 @@ class PCovC(_BasePCA, LinearModel):
     Principal Covariates Classification.
     Determines a latent-space projection :math:`\mathbf{T}` which
     minimizes a combined loss in supervised and unsupervised tasks.
+
     This projection is determined by the eigendecomposition of a modified gram
     matrix :math:`\mathbf{\tilde{K}}`
     .. math::
       \mathbf{\tilde{K}} = \alpha \mathbf{X} \mathbf{X}^T +
             (1 - \alpha) \mathbf{\hat{Y}}\mathbf{\hat{Y}}^T
+
     where :math:`\alpha` is a mixing parameter and
     :math:`\mathbf{X}` and :math:`\mathbf{\hat{Y}}` are matrices of shapes
     :math:`(n_{samples}, n_{features})` and :math:`(n_{samples}, n_{properties})`,
@@ -136,16 +139,19 @@ class PCovC(_BasePCA, LinearModel):
     :math:`(n_{samples} < n_{features})`, this can be more efficiently computed
     using the eigendecomposition of a modified covariance matrix
     :math:`\mathbf{\tilde{C}}`
+
     .. math::
       \mathbf{\tilde{C}} = \alpha \mathbf{X}^T \mathbf{X} +
             (1 - \alpha) \left(\left(\mathbf{X}^T
             \mathbf{X}\right)^{-\frac{1}{2}} \mathbf{X}^T
             \mathbf{\hat{Y}}\mathbf{\hat{Y}}^T \mathbf{X} \left(\mathbf{X}^T
             \mathbf{X}\right)^{-\frac{1}{2}}\right)
+
     For all PCovR methods, it is strongly suggested that :math:`\mathbf{X}` and
     :math:`\mathbf{Y}` are centered and scaled to unit variance, otherwise the
     results will change drastically near :math:`\alpha \to 0` and :math:`\alpha \to 1`.
     This can be done with the companion preprocessing classes, where
+
     >>> from skmatter.preprocessing import StandardFlexibleScaler as SFS
     >>> import numpy as np
     >>>
@@ -157,6 +163,7 @@ class PCovC(_BasePCA, LinearModel):
     >>> scaler.fit(A)
     StandardFlexibleScaler(column_wise=True)
     >>> A = scaler.transform(A)
+
     Parameters
     ----------
     mixing: float, default=0.5
@@ -214,6 +221,7 @@ class PCovC(_BasePCA, LinearModel):
          Used when the 'arpack' or 'randomized' solvers are used. Pass an int
          for reproducible results across multiple function calls.
     whiten : boolean, deprecated
+
     Attributes
     ----------
     mixing: float, default=0.5
@@ -244,6 +252,7 @@ class PCovC(_BasePCA, LinearModel):
         of the PCovR-modified covariance matrix of :math:`\mathbf{X}`.
     singular_values_ : ndarray of shape (n_components,)
         The singular values corresponding to each of the selected components.
+        
     Examples
     --------
     >>> import numpy as np
@@ -367,7 +376,7 @@ class PCovC(_BasePCA, LinearModel):
                 "`RidgeClassifier`, `RidgeClassifierCV`, `LogisticRegression`,"
                 "`Logistic RegressionCV`, or `precomputed`"
             )
-
+        
         # Assign the default classifier
         if self.classifier != "precomputed":
             if self.classifier is None:
@@ -426,19 +435,19 @@ class PCovC(_BasePCA, LinearModel):
         # change self.classifier to classifier and see what happens. if classifier is precomputed, there might be more errors so be careful.
         # if classifier is precomputed, I don't think we need to check if the classifier is fit or not?
 
-        #most tests are passing if we change self.classifier to classifier (just like how PCovR has it for self.regressor = ...)
-        #print(self.pxt_.shape)
-        #print((X @ self.pxt_).shape)
-        
-        
-
         #cases:
         #1. if classifier has been fit with X and Y already, we dont need to perform a check_cl_fit
-        #2. if classifier has not been fit with X or Y, we can perform check_cl_fit but don't need to
+        #2. if classifier has not been fit with X or Y, we dont need to 
         #3. if classifier has been fit with T and Y, we need to perform check_cl_fit (doesn't make sense actually, why would we fit with T and y)
 
         # old: self.classifier_ = check_cl_fit(self.classifier, X @ self.pxt_, y=y) #Has Ptz as weights 
-        self.classifier_ = check_cl_fit(classifier, X @ self.pxt_, y=y) #Has Ptz as weights 
+
+        self.classifier_ = check_cl_fit(classifier, X @ self.pxt_, y=y)
+
+        #self.classifier_ = LogisticRegression().fit(X @ self.pxt_, y)
+        #check_cl_fit(classifier., X @ self.pxt_, y=y) #Has Ptz as weights 
+        print("Self.classifier_ shape "+ str(self.classifier_.coef_.shape))
+        print("PCovC Self.pxt_ "+ str((self.pxt_).shape))
 
         if isinstance(self.classifier_, MultiOutputClassifier):
             self.ptz_ = np.hstack(
@@ -723,7 +732,6 @@ class PCovC(_BasePCA, LinearModel):
 
     def predict(self, X=None, T=None):
         """Predicts class labels from X or T."""
-
         check_is_fitted(self, attributes=["_label_binarizer", "pxz_", "ptz_"])
 
         if X is None and T is None:

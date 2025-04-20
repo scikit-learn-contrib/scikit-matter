@@ -254,16 +254,21 @@ class PCovR(_BasePCA, LinearModel):
             [
                 self.regressor is None,
                 self.regressor == "precomputed",
-                isinstance(self.regressor, LinearRegression),
-                isinstance(self.regressor, Ridge),
-                isinstance(self.regressor, RidgeCV),
+                isinstance(
+                    self.regressor, 
+                    (
+                           LinearRegression,
+                           Ridge,
+                           RidgeCV
+                        ),
+                ),
             ]
         ):
             raise ValueError(
                 "Regressor must be an instance of "
                 "`LinearRegression`, `Ridge`, `RidgeCV`, or `precomputed`"
             )
-
+        
         # Assign the default regressor
         if self.regressor != "precomputed":
             if self.regressor is None:
@@ -319,6 +324,8 @@ class PCovR(_BasePCA, LinearModel):
             )
 
         self.components_ = self.pxt_.T  # for sklearn compatibility
+        print("PCovR Self.pxt_ "+ str((self.pxt_).shape))
+
         return self
 
     def _fit_feature_space(self, X, Y, Yhat):
