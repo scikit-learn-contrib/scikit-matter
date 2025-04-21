@@ -1,5 +1,7 @@
  
+from sklearn.base import check_is_fitted
 from sklearn.discriminant_analysis import StandardScaler
+from sklearn.exceptions import NotFittedError
 from sklearn.kernel_ridge import KernelRidge
 from sklearn.linear_model import LogisticRegression, LinearRegression
 from sklearn.svm import SVC
@@ -9,32 +11,50 @@ from _pcovc import PCovC
 from sklearn.datasets import load_breast_cancer as get_dataset
 from sklearn.datasets import load_diabetes as get_dataset2
 from sklearn.metrics import accuracy_score
-from pcovr_new import PCovR
+from _kernel_pcovr import KernelPCovR
 
-X, Y = get_dataset2(return_X_y=True)
+X, Y = get_dataset(return_X_y=True)
 
+X_or = X
 scaler = StandardScaler()
 X = scaler.fit_transform(X)
+
+
+pcovc = PCovC(mixing=0.0, classifier=LogisticRegression(), n_components=2)
+pcovc.fit(X,Y)
+T = pcovc.transform(X)
+
+pcovc2 = PCovC(mixing=0.0, classifier=LogisticRegression(), n_components=2)
+pcovc2.classifier.fit(X, Y)
+print(pcovc2.classifier.coef_.shape)
+pcovc2.classifier.fit(T, Y)
+print(pcovc2.classifier.coef_.shape)
+
+
+
+
 
 # model = PCovR(mixing=0.5, regressor=LinearRegression())
 # model.fit(X,Y)
 # print(isinstance(model, PCovR))
 
-import numpy as np
+# import numpy as np
 
-X = np.array([[-1, 0, -2, 3], [3, -2, 0, 1], [-3, 0, -1, -1], [1, 3, 0, -2]])
-Y = np.array([[0], [1], [2], [0]])
-             
-pcovc = PCovC(mixing=0.1, n_components=2)
-pcovc.fit(X, Y)
-T= pcovc.transform(X)
-print(T)
+# X = np.array([[-1, 0, -2, 3], [3, -2, 0, 1], [-3, 0, -1, -1], [1, 3, 0, -2]])
+# Y = np.array([[0], [1], [2], [0]])
+
+# print("AA23")       
+# print(Y.shape)
+# pcovc = PCovC(mixing=0.1, n_components=2)
+# pcovc.fit(X, Y)
+# T= pcovc.transform(X)
+# print(T)
 # array([[ 3.2630561 ,  0.06663787],
 #            [-2.69395511, -0.41582771],
 #            [ 3.48683147, -0.83164387],
 #            [-4.05593245,  1.18083371]])
-Y = pcovc.predict(X)
-print(Y.shape)
+# Y = pcovc.predict(X)
+# print(Y.shape)
 # array([[ 0.01371776, -5.00945512],
 #            [-1.02805338,  1.06736871],
 #            [ 0.98166504, -4.98307078],

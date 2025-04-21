@@ -260,7 +260,7 @@ class PCovC(_BasePCov):
             )
         return super().fit(X, Y, W)
     
-    def _fit_feature_space(self, X, Y, Yhat):
+    def _fit_feature_space(self, X, Y, Z):
         r"""In feature-space PCovC, the projectors are determined by:
 
         .. math::
@@ -282,9 +282,9 @@ class PCovC(_BasePCov):
                                 \mathbf{U}_\mathbf{\tilde{C}}^T
                                 (\mathbf{X}^T \mathbf{X})^{\frac{1}{2}}
         """
-        return super()._fit_feature_space(X, Y, Yhat)
+        return super()._fit_feature_space(X, Y, Z)
 
-    def _fit_sample_space(self, X, Y, Yhat, W):
+    def _fit_sample_space(self, X, Y, Z, W):
         r"""In sample-space PCovC, the projectors are determined by:
 
         .. math::
@@ -303,7 +303,7 @@ class PCovC(_BasePCov):
             \mathbf{P}_{TX} = \mathbf{\Lambda}_\mathbf{\tilde{K}}^{-\frac{1}{2}}
                                 \mathbf{U}_\mathbf{\tilde{K}}^T \mathbf{X}
         """
-        return super()._fit_sample_space(X, Y, Yhat, W)
+        return super()._fit_sample_space(X, Y, Z, W)
     
     def _decompose_truncated(self, mat):
         return super()._decompose_truncated(mat)

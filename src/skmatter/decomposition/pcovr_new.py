@@ -57,11 +57,12 @@ class PCovR(_BasePCov):
     mixing: float, default=0.5
         mixing parameter, as described in PCovR as :math:`{\alpha}`, here named to avoid
         confusion with regularization parameter `alpha`
+
     n_components : int, float or str, default=None
         Number of components to keep.
         if n_components is not set all components are kept::
-
             n_components == min(n_samples, n_features)
+
     svd_solver : {'auto', 'full', 'arpack', 'randomized'}, default='auto'
         If auto :
             The solver is selected by a default policy based on `X.shape` and
@@ -78,13 +79,16 @@ class PCovR(_BasePCov):
             min(X.shape)
         If randomized :
             run randomized SVD by the method of Halko et al.
+
     tol : float, default=1e-12
         Tolerance for singular values computed by svd_solver == 'arpack'. Must be of
         range [0.0, infinity).
+
     space: {'feature', 'sample', 'auto'}, default='auto'
         whether to compute the PCovR in `sample` or `feature` space default=`sample`
         when :math:`{n_{samples} < n_{features}}` and `feature` when
         :math:`{n_{features} < n_{samples}}`
+
     regressor: {`Ridge`, `RidgeCV`, `LinearRegression`, `precomputed`}, default=None
         regressor for computing approximated :math:`{\mathbf{\hat{Y}}}`. The regressor
         should be one `sklearn.linear_model.Ridge`, `sklearn.linear_model.RidgeCV`, or
@@ -98,42 +102,52 @@ class PCovR(_BasePCov):
         regressed form of the targets :math:`{\mathbf{\hat{Y}}}`. If None,
         ``sklearn.linear_model.Ridge('alpha':1e-6, 'fit_intercept':False, 'tol':1e-12)``
         is used as the regressor.
+
     iterated_power : int or 'auto', default='auto'
          Number of iterations for the power method computed by svd_solver ==
          'randomized'. Must be of range [0, infinity).
+
     random_state : int, :class:`numpy.random.RandomState` instance or None, default=None
          Used when the 'arpack' or 'randomized' solvers are used. Pass an int for
          reproducible results across multiple function calls.
+         
     whiten : bool, deprecated
 
     Attributes
     ----------
     mixing: float, default=0.5
         mixing parameter, as described in PCovR as :math:`{\alpha}`
+
     tol: float, default=1e-12
         Tolerance for singular values computed by svd_solver == 'arpack'.
         Must be of range [0.0, infinity).
+
     space: {'feature', 'sample', 'auto'}, default='auto'
         whether to compute the PCovR in `sample` or `feature` space default=`sample`
         when :math:`{n_{samples} < n_{features}}` and `feature` when
         :math:`{n_{features} < n_{samples}}`
+
     n_components_ : int
         The estimated number of components, which equals the parameter n_components, or
         the lesser value of n_features and n_samples if n_components is None.
+
     pxt_ : numpy.ndarray of size :math:`({n_{samples}, n_{components}})`
         the projector, or weights, from the input space :math:`\mathbf{X}` to the
         latent-space projection :math:`\mathbf{T}`
+
     pty_ : numpy.ndarray of size :math:`({n_{components}, n_{properties}})`
         the projector, or weights, from the latent-space projection :math:`\mathbf{T}`
         to the properties :math:`\mathbf{Y}`
+
     pxy_ : numpy.ndarray of size :math:`({n_{samples}, n_{properties}})`
         the projector, or weights, from the input space :math:`\mathbf{X}` to the
         properties :math:`\mathbf{Y}`
+
     explained_variance_ : numpy.ndarray of shape (n_components,)
         The amount of variance explained by each of the selected components.
-
         Equal to n_components largest eigenvalues
         of the PCovR-modified covariance matrix of :math:`\mathbf{X}`.
+        
     singular_values_ : numpy.ndarray of shape (n_components,)
         The singular values corresponding to each of the selected components.
 
@@ -195,6 +209,7 @@ class PCovR(_BasePCov):
             means and scaled. If features are related, the matrix should be scaled
             to have unit variance, otherwise :math:`\mathbf{X}` should be
             scaled so that each feature has a variance of 1 / n_features.
+
         Y : numpy.ndarray, shape (n_samples, n_properties)
             Training data, where n_samples is the number of samples and n_properties is
             the number of properties
@@ -206,6 +221,7 @@ class PCovR(_BasePCov):
 
             If the passed regressor = `precomputed`, it is assumed that Y is the
             regressed form of the properties, :math:`{\mathbf{\hat{Y}}}`.
+
         W : numpy.ndarray, shape (n_features, n_properties)
             Regression weights, optional when regressor=`precomputed`. If not
             passed, it is assumed that `W = np.linalg.lstsq(X, Y, self.tol)[0]`
