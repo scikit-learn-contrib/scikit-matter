@@ -1,6 +1,7 @@
 import numbers
 
 import numpy as np
+import scipy.sparse as sp
 from scipy import linalg
 from scipy.sparse.linalg import svds
 from sklearn.decomposition._base import _BasePCA
@@ -249,7 +250,7 @@ class KernelPCovC(_BasePCA, LinearModel):
         gamma="scale",
         degree=3,
         coef0=0.0,
-        kernel_params=None,
+     #   kernel_params=None,
         center=False,
         fit_inverse_transform=False,
         tol=1e-12,
@@ -270,7 +271,7 @@ class KernelPCovC(_BasePCA, LinearModel):
         self.gamma = gamma
         self.degree = degree
         self.coef0 = coef0
-        self.kernel_params = kernel_params
+    #    self.kernel_params = kernel_params
 
         self.n_jobs = n_jobs
 
@@ -279,10 +280,23 @@ class KernelPCovC(_BasePCA, LinearModel):
         self.classifier = classifier
 
     def _get_kernel(self, X, Y=None):
+        sparse = sp.issparse(X)
+
         if callable(self.kernel):
-            params = self.kernel_params or {}
+            params = {} #self.kernel_params or {}
         else:
-            params = {"gamma": self.gamma, "degree": self.degree, "coef0": self.coef0}
+            if self.gamma == "scale":
+                X_var = (X.multiply(X)).mean() - (X.mean()) ** 2 if sparse else X.var()
+                self._gamma = 1.0 / (X.shape[1] * X_var) if X_var != 0 else 1.0
+            elif self.gamma == "auto":
+                self._gamma = 1.0 / X.shape[1]
+            else:
+                self._gamma = self.gamma
+            params = {"gamma": self._gamma, "degree": self.degree, "coef0": self.coef0}
+        print("Params")
+        print(params)
+        
+
         return pairwise_kernels(
             X, Y, metric=self.kernel, filter_params=True, n_jobs=self.n_jobs, **params
         )
@@ -435,7 +449,7 @@ class KernelPCovC(_BasePCA, LinearModel):
             z_classifier_ = check_krr_fit(classifier, K, X, y)
             '''
             z_classifier_ = check_krr_fit(classifier, K, X, y) #Pkz as weights
-            
+            print(z_classifier_)
             W = z_classifier_.dual_coef_.reshape(self.n_samples_in_, -1) #Pkz 
 
             # Use this instead of `self.classifier_.predict(K)`

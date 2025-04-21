@@ -438,7 +438,7 @@ class PCovC(_BasePCA, LinearModel):
         #cases:
         #1. if classifier has been fit with X and Y already, we dont need to perform a check_cl_fit
         #2. if classifier has not been fit with X or Y, we dont need to 
-        #3. if classifier has been fit with T and Y, we need to perform check_cl_fit (doesn't make sense actually, why would we fit with T and y)
+        #3. if classifier has been fit with T and Y, we need to perform check_cl_fit
 
         # old: self.classifier_ = check_cl_fit(self.classifier, X @ self.pxt_, y=y) #Has Ptz as weights 
 

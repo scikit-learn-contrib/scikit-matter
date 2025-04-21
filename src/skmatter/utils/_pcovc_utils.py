@@ -11,8 +11,7 @@ def check_cl_fit(classifier, X, y):
 
             # Check compatibility with X
             fitted_classifier._validate_data(X, y, reset=False, multi_output=True)
-            print("X shape "+str(X.shape))
-            print("y shape " + str(y.shape))
+   
             # Check compatibility with y
 
             # changed from if fitted_classifier.coef_.ndim != y.ndim:
@@ -22,10 +21,11 @@ def check_cl_fit(classifier, X, y):
                 raise ValueError(
                     "The classifier coefficients have a shape incompatible "
                     "with the supplied feature space. "
-                    "The coefficients have shape %d and the features "
-                    "have shape %d" % (fitted_classifier.coef_.shape, X.shape)
+                    "The coefficients have shape %r and the features "
+                    "have shape %r" % (fitted_classifier.coef_.shape, X.shape)
                 )
-            # LogisticRegression does not support multioutput, but RidgeClassifier does
+            # LogisticRegression does not support multioutput, but RidgeClassifier does.
+            # We need to check this...
             elif y.ndim == 2:
                 if fitted_classifier.coef_.shape[0] != y.shape[1]:
                     raise ValueError(

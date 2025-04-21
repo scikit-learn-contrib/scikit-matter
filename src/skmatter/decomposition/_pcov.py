@@ -1,3 +1,4 @@
+from copy import deepcopy
 import numbers
 import numpy as np
 import warnings
@@ -8,6 +9,7 @@ from scipy import linalg
 from scipy.linalg import sqrtm as MatrixSqrt
 from scipy.sparse.linalg import svds
 
+from sklearn import clone
 from sklearn.base import check_X_y
 from sklearn.calibration import column_or_1d
 from sklearn.decomposition._base import _BasePCA
@@ -151,15 +153,15 @@ class _BasePCov(_BasePCA, LinearModel):
                 else:
                     classifier = self.classifier
 
-                z_classifier_ = check_cl_fit(classifier, X, y=y)  #change to z classifier, fits linear classifier on x and y to get Pxz
+                self.z_classifier_ = check_cl_fit(classifier, X, y=y)  #change to z classifier, fits linear classifier on x and y to get Pxz
 
-                if isinstance(z_classifier_, MultiOutputClassifier):
-                    W = np.hstack([est_.coef_.T for est_ in z_classifier_.estimators_])
+                if isinstance(self.z_classifier_, MultiOutputClassifier):
+                    W = np.hstack([est_.coef_.T for est_ in self.z_classifier_.estimators_])
                     Z = X @ W #computes Z, basically Z=XPxz
 
                 else:
-                    W = z_classifier_.coef_.T.reshape(X.shape[1], -1)
-                    Z = z_classifier_.decision_function(X).reshape(X.shape[0], -1) #computes Z
+                    W = self.z_classifier_.coef_.T.reshape(X.shape[1], -1)
+                    Z = self.z_classifier_.decision_function(X).reshape(X.shape[0], -1) #computes Z this will throw an error since pxz and ptz aren't defined yet
 
             else:
                 Z = y.copy()
@@ -171,13 +173,34 @@ class _BasePCov(_BasePCA, LinearModel):
             if not self._label_binarizer.y_type_.startswith("multilabel"):
                 y = column_or_1d(y, warn=True)
          
-
             if self.space_ == "feature":
                 self._fit_feature_space(X, Y.reshape(Z.shape), Z)
             else:
                 self._fit_sample_space(X, Y.reshape(Z.shape), Z, W)
             
-            self.classifier_ = check_cl_fit(classifier, X @ self.pxt_, y=y)
+                # instead of using linear regression solution, refit with the classifier
+                # and steal weights to get ptz
+                # this is failing because self.classifier is never changed from None if None is passed as classifier
+                # change self.classifier to classifier and see what happens. if classifier is precomputed, there might be more errors so be careful.
+                # if classifier is precomputed, I don't think we need to check if the classifier is fit or not?
+
+                #cases:
+                #1. if classifier has been fit with X and Y already, we need to use classifier that hasn't been fitted and refit on T, y
+                #2. if classifier has not been fit with X and Y, we call check_cl_fit
+
+                # if (fitted(X,y)):
+                #   
+                # else:
+                # check_cl_fit
+
+            #self.classifier_ = check_cl_fit(classifier, X @ self.pxt_, y=y)
+            #we don't want to copy ALl parameters of classifier, such as n_features_in, since we are re-fitting it on T, y
+            if self.classifier != "precomputed":
+                self.classifier_ = clone(classifier).fit(X @ self.pxt_, y)
+            else:
+                self.classifier_ = LogisticRegression().fit(X @ self.pxt_, y)
+
+            self.classifier_._validate_data(X @ self.pxt_, y, reset=False)
 
             #self.classifier_ = LogisticRegression().fit(X @ self.pxt_, y)
             #check_cl_fit(classifier., X @ self.pxt_, y=y) #Has Ptz as weights 
