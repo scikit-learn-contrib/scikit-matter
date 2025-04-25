@@ -1,3 +1,5 @@
+import numpy as np
+from sklearn.base import check_X_y, check_array
 from sklearn.linear_model import (
     LinearRegression, 
     Ridge, 
@@ -8,6 +10,7 @@ from sklearn.utils.validation import check_is_fitted
 import sys
 sys.path.append('scikit-matter')
 from src.skmatter.decomposition._pcov import _BasePCov
+from src.skmatter.utils._pcovr_utils import check_lr_fit
 
 class PCovR(_BasePCov):
     r"""Principal Covariates Regression, as described in [deJong1992]_
@@ -189,11 +192,11 @@ class PCovR(_BasePCov):
             svd_solver=svd_solver,
             tol=tol,
             space=space,
-            regressor=regressor,
             iterated_power=iterated_power,
             random_state=random_state,
-            whiten=whiten,
-            subclass="PCovR")
+            whiten=whiten
+        )
+        self.regressor = regressor
 
     def fit(self, X, Y, W=None):
         r"""Fit the model with X and Y. Depending on the dimensions of X, calls either
@@ -226,6 +229,8 @@ class PCovR(_BasePCov):
             Regression weights, optional when regressor=`precomputed`. If not
             passed, it is assumed that `W = np.linalg.lstsq(X, Y, self.tol)[0]`
         """
+        X, y = check_X_y(X, Y, y_numeric=True, multi_output=True)
+
         if not any(
             [
                 self.regressor is None,
@@ -244,7 +249,45 @@ class PCovR(_BasePCov):
                 "Regressor must be an instance of "
                 "`LinearRegression`, `Ridge`, `RidgeCV`, or `precomputed`"
             )
-        return super().fit(X, Y, W)
+        
+        super()._fit_util(X, Y)
+
+        # Assign the default regressor
+        if self.regressor != "precomputed":
+            if self.regressor is None:
+                regressor = Ridge(
+                    alpha=1e-6,
+                    fit_intercept=False,
+                    tol=1e-12,
+                )
+            else:
+                regressor = self.regressor
+
+            self.regressor_ = check_lr_fit(regressor, X, y=Y)
+
+            W = self.regressor_.coef_.T.reshape(X.shape[1], -1)
+            Yhat = self.regressor_.predict(X).reshape(X.shape[0], -1)
+        else:
+            Yhat = Y.copy()
+            if W is None:
+                W = np.linalg.lstsq(X, Yhat, self.tol)[0]
+
+        if self.space_ == "feature":
+            self._fit_feature_space(X, Y.reshape(Yhat.shape), Yhat)
+        else:
+            self._fit_sample_space(X, Y.reshape(Yhat.shape), Yhat, W)
+
+        self.pxy_ = self.pxt_ @ self.pty_
+        if len(Y.shape) == 1:
+            self.pxy_ = self.pxy_.reshape(
+                X.shape[1],
+            )
+            self.pty_ = self.pty_.reshape(
+                self.n_components_,
+            )
+
+        self.components_ = self.pxt_.T  # for sklearn compatibility
+        return self
 
     def _fit_feature_space(self, X, Y, Yhat):
         r"""In feature-space PCovR, the projectors are determined by:
@@ -301,12 +344,6 @@ class PCovR(_BasePCov):
         """
         return super()._fit_sample_space(X, Y, Yhat, W)
 
-    def _decompose_truncated(self, mat):
-        return super()._decompose_truncated(mat)
-
-    def _decompose_full(self, mat):
-        return super()._decompose_full(mat)
-
     def inverse_transform(self, T):
         r"""Transform data back to its original space.
 
@@ -329,7 +366,16 @@ class PCovR(_BasePCov):
     def predict(self, X=None, T=None):
         """Predicts the property values using regression on X or T."""
         check_is_fitted(self, ["pxy_", "pty_"])
-        return super().predict(X, T)
+
+        if X is None and T is None:
+            raise ValueError("Either X or T must be supplied.")
+
+        if X is not None:
+            X = check_array(X)
+            return X @ self.pxy_
+        else:
+            T = check_array(T)
+            return T @ self.pty_
 
     def transform(self, X=None):
         """Apply dimensionality reduction to X.
@@ -377,4 +423,13 @@ class PCovR(_BasePCov):
             Negative sum of the loss in reconstructing X from the latent-space
             projection T and the loss in predicting Y from the latent-space projection T
         """
-        return super().score(X, Y, T)
+        if T is None:
+            T = self.transform(X)
+
+        x = self.inverse_transform(T)
+        y = self.predict(T=T)
+
+        return -(
+            np.linalg.norm(X - x) ** 2.0 / np.linalg.norm(X) ** 2.0
+            + np.linalg.norm(Y - y) ** 2.0 / np.linalg.norm(Y) ** 2.0
+        )

@@ -330,9 +330,9 @@ class KernelPCovR(_BasePCA, LinearModel):
             # Check if regressor is fitted; if not, fit with precomputed K
             # to avoid needing to compute the kernel a second time
             self.regressor_ = check_krr_fit(regressor, K, X, Y)
-
+            
             W = self.regressor_.dual_coef_.reshape(self.n_samples_in_, -1)
-
+            print(W.shape)
             # Use this instead of `self.regressor_.predict(K)`
             # so that we can handle the case of the pre-fitted regressor
             Yhat = K @ W
@@ -352,7 +352,6 @@ class KernelPCovR(_BasePCA, LinearModel):
             Yhat = Y.copy()
             if W is None:
                 W = np.linalg.lstsq(K, Yhat, self.tol)[0]
-
         # Handle svd_solver
         self._fit_svd_solver = self.svd_solver
         if self._fit_svd_solver == "auto":

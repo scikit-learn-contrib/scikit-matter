@@ -10,6 +10,7 @@ from sklearn.exceptions import NotFittedError
 from sklearn.linear_model import RidgeClassifier
 from sklearn.linear_model._base import LinearModel
 from sklearn.metrics.pairwise import pairwise_kernels
+from sklearn.multioutput import MultiOutputClassifier
 from sklearn.utils import check_array, check_random_state, column_or_1d
 from sklearn.utils._arpack import _init_arpack_v0
 from sklearn.utils.extmath import randomized_svd, stable_cumsum, svd_flip
@@ -444,17 +445,20 @@ class KernelPCovC(_BasePCA, LinearModel):
             # Check if classifier is fitted; if not, fit with precomputed K
             # to avoid needing to compute the kernel a second time
 
-
-            '''
-            z_classifier_ = check_krr_fit(classifier, K, X, y)
-            '''
             z_classifier_ = check_krr_fit(classifier, K, X, y) #Pkz as weights
-            print(z_classifier_)
+            print(z_classifier_.dual_coef_.shape)
+            
+            #W = z_classifier_.coef_.T.reshape(X.shape[1], -1)
+            #dual_coef_ has shape (n_classes -1, n_SV)
+            
             W = z_classifier_.dual_coef_.reshape(self.n_samples_in_, -1) #Pkz 
+            #probA_ndarray of shape (n_classes * (n_classes - 1) / 2)
+            #
 
             # Use this instead of `self.classifier_.predict(K)`
             # so that we can handle the case of the pre-fitted classifier
-            Z = K @ W #K * PKZ 
+            Z = K @ W #K @ Pkz 
+
             # When we have an unfitted classifier,
             # we fit it with a precomputed K
             # so we must subsequently "reset" it so that
@@ -495,29 +499,42 @@ class KernelPCovC(_BasePCA, LinearModel):
                 self._fit_svd_solver = "full"
 
         self._fit(K, Z, W) #gives us T, Pkt, self.pt__
-
-        self.classifier_ = check_cl_fit(classifier, K @ self.pkt, y) #Ptz as weights
-
-        '''
-        we now need Z = TPtz
-
-        self.classifier_ = check_cl_fit(classifier, K @ self.pkt, y) #Ptz as weights
-        Extract weights from self.classifier_ to get Ptz
-        Then, pxz_ = pxt @ ptz
         
-        And so then maybe we change the below code 
-        (originally for KPCovR, with self.pty replaced with self.ptz and self.pky replaced with self.pkz)
-        '''
-
-
         self.ptk_ = self.pt__ @ K
-        self.ptz_ = self.pt__ @ Y
+        #self.pty_ = self.pt__ @ Y
 
         if self.fit_inverse_transform:
             self.ptx_ = self.pt__ @ X
 
         #self.pkz_ = self.pkt_self.ptz_
         self.pkz_ = self.pkt_ @ self.ptz_
+
+        self.classifier_ = check_cl_fit(classifier, K @ self.pkt_, y) # Extract weights to get Ptz
+
+        # we now need Z = TPtz = (KPkt)Ptz
+        # Then, pkz_ = pkt_ @ ptz_
+        # And predict() will do self.classifier_.predict(K @ pkt_) which is T @ Ptz -> activation -> class labels (Y)
+
+        # And so then maybe we change the below code 
+        # (originally for KPCovR, with self.pty replaced with self.ptz and self.pky replaced with self.pkz)
+        
+        if isinstance(self.classifier_, MultiOutputClassifier):
+            self.ptz_ = np.hstack(
+                [est_.coef_.T for est_ in self.classifier_.estimators_]
+            )
+            self.pkz_ = self.pkt_ @ self.ptz_
+        else:
+            self.ptz_ = self.classifier_.coef_.T #self.ptz_ = self.classifier_.coef.T
+            self.pkz_ = self.pkt_ @ self.ptz_ #self.pxz_ = self.pxt_ @ self.ptz_
+
+        if len(Y.shape) == 1:
+            self.pkz_ = self.pkz_.reshape(
+                X.shape[1],
+            )
+            self.ptz_ = self.ptz_.reshape(
+                self.n_components_,
+            )
+
 
         self.components_ = self.pkt_.T  # for sklearn compatibility
         return self

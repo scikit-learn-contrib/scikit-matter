@@ -1,3 +1,7 @@
+import numpy as np
+from sklearn import clone
+from sklearn.base import check_X_y
+from sklearn.metrics import accuracy_score
 from sklearn.linear_model import (
     RidgeClassifier,
     RidgeClassifierCV,
@@ -5,6 +9,8 @@ from sklearn.linear_model import (
     LogisticRegressionCV,
     SGDClassifier
 )
+from sklearn.calibration import column_or_1d
+from sklearn.naive_bayes import LabelBinarizer
 from sklearn.svm import LinearSVC
 from sklearn.multioutput import MultiOutputClassifier
 from sklearn.utils import check_array
@@ -13,6 +19,7 @@ from sklearn.utils.validation import check_is_fitted
 import sys
 sys.path.append('scikit-matter')
 from src.skmatter.decomposition._pcov import _BasePCov
+from src.skmatter.utils._pcovc_utils import check_cl_fit
 
 class PCovC(_BasePCov):
     r"""Principal Covariates Classification determines a latent-space projection :math:`\mathbf{T}` 
@@ -197,14 +204,14 @@ class PCovC(_BasePCov):
             svd_solver=svd_solver,
             tol=tol,
             space=space,
-            classifier=classifier,
             iterated_power=iterated_power,
             random_state=random_state,
-            whiten=whiten,
-            subclass="PCovC")
+            whiten=whiten
+        )
+        self.classifier = classifier
 
-    def fit(self, X, Y, W=None):
-        r"""Fit the model with X and Y. Depending on the dimensions of X, calls either
+    def fit(self, X, y, W=None):
+        r"""Fit the model with X and y. Depending on the dimensions of X, calls either
         `_fit_feature_space` or `_fit_sample_space`
 
         Parameters
@@ -218,7 +225,7 @@ class PCovC(_BasePCov):
             to have unit variance, otherwise :math:`\mathbf{X}` should be
             scaled so that each feature has a variance of 1 / n_features.
 
-        Y : numpy.ndarray, shape (n_samples, n_properties)
+        y : numpy.ndarray, shape (n_samples, n_properties)
             Training data, where n_samples is the number of samples and n_properties is
             the number of properties
 
@@ -234,6 +241,8 @@ class PCovC(_BasePCov):
             Classification weights, optional when classifier=`precomputed`. If not
             passed, it is assumed that `W = np.linalg.lstsq(X, Z, self.tol)[0]`
         """
+        X, y = check_X_y(X, y, multi_output=True)
+
         if not any(
             [
                 self.classifier is None,
@@ -258,7 +267,81 @@ class PCovC(_BasePCov):
                 "`Logistic RegressionCV`, `SGDClassifier`, `LinearSVC`,"
                 "`MultiOutputClassifier`, or `precomputed`"
             )
-        return super().fit(X, Y, W)
+        
+        super()._fit_util(X, y)
+
+        if self.classifier != "precomputed":
+            if self.classifier is None:
+                classifier = LogisticRegression()
+            else:
+                classifier = self.classifier
+
+            self.z_classifier_ = check_cl_fit(classifier, X, y=y)  #change to z classifier, fits linear classifier on x and y to get Pxz
+
+            if isinstance(self.z_classifier_, MultiOutputClassifier):
+                W = np.hstack([est_.coef_.T for est_ in self.z_classifier_.estimators_])
+                Z = X @ W #computes Z, basically Z=XPxz
+
+            else:
+                W = self.z_classifier_.coef_.T.reshape(X.shape[1], -1)
+                Z = self.z_classifier_.decision_function(X).reshape(X.shape[0], -1) #computes Z this will throw an error since pxz and ptz aren't defined yet
+
+        else:
+            Z = y.copy()  
+            if W is None:
+                W = np.linalg.lstsq(X, Z, self.tol)[0]  #W = weights for Pxz
+
+        self._label_binarizer = LabelBinarizer(neg_label=-1, pos_label=1)
+        Y = self._label_binarizer.fit_transform(y) #check if we need this
+
+        if not self._label_binarizer.y_type_.startswith("multilabel"):
+            y = column_or_1d(y, warn=True)
+  
+        if self.space_ == "feature":
+            self._fit_feature_space(X, Y.reshape(Z.shape), Z)
+        else:
+            self._fit_sample_space(X, Y.reshape(Z.shape), Z, W)
+            
+            # instead of using linear regression solution, refit with the classifier
+            # and steal weights to get ptz
+            # this is failing because self.classifier is never changed from None if None is passed as classifier
+            # what to do when classifier = precomputed?
+
+            #cases:
+            #1. if classifier has been fit with X and Y already, we need to use classifier that hasn't been fitted and refit on T, y
+            #2. if classifier has not been fit with X and Y, we call check_cl_fit
+
+        #original: self.classifier_ = check_cl_fit(classifier, X @ self.pxt_, y=y)
+        #we don't want to copy ALl parameters of classifier, such as n_features_in, since we are re-fitting it on T, y
+        #ask Rosy about this
+        if self.classifier != "precomputed":
+            self.classifier_ = clone(classifier).fit(X @ self.pxt_, y)
+        else:
+                self.classifier_ = LogisticRegression().fit(X @ self.pxt_, y)
+        self.classifier_._validate_data(X @ self.pxt_, y, reset=False)
+
+        #self.classifier_ = LogisticRegression().fit(X @ self.pxt_, y)
+        #check_cl_fit(classifier., X @ self.pxt_, y=y) #Has Ptz as weights 
+   
+        if isinstance(self.classifier_, MultiOutputClassifier):
+            self.ptz_ = np.hstack(
+                [est_.coef_.T for est_ in self.classifier_.estimators_]
+            )
+            self.pxz_ = self.pxt_ @ self.ptz_
+        else:
+            self.ptz_ = self.classifier_.coef_.T
+            self.pxz_ = self.pxt_ @ self.ptz_ 
+
+        if len(Y.shape) == 1:
+            self.pxz_ = self.pxz_.reshape(
+                X.shape[1],
+            )
+            self.ptz_ = self.ptz_.reshape(
+                self.n_components_,
+            )
+
+        self.components_ = self.pxt_.T # for sklearn compatibility
+        return self
     
     def _fit_feature_space(self, X, Y, Z):
         r"""In feature-space PCovC, the projectors are determined by:
@@ -304,12 +387,6 @@ class PCovC(_BasePCov):
                                 \mathbf{U}_\mathbf{\tilde{K}}^T \mathbf{X}
         """
         return super()._fit_sample_space(X, Y, Z, W)
-    
-    def _decompose_truncated(self, mat):
-        return super()._decompose_truncated(mat)
-
-    def _decompose_full(self, mat):
-        return super()._decompose_full(mat)
 
     def inverse_transform(self, T):
         r"""Transform data back to its original space.
@@ -345,10 +422,17 @@ class PCovC(_BasePCov):
             return T @ self.ptz_
         
     def predict(self, X=None, T=None):
-        """Predicts the property values using classification on X or T."""
+        """Predicts the property values using classification on T."""
         check_is_fitted(self, attributes=["_label_binarizer", "pxz_", "ptz_"])
-        return super().predict(X, T)
-        
+
+        if X is None and T is None:
+            raise ValueError("Either X or T must be supplied.")
+
+        if X is not None:
+            return self.classifier_.predict(X @ self.pxt_) #Ptz(T) -> activation -> Y labels
+        else:
+            return self.classifier_.predict(T) #Ptz(T) -> activation -> Y labels
+  
     def transform(self, X=None):
         """Apply dimensionality reduction to X.
 
@@ -363,35 +447,32 @@ class PCovC(_BasePCov):
         """
         return super().transform(X)
 
-    def score(self, X, Y, T=None):
-        r"""Return the (negative) total reconstruction error for X and Y,
-        defined as:
+    def score(self, X, Y, T=None, sample_weight=None):
+        #taken from sklearn's LogisticRegression score() implementation:
+        r"""Return the mean accuracy on the given test data and labels.
 
-        .. math::
-            \ell_{X} = \frac{\lVert \mathbf{X} - \mathbf{T}\mathbf{P}_{TX} \rVert ^ 2}
-                            {\lVert \mathbf{X}\rVert ^ 2}
-
-        and
-
-        .. math::
-            \ell_{Y} = \frac{\lVert \mathbf{Y} - \mathbf{T}\mathbf{P}_{TY} \rVert ^ 2}
-                            {\lVert \mathbf{Y}\rVert ^ 2}
-
-        The negative loss :math:`-\ell = -(\ell_{X} + \ell{Y})` is returned for easier
-        use in sklearn pipelines, e.g., a grid search, where methods named 'score' are
-        meant to be maximized.
+        In multi-label classification, this is the subset accuracy
+        which is a harsh metric since you require for each sample that
+        each label set be correctly predicted.
 
         Parameters
         ----------
-        X : numpy.ndarray of shape (n_samples, n_features)
-            The data.
-        Y : numpy.ndarray of shape (n_samples, n_properties)
-            The target.
+        X : array-like of shape (n_samples, n_features)
+            Test samples.
+
+        Y : array-like of shape (n_samples,) or (n_samples, n_outputs)
+            True labels for `X`.
+
+        T : ndarray, shape (n_samples, n_components)
+            Projected data, where n_samples is the number of samples
+            and n_components is the number of components.
+
+        sample_weight : array-like of shape (n_samples,), default=None
+            Sample weights.
 
         Returns
         -------
-        loss : float
-            Negative sum of the loss in reconstructing X from the latent-space
-            projection T and the loss in predicting Y from the latent-space projection T
+        score : float
+            Mean accuracy of ``self.predict(X, T)`` w.r.t. `Y`.
         """
-        return super().score(X, Y, T)
+        return accuracy_score(Y, self.predict(X, T), sample_weight=sample_weight)

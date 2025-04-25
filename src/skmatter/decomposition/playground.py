@@ -1,4 +1,5 @@
  
+import numpy as np
 from sklearn.base import check_is_fitted
 from sklearn.discriminant_analysis import StandardScaler
 from sklearn.exceptions import NotFittedError
@@ -7,7 +8,7 @@ from sklearn.linear_model import LogisticRegression, LinearRegression
 from sklearn.svm import SVC
 from _kernel_pcovc import KernelPCovC
 from _kernel_pcovr import KernelPCovR
-from _pcovc import PCovC
+from pcovc_new import PCovC
 from sklearn.datasets import load_breast_cancer as get_dataset
 from sklearn.datasets import load_diabetes as get_dataset2
 from sklearn.metrics import accuracy_score
@@ -19,16 +20,32 @@ X_or = X
 scaler = StandardScaler()
 X = scaler.fit_transform(X)
 
+classifier = LogisticRegression()
+classifier.fit(X, Y)
+Yhat = classifier.decision_function(X)
+W = classifier.coef_.reshape(X.shape[1], -1)
+pcovc1 = PCovC(mixing=0.5, classifier="precomputed", n_components=1)
+pcovc1.fit(X, Yhat, W)
+t1 = pcovc1.transform(X)
 
-pcovc = PCovC(mixing=0.0, classifier=LogisticRegression(), n_components=2)
-pcovc.fit(X,Y)
-T = pcovc.transform(X)
+pcovc2 = PCovC(mixing=0.5, classifier=classifier, n_components=1)
+pcovc2.fit(X, Y)
+t2 = pcovc2.transform(X)
 
-pcovc2 = PCovC(mixing=0.0, classifier=LogisticRegression(), n_components=2)
-pcovc2.classifier.fit(X, Y)
-print(pcovc2.classifier.coef_.shape)
-pcovc2.classifier.fit(T, Y)
-print(pcovc2.classifier.coef_.shape)
+print(np.linalg.norm(t1 - t2))
+
+
+
+
+# pcovc = PCovC(mixing=0.0, classifier=LogisticRegression(), n_components=2)
+# pcovc.fit(X,Y)
+# T = pcovc.transform(X)
+
+# pcovc2 = PCovC(mixing=0.0, classifier=LogisticRegression(), n_components=2)
+# pcovc2.classifier.fit(X, Y)
+# print(pcovc2.classifier.coef_.shape)
+# pcovc2.classifier.fit(T, Y)
+# print(pcovc2.classifier.coef_.shape)
 
 
 
