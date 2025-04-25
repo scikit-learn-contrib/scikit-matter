@@ -9,25 +9,15 @@ from scipy import linalg
 from scipy.linalg import sqrtm as MatrixSqrt
 from scipy.sparse.linalg import svds
 
-from sklearn import clone
-from sklearn.base import check_X_y
-from sklearn.calibration import column_or_1d
 from sklearn.decomposition._base import _BasePCA
-from sklearn.linear_model import LogisticRegression, Ridge
 from sklearn.linear_model._base import LinearModel
-from sklearn.multioutput import MultiOutputClassifier
-from sklearn.naive_bayes import LabelBinarizer
 from sklearn.decomposition._pca import _infer_dimension
-from sklearn.utils import check_array, check_random_state
+from sklearn.utils import check_random_state
 from sklearn.utils._arpack import _init_arpack_v0
 from sklearn.utils.extmath import randomized_svd, stable_cumsum, svd_flip
-from sklearn.utils.validation import check_is_fitted, check_X_y
+from sklearn.utils.validation import check_is_fitted
 
-from skmatter.utils import check_lr_fit, pcovr_covariance, pcovr_kernel
-
-import sys
-sys.path.append('scikit-matter')
-from src.skmatter.utils._pcovc_utils import check_cl_fit
+from skmatter.utils import pcovr_covariance, pcovr_kernel
 
 class _BasePCov(_BasePCA, LinearModel):
     def __init__(
@@ -37,29 +27,22 @@ class _BasePCov(_BasePCA, LinearModel):
         svd_solver="auto",
         tol=1e-12,
         space="auto",
-        regressor=None,
-        classifier=None,
         iterated_power="auto",
         random_state=None,
         whiten=False,
-        subclass=None
-
     ):
         self.mixing = mixing
         self.n_components = n_components
         self.svd_solver = svd_solver
         self.tol = tol
         self.space = space
-        self.regressor = regressor
-        self.classifier = classifier
         self.iterated_power = iterated_power
         self.random_state = random_state
         self.whiten = whiten
-        self.subclass = subclass
 
-    def fit(self, X, y, W=None):
-        X, y = check_X_y(X, y, y_numeric=True if self.subclass == "PCovR" else False, multi_output=True)
-
+    # this contains the common functionality for PCovR and PCovC fit methods, 
+    # but leaves the rest of the fit functionality to the subclass
+    def _fit_util(self, X, y):
         # saved for inverse transformations from the latent space,
         # should be zero in the case that the features have been properly centered
         self.mean_ = np.mean(X, axis=0)
@@ -87,7 +70,6 @@ class _BasePCov(_BasePCA, LinearModel):
         else:
             self.n_components_ = self.n_components
 
-        
         # Handle svd_solver
         self.fit_svd_solver_ = self.svd_solver
         if self.fit_svd_solver_ == "auto":
@@ -107,127 +89,7 @@ class _BasePCov(_BasePCA, LinearModel):
                 self.space_ = "feature"
             else:
                 self.space_ = "sample"
-
-        if self.subclass=="PCovR":
-             # Assign the default regressor
-            if self.regressor != "precomputed":
-                if self.regressor is None:
-                    regressor = Ridge(
-                        alpha=1e-6,
-                        fit_intercept=False,
-                        tol=1e-12,
-                    )
-                else:
-                    regressor = self.regressor
-
-                self.regressor_ = check_lr_fit(regressor, X, y=y)
-
-                W = self.regressor_.coef_.T.reshape(X.shape[1], -1)
-                Yhat = self.regressor_.predict(X).reshape(X.shape[0], -1)
-            else:
-                Yhat = y.copy()
-                if W is None:
-                    W = np.linalg.lstsq(X, Yhat, self.tol)[0]
-
-            if self.space_ == "feature":
-                self._fit_feature_space(X, y.reshape(Yhat.shape), Yhat)
-            else:
-                self._fit_sample_space(X, y.reshape(Yhat.shape), Yhat, W)
-
-            self.pxy_ = self.pxt_ @ self.pty_
-            if len(y.shape) == 1:
-                self.pxy_ = self.pxy_.reshape(
-                    X.shape[1],
-                )
-                self.pty_ = self.pty_.reshape(
-                    self.n_components_,
-                )
-
-            self.components_ = self.pxt_.T  # for sklearn compatibility
-
-        else:
-            # Assign the default classifier
-            if self.classifier != "precomputed":
-                if self.classifier is None:
-                    classifier = LogisticRegression()
-                else:
-                    classifier = self.classifier
-
-                self.z_classifier_ = check_cl_fit(classifier, X, y=y)  #change to z classifier, fits linear classifier on x and y to get Pxz
-
-                if isinstance(self.z_classifier_, MultiOutputClassifier):
-                    W = np.hstack([est_.coef_.T for est_ in self.z_classifier_.estimators_])
-                    Z = X @ W #computes Z, basically Z=XPxz
-
-                else:
-                    W = self.z_classifier_.coef_.T.reshape(X.shape[1], -1)
-                    Z = self.z_classifier_.decision_function(X).reshape(X.shape[0], -1) #computes Z this will throw an error since pxz and ptz aren't defined yet
-
-            else:
-                Z = y.copy()
-                if W is None:
-                    W = np.linalg.lstsq(X, Z, self.tol)[0]  #W = weights for Pxz
-
-            self._label_binarizer = LabelBinarizer(neg_label=-1, pos_label=1)
-            Y = self._label_binarizer.fit_transform(y)
-            if not self._label_binarizer.y_type_.startswith("multilabel"):
-                y = column_or_1d(y, warn=True)
-         
-            if self.space_ == "feature":
-                self._fit_feature_space(X, Y.reshape(Z.shape), Z)
-            else:
-                self._fit_sample_space(X, Y.reshape(Z.shape), Z, W)
-            
-                # instead of using linear regression solution, refit with the classifier
-                # and steal weights to get ptz
-                # this is failing because self.classifier is never changed from None if None is passed as classifier
-                # change self.classifier to classifier and see what happens. if classifier is precomputed, there might be more errors so be careful.
-                # if classifier is precomputed, I don't think we need to check if the classifier is fit or not?
-
-                #cases:
-                #1. if classifier has been fit with X and Y already, we need to use classifier that hasn't been fitted and refit on T, y
-                #2. if classifier has not been fit with X and Y, we call check_cl_fit
-
-                # if (fitted(X,y)):
-                #   
-                # else:
-                # check_cl_fit
-
-            #self.classifier_ = check_cl_fit(classifier, X @ self.pxt_, y=y)
-            #we don't want to copy ALl parameters of classifier, such as n_features_in, since we are re-fitting it on T, y
-            if self.classifier != "precomputed":
-                self.classifier_ = clone(classifier).fit(X @ self.pxt_, y)
-            else:
-                self.classifier_ = LogisticRegression().fit(X @ self.pxt_, y)
-
-            self.classifier_._validate_data(X @ self.pxt_, y, reset=False)
-
-            #self.classifier_ = LogisticRegression().fit(X @ self.pxt_, y)
-            #check_cl_fit(classifier., X @ self.pxt_, y=y) #Has Ptz as weights 
-            #print("Self.classifier_ shape "+ str(self.classifier_.coef_.shape))
-            #print("PCovC Self.pxt_ "+ str((self.pxt_).shape))
-
-            if isinstance(self.classifier_, MultiOutputClassifier):
-                self.ptz_ = np.hstack(
-                    [est_.coef_.T for est_ in self.classifier_.estimators_]
-                )
-                self.pxz_ = self.pxt_ @ self.ptz_
-            else:
-                self.ptz_ = self.classifier_.coef_.T #self.ptz_ = self.classifier_.coef.T
-                self.pxz_ = self.pxt_ @ self.ptz_ #self.pxz_ = self.pxt_ @ self.ptz_
-
-            if len(Y.shape) == 1:
-                self.pxz_ = self.pxz_.reshape(
-                    X.shape[1],
-                )
-                self.ptz_ = self.ptz_.reshape(
-                    self.n_components_,
-                )
-
-            self.components_ = self.pxt_.T  # for sklearn compatibility
-
-        return self
-   
+                
     def _fit_feature_space(self, X, Y, Yhat):
         Ct, iCsqrt = pcovr_covariance(
             mixing=self.mixing,
@@ -264,8 +126,7 @@ class _BasePCov(_BasePCA, LinearModel):
 
         self.pxt_ = np.linalg.multi_dot([iCsqrt, Vt.T, S_sqrt])
         self.ptx_ = np.linalg.multi_dot([S_sqrt_inv, Vt, Csqrt])
-        if self.subclass=="PCovR":
-            self.pty_ = np.linalg.multi_dot([S_sqrt_inv, Vt, iCsqrt, X.T, Y])
+        self.pty_ = np.linalg.multi_dot([S_sqrt_inv, Vt, iCsqrt, X.T, Y])
 
     def _fit_sample_space(self, X, Y, Yhat, W):
         Kt = pcovr_kernel(mixing=self.mixing, X=X, Y=Yhat)
@@ -291,8 +152,7 @@ class _BasePCov(_BasePCA, LinearModel):
 
         self.pxt_ = P @ T
         self.ptx_ = T.T @ X
-        if self.subclass=="PCovR":
-            self.pty_ = T.T @ Y
+        self.pty_ = T.T @ Y
     
     #exactly same in PCovR/PCovC
     def _decompose_truncated(self, mat):
@@ -422,38 +282,8 @@ class _BasePCov(_BasePCA, LinearModel):
 
         return T @ self.ptx_
 
-    def predict(self, X=None, T=None):
-        if X is None and T is None:
-            raise ValueError("Either X or T must be supplied.")
-
-        if(X is not None):
-            if self.subclass=="PCovR":
-                X = check_array(X)
-                return X @ self.pxy_
-            else:
-                return self.classifier_.predict(X @ self.pxt_) #Ptz(T) -> activation -> Y labels
-        else:
-            if self.subclass=="PCovR":
-                T = check_array(T)
-                return T @ self.pty_
-            else:
-                return self.classifier_.predict(T) #Ptz(T) -> activation -> Y labels
-
-
-    #exactly the same in PCovr/PCovC
+    #exactly the same in PCovR/PCovC
     def transform(self, X=None):
         check_is_fitted(self, ["pxt_", "mean_"])
-
         return super().transform(X)
     
-    def score(self, X, Y, T=None):
-        if T is None:
-            T = self.transform(X)
-
-        x = self.inverse_transform(T)
-        y = self.predict(T=T) if self.subclass=="PCovR" else self.decision_function(T=T)
-
-        return -(
-            np.linalg.norm(X - x) ** 2.0 / np.linalg.norm(X) ** 2.0
-            + np.linalg.norm(Y - y) ** 2.0 / np.linalg.norm(Y) ** 2.0
-        )

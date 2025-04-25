@@ -250,7 +250,7 @@ class PCovCSpaceTest(PCovCBaseTest):
                     np.allclose(
                         pcovc_ss.inverse_transform(pcovc_ss.transform(self.X)),
                         pcovc_fs.inverse_transform(pcovc_fs.transform(self.X)),
-                        self.error_tol
+                        self.error_tol,
                     )
                 )
 
