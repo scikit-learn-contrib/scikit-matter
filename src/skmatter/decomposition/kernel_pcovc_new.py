@@ -251,7 +251,7 @@ class KernelPCovC(_BasePCA, LinearModel):
         gamma="scale",
         degree=3,
         coef0=0.0,
-     #   kernel_params=None,
+     #   kernel_params,
         center=False,
         fit_inverse_transform=False,
         tol=1e-12,
@@ -286,6 +286,7 @@ class KernelPCovC(_BasePCA, LinearModel):
         if callable(self.kernel):
             params = {} #self.kernel_params or {}
         else:
+            #this is how BaseSVC has it:
             if self.gamma == "scale":
                 X_var = (X.multiply(X)).mean() - (X.mean()) ** 2 if sparse else X.var()
                 self._gamma = 1.0 / (X.shape[1] * X_var) if X_var != 0 else 1.0
@@ -428,18 +429,6 @@ class KernelPCovC(_BasePCA, LinearModel):
                             ),
                         )
                     )
-                
-            '''
-            z_classifier_ = check_krr_fit(classifier, K, X, y) #fits classifier with K and Y, has Pkz as weights
-
-            if isinstance(z_classifier_, MultiOutputClassifier):
-                W = np.hstack([est_.coef_.T for est_ in z_classifier_.estimators_]) #Pkz
-                Z = K @ W #computes Z, basically Z=KPkz 
-
-            else:
-                W = z_classifier_.coef_.T.reshape(X.shape[1], -1) #Pkz
-                Z = z_classifier_.decision_function(X).reshape(X.shape[0], -1) #computes Z
-            '''
 
             # Check if classifier is fitted; if not, fit with precomputed K
             # to avoid needing to compute the kernel a second time
@@ -504,12 +493,10 @@ class KernelPCovC(_BasePCA, LinearModel):
         self._fit(K, Z, W) #gives us T, Pkt, self.pt__
         
         self.ptk_ = self.pt__ @ K
-        #self.pty_ = self.pt__ @ Y
 
         if self.fit_inverse_transform:
             self.ptx_ = self.pt__ @ X
 
-        #self.pkz_ = self.pkt_ @ self.ptz_
 
         #self.classifier_ = check_cl_fit(classifier, K @ self.pkt_, y) # Extract weights to get Ptz
         if self.classifier != "precomputed":
@@ -517,30 +504,6 @@ class KernelPCovC(_BasePCA, LinearModel):
         else:
             self.classifier_ = SVC().fit(K @ self.pkt_, y)
         self.classifier_._validate_data(K @ self.pkt_, y, reset=False)
-
-        # we now need Z = TPtz = (KPkt)Ptz
-        # Then, pkz_ = pkt_ @ ptz_
-        # And predict() will do self.classifier_.predict(K @ pkt_) which is T @ Ptz -> activation -> class labels (Y)
-
-        # And so then maybe we change the below code 
-        # (originally for KPCovR, with self.pty replaced with self.ptz and self.pky replaced with self.pkz)
-        
-        # if isinstance(self.classifier_, MultiOutputClassifier):
-        #     self.ptz_ = np.hstack(
-        #         [est_.coef_.T for est_ in self.classifier_.estimators_]
-        #     )
-        #     self.pkz_ = self.pkt_ @ self.ptz_
-        # # else:
-        #    # self.ptz_ = self.classifier_.coef_.T #self.ptz_ = self.classifier_.coef.T
-        #     #self.pkz_ = self.pkt_ @ self.ptz_ #self.pxz_ = self.pxt_ @ self.ptz_
-
-        # if len(Y.shape) == 1:
-        #     self.pkz_ = self.pkz_.reshape(
-        #         X.shape[1],
-        #     )
-        #     self.ptz_ = self.ptz_.reshape(
-        #         self.n_components_,
-        #     )
 
 
         self.components_ = self.pkt_.T  # for sklearn compatibility
@@ -568,8 +531,6 @@ class KernelPCovC(_BasePCA, LinearModel):
             return self.classifier_.predict_proba(T)
             #return T @ self.ptz_
 
-    #is there a reason why this predict function is different than the one in PCovc?
-    #it can be the same
     def predict(self, X=None, T=None):
         """Predicts class values from X or T."""
 
@@ -587,26 +548,6 @@ class KernelPCovC(_BasePCA, LinearModel):
             return self.classifier_.predict(K @ self.pkt_) #Ptz(T) -> activation -> Y labels
         else:
             return self.classifier_.predict(T) #Ptz(T) -> activation -> Y labels
-        
-        # multiclass = self._label_binarizer.y_type_.startswith("multiclass")
-
-        # if X is not None:
-        #     xp, _ = get_namespace(X)
-        #     scores = self.decision_function(X=X)
-        #     if multiclass:
-        #         indices = xp.argmax(scores, axis=1)
-        #     else:
-        #         indices = xp.astype(scores > 0, indexing_dtype(xp))
-        #     return xp.take(self.classes_, indices, axis=0)
-
-        # else:
-        #     tp, _ = get_namespace(T)
-        #     scores = self.decision_function(T=T)
-        #     if multiclass:
-        #         indices = tp.argmax(scores, axis=1)
-        #     else:
-        #         indices = tp.astype(scores > 0, indexing_dtype(tp))
-        #     return tp.take(self.classes_, indices, axis=0)
 
     def transform(self, X):
         """
@@ -837,7 +778,3 @@ class KernelPCovC(_BasePCA, LinearModel):
             S[: self.n_components_],
             Vt[: self.n_components_],
         )
-
-    @property
-    def classes_(self):
-        return self._label_binarizer.classes_

@@ -230,7 +230,11 @@ class KernelPCovR(_BasePCA, LinearModel):
 
         S_inv = np.array([1.0 / s if s > self.tol else 0.0 for s in S])
 
+        print("P: " +str(P.shape))
+        print("U: " + str(U.shape))
+
         self.pkt_ = P @ U @ np.sqrt(np.diagflat(S_inv))
+        print("Pkt: "+str(self.pkt_.shape))
 
         T = K @ self.pkt_
         self.pt__ = np.linalg.lstsq(T, np.eye(T.shape[0]), rcond=self.tol)[0]
