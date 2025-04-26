@@ -317,7 +317,7 @@ class PCovC(_BasePCov):
         if self.classifier != "precomputed":
             self.classifier_ = clone(classifier).fit(X @ self.pxt_, y)
         else:
-                self.classifier_ = LogisticRegression().fit(X @ self.pxt_, y)
+            self.classifier_ = LogisticRegression().fit(X @ self.pxt_, y)
         self.classifier_._validate_data(X @ self.pxt_, y, reset=False)
 
         #self.classifier_ = LogisticRegression().fit(X @ self.pxt_, y)
@@ -326,10 +326,11 @@ class PCovC(_BasePCov):
         if isinstance(self.classifier_, MultiOutputClassifier):
             self.ptz_ = np.hstack(
                 [est_.coef_.T for est_ in self.classifier_.estimators_]
-            )
+            ) 
+
             self.pxz_ = self.pxt_ @ self.ptz_
         else:
-            self.ptz_ = self.classifier_.coef_.T
+            self.ptz_ = self.classifier_.coef_.T #this is actually of shape (n_features, 1) when we have binary classification, but we need it to be shape (n_features, n_classes)
             self.pxz_ = self.pxt_ @ self.ptz_ 
 
         if len(Y.shape) == 1:
@@ -408,6 +409,9 @@ class PCovC(_BasePCov):
         return super().inverse_transform(T)
 
     def decision_function(self, X=None, T=None):
+        print(self.pxz_.shape)
+        print(self.ptz_.shape)
+
         """Predicts confidence scores from X or T."""
         check_is_fitted(self, attributes=["_label_binarizer", "pxz_", "ptz_"])
 
@@ -416,13 +420,22 @@ class PCovC(_BasePCov):
 
         if X is not None:
             X = check_array(X)
-            return X @ self.pxz_
+            return self.z_classifier_.decision_function(X)
         else:
             T = check_array(T)
-            return T @ self.ptz_
+
+            return self.classifier_.decision_function(T)
+
+        # if X is not None:
+        #     X = check_array(X)
+        #     return X @ self.pxz_
+        # else:
+        #     T = check_array(T)
+
+        #     return T @ self.ptz_
         
     def predict(self, X=None, T=None):
-        """Predicts the property values using classification on T."""
+        """Predicts the property labels using classification on T."""
         check_is_fitted(self, attributes=["_label_binarizer", "pxz_", "ptz_"])
 
         if X is None and T is None:

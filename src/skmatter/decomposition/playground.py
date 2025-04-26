@@ -1,6 +1,7 @@
  
 import numpy as np
 from sklearn.base import check_is_fitted
+from sklearn.calibration import LinearSVC
 from sklearn.discriminant_analysis import StandardScaler
 from sklearn.exceptions import NotFittedError
 from sklearn.kernel_ridge import KernelRidge
@@ -15,24 +16,70 @@ from sklearn.metrics import accuracy_score
 from _kernel_pcovr import KernelPCovR
 
 X, Y = get_dataset(return_X_y=True)
-
-X_or = X
 scaler = StandardScaler()
 X = scaler.fit_transform(X)
 
-classifier = LogisticRegression()
-classifier.fit(X, Y)
-Yhat = classifier.decision_function(X)
-W = classifier.coef_.reshape(X.shape[1], -1)
-pcovc1 = PCovC(mixing=0.5, classifier="precomputed", n_components=1)
-pcovc1.fit(X, Yhat, W)
-t1 = pcovc1.transform(X)
 
-pcovc2 = PCovC(mixing=0.5, classifier=classifier, n_components=1)
-pcovc2.fit(X, Y)
-t2 = pcovc2.transform(X)
+ke = KernelPCovC(mixing=0.5,classifier=SVC(), n_components=2)
+ke.fit(X, Y)
+y_pred = ke.predict(X)
+print(accuracy_score(Y, y_pred))
 
-print(np.linalg.norm(t1 - t2))
+# ke = KernelPCovC(mixing=1.0, classifier=SVC(verbose=1), svd_solver="full",n_components=2)
+# ke.fit(X, Y)
+
+# for svd_solver in ["auto", "full"]:
+#     # this one should pass
+# ke = KernelPCovC(n_components=2, svd_solver="full")
+# ke.fit(X, Y)
+
+            # this one should pass
+# ke = KernelPCovC(classifier=SVC(verbose=1), n_components="mle", svd_solver="auto")
+# ke.fit(X, Y)
+# y_pred = ke.predict(X)
+# print(accuracy_score(Y, y_pred))
+
+# ke.fit(X, Y)
+# print(ke.predict(X))
+# y_pred = ke.predict(X)
+# print(accuracy_score(Y, y_pred))
+# X, Y = get_dataset2(return_X_y=True)
+# scaler = StandardScaler()
+# X = scaler.fit_transform(X)
+
+# kr = KernelPCovR(mixing=1.0, regressor=KernelRidge(), n_components=2)
+# kr.fit(X, Y)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# X_or = X
+# scaler = StandardScaler()
+# X = scaler.fit_transform(X)
+
+# classifier = LogisticRegression()
+# classifier.fit(X, Y)
+# Yhat = classifier.decision_function(X)
+# W = classifier.coef_.reshape(X.shape[1], -1)
+# pcovc1 = PCovC(mixing=0.5, classifier="precomputed", n_components=1)
+# pcovc1.fit(X, Yhat, W)
+# t1 = pcovc1.transform(X)
+
+# pcovc2 = PCovC(mixing=0.5, classifier=classifier, n_components=1)
+# pcovc2.fit(X, Y)
+# t2 = pcovc2.transform(X)
+
+# print(np.linalg.norm(t1 - t2))
 
 
 

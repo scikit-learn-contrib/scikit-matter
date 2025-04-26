@@ -294,8 +294,6 @@ class KernelPCovC(_BasePCA, LinearModel):
             else:
                 self._gamma = self.gamma
             params = {"gamma": self._gamma, "degree": self.degree, "coef0": self.coef0}
-        print("Params")
-        print(params)
         
 
         return pairwise_kernels(
@@ -321,11 +319,13 @@ class KernelPCovC(_BasePCA, LinearModel):
         U = Vt.T
 
         P = (self.mixing * np.eye(K.shape[0])) + (1.0 - self.mixing) * (W @ Z.T)
+        # print("P: " +str(P.shape))
+        # print("U: " + str(U.shape))
 
         S_inv = np.array([1.0 / s if s > self.tol else 0.0 for s in S])
 
         self.pkt_ = P @ U @ np.sqrt(np.diagflat(S_inv))
-
+        # print("Pkt: "+str(self.pkt_.shape))
         T = K @ self.pkt_
         self.pt__ = np.linalg.lstsq(T, np.eye(T.shape[0]), rcond=self.tol)[0]
 
@@ -368,7 +368,6 @@ class KernelPCovC(_BasePCA, LinearModel):
         if self.classifier not in ["precomputed", None] and not isinstance(
             self.classifier, SVC
         ):
-            print(self.classifier)
             raise ValueError(
                 "classifier must be an instance of `SVC`"
             )
@@ -444,20 +443,24 @@ class KernelPCovC(_BasePCA, LinearModel):
 
             # Check if classifier is fitted; if not, fit with precomputed K
             # to avoid needing to compute the kernel a second time
-
-            z_classifier_ = check_krr_fit(classifier, K, X, y) #Pkz as weights
-            print(z_classifier_.dual_coef_.shape)
+            classifier.probability = True
+            self.z_classifier_ = check_krr_fit(classifier, K, X, y) #Pkz as weights - fits on K, y
             
-            #W = z_classifier_.coef_.T.reshape(X.shape[1], -1)
-            #dual_coef_ has shape (n_classes -1, n_SV)
+            Z = self.z_classifier_.predict_proba(K)
+            # print(K.shape)
+            # print("Z: "+str(Z.shape))
             
-            W = z_classifier_.dual_coef_.reshape(self.n_samples_in_, -1) #Pkz 
+            W = np.linalg.lstsq(K, Z, self.tol)[0]
+            #W should have shape (samples, classes) since Z = K*W
+            #(samples, classes) = (samples, samples)*(samples,classes)
             #probA_ndarray of shape (n_classes * (n_classes - 1) / 2)
-            #
+
+            # W = z_classifier_.dual_coef_.reshape(self.n_samples_in_, -1) #Pkz
+            #dual_coef_ has shape (n_classes -1, n_SV)
 
             # Use this instead of `self.classifier_.predict(K)`
             # so that we can handle the case of the pre-fitted classifier
-            Z = K @ W #K @ Pkz 
+            # Z = K @ W #K @ Pkz 
 
             # When we have an unfitted classifier,
             # we fit it with a precomputed K
@@ -468,9 +471,9 @@ class KernelPCovC(_BasePCA, LinearModel):
             try:
                 check_is_fitted(classifier)
             except NotFittedError:
-                z_classifier_.set_params(**classifier.get_params())
-                z_classifier_.X_fit_ = self.X_fit_
-                z_classifier_._check_n_features(self.X_fit_, reset=True)
+                self.z_classifier_.set_params(**classifier.get_params())
+                self.z_classifier_.X_fit_ = self.X_fit_
+                self.z_classifier_._check_n_features(self.X_fit_, reset=True)
         else:
             Z = y.copy()
             if W is None:
@@ -506,10 +509,14 @@ class KernelPCovC(_BasePCA, LinearModel):
         if self.fit_inverse_transform:
             self.ptx_ = self.pt__ @ X
 
-        #self.pkz_ = self.pkt_self.ptz_
-        self.pkz_ = self.pkt_ @ self.ptz_
+        #self.pkz_ = self.pkt_ @ self.ptz_
 
-        self.classifier_ = check_cl_fit(classifier, K @ self.pkt_, y) # Extract weights to get Ptz
+        #self.classifier_ = check_cl_fit(classifier, K @ self.pkt_, y) # Extract weights to get Ptz
+        if self.classifier != "precomputed":
+            self.classifier_ = clone(classifier).fit(K @ self.pkt_, y)
+        else:
+            self.classifier_ = SVC().fit(K @ self.pkt_, y)
+        self.classifier_._validate_data(K @ self.pkt_, y, reset=False)
 
         # we now need Z = TPtz = (KPkt)Ptz
         # Then, pkz_ = pkt_ @ ptz_
@@ -518,31 +525,31 @@ class KernelPCovC(_BasePCA, LinearModel):
         # And so then maybe we change the below code 
         # (originally for KPCovR, with self.pty replaced with self.ptz and self.pky replaced with self.pkz)
         
-        if isinstance(self.classifier_, MultiOutputClassifier):
-            self.ptz_ = np.hstack(
-                [est_.coef_.T for est_ in self.classifier_.estimators_]
-            )
-            self.pkz_ = self.pkt_ @ self.ptz_
-        else:
-            self.ptz_ = self.classifier_.coef_.T #self.ptz_ = self.classifier_.coef.T
-            self.pkz_ = self.pkt_ @ self.ptz_ #self.pxz_ = self.pxt_ @ self.ptz_
+        # if isinstance(self.classifier_, MultiOutputClassifier):
+        #     self.ptz_ = np.hstack(
+        #         [est_.coef_.T for est_ in self.classifier_.estimators_]
+        #     )
+        #     self.pkz_ = self.pkt_ @ self.ptz_
+        # # else:
+        #    # self.ptz_ = self.classifier_.coef_.T #self.ptz_ = self.classifier_.coef.T
+        #     #self.pkz_ = self.pkt_ @ self.ptz_ #self.pxz_ = self.pxt_ @ self.ptz_
 
-        if len(Y.shape) == 1:
-            self.pkz_ = self.pkz_.reshape(
-                X.shape[1],
-            )
-            self.ptz_ = self.ptz_.reshape(
-                self.n_components_,
-            )
+        # if len(Y.shape) == 1:
+        #     self.pkz_ = self.pkz_.reshape(
+        #         X.shape[1],
+        #     )
+        #     self.ptz_ = self.ptz_.reshape(
+        #         self.n_components_,
+        #     )
 
 
         self.components_ = self.pkt_.T  # for sklearn compatibility
         return self
 
     def decision_function(self, X=None, T=None):
-        """Predicts the confidence score for samples."""
+        """Predicts confidence scores from X or T."""
 
-        check_is_fitted(self, ["_label_binarizer", "pky_", "pty_"])
+        #check_is_fitted(self, ["_label_binarizer", "pky_", "pty_"])
 
         if X is None and T is None:
             raise ValueError("Either X or T must be supplied.")
@@ -552,41 +559,54 @@ class KernelPCovC(_BasePCA, LinearModel):
             K = self._get_kernel(X, self.X_fit_)
             if self.center:
                 K = self.centerer_.transform(K)
-            return K @ self.pkz_
+
+            return self.z_classifier_.predict_proba(K)
+            #return K @ self.pkz_
 
         else:
             T = check_array(T)
-            return T @ self.ptz_
+            return self.classifier_.predict_proba(T)
+            #return T @ self.ptz_
 
     #is there a reason why this predict function is different than the one in PCovc?
     #it can be the same
     def predict(self, X=None, T=None):
         """Predicts class values from X or T."""
 
-        check_is_fitted(self, ["_label_binarizer", "pky_", "pty_"])
+        #check_is_fitted(self, ["_label_binarizer", "pky_", "pty_"])
 
         if X is None and T is None:
             raise ValueError("Either X or T must be supplied.")
 
-        multiclass = self._label_binarizer.y_type_.startswith("multiclass")
-
         if X is not None:
-            xp, _ = get_namespace(X)
-            scores = self.decision_function(X=X)
-            if multiclass:
-                indices = xp.argmax(scores, axis=1)
-            else:
-                indices = xp.astype(scores > 0, indexing_dtype(xp))
-            return xp.take(self.classes_, indices, axis=0)
+            X = check_array(X)
+            K = self._get_kernel(X, self.X_fit_)
+            if self.center:
+                K = self.centerer_.transform(K)
 
+            return self.classifier_.predict(K @ self.pkt_) #Ptz(T) -> activation -> Y labels
         else:
-            tp, _ = get_namespace(T)
-            scores = self.decision_function(T=T)
-            if multiclass:
-                indices = tp.argmax(scores, axis=1)
-            else:
-                indices = tp.astype(scores > 0, indexing_dtype(tp))
-            return tp.take(self.classes_, indices, axis=0)
+            return self.classifier_.predict(T) #Ptz(T) -> activation -> Y labels
+        
+        # multiclass = self._label_binarizer.y_type_.startswith("multiclass")
+
+        # if X is not None:
+        #     xp, _ = get_namespace(X)
+        #     scores = self.decision_function(X=X)
+        #     if multiclass:
+        #         indices = xp.argmax(scores, axis=1)
+        #     else:
+        #         indices = xp.astype(scores > 0, indexing_dtype(xp))
+        #     return xp.take(self.classes_, indices, axis=0)
+
+        # else:
+        #     tp, _ = get_namespace(T)
+        #     scores = self.decision_function(T=T)
+        #     if multiclass:
+        #         indices = tp.argmax(scores, axis=1)
+        #     else:
+        #         indices = tp.astype(scores > 0, indexing_dtype(tp))
+        #     return tp.take(self.classes_, indices, axis=0)
 
     def transform(self, X):
         """
@@ -611,6 +631,7 @@ class KernelPCovC(_BasePCA, LinearModel):
         if self.center:
             K = self.centerer_.transform(K)
 
+       
         return K @ self.pkt_
 
     def inverse_transform(self, T):
