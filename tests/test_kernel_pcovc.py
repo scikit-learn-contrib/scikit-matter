@@ -2,6 +2,7 @@ import unittest
 
 import numpy as np
 from sklearn import exceptions
+from sklearn.calibration import LinearSVC
 from sklearn.datasets import load_breast_cancer as get_dataset
 from sklearn.kernel_ridge import KernelRidge
 from sklearn.linear_model import Ridge, RidgeCV
@@ -193,6 +194,8 @@ class KernelPCovCInfrastructureTest(KernelPCovCBaseTest):
 
     def test_prefit_classifier(self):
         classifier = SVC(kernel="rbf", gamma=0.1)
+        #this fails since we are trying to call decision_function(K) on a classifier fitted with X
+        #see line 340 of kernel_pcovr
         classifier.fit(self.X, self.Y)
         print(classifier.n_features_in_)
         kpcovc = self.model(mixing=0.5, classifier=classifier, kernel="rbf", gamma=0.1)
@@ -336,7 +339,7 @@ class KernelTests(KernelPCovCBaseTest):
         """Check that KernelPCovC returns the same results as PCovC when using a linear
         kernel.
         """
-        svc = SVC(kernel="linear", gamma="scale", coef0=0)
+        svc = LinearSVC()
         svc.fit(self.X, self.Y)
 
         # common instantiation parameters for the two models
