@@ -334,7 +334,7 @@ class KernelPCovR(_BasePCA, LinearModel):
             # Check if regressor is fitted; if not, fit with precomputed K
             # to avoid needing to compute the kernel a second time
             self.regressor_ = check_krr_fit(regressor, K, X, Y)
-            
+            print(self.regressor_.n_features_in_)
             W = self.regressor_.dual_coef_.reshape(self.n_samples_in_, -1)
             print(W.shape)
             # Use this instead of `self.regressor_.predict(K)`

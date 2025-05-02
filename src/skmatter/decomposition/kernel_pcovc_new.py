@@ -4,6 +4,7 @@ import numpy as np
 import scipy.sparse as sp
 from scipy import linalg
 from scipy.sparse.linalg import svds
+from sklearn.calibration import LinearSVC
 from sklearn.decomposition._base import _BasePCA
 from sklearn.decomposition._pca import _infer_dimension
 from sklearn.exceptions import NotFittedError
@@ -20,58 +21,15 @@ from sklearn.utils._array_api import get_namespace, indexing_dtype
 from sklearn.svm import SVC
 from sklearn.base import clone
 from copy import deepcopy
+from sklearn.metrics import accuracy_score
 
 from skmatter.preprocessing import KernelNormalizer
-from skmatter.utils import check_krr_fit, pcovr_kernel
+from skmatter.utils import pcovr_kernel
 
-def check_cl_fit(classifier, X, y):
-    r"""
-    Checks that a (linear) classifier is fitted, and if not,
-    fits it with the provided data
-    :param regressor: sklearn-style classifier
-    :type classifier: object
-    :param X: feature matrix with which to fit the classifier
-        if it is not already fitted
-    :type X: array
-    :param y: target values with which to fit the classifier
-        if it is not already fitted
-    :type y: array
-    """
-    try:
-        check_is_fitted(classifier)
-        fitted_classifier = deepcopy(classifier)
-
-        # Check compatibility with X
-        fitted_classifier._validate_data(X, y, reset=False, multi_output=True)
-
-        # Check compatibility with y
-
-        # changed from if fitted_classifier.coef_.ndim != y.ndim:
-        # dimension of classifier coefficients is always 2, hence we don't need to check 
-        # for match with Y
-        if fitted_classifier.coef_.shape[1] != X.shape[1]:
-            raise ValueError(
-                "The classifier coefficients have a shape incompatible "
-                "with the supplied feature space. "
-                "The coefficients have shape %d and the features "
-                "have shape %d" % (fitted_classifier.coef_.shape, X.shape)
-            )
-        # LogisticRegression does not support multioutput, but RidgeClassifier does
-        elif y.ndim == 2:
-            if fitted_classifier.coef_.shape[0] != y.shape[1]:
-                raise ValueError(
-                    "The classifier coefficients have a shape incompatible "
-                    "with the supplied target space. "
-                    "The coefficients have shape %r and the targets "
-                    "have shape %r" % (fitted_classifier.coef_.shape, y.shape)
-                )
-
-    except NotFittedError:
-        fitted_classifier = clone(classifier)
-        fitted_classifier.fit(X, y)
-
-    return fitted_classifier
-
+import sys
+sys.path.append('scikit-matter')
+from src.skmatter.utils._pcovc_utils import check_svc_fit
+from src.skmatter.utils._pcovr_utils import check_krr_fit
 
 class KernelPCovC(_BasePCA, LinearModel):
     r"""
@@ -251,7 +209,7 @@ class KernelPCovC(_BasePCA, LinearModel):
         gamma="scale",
         degree=3,
         coef0=0.0,
-     #   kernel_params,
+        kernel_params=None,
         center=False,
         fit_inverse_transform=False,
         tol=1e-12,
@@ -272,7 +230,7 @@ class KernelPCovC(_BasePCA, LinearModel):
         self.gamma = gamma
         self.degree = degree
         self.coef0 = coef0
-    #    self.kernel_params = kernel_params
+        self.kernel_params = kernel_params
 
         self.n_jobs = n_jobs
 
@@ -284,7 +242,7 @@ class KernelPCovC(_BasePCA, LinearModel):
         sparse = sp.issparse(X)
 
         if callable(self.kernel):
-            params = {} #self.kernel_params or {}
+            params = self.kernel_params or {}
         else:
             #this is how BaseSVC has it:
             if self.gamma == "scale":
@@ -367,7 +325,7 @@ class KernelPCovC(_BasePCA, LinearModel):
         """
 
         if self.classifier not in ["precomputed", None] and not isinstance(
-            self.classifier, SVC
+            self.classifier, SVC #make sure that decision_function_shape is ONLY "ovr" otherwise this will impact Z's shape
         ):
             raise ValueError(
                 "classifier must be an instance of `SVC`"
@@ -433,12 +391,14 @@ class KernelPCovC(_BasePCA, LinearModel):
             # Check if classifier is fitted; if not, fit with precomputed K
             # to avoid needing to compute the kernel a second time
             classifier.probability = True
-            self.z_classifier_ = check_krr_fit(classifier, K, X, y) #Pkz as weights - fits on K, y
-            
-            Z = self.z_classifier_.predict_proba(K)
+            self.z_classifier_ = check_svc_fit(classifier, K, X, y) #Pkz as weights - fits on K, y
+            Z = self.z_classifier_.decision_function(K)
+
             # print(K.shape)
             # print("Z: "+str(Z.shape))
             
+            #problem is that with a prefitted classifeir on X, y, we are trying to refit it on K, y
+
             W = np.linalg.lstsq(K, Z, self.tol)[0]
             #W should have shape (samples, classes) since Z = K*W
             #(samples, classes) = (samples, samples)*(samples,classes)
@@ -457,12 +417,12 @@ class KernelPCovC(_BasePCA, LinearModel):
             # it will work on the particular X
             # of the KPCovR call. The dual coefficients are kept.
             # Can be bypassed if the classifier is pre-fitted.
-            try:
-                check_is_fitted(classifier)
-            except NotFittedError:
-                self.z_classifier_.set_params(**classifier.get_params())
-                self.z_classifier_.X_fit_ = self.X_fit_
-                self.z_classifier_._check_n_features(self.X_fit_, reset=True)
+            # try:
+            #     check_is_fitted(classifier)
+            # except NotFittedError:
+            #     self.z_classifier_.set_params(**classifier.get_params())
+            #     self.z_classifier_.X_fit_ = self.X_fit_
+            #     self.z_classifier_._check_n_features(self.X_fit_, reset=True)
         else:
             Z = y.copy()
             if W is None:
@@ -497,14 +457,30 @@ class KernelPCovC(_BasePCA, LinearModel):
         if self.fit_inverse_transform:
             self.ptx_ = self.pt__ @ X
 
-
         #self.classifier_ = check_cl_fit(classifier, K @ self.pkt_, y) # Extract weights to get Ptz
-        if self.classifier != "precomputed":
-            self.classifier_ = clone(classifier).fit(K @ self.pkt_, y)
-        else:
-            self.classifier_ = SVC().fit(K @ self.pkt_, y)
+        self.classifier_ = LinearSVC().fit(K @ self.pkt_, y)
+        # if self.classifier != "precomputed":
+        #     self.classifier_ = clone(classifier).fit(K @ self.pkt_, y)
+        # else:
+        #     self.classifier_ = SVC().fit(K @ self.pkt_, y)
         self.classifier_._validate_data(K @ self.pkt_, y, reset=False)
 
+        if isinstance(self.classifier_, MultiOutputClassifier):
+            self.ptz_ = np.hstack(
+                [est_.coef_.T for est_ in self.classifier_.estimators_]
+            )
+            self.pkz_ = self.pkt_ @ self.ptz_
+        else:
+            self.ptz_ = self.classifier_.coef_.T
+            self.pkz_ = self.pkt_ @ self.ptz_
+
+        if len(Y.shape) == 1:
+            self.pkz_ = self.pkz_.reshape(
+                X.shape[1],
+            )
+            self.ptz_ = self.ptz_.reshape(
+                self.n_components_,
+            )
 
         self.components_ = self.pkt_.T  # for sklearn compatibility
         return self
@@ -522,14 +498,13 @@ class KernelPCovC(_BasePCA, LinearModel):
             K = self._get_kernel(X, self.X_fit_)
             if self.center:
                 K = self.centerer_.transform(K)
-
-            return self.z_classifier_.predict_proba(K)
-            #return K @ self.pkz_
+                
+            return K @ self.pkz_
 
         else:
             T = check_array(T)
-            return self.classifier_.predict_proba(T)
-            #return T @ self.ptz_
+            return T @ self.ptz_
+            
 
     def predict(self, X=None, T=None):
         """Predicts class values from X or T."""
@@ -602,67 +577,35 @@ class KernelPCovC(_BasePCA, LinearModel):
 
         return T @ self.ptx_
 
-    def score(self, X, Y):
-        r"""
-        Computes the (negative) loss values for KernelPCovC on the given predictor and
-        response variables. The loss in :math:`\mathbf{K}`, as explained in
-        [Helfrecht2020]_ does not correspond to a traditional Gram loss
-        :math:`\mathbf{K} - \mathbf{TT}^T`. Indicating the kernel between set
-        A and B as :math:`\mathbf{K}_{AB}`,
-        the projection of set A as :math:`\mathbf{T}_A`, and with N and V as the
-        train and validation/test set, one obtains
+    def score(self, X, Y, sample_weight=None):
+        #taken from sklearn's LogisticRegression score() implementation:
+        r"""Return the mean accuracy on the given test data and labels.
 
-        .. math::
+        In multi-label classification, this is the subset accuracy
+        which is a harsh metric since you require for each sample that
+        each label set be correctly predicted.
 
-            \ell=\frac{\operatorname{Tr}\left[\mathbf{K}_{VV} - 2
-            \mathbf{K}_{VN} \mathbf{T}_N
-                (\mathbf{T}_N^T \mathbf{T}_N)^{-1} \mathbf{T}_V^T
-            +\mathbf{T}_V(\mathbf{T}_N^T \mathbf{T}_N)^{-1}  \mathbf{T}_N^T
-            \mathbf{K}_{NN} \mathbf{T}_N (\mathbf{T}_N^T \mathbf{T}_N)^{-1}
-            \mathbf{T}_V^T\right]}{\operatorname{Tr}(\mathbf{K}_{VV})}
+        Parameters
+        ----------
+        X : array-like of shape (n_samples, n_features)
+            Test samples.
 
-        The negative loss is returned for easier use in sklearn pipelines, e.g., a
-        grid search, where methods named 'score' are meant to be maximized.
+        Y : array-like of shape (n_samples,) or (n_samples, n_outputs)
+            True labels for `X`.
 
-        Arguments
-        ---------
-        X:              independent (predictor) variable
-        Y:              dependent (response) variable
+        T : ndarray, shape (n_samples, n_components)
+            Projected data, where n_samples is the number of samples
+            and n_components is the number of components.
+
+        sample_weight : array-like of shape (n_samples,), default=None
+            Sample weights.
 
         Returns
         -------
-        L:             Negative sum of the KPCA and KRR losses, with the KPCA loss
-                       determined by the reconstruction of the kernel
-
+        score : float
+            Mean accuracy of ``self.predict(X, T)`` w.r.t. `Y`.
         """
-
-        check_is_fitted(self, ["pkt_", "X_fit_"])
-
-        X = check_array(X)
-
-        K_NN = self._get_kernel(self.X_fit_, self.X_fit_)
-        K_VN = self._get_kernel(X, self.X_fit_)
-        K_VV = self._get_kernel(X)
-
-        if self.center:
-            K_NN = self.centerer_.transform(K_NN)
-            K_VN = self.centerer_.transform(K_VN)
-            K_VV = self.centerer_.transform(K_VV)
-
-        y = K_VN @ self.pkz_
-        Lkrr = np.linalg.norm(Y - y) ** 2 / np.linalg.norm(Y) ** 2
-
-        t_n = K_NN @ self.pkt_
-        t_v = K_VN @ self.pkt_
-
-        w = (
-            t_n
-            @ np.linalg.lstsq(t_n.T @ t_n, np.eye(t_n.shape[1]), rcond=self.tol)[0]
-            @ t_v.T
-        )
-        Lkpca = np.trace(K_VV - 2 * K_VN @ w + w.T @ K_VV @ w) / np.trace(K_VV)
-
-        return -sum([Lkpca, Lkrr])
+        return accuracy_score(Y, self.predict(X), sample_weight=sample_weight)
 
     def _decompose_truncated(self, mat):
         if not 1 <= self.n_components_ <= self.n_samples_in_:

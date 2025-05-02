@@ -250,7 +250,7 @@ class PCovCSpaceTest(PCovCBaseTest):
                     np.allclose(
                         pcovc_ss.inverse_transform(pcovc_ss.transform(self.X)),
                         pcovc_fs.inverse_transform(pcovc_fs.transform(self.X)),
-                        self.error_tol,
+                        self.error_tol
                     )
                 )
 
@@ -510,9 +510,7 @@ class PCovCInfrastructureTest(PCovCBaseTest):
         self.assertTrue(pcovc.classifier_ is not None)
 
     def test_incompatible_coef_shape(self):
-        # self.Y is 2D with one target
-        # Don't need to test X shape, since this should
-        # be caught by sklearn's _validate_data
+  
         classifier = LogisticRegression()
         classifier.fit(self.X, self.Y)
         pcovc = self.model(mixing=0.5, classifier=classifier)

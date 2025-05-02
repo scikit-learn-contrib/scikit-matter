@@ -194,6 +194,7 @@ class KernelPCovCInfrastructureTest(KernelPCovCBaseTest):
     def test_prefit_classifier(self):
         classifier = SVC(kernel="rbf", gamma=0.1)
         classifier.fit(self.X, self.Y)
+        print(classifier.n_features_in_)
         kpcovc = self.model(mixing=0.5, classifier=classifier, kernel="rbf", gamma=0.1)
         kpcovc.fit(self.X, self.Y)
 
@@ -253,11 +254,7 @@ class KernelPCovCInfrastructureTest(KernelPCovCBaseTest):
         self.assertTrue(kpcovc.classifier_ is not None)
 
     def test_incompatible_coef_shape(self):
-        # self.Y is 2D with two targets
-        # Don't need to test X shape, since this should
-        # be caught by sklearn's _validate_data
         classifier = SVC(kernel="linear")
-        print(self.Y.shape)
         classifier.fit(self.X, self.Y)
         kpcovc = self.model(mixing=0.5, classifier=classifier)
 
@@ -364,7 +361,7 @@ class KernelTests(KernelPCovCBaseTest):
         )
 
         # computing projection and predicton loss with PCovC
-        ref_pcovc = PCovC(**hypers, classifier=svc, space="sample")
+        ref_pcovc = PCovC(**hypers, classifier=svc)
         ref_pcovc.fit(self.X, self.Y)
         ly_ref = (
             np.linalg.norm(self.Y - ref_pcovc.predict(self.X)) ** 2.0
@@ -392,6 +389,62 @@ class KernelTests(KernelPCovCBaseTest):
             round(lk, rounding),
             round(lk_ref, rounding),
         )
+
+        # """Check that KernelPCovR returns the same results as PCovR when using a linear
+        # kernel.
+        # """
+        # svc = SVC()
+        # svc.fit(self.X, self.Y)
+
+        # # common instantiation parameters for the two models
+        # hypers = dict(
+        #     mixing=0.5,
+        #     n_components=1,
+        # )
+
+        # # computing projection and predicton loss with linear KernelPCovR
+        # # and use the alpha from RidgeCV for level regression comparisons
+        # kpcovc = KernelPCovC(
+        #     classifier=SVC(kernel="linear"),
+        #     kernel="linear",
+        #     fit_inverse_transform=True,
+        #     **hypers,
+        # )
+        # kpcovr.fit(self.X, self.Y)
+        # ly = (
+        #     np.linalg.norm(self.Y - kpcovr.predict(self.X)) ** 2.0
+        #     / np.linalg.norm(self.Y) ** 2.0
+        # )
+
+        # # computing projection and predicton loss with PCovR
+        # ref_pcovr = PCovR(**hypers, regressor=ridge, space="sample")
+        # ref_pcovr.fit(self.X, self.Y)
+        # ly_ref = (
+        #     np.linalg.norm(self.Y - ref_pcovr.predict(self.X)) ** 2.0
+        #     / np.linalg.norm(self.Y) ** 2.0
+        # )
+
+        # t_ref = ref_pcovr.transform(self.X)
+        # t = kpcovr.transform(self.X)
+
+        # K = kpcovr._get_kernel(self.X)
+
+        # k_ref = t_ref @ t_ref.T
+        # k = t @ t.T
+
+        # lk_ref = np.linalg.norm(K - k_ref) ** 2.0 / np.linalg.norm(K) ** 2.0
+        # lk = np.linalg.norm(K - k) ** 2.0 / np.linalg.norm(K) ** 2.0
+
+        # rounding = 3
+        # self.assertEqual(
+        #     round(ly, rounding),
+        #     round(ly_ref, rounding),
+        # )
+
+        # self.assertEqual(
+        #     round(lk, rounding),
+        #     round(lk_ref, rounding),
+        # )
 
 
 class KernelPCovCTestSVDSolvers(KernelPCovCBaseTest):
