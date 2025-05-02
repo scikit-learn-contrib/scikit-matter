@@ -7,23 +7,36 @@ from sklearn.exceptions import NotFittedError
 from sklearn.kernel_ridge import KernelRidge
 from sklearn.linear_model import LogisticRegression, LinearRegression
 from sklearn.svm import SVC
-from _kernel_pcovc import KernelPCovC
+from kernel_pcovc_new import KernelPCovC
 from _kernel_pcovr import KernelPCovR
 from pcovc_new import PCovC
 from sklearn.datasets import load_breast_cancer as get_dataset
-from sklearn.datasets import load_diabetes as get_dataset2
+from sklearn.datasets import load_iris as get_dataset2
+from sklearn.datasets import load_diabetes as get_dataset3
 from sklearn.metrics import accuracy_score
 from _kernel_pcovr import KernelPCovR
 
-X, Y = get_dataset(return_X_y=True)
+X, Y = get_dataset2(return_X_y=True)
 scaler = StandardScaler()
-X = scaler.fit_transform(X)
+X_scaled = scaler.fit_transform(X)
 
 
-ke = KernelPCovC(mixing=0.5,classifier=SVC(), n_components=2)
-ke.fit(X, Y)
-y_pred = ke.predict(X)
-print(accuracy_score(Y, y_pred))
+# ke = KernelPCovC(mixing=0.5,classifier=SVC(), n_components=2)
+# ke.fit(X, Y)
+# y_pred = ke.predict(X)
+# print(ke.decision_function(X))
+
+model = KernelPCovC(mixing=0.5, kernel="rbf", classifier=SVC(kernel="rbf"), n_components=2)
+model.fit(X_scaled, Y)
+T = model.transform(X_scaled)
+y_pred = model.predict(X_scaled)
+print(model.score(X_scaled, Y)) # we should have KPCovC match PCovC decision function shape 
+
+model2 = PCovC(mixing=0.5, classifier=LinearSVC(), n_components=2)
+model2.fit(X_scaled, Y)
+T_2 = model2.transform(X_scaled)
+y_pred_2 = model2.predict(X_scaled)
+print(model2.score(X_scaled, Y))
 
 # ke = KernelPCovC(mixing=1.0, classifier=SVC(verbose=1), svd_solver="full",n_components=2)
 # ke.fit(X, Y)

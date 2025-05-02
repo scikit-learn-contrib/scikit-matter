@@ -12,6 +12,8 @@ from sklearn.linear_model import (
 from sklearn.calibration import column_or_1d
 from sklearn.naive_bayes import LabelBinarizer
 from sklearn.svm import LinearSVC
+from sklearn.svm import SVC
+
 from sklearn.multioutput import MultiOutputClassifier
 from sklearn.utils import check_array
 from sklearn.utils.validation import check_is_fitted
@@ -172,7 +174,7 @@ class PCovC(_BasePCov):
     Examples
     --------
     >>> import numpy as np
-    >>> from skmatter.decomposition import PCovc
+    >>> from skmatter.decomposition import PCovC
     >>> X = np.array([[-1, 0, -2, 3], [3, -2, 0, 1], [-3, 0, -1, -1], [1, 3, 0, -2]])
     >>> Y = np.array([[0], [1], [2], [0]])
     >>> pcovc = PCovC(mixing=0.1, n_components=2)
@@ -256,7 +258,8 @@ class PCovC(_BasePCov):
                         LogisticRegressionCV,
                         SGDClassifier,
                         LinearSVC,
-                        MultiOutputClassifier,
+                        MultiOutputClassifier
+                        #check to see if all linear classifiers are here: Perceptron, LDA
                     ),
                 ),
             ]
@@ -284,13 +287,15 @@ class PCovC(_BasePCov):
 
             else:
                 W = self.z_classifier_.coef_.T.reshape(X.shape[1], -1)
-                Z = self.z_classifier_.decision_function(X).reshape(X.shape[0], -1) #computes Z this will throw an error since pxz and ptz aren't defined yet
+                Z = self.z_classifier_.decision_function(X).reshape(X.shape[0], -1) 
+                #computes Z this will throw an error since pxz and ptz aren't defined yet
 
         else:
             Z = y.copy()  
             if W is None:
                 W = np.linalg.lstsq(X, Z, self.tol)[0]  #W = weights for Pxz
-
+        # print("Z: "+str(Z[:4]))
+        # print("W: "+str(W[:4]))
         self._label_binarizer = LabelBinarizer(neg_label=-1, pos_label=1)
         Y = self._label_binarizer.fit_transform(y) #check if we need this
 
@@ -409,8 +414,8 @@ class PCovC(_BasePCov):
         return super().inverse_transform(T)
 
     def decision_function(self, X=None, T=None):
-        print(self.pxz_.shape)
-        print(self.ptz_.shape)
+        # print(self.pxz_.shape)
+        # print(self.ptz_.shape)
 
         """Predicts confidence scores from X or T."""
         check_is_fitted(self, attributes=["_label_binarizer", "pxz_", "ptz_"])
@@ -420,19 +425,10 @@ class PCovC(_BasePCov):
 
         if X is not None:
             X = check_array(X)
-            return self.z_classifier_.decision_function(X)
+            return X @ self.pxz_
         else:
             T = check_array(T)
-
-            return self.classifier_.decision_function(T)
-
-        # if X is not None:
-        #     X = check_array(X)
-        #     return X @ self.pxz_
-        # else:
-        #     T = check_array(T)
-
-        #     return T @ self.ptz_
+            return T @ self.ptz_
         
     def predict(self, X=None, T=None):
         """Predicts the property labels using classification on T."""
@@ -460,7 +456,7 @@ class PCovC(_BasePCov):
         """
         return super().transform(X)
 
-    def score(self, X, Y, T=None, sample_weight=None):
+    def score(self, X, Y, sample_weight=None):
         #taken from sklearn's LogisticRegression score() implementation:
         r"""Return the mean accuracy on the given test data and labels.
 
@@ -488,4 +484,4 @@ class PCovC(_BasePCov):
         score : float
             Mean accuracy of ``self.predict(X, T)`` w.r.t. `Y`.
         """
-        return accuracy_score(Y, self.predict(X, T), sample_weight=sample_weight)
+        return accuracy_score(Y, self.predict(X), sample_weight=sample_weight)
