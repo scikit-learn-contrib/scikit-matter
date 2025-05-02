@@ -288,20 +288,19 @@ class PCovC(_BasePCov):
             else:
                 W = self.z_classifier_.coef_.T.reshape(X.shape[1], -1)
                 Z = self.z_classifier_.decision_function(X).reshape(X.shape[0], -1) 
-                #computes Z this will throw an error since pxz and ptz aren't defined yet
 
         else:
-            Z = y.copy()  
+            #Z = y.copy()  
+            Z = X @ W
             if W is None:
                 W = np.linalg.lstsq(X, Z, self.tol)[0]  #W = weights for Pxz
         # print("Z: "+str(Z[:4]))
         # print("W: "+str(W[:4]))
         self._label_binarizer = LabelBinarizer(neg_label=-1, pos_label=1)
         Y = self._label_binarizer.fit_transform(y) #check if we need this
-
         if not self._label_binarizer.y_type_.startswith("multilabel"):
             y = column_or_1d(y, warn=True)
-  
+
         if self.space_ == "feature":
             self._fit_feature_space(X, Y.reshape(Z.shape), Z)
         else:
@@ -332,10 +331,9 @@ class PCovC(_BasePCov):
             self.ptz_ = np.hstack(
                 [est_.coef_.T for est_ in self.classifier_.estimators_]
             ) 
-
             self.pxz_ = self.pxt_ @ self.ptz_
         else:
-            self.ptz_ = self.classifier_.coef_.T #this is actually of shape (n_features, 1) when we have binary classification, but we need it to be shape (n_features, n_classes)
+            self.ptz_ = self.classifier_.coef_.T 
             self.pxz_ = self.pxt_ @ self.ptz_ 
 
         if len(Y.shape) == 1:
@@ -425,10 +423,16 @@ class PCovC(_BasePCov):
 
         if X is not None:
             X = check_array(X)
-            return X @ self.pxz_
+            scores = X @ self.pxz_ 
         else:
             T = check_array(T)
-            return T @ self.ptz_
+            scores = T @ self.ptz_ 
+        
+        return (
+                np.reshape(scores, (-1, ))
+                if (scores.ndim > 1 and scores.shape[1] == 1)
+                else scores
+        )  
         
     def predict(self, X=None, T=None):
         """Predicts the property labels using classification on T."""
