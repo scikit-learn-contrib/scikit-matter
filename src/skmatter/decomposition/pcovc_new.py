@@ -1,8 +1,10 @@
 import numpy as np
 from sklearn import clone
 from sklearn.base import check_X_y
+from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
 from sklearn.metrics import accuracy_score
 from sklearn.linear_model import (
+    Perceptron,
     RidgeClassifier,
     RidgeClassifierCV,
     LogisticRegression,
@@ -117,7 +119,7 @@ class PCovC(_BasePCov):
              In such cases, the classifier will be re-fitted on the same
              training data as the composite estimator.
              If `precomputed`, we assume that the `y` passed to the `fit` function
-             is the class likelihoods :math:`{\mathbf{Z}}`.
+             is the classified form of the targets :math:`{\mathbf{\hat{Y}}}`.
              If None, ``sklearn.linear_model.LogisticRegression()``
              is used as the classifier.
 
@@ -231,13 +233,13 @@ class PCovC(_BasePCov):
             Training data, where n_samples is the number of samples and n_properties is
             the number of properties
 
-            It is suggested that :math:`\mathbf{X}` be centered by its column- means and
+            It is suggested that :math:`\mathbf{X}` be centered by its column-means and
             scaled. If features are related, the matrix should be scaled to have unit
             variance, otherwise :math:`\mathbf{Y}` should be scaled so that each feature
             has a variance of 1 / n_features.
 
-            If the passed classifier = `precomputed`, it is assumed that Y is the
-            class likelihoods, :math:`{\mathbf{Z}}`.
+            If the passed classifier = `precomputed`, it is assumed that Y is the 
+            classified form of the properties, :math:`{\mathbf{\hat{Y}}}`.
 
         W : numpy.ndarray, shape (n_features, n_properties)
             Classification weights, optional when classifier=`precomputed`. If not
@@ -251,14 +253,16 @@ class PCovC(_BasePCov):
                 self.classifier == "precomputed",
                 isinstance(
                     self.classifier,
-                    (
-                        RidgeClassifier,
-                        RidgeClassifierCV,
+                    (   
+                        LinearDiscriminantAnalysis,
+                        LinearSVC,
                         LogisticRegression,
                         LogisticRegressionCV,
-                        SGDClassifier,
-                        LinearSVC,
-                        MultiOutputClassifier
+                        MultiOutputClassifier,
+                        Perceptron,
+                        RidgeClassifier,
+                        RidgeClassifierCV,
+                        SGDClassifier
                         #check to see if all linear classifiers are here: Perceptron, LDA
                     ),
                 ),
@@ -266,9 +270,9 @@ class PCovC(_BasePCov):
         ):
             raise ValueError(
                 "classifier must be an instance of "
-                "`RidgeClassifier`, `RidgeClassifierCV`, `LogisticRegression`,"
-                "`Logistic RegressionCV`, `SGDClassifier`, `LinearSVC`,"
-                "`MultiOutputClassifier`, or `precomputed`"
+                "`LinearDiscriminantAnalysis`, `LinearSVC`, `LogisticRegression`,"
+                "`LogisticRegressionCV`, `MultiOutputClassifier`, `Perceptron`,"
+                "`RidgeClassifier`, `RidgeClassifierCV`, or `SGDClassifier`"
             )
         
         super()._fit_util(X, y)
@@ -429,9 +433,9 @@ class PCovC(_BasePCov):
             scores = T @ self.ptz_ 
         
         return (
-                np.reshape(scores, (-1, ))
-                if (scores.ndim > 1 and scores.shape[1] == 1)
-                else scores
+            np.reshape(scores, (-1, ))
+            if (scores.ndim > 1 and scores.shape[1] == 1)
+            else scores
         )  
         
     def predict(self, X=None, T=None):

@@ -6,7 +6,7 @@ from sklearn import exceptions
 from sklearn.datasets import load_breast_cancer as get_dataset
 from sklearn.decomposition import PCA
 from sklearn.kernel_ridge import KernelRidge
-from sklearn.linear_model import Ridge
+from sklearn.linear_model import LinearRegression, Ridge
 from sklearn.linear_model import LogisticRegression
 from sklearn.naive_bayes import GaussianNB
 
@@ -432,6 +432,7 @@ class PCovCInfrastructureTest(PCovCBaseTest):
         self.assertTrue(Z.ndim == 1)
         self.assertTrue(Z.shape[0] == self.X.shape[0])
 
+        # Modify Y so that it now has three classes
         Y_multiclass = self.Y.copy()
         Y_multiclass[0] = 2
 
@@ -522,9 +523,9 @@ class PCovCInfrastructureTest(PCovCBaseTest):
         self.assertEqual(
             str(cm.exception),
             "classifier must be an instance of "
-            "`RidgeClassifier`, `RidgeClassifierCV`, `LogisticRegression`,"
-            "`Logistic RegressionCV`, `SGDClassifier`, `LinearSVC`,"
-            "`MultiOutputClassifier`, or `precomputed`",
+            "`LinearDiscriminantAnalysis`, `LinearSVC`, `LogisticRegression`,"
+            "`LogisticRegressionCV`, `MultiOutputClassifier`, `Perceptron`,"
+            "`RidgeClassifier`, `RidgeClassifierCV`, or `SGDClassifier`"
         )
 
     def test_none_classifier(self):
@@ -537,31 +538,38 @@ class PCovCInfrastructureTest(PCovCBaseTest):
         self.assertTrue(pcovc.classifier_ is not None)
 
     def test_incompatible_coef_shape(self):
-  
-        classifier = LogisticRegression()
-        classifier.fit(self.X, self.Y)
-        pcovc = self.model(mixing=0.5, classifier=classifier)
+        classifier1 = LogisticRegression()
 
-        # Dimension mismatch
-        # with self.assertRaises(ValueError) as cm:
-        #     pcovc.fit(self.X, self.Y.squeeze())
-        # self.assertEqual(
-        #     str(cm.exception),
-        #     "The classifier coefficients have a dimension incompatible "
-        #     "with the supplied target space. "
-        #     "The coefficients have dimension %d and the targets "
-        #     "have dimension %d" % (classifier.coef_.ndim, self.Y.squeeze().ndim),
-        # )
-        
+        # Modify Y to be multiclass
+        Y_multiclass = self.Y.copy()
+        Y_multiclass[0] = 2
+
+        classifier1.fit(self.X, Y_multiclass)
+        pcovc1 = self.model(mixing=0.5, classifier=classifier1)
+
+        # Binary classification shape mismatch
         with self.assertRaises(ValueError) as cm:
-            pcovc.fit(self.X, np.column_stack((self.Y, self.Y)))
+            pcovc1.fit(self.X, self.Y)
         self.assertEqual(
-           str(cm.exception),
-           "The classifier coefficients have a shape incompatible with the supplied "
-           "target space. The coefficients have shape %r and the targets have shape %r"
-            % (classifier.coef_.shape, np.column_stack((self.Y, self.Y)).shape),
+            str(cm.exception),
+            "For binary classification, expected classifier coefficients "
+            "to have shape (1, %d) but got shape %r" 
+            % (self.X.shape[1], classifier1.coef_.shape)
         )
+        
+        classifier2 = LogisticRegression()
+        classifier2.fit(self.X, self.Y)
+        pcovc2 = self.model(mixing=0.5, classifier=classifier2)
 
+        # Multiclass classification shape mismatch 
+        with self.assertRaises(ValueError) as cm:
+            pcovc2.fit(self.X, Y_multiclass)
+        self.assertEqual(
+            str(cm.exception),
+            "For multiclass classification, expected classifier coefficients "
+            "to have shape (%d, %d) but got shape %r" 
+            % (len(np.unique(Y_multiclass)), self.X.shape[1], classifier2.coef_.shape)
+        )
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)
