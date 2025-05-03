@@ -29,7 +29,6 @@ class _BasePCov(_BasePCA, LinearModel):
         space="auto",
         iterated_power="auto",
         random_state=None,
-        whiten=False,
     ):
         self.mixing = mixing
         self.n_components = n_components
@@ -38,11 +37,10 @@ class _BasePCov(_BasePCA, LinearModel):
         self.space = space
         self.iterated_power = iterated_power
         self.random_state = random_state
-        self.whiten = whiten
 
     # this contains the common functionality for PCovR and PCovC fit methods, 
     # but leaves the rest of the fit functionality to the subclass
-    def _fit_util(self, X, y):
+    def _fit_utils(self, X, y):
         # saved for inverse transformations from the latent space,
         # should be zero in the case that the features have been properly centered
         self.mean_ = np.mean(X, axis=0)

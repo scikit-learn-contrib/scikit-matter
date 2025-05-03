@@ -418,31 +418,30 @@ class PCovCInfrastructureTest(PCovCBaseTest):
         self.assertTrue(T.shape[-1] == n_components)
     
     def test_Z_shape(self):
-        """Check that PCovC returns an evidence matrix consistent with the shape of the input
-         matrix and the number of classes.
+        """Check that PCovC returns an evidence matrix consistent with the number of samples
+        and the number of classes.
         """
         n_components = 5
         pcovc = self.model(n_components=n_components, tol=1e-12)
-        
         pcovc.fit(self.X, self.Y)
 
         # Shape (n_samples, ) for binary classifcation
         Z = pcovc.decision_function(self.X) 
-        
+
         self.assertTrue(Z.ndim == 1)
         self.assertTrue(Z.shape[0] == self.X.shape[0])
 
-        # Modify Y so that it now has three classes
+        # Modify Y so that it now contains three classes
         Y_multiclass = self.Y.copy()
         Y_multiclass[0] = 2
-
         pcovc.fit(self.X, Y_multiclass)
+        n_classes = len(np.unique(Y_multiclass))
 
         # Shape (n_samples, n_classes) for multiclass classification
         Z = pcovc.decision_function(self.X) 
-        
+
         self.assertTrue(Z.ndim == 2)
-        self.assertTrue(Z.shape[0] == self.X.shape[0])
+        self.assertTrue((Z.shape[0], Z.shape[1]) == (self.X.shape[0], n_classes))
 
     def test_default_ncomponents(self):
         pcovc = PCovC(mixing=0.5)
@@ -475,10 +474,9 @@ class PCovCInfrastructureTest(PCovCBaseTest):
         self.assertTrue(np.allclose(Z_classifier, Z_pcovc))
         self.assertTrue(np.allclose(W_classifier, W_pcovc))
 
-    def test_prefit_classification(self):
+    def test_precomputed_classification(self):
         classifier = LogisticRegression()
         classifier.fit(self.X, self.Y)
-        #Yhat = classifier.predict(self.X)
         Yhat = classifier.predict(self.X)
         W = classifier.coef_.reshape(self.X.shape[1], -1)
         pcovc1 = self.model(mixing=0.5, classifier="precomputed", n_components=1)
