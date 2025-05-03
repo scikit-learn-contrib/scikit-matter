@@ -132,8 +132,6 @@ class PCovC(_BasePCov):
          Used when the 'arpack' or 'randomized' solvers are used. Pass an int
          for reproducible results across multiple function calls.
 
-    whiten : boolean, deprecated
-
     Attributes
     ----------
     mixing: float, default=0.5
@@ -200,7 +198,6 @@ class PCovC(_BasePCov):
         classifier=None,
         iterated_power="auto",
         random_state=None,
-        whiten=False,
     ):
         super().__init__(
             mixing=mixing,
@@ -210,7 +207,6 @@ class PCovC(_BasePCov):
             space=space,
             iterated_power=iterated_power,
             random_state=random_state,
-            whiten=whiten
         )
         self.classifier = classifier
 
@@ -246,6 +242,7 @@ class PCovC(_BasePCov):
             passed, it is assumed that `W = np.linalg.lstsq(X, Z, self.tol)[0]`
         """
         X, y = check_X_y(X, y, multi_output=True)
+        super()._fit_utils(X, y)
 
         if not any(
             [
@@ -275,7 +272,6 @@ class PCovC(_BasePCov):
                 "`RidgeClassifier`, `RidgeClassifierCV`, or `SGDClassifier`"
             )
         
-        super()._fit_util(X, y)
 
         if self.classifier != "precomputed":
             if self.classifier is None:
@@ -283,7 +279,7 @@ class PCovC(_BasePCov):
             else:
                 classifier = self.classifier
 
-            self.z_classifier_ = check_cl_fit(classifier, X, y=y)  #change to z classifier, fits linear classifier on x and y to get Pxz
+            self.z_classifier_ = check_cl_fit(classifier, X, y)  #change to z classifier, fits linear classifier on x and y to get Pxz
 
             if isinstance(self.z_classifier_, MultiOutputClassifier):
                 W = np.hstack([est_.coef_.T for est_ in self.z_classifier_.estimators_])
@@ -325,6 +321,7 @@ class PCovC(_BasePCov):
         if self.classifier != "precomputed":
             self.classifier_ = clone(classifier).fit(X @ self.pxt_, y)
         else:
+            # if precomputed, use default classifier to predict y from T
             self.classifier_ = LogisticRegression().fit(X @ self.pxt_, y)
         self.classifier_._validate_data(X @ self.pxt_, y, reset=False)
 
@@ -465,7 +462,6 @@ class PCovC(_BasePCov):
         return super().transform(X)
 
     def score(self, X, Y, sample_weight=None):
-        #taken from sklearn's LogisticRegression score() implementation:
         r"""Return the mean accuracy on the given test data and labels.
 
         In multi-label classification, this is the subset accuracy
@@ -480,16 +476,12 @@ class PCovC(_BasePCov):
         Y : array-like of shape (n_samples,) or (n_samples, n_outputs)
             True labels for `X`.
 
-        T : ndarray, shape (n_samples, n_components)
-            Projected data, where n_samples is the number of samples
-            and n_components is the number of components.
-
         sample_weight : array-like of shape (n_samples,), default=None
             Sample weights.
 
         Returns
         -------
         score : float
-            Mean accuracy of ``self.predict(X, T)`` w.r.t. `Y`.
+            Mean accuracy of ``self.predict(X)`` w.r.t. `Y`.
         """
         return accuracy_score(Y, self.predict(X), sample_weight=sample_weight)

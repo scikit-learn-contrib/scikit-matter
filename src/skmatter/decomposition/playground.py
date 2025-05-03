@@ -16,7 +16,7 @@ from sklearn.datasets import load_diabetes as get_dataset3
 from sklearn.metrics import accuracy_score
 from _kernel_pcovr import KernelPCovR
 
-X, Y = get_dataset2(return_X_y=True)
+X, Y = get_dataset(return_X_y=True)
 scaler = StandardScaler()
 X_scaled = scaler.fit_transform(X)
 
@@ -26,13 +26,18 @@ X_scaled = scaler.fit_transform(X)
 # y_pred = ke.predict(X)
 # print(ke.decision_function(X))
 
-model = KernelPCovC(mixing=0.5, kernel="rbf", classifier=SVC(kernel="rbf"), n_components=2)
+model = KernelPCovC(mixing=0.5, kernel="rbf", classifier=LogisticRegression(), n_components=2)
 model.fit(X_scaled, Y)
+print(model.n_features_in_)
 T = model.transform(X_scaled)
+
+Z = model.decision_function(X_scaled)
+X = model.inverse_transform(T)
+print(T.shape)
 y_pred = model.predict(X_scaled)
 print(model.score(X_scaled, Y)) # we should have KPCovC match PCovC decision function shape 
 
-model2 = PCovC(mixing=0.5, classifier=LinearSVC(), n_components=2)
+model2 = PCovC(mixing=0.5, classifier=LogisticRegression(), n_components=2)
 model2.fit(X_scaled, Y)
 T_2 = model2.transform(X_scaled)
 y_pred_2 = model2.predict(X_scaled)

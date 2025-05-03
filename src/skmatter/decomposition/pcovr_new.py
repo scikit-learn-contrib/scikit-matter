@@ -114,8 +114,6 @@ class PCovR(_BasePCov):
          Used when the 'arpack' or 'randomized' solvers are used. Pass an int for
          reproducible results across multiple function calls.
          
-    whiten : bool, deprecated
-
     Attributes
     ----------
     mixing: float, default=0.5
@@ -184,7 +182,6 @@ class PCovR(_BasePCov):
         regressor=None,
         iterated_power="auto",
         random_state=None,
-        whiten=False,
     ):
         super().__init__(
             mixing=mixing,
@@ -194,7 +191,6 @@ class PCovR(_BasePCov):
             space=space,
             iterated_power=iterated_power,
             random_state=random_state,
-            whiten=whiten
         )
         self.regressor = regressor
 
@@ -230,6 +226,7 @@ class PCovR(_BasePCov):
             passed, it is assumed that `W = np.linalg.lstsq(X, Y, self.tol)[0]`
         """
         X, y = check_X_y(X, Y, y_numeric=True, multi_output=True)
+        super()._fit_utils(X, Y)
 
         if not any(
             [
@@ -250,8 +247,6 @@ class PCovR(_BasePCov):
                 "`LinearRegression`, `Ridge`, `RidgeCV`, or `precomputed`"
             )
         
-        super()._fit_util(X, Y)
-
         # Assign the default regressor
         if self.regressor != "precomputed":
             if self.regressor is None:
@@ -263,7 +258,7 @@ class PCovR(_BasePCov):
             else:
                 regressor = self.regressor
 
-            self.regressor_ = check_lr_fit(regressor, X, y=Y)
+            self.regressor_ = check_lr_fit(regressor, X, Y)
 
             W = self.regressor_.coef_.T.reshape(X.shape[1], -1)
             Yhat = self.regressor_.predict(X).reshape(X.shape[0], -1)
