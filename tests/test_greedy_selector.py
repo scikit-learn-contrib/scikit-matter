@@ -49,6 +49,14 @@ class TestGreedy(unittest.TestCase):
             "You cannot specify both `score_threshold` and `full=True`.",
         )
 
+    def test_bad_score_threshold_type(self):
+        with self.assertRaises(ValueError) as cm:
+            _ = GreedyTester(score_threshold_type = "invalid").fit(self.X)
+        self.assertEqual(
+            str(cm.exception),
+            "invalid score_threshold_type, expected one of 'relative' or 'absolute'"
+        )
+
     def test_bad_warm_start(self):
         selector = GreedyTester()
         with self.assertRaises(ValueError) as cm:
