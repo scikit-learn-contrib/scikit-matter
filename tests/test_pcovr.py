@@ -14,7 +14,6 @@ import sys
 sys.path.append('scikit-matter')
 from src.skmatter.decomposition.pcovr_new import PCovR
 
-
 class PCovRBaseTest(unittest.TestCase):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -30,7 +29,6 @@ class PCovRBaseTest(unittest.TestCase):
 
     def setUp(self):
         pass
-
 
 class PCovRErrorTest(PCovRBaseTest):
     def test_against_pca(self):

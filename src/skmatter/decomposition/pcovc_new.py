@@ -14,7 +14,6 @@ from sklearn.linear_model import (
 from sklearn.calibration import column_or_1d
 from sklearn.naive_bayes import LabelBinarizer
 from sklearn.svm import LinearSVC
-from sklearn.svm import SVC
 
 from sklearn.multioutput import MultiOutputClassifier
 from sklearn.utils import check_array
@@ -105,23 +104,22 @@ class PCovC(_BasePCov):
             `feature` when :math:`{n_{features} < n_{samples}}`
 
     classifier: {`RidgeClassifier`, `RidgeClassifierCV`, `LogisticRegression`, 
-            `LogisticRegressionCV`, `SGDClassifier`, `LinearSVC`, `precomputed`}, default=None
-             classifier for computing :math:`{\mathbf{Z}}`.
-             The classifier should be one `sklearn.linear_model.RidgeClassifier`,
-             `sklearn.linear_model.RidgeClassifierCV`, `sklearn.linear_model.LogisticRegression`, 
-             `sklearn.linear_model.LogisticRegressionCV`, `sklearn.linear_model.SGDClassifier`, 
-             or `sklearn.svm.LinearSVC`. If a pre-fitted classifier is provided, it is used to compute
-             :math:`{\mathbf{Y}}`.
-             Note that any pre-fitting of the classifier will be lost if `PCovC` is
-             within a composite estimator that enforces cloning, e.g.,
-             `sklearn.compose.TransformedTargetclassifier` or
-             `sklearn.pipeline.Pipeline` with model caching.
-             In such cases, the classifier will be re-fitted on the same
-             training data as the composite estimator.
-             If `precomputed`, we assume that the `y` passed to the `fit` function
-             is the classified form of the targets :math:`{\mathbf{\hat{Y}}}`.
-             If None, ``sklearn.linear_model.LogisticRegression()``
-             is used as the classifier.
+            `LogisticRegressionCV`, `SGDClassifier`, `LinearSVC`, `precomputed`}, default=None 
+            classifier for computing :math:`{\mathbf{Z}}`. The classifier should be one 
+            `sklearn.linear_model.RidgeClassifier`, `sklearn.linear_model.RidgeClassifierCV`, 
+            `sklearn.linear_model.LogisticRegression`, `sklearn.linear_model.LogisticRegressionCV`, 
+            `sklearn.linear_model.SGDClassifier`, or `sklearn.svm.LinearSVC`. If a pre-fitted classifier 
+            is provided, it is used to compute :math:`{\mathbf{Y}}`.
+            Note that any pre-fitting of the classifier will be lost if `PCovC` is
+            within a composite estimator that enforces cloning, e.g.,
+            `sklearn.compose.TransformedTargetclassifier` or
+            `sklearn.pipeline.Pipeline` with model caching.
+            In such cases, the classifier will be re-fitted on the same
+            training data as the composite estimator.
+            If `precomputed`, we assume that the `y` passed to the `fit` function
+            is the classified form of the targets :math:`{\mathbf{\hat{Y}}}`.
+            If None, ``sklearn.linear_model.LogisticRegression()``
+            is used as the classifier.
 
     iterated_power : int or 'auto', default='auto'
          Number of iterations for the power method computed by
@@ -131,6 +129,8 @@ class PCovC(_BasePCov):
     random_state : int, RandomState instance or None, default=None
          Used when the 'arpack' or 'randomized' solvers are used. Pass an int
          for reproducible results across multiple function calls.
+    
+    whiten : boolean, deprecated
 
     Attributes
     ----------
@@ -151,15 +151,15 @@ class PCovC(_BasePCov):
         n_components, or the lesser value of n_features and n_samples
         if n_components is None.
 
-    pxt_ : ndarray of size :math:`({n_{samples}, n_{components}})`
+    pxt_ : ndarray of size :math:`({n_{features}, n_{components}})`
            the projector, or weights, from the input space :math:`\mathbf{X}`
            to the latent-space projection :math:`\mathbf{T}`
 
-    ptz_ : ndarray of size :math:`({n_{components}, n_{properties}})`
+    ptz_ : ndarray of size :math:`({n_{components}, n_{classes}})`
           the projector, or weights, from the latent-space projection
           :math:`\mathbf{T}` to the class likelihoods :math:`\mathbf{Z}`
 
-    pxz_ : ndarray of size :math:`({n_{samples}, n_{properties}})`
+    pxz_ : ndarray of size :math:`({n_{features}, n_{classes}})`
            the projector, or weights, from the input space :math:`\mathbf{X}`
            to the class likelihoods :math:`\mathbf{Z}`
            
@@ -198,6 +198,7 @@ class PCovC(_BasePCov):
         classifier=None,
         iterated_power="auto",
         random_state=None,
+        whiten=False
     ):
         super().__init__(
             mixing=mixing,
@@ -207,6 +208,7 @@ class PCovC(_BasePCov):
             space=space,
             iterated_power=iterated_power,
             random_state=random_state,
+            whiten=whiten
         )
         self.classifier = classifier
 
@@ -279,7 +281,7 @@ class PCovC(_BasePCov):
             else:
                 classifier = self.classifier
 
-            self.z_classifier_ = check_cl_fit(classifier, X, y)  #change to z classifier, fits linear classifier on x and y to get Pxz
+            self.z_classifier_ = check_cl_fit(classifier, X, y)  #its linear classifier on x and y to get Pxz
 
             if isinstance(self.z_classifier_, MultiOutputClassifier):
                 W = np.hstack([est_.coef_.T for est_ in self.z_classifier_.estimators_])
@@ -290,12 +292,10 @@ class PCovC(_BasePCov):
                 Z = self.z_classifier_.decision_function(X).reshape(X.shape[0], -1) 
 
         else:
-            #Z = y.copy()  
             Z = X @ W
             if W is None:
                 W = np.linalg.lstsq(X, Z, self.tol)[0]  #W = weights for Pxz
-        # print("Z: "+str(Z[:4]))
-        # print("W: "+str(W[:4]))
+
         self._label_binarizer = LabelBinarizer(neg_label=-1, pos_label=1)
         Y = self._label_binarizer.fit_transform(y) #check if we need this
         if not self._label_binarizer.y_type_.startswith("multilabel"):
@@ -306,18 +306,12 @@ class PCovC(_BasePCov):
         else:
             self._fit_sample_space(X, Y.reshape(Z.shape), Z, W)
             
-            # instead of using linear regression solution, refit with the classifier
-            # and steal weights to get ptz
-            # this is failing because self.classifier is never changed from None if None is passed as classifier
-            # what to do when classifier = precomputed?
-
-            #cases:
-            #1. if classifier has been fit with X and Y already, we need to use classifier that hasn't been fitted and refit on T, y
-            #2. if classifier has not been fit with X and Y, we call check_cl_fit
+        # instead of using linear regression solution, refit with the classifier
+        # and steal weights to get ptz
+        # what to do when classifier = precomputed?
 
         #original: self.classifier_ = check_cl_fit(classifier, X @ self.pxt_, y=y)
         #we don't want to copy ALl parameters of classifier, such as n_features_in, since we are re-fitting it on T, y
-        #ask Rosy about this
         if self.classifier != "precomputed":
             self.classifier_ = clone(classifier).fit(X @ self.pxt_, y)
         else:
@@ -413,9 +407,6 @@ class PCovC(_BasePCov):
         return super().inverse_transform(T)
 
     def decision_function(self, X=None, T=None):
-        # print(self.pxz_.shape)
-        # print(self.ptz_.shape)
-
         """Predicts confidence scores from X or T."""
         check_is_fitted(self, attributes=["_label_binarizer", "pxz_", "ptz_"])
 
@@ -443,9 +434,9 @@ class PCovC(_BasePCov):
             raise ValueError("Either X or T must be supplied.")
 
         if X is not None:
-            return self.classifier_.predict(X @ self.pxt_) #Ptz(T) -> activation -> Y labels
+            return self.classifier_.predict(X @ self.pxt_)
         else:
-            return self.classifier_.predict(T) #Ptz(T) -> activation -> Y labels
+            return self.classifier_.predict(T)
   
     def transform(self, X=None):
         """Apply dimensionality reduction to X.
