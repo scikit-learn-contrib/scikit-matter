@@ -1,5 +1,6 @@
 import scipy.sparse as sp
 
+from sklearn.base import check_is_fitted
 from sklearn.metrics.pairwise import pairwise_kernels
 from sklearn.utils import check_array
 
@@ -25,7 +26,9 @@ class KernelPCovC(PCovC):
         degree=3,
         coef0=0,
         kernel_params=None,
-        center=True, # Originally False; PCovC is throwing an error sometimes since K (passed as X) is not centered
+        center=True, # False in KPCovR, but getting error:
+                     # "STOP: TOTAL NO. of ITERATIONS REACHED LIMIT" sometimes 
+                     # when training due to unscaled X
         n_jobs=None,
     ):
         super().__init__(
@@ -52,7 +55,7 @@ class KernelPCovC(PCovC):
         if callable(self.kernel):
             params = self.kernel_params or {}
         else:
-            #this is how BaseSVC has it:
+            # from BaseSVC:
             if self.gamma == "scale":
                 X_var = (X.multiply(X)).mean() - (X.mean()) ** 2 if sparse else X.var()
                 self.gamma_ = 1.0 / (X.shape[1] * X_var) if X_var != 0 else 1.0
@@ -80,6 +83,7 @@ class KernelPCovC(PCovC):
         return super().inverse_transform(T)
 
     def decision_function(self, X=None, T=None):
+        check_is_fitted(self, attributes=["_label_binarizer", "pxz_", "ptz_"])
         X = check_array(X)
         K = self._get_kernel(X, self.X_fit_)
 
@@ -89,6 +93,7 @@ class KernelPCovC(PCovC):
         return super().decision_function(K, T)
         
     def predict(self, X=None, T=None):
+        check_is_fitted(self, attributes=["_label_binarizer", "pxz_", "ptz_"])
         X = check_array(X)
         K = self._get_kernel(X, self.X_fit_)
 
@@ -98,6 +103,7 @@ class KernelPCovC(PCovC):
         return super().predict(K, T)
   
     def transform(self, X=None):
+        check_is_fitted(self, ["pxt_", "mean_"])
         X = check_array(X)
         K = self._get_kernel(X, self.X_fit_)
 

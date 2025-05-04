@@ -113,7 +113,9 @@ class PCovR(_BasePCov):
     random_state : int, :class:`numpy.random.RandomState` instance or None, default=None
          Used when the 'arpack' or 'randomized' solvers are used. Pass an int for
          reproducible results across multiple function calls.
-         
+    
+    whiten : boolean, deprecated
+
     Attributes
     ----------
     mixing: float, default=0.5
@@ -151,7 +153,7 @@ class PCovR(_BasePCov):
         
     singular_values_ : numpy.ndarray of shape (n_components,)
         The singular values corresponding to each of the selected components.
-
+    
     Examples
     --------
     >>> import numpy as np
@@ -182,6 +184,7 @@ class PCovR(_BasePCov):
         regressor=None,
         iterated_power="auto",
         random_state=None,
+        whiten=False
     ):
         super().__init__(
             mixing=mixing,
@@ -191,6 +194,7 @@ class PCovR(_BasePCov):
             space=space,
             iterated_power=iterated_power,
             random_state=random_state,
+            whiten=whiten
         )
         self.regressor = regressor
 

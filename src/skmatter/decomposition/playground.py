@@ -26,7 +26,7 @@ X_scaled = scaler.fit_transform(X)
 # y_pred = ke.predict(X)
 # print(ke.decision_function(X))
 
-model = KernelPCovC(mixing=0.5, kernel="rbf", classifier=LogisticRegression(), n_components=2)
+model = KernelPCovC(mixing=0.5, center=False, kernel="linear", classifier=LogisticRegression(), n_components=2)
 model.fit(X_scaled, Y)
 print(model.n_features_in_)
 T = model.transform(X_scaled)
@@ -190,16 +190,3 @@ print(model2.score(X_scaled, Y))
 # X_new, Y_new = get_dataset2(return_X_y=True)
 # print(X_new.shape)
 # print(Y_new.shape)
-
-
-'''
-Problem is this: check_lr_fit and check_cl_fit do different things because the coefficients for Logistic/Linear regression are different.
-So we need to change check_cl_fit
-
-scaler = StandardScaler()
-X_new = scaler.fit_transform(X_new)
-regressor = LinearRegression()
-
-regressor.fit(X_new, Y_new)
-model2 = PCovR(regressor = regressor)
-print(model2.regressor.coef_)'''

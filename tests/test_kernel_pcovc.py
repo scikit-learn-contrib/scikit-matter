@@ -193,16 +193,16 @@ class KernelPCovCInfrastructureTest(KernelPCovCBaseTest):
         kpcovc.fit(self.X, self.Y)
 
         Yhat_classifier = classifier.predict(self.X).reshape(self.X.shape[0], -1)
-        W_classifier = classifier.dual_coef_.reshape(self.X.shape[0], -1)
+        W_classifier = classifier.coef_.reshape(self.X.shape[1], -1)
 
         Yhat_kpcovc = kpcovc.classifier_.predict(self.X).reshape(self.X.shape[0], -1)
-        W_kpcovc = kpcovc.classifier_.dual_coef_.reshape(self.X.shape[0], -1)
+        W_kpcovc = kpcovc.classifier_.coef_.reshape(self.X.shape[1], -1)
 
         self.assertTrue(np.allclose(Yhat_classifier, Yhat_kpcovc))
         self.assertTrue(np.allclose(W_classifier, W_kpcovc))
 
     def test_classifier_modifications(self):
-        classifier = LinearSVC(kernel="rbf", gamma=0.1)
+        classifier = LinearSVC()
         kpcovc = self.model(mixing=0.5, classifier=classifier, kernel="rbf", gamma=0.1)
 
         # KPCovC classifier matches the original
@@ -210,12 +210,12 @@ class KernelPCovCInfrastructureTest(KernelPCovCBaseTest):
 
         # KPCovC classifier updates its parameters
         # to match the original classifier
-        classifier.set_params(gamma=0.2)
+        classifier.set_params(random_state=3)
         self.assertTrue(classifier.get_params() == kpcovc.classifier.get_params())
 
         # Fitting classifier outside KPCovC fits the KPCovC classifier
         classifier.fit(self.X, self.Y)
-        self.assertTrue(hasattr(kpcovc.classifier, "dual_coef_"))
+        self.assertTrue(hasattr(kpcovc.classifier, "coef_"))
 
         # Raise error during KPCovC fit since classifier and KPCovC
         # kernel parameters now inconsistent
@@ -248,30 +248,37 @@ class KernelPCovCInfrastructureTest(KernelPCovCBaseTest):
         self.assertTrue(kpcovc.classifier_ is not None)
 
     def test_incompatible_coef_shape(self):
-        classifier = LinearSVC()
-        classifier.fit(self.X, self.Y)
-        kpcovc = self.model(mixing=0.5, classifier=classifier)
+        classifier1 = LinearSVC()
 
-        # Dimension mismatch
+        # Modify Y to be multiclass
+        Y_multiclass = self.Y.copy()
+        Y_multiclass[0] = 2
+
+        classifier1.fit(self.X, Y_multiclass)
+        kpcovc1 = self.model(mixing=0.5, classifier=classifier1, kernel="rbf")
+
+        # Binary classification shape mismatch
         with self.assertRaises(ValueError) as cm:
-            kpcovc.fit(self.X, self.Y)
-        self.assertTrue(
+            kpcovc1.fit(self.X, self.Y)
+        self.assertEqual(
             str(cm.exception),
-            "The regressor coefficients have a dimension incompatible "
-            "with the supplied target space. "
-            "The coefficients have dimension %d and the targets "
-            "have dimension %d" % (classifier.dual_coef_.ndim, self.Y[:, 0].ndim),
+            "For binary classification, expected classifier coefficients "
+            "to have shape (1, %d) but got shape %r" 
+            % (self.X.shape[1], classifier1.coef_.shape)
         )
+        
+        classifier2 = LinearSVC()
+        classifier2.fit(self.X, self.Y)
+        kpcovc2 = self.model(mixing=0.5, classifier=classifier2, kernel="rbf")
 
-        # Shape mismatch (number of targets)
+        # Multiclass classification shape mismatch 
         with self.assertRaises(ValueError) as cm:
-            kpcovc.fit(self.X, self.Y)
-        self.assertTrue(
+            kpcovc2.fit(self.X, Y_multiclass)
+        self.assertEqual(
             str(cm.exception),
-            "The regressor coefficients have a shape incompatible "
-            "with the supplied target space. "
-            "The coefficients have shape %r and the targets "
-            "have shape %r" % (classifier.dual_coef_.shape, self.Y.shape),
+            "For multiclass classification, expected classifier coefficients "
+            "to have shape (%d, %d) but got shape %r" 
+            % (len(np.unique(Y_multiclass)), self.X.shape[1], classifier2.coef_.shape)
         )
 
     def test_precomputed_classification(self):
@@ -416,7 +423,7 @@ class KernelPCovCTestSVDSolvers(KernelPCovCBaseTest):
                 else:
                     kpcovc.fit(self.X, self.Y)
 
-                self.assertTrue(kpcovc._fit_svd_solver == solver)
+                self.assertTrue(kpcovc.fit_svd_solver_ == solver)
 
     def test_bad_solver(self):
         """
