@@ -182,8 +182,6 @@ class KernelPCovRInfrastructureTest(KernelPCovRBaseTest):
         self.assertTrue(hasattr(kpcovr, "centerer_"))
         _ = kpcovr.predict(self.X)
         _ = kpcovr.transform(self.X)
-
-        print(self.Y.shape)
         _ = kpcovr.score(self.X, self.Y)
 
     def test_prefit_regressor(self):
