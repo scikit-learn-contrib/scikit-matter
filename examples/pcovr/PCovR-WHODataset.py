@@ -312,5 +312,3 @@ fig.suptitle(
     "Linear and Kernel PCovR for Predicting Life Expectancy", y=0.925, fontsize=10
 )
 plt.show()
-
-# %%
