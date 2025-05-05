@@ -23,10 +23,12 @@ jobs:
         python-version: ${{ matrix.python-version }}
 
     - name: install tests dependencies
-      run: python -m pip install tox
+      run: python -m pip install tox coverage[toml]
 
     - name: run Python tests
-      run: tox -e tests
+      run: |
+        tox -e tests
+        coverage xml
 
     - name: upload to codecov.io
       uses: codecov/codecov-action@v5
