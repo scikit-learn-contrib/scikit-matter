@@ -10,8 +10,9 @@ from sklearn.linear_model import Ridge
 from sklearn.preprocessing import StandardScaler
 from sklearn.utils.validation import check_X_y
 
-from skmatter.decomposition import PCovR
-
+import sys
+sys.path.append('scikit-matter')
+from src.skmatter.decomposition._pcovr import PCovR
 
 class PCovRBaseTest(unittest.TestCase):
     def __init__(self, *args, **kwargs):
@@ -28,7 +29,6 @@ class PCovRBaseTest(unittest.TestCase):
 
     def setUp(self):
         pass
-
 
 class PCovRErrorTest(PCovRBaseTest):
     def test_against_pca(self):
@@ -231,7 +231,8 @@ class PCovRSpaceTest(PCovRBaseTest):
                 #             pcovr_ss.pxt_, pcovr_fs.pxt_,
                 #             self.error_tol
                 #         ))
-                # print(" ")        
+                # print(" ")   
+
                 self.assertTrue(
                     np.allclose(
                         pcovr_ss.inverse_transform(pcovr_ss.transform(self.X)),
