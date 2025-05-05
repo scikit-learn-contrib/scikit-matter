@@ -15,8 +15,8 @@ from sklearn.linear_model import RidgeClassifier
 
 import sys
 sys.path.append('scikit-matter')
-from src.skmatter.decomposition.pcovc_new import PCovC
-from src.skmatter.decomposition.kernel_pcovc_new import KernelPCovC
+from src.skmatter.decomposition._pcovc import PCovC
+from src.skmatter.decomposition._kernel_pcovc import KernelPCovC
 
 class KernelPCovCBaseTest(unittest.TestCase):
     def __init__(self, *args, **kwargs):
@@ -80,7 +80,7 @@ class KernelPCovCErrorTest(KernelPCovCBaseTest):
 
         for mixing in np.linspace(0, 1, 6):
             kpcovc = KernelPCovC(
-                mixing=mixing, n_components=4, tol=1e-12
+                mixing=mixing, n_components=4, fit_inverse_transform=True, tol=1e-12
             )
             kpcovc.fit(self.X, self.Y)
 

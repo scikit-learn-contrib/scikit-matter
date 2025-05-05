@@ -10,12 +10,14 @@ from skmatter.preprocessing import KernelNormalizer, StandardFlexibleScaler
 
 import sys
 sys.path.append('scikit-matter')
-from src.skmatter.decomposition.pcovr_new import PCovR
-from src.skmatter.decomposition.pcovc_new import PCovC
+from src.skmatter.decomposition._pcovr import PCovR
+from src.skmatter.decomposition._pcovc import PCovC
+from src.skmatter.decomposition._kernel_pcovc import KernelPCovC
 
 @parametrize_with_checks(
     [
         KernelPCovR(mixing=0.5),
+        KernelPCovC(mixing=0.5),
         PCovR(mixing=0.5),
         PCovC(mixing=0.5),
         fCUR(),
@@ -25,7 +27,6 @@ from src.skmatter.decomposition.pcovc_new import PCovC
         Ridge2FoldCV(),
         KernelNormalizer(),
         StandardFlexibleScaler(),
-        #put PCovC/KPCovC once ready
     ]
 )
 def test_sklearn_compatible_estimator(estimator, check):

@@ -1,4 +1,3 @@
-from copy import deepcopy
 import numbers
 import numpy as np
 import warnings
@@ -53,7 +52,7 @@ class _BasePCov(_BasePCA, LinearModel):
                 " greater than the supplied tolerance.",
                 stacklevel=1,
             )
-
+        
         if self.space is not None and self.space not in [
             "feature",
             "sample",

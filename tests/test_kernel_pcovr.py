@@ -9,7 +9,7 @@ from sklearn.utils.validation import check_X_y
 
 import sys
 sys.path.append('scikit-matter')
-from src.skmatter.decomposition.pcovr_new import PCovR
+from src.skmatter.decomposition._pcovr import PCovR
 from src.skmatter.decomposition._kernel_pcovr import KernelPCovR
 
 from skmatter.preprocessing import StandardFlexibleScaler as SFS
