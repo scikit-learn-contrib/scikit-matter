@@ -13,6 +13,7 @@ The rules for CHANGELOG file:
 
 0.3.0 (XXXX/XX/XX)
 ------------------
+- Update to sklearn >= 1.6.0 and scipy >= 1.15.0 (#239)
 - Fixed moved function import from scipy and bump scipy dependency to 1.15.0 (#236)
 - Fix rendering issues for `SparseKDE` and `QuickShift` (#236)
 - Updating ``FPS`` to allow a numpy array of ints as an initialize parameter (#145)
