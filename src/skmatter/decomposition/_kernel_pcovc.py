@@ -9,9 +9,8 @@ from sklearn.utils import check_array
 
 from skmatter.preprocessing import KernelNormalizer
 
-import sys
-sys.path.append('scikit-matter')
-from src.skmatter.decomposition._pcovc import PCovC
+from skmatter.decomposition import PCovC
+
 
 class KernelPCovC(PCovC):
     def __init__(
@@ -29,9 +28,9 @@ class KernelPCovC(PCovC):
         degree=3,
         coef0=0,
         kernel_params=None,
-        center=True, # False in KPCovR, but getting error:
-                     # "STOP: TOTAL NO. of ITERATIONS REACHED LIMIT" sometimes 
-                     # when training due to unscaled X
+        center=True,  # False in KPCovR, but getting error:
+        # "STOP: TOTAL NO. of ITERATIONS REACHED LIMIT" sometimes
+        # when training due to unscaled X
         fit_inverse_transform=False,
         n_jobs=None,
     ):
@@ -45,14 +44,14 @@ class KernelPCovC(PCovC):
             iterated_power=iterated_power,
             random_state=random_state,
         )
-        self.kernel=kernel
-        self.gamma=gamma
-        self.degree=degree
-        self.coef0=coef0
-        self.kernel_params=kernel_params
-        self.center=center
+        self.kernel = kernel
+        self.gamma = gamma
+        self.degree = degree
+        self.coef0 = coef0
+        self.kernel_params = kernel_params
+        self.center = center
         self.fit_inverse_transform = fit_inverse_transform
-        self.n_jobs=n_jobs
+        self.n_jobs = n_jobs
 
     def _get_kernel(self, X, Y=None):
         sparse = sp.issparse(X)
@@ -89,7 +88,7 @@ class KernelPCovC(PCovC):
             self.inverse_coef_ = linalg.solve(K, X, assume_a="pos", overwrite_a=True)
 
         return self
-    
+
     def inverse_transform(self, T):
         if not self.fit_inverse_transform:
             raise NotFittedError(
@@ -100,7 +99,7 @@ class KernelPCovC(PCovC):
 
         K = super().inverse_transform(T)
         return np.dot(K, self.inverse_coef_)
-        
+
     def decision_function(self, X=None, T=None):
         check_is_fitted(self, attributes=["_label_binarizer", "pxz_", "ptz_"])
         X = check_array(X)
@@ -110,7 +109,7 @@ class KernelPCovC(PCovC):
             K = self.centerer_.transform(K)
 
         return super().decision_function(K, T)
-        
+
     def predict(self, X=None, T=None):
         check_is_fitted(self, attributes=["_label_binarizer", "pxz_", "ptz_"])
         X = check_array(X)
@@ -120,7 +119,7 @@ class KernelPCovC(PCovC):
             K = self.centerer_.transform(K)
 
         return super().predict(K, T)
-  
+
     def transform(self, X=None):
         check_is_fitted(self, ["pxt_", "mean_"])
         X = check_array(X)

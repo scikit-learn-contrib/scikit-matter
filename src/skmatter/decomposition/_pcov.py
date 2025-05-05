@@ -1,8 +1,8 @@
 import numbers
-import numpy as np
 import warnings
-from matplotlib.pylab import LinAlgError
 
+import numpy as np
+from numpy.linalg import LinAlgError
 from scipy.linalg import sqrtm as MatrixSqrt
 from scipy import linalg
 from scipy.linalg import sqrtm as MatrixSqrt
@@ -18,9 +18,10 @@ from sklearn.utils.validation import check_is_fitted
 
 from skmatter.utils import pcovr_covariance, pcovr_kernel
 
+
 class _BasePCov(_BasePCA, LinearModel):
     def __init__(
-        self, 
+        self,
         mixing=0.5,
         n_components=None,
         svd_solver="auto",
@@ -37,9 +38,9 @@ class _BasePCov(_BasePCA, LinearModel):
         self.space = space
         self.iterated_power = iterated_power
         self.random_state = random_state
-        self.whiten=whiten
+        self.whiten = whiten
 
-    # this contains the common functionality for PCovR and PCovC fit methods, 
+    # this contains the common functionality for PCovR and PCovC fit methods,
     # but leaves the rest of the fit functionality to the subclass
     def _fit_utils(self, X, y):
         # saved for inverse transformations from the latent space,
@@ -52,7 +53,7 @@ class _BasePCov(_BasePCA, LinearModel):
                 " greater than the supplied tolerance.",
                 stacklevel=1,
             )
-        
+
         if self.space is not None and self.space not in [
             "feature",
             "sample",
@@ -60,7 +61,7 @@ class _BasePCov(_BasePCA, LinearModel):
         ]:
             raise ValueError("Only feature and sample space are supported.")
 
-         # Handle self.n_components==None
+        # Handle self.n_components==None
         if self.n_components is None:
             if self.svd_solver != "arpack":
                 self.n_components_ = min(X.shape)
@@ -88,7 +89,7 @@ class _BasePCov(_BasePCA, LinearModel):
                 self.space_ = "feature"
             else:
                 self.space_ = "sample"
-                
+
     def _fit_feature_space(self, X, Y, Yhat):
         Ct, iCsqrt = pcovr_covariance(
             mixing=self.mixing,
@@ -152,8 +153,8 @@ class _BasePCov(_BasePCA, LinearModel):
         self.pxt_ = P @ T
         self.ptx_ = T.T @ X
         self.pty_ = T.T @ Y
-    
-    #exactly same in PCovR/PCovC
+
+    # exactly same in PCovR/PCovC
     def _decompose_truncated(self, mat):
         if not 1 <= self.n_components_ <= min(self.n_samples_in_, self.n_features_in_):
             raise ValueError(
@@ -209,8 +210,8 @@ class _BasePCov(_BasePCA, LinearModel):
             )
 
         return U, S, Vt
-    
-    #exactly same in PCovR/PCovC
+
+    # exactly same in PCovR/PCovC
     def _decompose_full(self, mat):
         if self.n_components_ == "mle":
             if self.n_samples_in_ < self.n_features_in_:
@@ -268,8 +269,8 @@ class _BasePCov(_BasePCA, LinearModel):
             S[: self.n_components_],
             Vt[: self.n_components_],
         )
-    
-    #exactly same in PCovR/PCovC
+
+    # exactly same in PCovR/PCovC
     def inverse_transform(self, T):
         if np.max(np.abs(self.mean_)) > self.tol:
             warnings.warn(
@@ -281,8 +282,7 @@ class _BasePCov(_BasePCA, LinearModel):
 
         return T @ self.ptx_
 
-    #exactly the same in PCovR/PCovC
+    # exactly the same in PCovR/PCovC
     def transform(self, X=None):
         check_is_fitted(self, ["pxt_", "mean_"])
         return super().transform(X)
-    

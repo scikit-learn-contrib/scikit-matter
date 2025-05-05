@@ -4,6 +4,7 @@ from sklearn.base import check_is_fitted
 from sklearn.exceptions import NotFittedError
 import numpy as np
 
+
 def check_cl_fit(classifier, X, y):
     r"""
     Checks that a (linear) classifier is fitted, and if not,
@@ -26,8 +27,8 @@ def check_cl_fit(classifier, X, y):
         fitted_classifier._validate_data(X, y, reset=False, multi_output=True)
 
         # Check compatibility with y
-        # dimension of classifier coefficients is always 2, hence we don't 
-        # need to check dimension for match with Y 
+        # dimension of classifier coefficients is always 2, hence we don't
+        # need to check dimension for match with Y
         # We need to double check this...
         n_classes = len(np.unique(y))
 
@@ -42,15 +43,16 @@ def check_cl_fit(classifier, X, y):
             if fitted_classifier.coef_.shape[0] != n_classes:
                 raise ValueError(
                     "For multiclass classification, expected classifier coefficients "
-                    "to have shape (%d, %d) but got shape %r" 
+                    "to have shape (%d, %d) but got shape %r"
                     % (n_classes, X.shape[1], fitted_classifier.coef_.shape)
                 )
-            
+
     except NotFittedError:
         fitted_classifier = clone(classifier)
         fitted_classifier.fit(X, y)
 
     return fitted_classifier
+
 
 # def check_svc_fit(classifier, K, X, y):
 #     r"""
@@ -83,7 +85,7 @@ def check_cl_fit(classifier, X, y):
 #         if fitted_classifier.coef_.shape[0] != n_classes - 1:
 #             raise ValueError(
 #                 "Expected classifier coefficients "
-#                 "to have shape (%d, %d) but got shape %r" 
+#                 "to have shape (%d, %d) but got shape %r"
 #                 % (n_classes, n_sv, fitted_classifier.coef_.shape)
 #             )
 

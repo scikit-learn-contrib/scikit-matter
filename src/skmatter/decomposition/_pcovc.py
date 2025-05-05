@@ -9,7 +9,7 @@ from sklearn.linear_model import (
     RidgeClassifierCV,
     LogisticRegression,
     LogisticRegressionCV,
-    SGDClassifier
+    SGDClassifier,
 )
 from sklearn.svm import LinearSVC
 
@@ -19,13 +19,12 @@ from sklearn.multioutput import MultiOutputClassifier
 from sklearn.utils import check_array
 from sklearn.utils.validation import check_is_fitted
 
-import sys
-sys.path.append('scikit-matter')
-from src.skmatter.decomposition._pcov import _BasePCov
-from src.skmatter.utils._pcovc_utils import check_cl_fit
+from skmatter.decomposition import _BasePCov
+from skmatter.utils import check_cl_fit
+
 
 class PCovC(_BasePCov):
-    r"""Principal Covariates Classification determines a latent-space projection :math:`\mathbf{T}` 
+    r"""Principal Covariates Classification determines a latent-space projection :math:`\mathbf{T}`
     which minimizes a combined loss in supervised and unsupervised tasks.
 
     This projection is determined by the eigendecomposition of a modified gram
@@ -35,9 +34,9 @@ class PCovC(_BasePCov):
       \mathbf{\tilde{K}} = \alpha \mathbf{X} \mathbf{X}^T +
             (1 - \alpha) \mathbf{Z}\mathbf{Z}^T
 
-    where :math:`\alpha` is a mixing parameter, :math:`\mathbf{X}` is an input matrix of shape 
-    :math:`(n_{samples}, n_{features})`, and :math:`\mathbf{Z}` is an evidence tensor of shape 
-    :math:`(n_{samples}, n_{classes}, n_{labels})`. For :math:`(n_{samples} < n_{features})`, 
+    where :math:`\alpha` is a mixing parameter, :math:`\mathbf{X}` is an input matrix of shape
+    :math:`(n_{samples}, n_{features})`, and :math:`\mathbf{Z}` is an evidence tensor of shape
+    :math:`(n_{samples}, n_{classes}, n_{labels})`. For :math:`(n_{samples} < n_{features})`,
     this can be more efficiently computed using the eigendecomposition of a modified covariance matrix
     :math:`\mathbf{\tilde{C}}`
 
@@ -103,12 +102,12 @@ class PCovC(_BasePCov):
             default=`sample` when :math:`{n_{samples} < n_{features}}` and
             `feature` when :math:`{n_{features} < n_{samples}}`
 
-    classifier: {`RidgeClassifier`, `RidgeClassifierCV`, `LogisticRegression`, 
-            `LogisticRegressionCV`, `SGDClassifier`, `LinearSVC`, `precomputed`}, default=None 
-            classifier for computing :math:`{\mathbf{Z}}`. The classifier should be one 
-            `sklearn.linear_model.RidgeClassifier`, `sklearn.linear_model.RidgeClassifierCV`, 
-            `sklearn.linear_model.LogisticRegression`, `sklearn.linear_model.LogisticRegressionCV`, 
-            `sklearn.linear_model.SGDClassifier`, or `sklearn.svm.LinearSVC`. If a pre-fitted classifier 
+    classifier: {`RidgeClassifier`, `RidgeClassifierCV`, `LogisticRegression`,
+            `LogisticRegressionCV`, `SGDClassifier`, `LinearSVC`, `precomputed`}, default=None
+            classifier for computing :math:`{\mathbf{Z}}`. The classifier should be one
+            `sklearn.linear_model.RidgeClassifier`, `sklearn.linear_model.RidgeClassifierCV`,
+            `sklearn.linear_model.LogisticRegression`, `sklearn.linear_model.LogisticRegressionCV`,
+            `sklearn.linear_model.SGDClassifier`, or `sklearn.svm.LinearSVC`. If a pre-fitted classifier
             is provided, it is used to compute :math:`{\mathbf{Y}}`.
             Note that any pre-fitting of the classifier will be lost if `PCovC` is
             within a composite estimator that enforces cloning, e.g.,
@@ -129,7 +128,7 @@ class PCovC(_BasePCov):
     random_state : int, RandomState instance or None, default=None
          Used when the 'arpack' or 'randomized' solvers are used. Pass an int
          for reproducible results across multiple function calls.
-    
+
     whiten : boolean, deprecated
 
     Attributes
@@ -162,7 +161,7 @@ class PCovC(_BasePCov):
     pxz_ : ndarray of size :math:`({n_{features}, n_{classes}})`
            the projector, or weights, from the input space :math:`\mathbf{X}`
            to the class likelihoods :math:`\mathbf{Z}`
-           
+
     explained_variance_ : ndarray of shape (n_components,)
         The amount of variance explained by each of the selected components.
         Equal to n_components largest eigenvalues
@@ -170,7 +169,7 @@ class PCovC(_BasePCov):
 
     singular_values_ : ndarray of shape (n_components,)
         The singular values corresponding to each of the selected components.
-        
+
     Examples
     --------
     >>> import numpy as np
@@ -188,6 +187,7 @@ class PCovC(_BasePCov):
     >>> pcovc.predict(X)
     array([[0], [1], [2], [0]])
     """
+
     def __init__(
         self,
         mixing=0.5,
@@ -198,7 +198,7 @@ class PCovC(_BasePCov):
         classifier=None,
         iterated_power="auto",
         random_state=None,
-        whiten=False
+        whiten=False,
     ):
         super().__init__(
             mixing=mixing,
@@ -208,7 +208,7 @@ class PCovC(_BasePCov):
             space=space,
             iterated_power=iterated_power,
             random_state=random_state,
-            whiten=whiten
+            whiten=whiten,
         )
         self.classifier = classifier
 
@@ -236,7 +236,7 @@ class PCovC(_BasePCov):
             variance, otherwise :math:`\mathbf{Y}` should be scaled so that each feature
             has a variance of 1 / n_features.
 
-            If the passed classifier = `precomputed`, it is assumed that Y is the 
+            If the passed classifier = `precomputed`, it is assumed that Y is the
             classified form of the properties, :math:`{\mathbf{\hat{Y}}}`.
 
         W : numpy.ndarray, shape (n_features, n_properties)
@@ -255,7 +255,7 @@ class PCovC(_BasePCov):
             Perceptron,
             RidgeClassifier,
             RidgeClassifierCV,
-            SGDClassifier
+            SGDClassifier,
         )
 
         if self.classifier not in ["precomputed", None] and not isinstance(
@@ -273,39 +273,41 @@ class PCovC(_BasePCov):
             else:
                 classifier = self.classifier
 
-            self.z_classifier_ = check_cl_fit(classifier, X, y)  #its linear classifier on x and y to get Pxz
+            self.z_classifier_ = check_cl_fit(
+                classifier, X, y
+            )  # its linear classifier on x and y to get Pxz
 
             if isinstance(self.z_classifier_, MultiOutputClassifier):
                 W = np.hstack([est_.coef_.T for est_ in self.z_classifier_.estimators_])
-                Z = X @ W #computes Z, basically Z=XPxz
+                Z = X @ W  # computes Z, basically Z=XPxz
 
             else:
                 W = self.z_classifier_.coef_.T.reshape(X.shape[1], -1)
-                Z = self.z_classifier_.decision_function(X).reshape(X.shape[0], -1) 
+                Z = self.z_classifier_.decision_function(X).reshape(X.shape[0], -1)
 
         else:
             Z = X @ W
             if W is None:
-                W = np.linalg.lstsq(X, Z, self.tol)[0]  #W = weights for Pxz
+                W = np.linalg.lstsq(X, Z, self.tol)[0]  # W = weights for Pxz
 
         self._label_binarizer = LabelBinarizer(neg_label=-1, pos_label=1)
-        Y = self._label_binarizer.fit_transform(y) #check if we need this
+        Y = self._label_binarizer.fit_transform(y)  # check if we need this
         if not self._label_binarizer.y_type_.startswith("multilabel"):
             print(y)
             y = column_or_1d(y, warn=True)
             print(y)
-        
+
         if self.space_ == "feature":
             self._fit_feature_space(X, Y.reshape(Z.shape), Z)
         else:
             self._fit_sample_space(X, Y.reshape(Z.shape), Z, W)
-            
+
         # instead of using linear regression solution, refit with the classifier
         # and steal weights to get ptz
         # what to do when classifier = precomputed?
 
-        #original: self.classifier_ = check_cl_fit(classifier, X @ self.pxt_, y=y)
-        #we don't want to copy ALl parameters of classifier, such as n_features_in, since we are re-fitting it on T, y
+        # original: self.classifier_ = check_cl_fit(classifier, X @ self.pxt_, y=y)
+        # we don't want to copy ALl parameters of classifier, such as n_features_in, since we are re-fitting it on T, y
         if self.classifier != "precomputed":
             self.classifier_ = clone(classifier).fit(X @ self.pxt_, y)
         else:
@@ -313,17 +315,17 @@ class PCovC(_BasePCov):
             self.classifier_ = LogisticRegression().fit(X @ self.pxt_, y)
         print(self.classifier_)
 
-        #self.classifier_ = LogisticRegression().fit(X @ self.pxt_, y)
-        #check_cl_fit(classifier., X @ self.pxt_, y=y) #Has Ptz as weights 
-   
+        # self.classifier_ = LogisticRegression().fit(X @ self.pxt_, y)
+        # check_cl_fit(classifier., X @ self.pxt_, y=y) #Has Ptz as weights
+
         if isinstance(self.classifier_, MultiOutputClassifier):
             self.ptz_ = np.hstack(
                 [est_.coef_.T for est_ in self.classifier_.estimators_]
-            ) 
+            )
             self.pxz_ = self.pxt_ @ self.ptz_
         else:
-            self.ptz_ = self.classifier_.coef_.T 
-            self.pxz_ = self.pxt_ @ self.ptz_ 
+            self.ptz_ = self.classifier_.coef_.T
+            self.pxz_ = self.pxt_ @ self.ptz_
 
         if len(Y.shape) == 1:
             self.pxz_ = self.pxz_.reshape(
@@ -333,9 +335,9 @@ class PCovC(_BasePCov):
                 self.n_components_,
             )
 
-        self.components_ = self.pxt_.T # for sklearn compatibility
+        self.components_ = self.pxt_.T  # for sklearn compatibility
         return self
-    
+
     def _fit_feature_space(self, X, Y, Z):
         r"""In feature-space PCovC, the projectors are determined by:
 
@@ -409,17 +411,17 @@ class PCovC(_BasePCov):
 
         if X is not None:
             X = check_array(X)
-            scores = X @ self.pxz_ 
+            scores = X @ self.pxz_
         else:
             T = check_array(T)
-            scores = T @ self.ptz_ 
-        
+            scores = T @ self.ptz_
+
         return (
-            np.reshape(scores, (-1, ))
+            np.reshape(scores, (-1,))
             if (scores.ndim > 1 and scores.shape[1] == 1)
             else scores
-        )  
-        
+        )
+
     def predict(self, X=None, T=None):
         """Predicts the property labels using classification on T."""
         check_is_fitted(self, attributes=["_label_binarizer", "pxz_", "ptz_"])
@@ -431,7 +433,7 @@ class PCovC(_BasePCov):
             return self.classifier_.predict(X @ self.pxt_)
         else:
             return self.classifier_.predict(T)
-  
+
     def transform(self, X=None):
         """Apply dimensionality reduction to X.
 

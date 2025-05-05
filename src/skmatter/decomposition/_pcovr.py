@@ -1,16 +1,11 @@
 import numpy as np
 from sklearn.base import check_X_y, check_array
-from sklearn.linear_model import (
-    LinearRegression, 
-    Ridge, 
-    RidgeCV
-)
+from sklearn.linear_model import LinearRegression, Ridge, RidgeCV
 from sklearn.utils.validation import check_is_fitted
 
-import sys
-sys.path.append('scikit-matter')
-from src.skmatter.decomposition._pcov import _BasePCov
-from src.skmatter.utils._pcovr_utils import check_lr_fit
+from skmatter.decomposition import _BasePCov
+from skmatter.utils import check_lr_fit
+
 
 class PCovR(_BasePCov):
     r"""Principal Covariates Regression, as described in [deJong1992]_
@@ -22,7 +17,7 @@ class PCovR(_BasePCov):
     .. math::
       \mathbf{\tilde{K}} = \alpha \mathbf{X} \mathbf{X}^T +
             (1 - \alpha) \mathbf{\hat{Y}}\mathbf{\hat{Y}}^T
-    
+
     where :math:`\alpha` is a mixing parameter and
     :math:`\mathbf{X}` and :math:`\mathbf{\hat{Y}}` are matrices of shapes
     :math:`(n_{samples}, n_{features})` and :math:`(n_{samples}, n_{properties})`,
@@ -113,7 +108,7 @@ class PCovR(_BasePCov):
     random_state : int, :class:`numpy.random.RandomState` instance or None, default=None
          Used when the 'arpack' or 'randomized' solvers are used. Pass an int for
          reproducible results across multiple function calls.
-    
+
     whiten : boolean, deprecated
 
     Attributes
@@ -150,10 +145,10 @@ class PCovR(_BasePCov):
         The amount of variance explained by each of the selected components.
         Equal to n_components largest eigenvalues
         of the PCovR-modified covariance matrix of :math:`\mathbf{X}`.
-        
+
     singular_values_ : numpy.ndarray of shape (n_components,)
         The singular values corresponding to each of the selected components.
-    
+
     Examples
     --------
     >>> import numpy as np
@@ -174,6 +169,7 @@ class PCovR(_BasePCov):
            [ 0.98166504, -4.98307078],
            [-2.9963189 ,  1.98238856]])
     """
+
     def __init__(
         self,
         mixing=0.5,
@@ -184,7 +180,7 @@ class PCovR(_BasePCov):
         regressor=None,
         iterated_power="auto",
         random_state=None,
-        whiten=False
+        whiten=False,
     ):
         super().__init__(
             mixing=mixing,
@@ -194,7 +190,7 @@ class PCovR(_BasePCov):
             space=space,
             iterated_power=iterated_power,
             random_state=random_state,
-            whiten=whiten
+            whiten=whiten,
         )
         self.regressor = regressor
 
@@ -232,11 +228,7 @@ class PCovR(_BasePCov):
         X, y = check_X_y(X, Y, y_numeric=True, multi_output=True)
         super()._fit_utils(X, Y)
 
-        compatible_regressors = (
-            LinearRegression,
-            Ridge,
-            RidgeCV
-        )
+        compatible_regressors = (LinearRegression, Ridge, RidgeCV)
 
         if self.regressor not in ["precomputed", None] and not isinstance(
             self.regressor, compatible_regressors
@@ -246,7 +238,7 @@ class PCovR(_BasePCov):
                 f"{'`, `'.join(r.__name__ for r in compatible_regressors)}`"
                 ", or `precomputed`"
             )
-        
+
         # Assign the default regressor
         if self.regressor != "precomputed":
             if self.regressor is None:
@@ -385,7 +377,6 @@ class PCovR(_BasePCov):
             and n_features is the number of features.
         """
         return super().transform(X)
-
 
     def score(self, X, Y, T=None):
         r"""Return the (negative) total reconstruction error for X and Y,
