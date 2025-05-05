@@ -26,10 +26,10 @@ The module includes:
 """
 
 from ._kernel_pcovr import KernelPCovR
-from ._pcovr import (
-    PCovR,
-    pcovr_covariance,
-    pcovr_kernel,
+from ._pcovr import PCovR
+from ._pcov import (
+    pcovr_covariance, 
+    pcovr_kernel
 )
 
 __all__ = ["pcovr_covariance", "pcovr_kernel", "PCovR", "KernelPCovR"]

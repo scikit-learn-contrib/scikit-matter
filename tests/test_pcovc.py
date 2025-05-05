@@ -15,7 +15,7 @@ from sklearn.utils.validation import check_X_y
 
 import sys
 sys.path.append('scikit-matter')
-from src.skmatter.decomposition.pcovc_new import PCovC
+from src.skmatter.decomposition._pcovc import PCovC
 
 class PCovCBaseTest(unittest.TestCase):
     def __init__(self, *args, **kwargs):
@@ -78,7 +78,6 @@ class PCovCErrorTest(PCovCBaseTest):
         """
         for space in ["feature", "sample", "auto"]:
             with self.subTest(space=space):
-                print(self.X.shape)
                 pcovc = self.model(mixing=0.0, n_components=2, space=space)
 
                 pcovc.classifier.fit(self.X, self.Y)
@@ -99,9 +98,7 @@ class PCovCErrorTest(PCovCBaseTest):
         prev_error = -1.0
 
         for mixing in np.linspace(0, 1, 11):
-            print(mixing)
             pcovc = self.model(mixing=mixing, n_components=2, tol=1e-12)
-            print(pcovc.classifier)
             pcovc.fit(self.X, self.Y)
 
             Yp = pcovc.predict(X=self.X)
@@ -458,8 +455,6 @@ class PCovCInfrastructureTest(PCovCBaseTest):
         self.assertEqual(pcovc.ptz_.shape[0], pcovc.n_components_)
 
     def test_prefit_classifier(self):
-        print("Components")
-        print(self.Y.shape)
         classifier = LogisticRegression()
         classifier.fit(self.X, self.Y)
         pcovc = self.model(mixing=0.5, classifier=classifier)
@@ -486,7 +481,6 @@ class PCovCInfrastructureTest(PCovCBaseTest):
         pcovc2 = self.model(mixing=0.5, classifier=classifier, n_components=1)
         pcovc2.fit(self.X, self.Y)
         t2 = pcovc2.transform(self.X)
-        print(np.linalg.norm(t1 - t2))
         self.assertTrue(np.linalg.norm(t1 - t2) < self.error_tol)
 
     def test_classifier_modifications(self):
@@ -512,6 +506,7 @@ class PCovCInfrastructureTest(PCovCBaseTest):
         self.assertTrue(classifier.get_params() != pcovc.classifier_.get_params())
 
     def test_incompatible_classifier(self):
+        self.maxDiff = None
         classifier = GaussianNB()
         classifier.fit(self.X, self.Y)
         pcovc = self.model(mixing=0.5, classifier=classifier)
@@ -520,19 +515,17 @@ class PCovCInfrastructureTest(PCovCBaseTest):
             pcovc.fit(self.X, self.Y)
         self.assertEqual(
             str(cm.exception),
-            "classifier must be an instance of "
-            "`LinearDiscriminantAnalysis`, `LinearSVC`, `LogisticRegression`,"
-            "`LogisticRegressionCV`, `MultiOutputClassifier`, `Perceptron`,"
-            "`RidgeClassifier`, `RidgeClassifierCV`, or `SGDClassifier`"
+            "Classifier must be an instance of "
+            "`LinearDiscriminantAnalysis`, `LinearSVC`, `LogisticRegression`, "
+            "`LogisticRegressionCV`, `MultiOutputClassifier`, `Perceptron`, "
+            "`RidgeClassifier`, `RidgeClassifierCV`, `SGDClassifier`, or `precomputed`"
         )
 
     def test_none_classifier(self):
         pcovc = PCovC(mixing=0.5, classifier=None)
-        print(pcovc.classifier)
 
         pcovc.fit(self.X, self.Y)
         self.assertTrue(pcovc.classifier is None)
-        print(pcovc.classifier_)
         self.assertTrue(pcovc.classifier_ is not None)
 
     def test_incompatible_coef_shape(self):
