@@ -13,7 +13,7 @@ from sklearn.linear_model._base import LinearModel
 from sklearn.utils import check_array, check_random_state
 from sklearn.utils._arpack import _init_arpack_v0
 from sklearn.utils.extmath import randomized_svd, stable_cumsum, svd_flip
-from sklearn.utils.validation import check_is_fitted, check_X_y
+from sklearn.utils.validation import check_is_fitted, validate_data
 
 from ..utils import check_lr_fit, pcovr_covariance, pcovr_kernel
 
@@ -221,7 +221,7 @@ class PCovR(_BasePCA, LinearModel):
             Regression weights, optional when regressor=`precomputed`. If not
             passed, it is assumed that `W = np.linalg.lstsq(X, Y, self.tol)[0]`
         """
-        X, Y = check_X_y(X, Y, y_numeric=True, multi_output=True)
+        X, Y = validate_data(self, X, Y, y_numeric=True, multi_output=True)
 
         # saved for inverse transformations from the latent space,
         # should be zero in the case that the features have been properly centered
@@ -582,7 +582,7 @@ class PCovR(_BasePCA, LinearModel):
             raise ValueError("Either X or T must be supplied.")
 
         if X is not None:
-            X = check_array(X)
+            X = validate_data(self, X, reset=False)
             return X @ self.pxy_
         else:
             T = check_array(T)
@@ -604,7 +604,7 @@ class PCovR(_BasePCA, LinearModel):
 
         return super().transform(X)
 
-    def score(self, X, Y, T=None):
+    def score(self, X, y, T=None):
         r"""Return the (negative) total reconstruction error for X and Y,
         defined as:
 
@@ -635,13 +635,15 @@ class PCovR(_BasePCA, LinearModel):
             Negative sum of the loss in reconstructing X from the latent-space
             projection T and the loss in predicting Y from the latent-space projection T
         """
+        X, y = validate_data(self, X, y, reset=False)
+
         if T is None:
             T = self.transform(X)
 
-        x = self.inverse_transform(T)
-        y = self.predict(T=T)
+        Xrec = self.inverse_transform(T)
+        ypred = self.predict(T=T)
 
         return -(
-            np.linalg.norm(X - x) ** 2.0 / np.linalg.norm(X) ** 2.0
-            + np.linalg.norm(Y - y) ** 2.0 / np.linalg.norm(Y) ** 2.0
+            np.linalg.norm(X - Xrec) ** 2.0 / np.linalg.norm(X) ** 2.0
+            + np.linalg.norm(y - ypred) ** 2.0 / np.linalg.norm(y) ** 2.0
         )

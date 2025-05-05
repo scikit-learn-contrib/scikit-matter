@@ -49,6 +49,14 @@ class TestGreedy(unittest.TestCase):
             "You cannot specify both `score_threshold` and `full=True`.",
         )
 
+    def test_bad_score_threshold_type(self):
+        with self.assertRaises(ValueError) as cm:
+            _ = GreedyTester(score_threshold_type="bad").fit(self.X)
+        self.assertEqual(
+            str(cm.exception),
+            "invalid score_threshold_type, expected one of 'relative' or 'absolute'",
+        )
+
     def test_bad_warm_start(self):
         selector = GreedyTester()
         with self.assertRaises(ValueError) as cm:
@@ -73,7 +81,7 @@ class TestGreedy(unittest.TestCase):
             _ = selector.transform(self.X[:, :3])
         self.assertEqual(
             str(cm.exception),
-            "X has a different shape than during fitting. Reshape your data.",
+            "X has 3 features, but GreedyTester is expecting 10 features as input.",
         )
 
     def test_no_nfeatures(self):
@@ -124,8 +132,8 @@ class TestGreedy(unittest.TestCase):
             selector_feature.fit(X)
         self.assertEqual(
             str(cm.exception),
-            f"Found array with 1 feature(s) (shape={X.shape})"
-            " while a minimum of 2 is required.",
+            f"Found array with 1 feature(s) (shape={X.shape}) while a minimum of 2 is "
+            "required by GreedyTester.",
         )
 
         X = X.reshape(1, -1)
@@ -135,7 +143,7 @@ class TestGreedy(unittest.TestCase):
         self.assertEqual(
             str(cm.exception),
             f"Found array with 1 sample(s) (shape={X.shape}) while a minimum of 2 is "
-            "required.",
+            "required by GreedyTester.",
         )
 
 

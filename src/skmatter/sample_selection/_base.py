@@ -4,7 +4,7 @@ import warnings
 
 import numpy as np
 from scipy.interpolate import LinearNDInterpolator, interp1d
-from scipy.interpolate.interpnd import _ndim_coords_from_arrays
+from scipy.interpolate._interpnd import _ndim_coords_from_arrays
 from scipy.spatial import ConvexHull
 from sklearn.utils.validation import check_array, check_is_fitted, check_X_y
 
@@ -509,7 +509,7 @@ class DirectionalConvexHull:
     selected_idx_ : numpy.ndarray
                     Indices of datapoints that form the vertices of the
                     convex hull
-    interpolator_high_dim_  : scipy.interpolate.interpnd.LinearNDInterpolator
+    interpolator_high_dim_  : scipy.interpolate._interpnd.LinearNDInterpolator
                     Interpolator for the features in the high-
                     dimensional space
 

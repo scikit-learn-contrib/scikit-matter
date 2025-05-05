@@ -24,11 +24,12 @@ class TestPCovFPS(unittest.TestCase):
 
     def test_no_mixing_1(self):
         """Check that the model throws an error when mixing = 1.0."""
+        selector = PCovFPS(n_to_select=1, mixing=1.0)
         with self.assertRaises(ValueError) as cm:
-            _ = PCovFPS(n_to_select=1, mixing=1.0)
+            selector.fit(self.X, y=self.y)
         self.assertEqual(
             str(cm.exception),
-            "Mixing = 1.0 corresponds to traditional FPS." "Please use the FPS class.",
+            "Mixing = 1.0 corresponds to traditional FPS. Please use the FPS class.",
         )
 
 

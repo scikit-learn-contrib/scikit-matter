@@ -24,7 +24,7 @@ class PCovRBaseTest(unittest.TestCase):
 
         self.X, self.Y = get_dataset(return_X_y=True)
         self.X = StandardScaler().fit_transform(self.X)
-        self.Y = StandardScaler().fit_transform(np.vstack(self.Y))
+        self.Y = StandardScaler().fit_transform(np.vstack(self.Y)).ravel()
 
     def setUp(self):
         pass
@@ -69,7 +69,7 @@ class PCovRErrorTest(PCovRBaseTest):
     def test_simple_prediction(self):
         """
         Check that PCovR with a full eigendecomposition at mixing=0
-        can fully reconstruct the input properties.
+        can reproduce a linear regression result.
         """
         for space in ["feature", "sample", "auto"]:
             with self.subTest(space=space):
@@ -481,33 +481,42 @@ class PCovRInfrastructureTest(PCovRBaseTest):
         self.assertTrue(pcovr.regressor is None)
         self.assertTrue(pcovr.regressor_ is not None)
 
-    def test_incompatible_coef_shape(self):
-        # self.Y is 2D with one target
+    def test_incompatible_coef_dim(self):
+        # self.Y is 1D with one target
         # Don't need to test X shape, since this should
-        # be caught by sklearn's _validate_data
+        # be caught by sklearn's validate_data
+        Y_2D = np.column_stack((self.Y, self.Y))
         regressor = Ridge(alpha=1e-8, fit_intercept=False, tol=1e-12)
-        regressor.fit(self.X, self.Y)
+        regressor.fit(self.X, Y_2D)
         pcovr = self.model(mixing=0.5, regressor=regressor)
 
         # Dimension mismatch
         with self.assertRaises(ValueError) as cm:
-            pcovr.fit(self.X, self.Y.squeeze())
+            pcovr.fit(self.X, self.Y)
         self.assertEqual(
             str(cm.exception),
-            "The regressor coefficients have a dimension incompatible "
-            "with the supplied target space. "
-            "The coefficients have dimension %d and the targets "
-            "have dimension %d" % (regressor.coef_.ndim, self.Y.squeeze().ndim),
+            "The regressor coefficients have a dimension incompatible with the "
+            "supplied target space. The coefficients have dimension 2 and the targets "
+            "have dimension 1",
         )
 
+    def test_incompatible_coef_shape(self):
         # Shape mismatch (number of targets)
+        Y_double = np.column_stack((self.Y, self.Y))
+        Y_triple = np.column_stack((Y_double, self.Y))
+
+        regressor = Ridge(alpha=1e-8, fit_intercept=False, tol=1e-12)
+        regressor.fit(self.X, Y_double)
+
+        pcovr = self.model(mixing=0.5, regressor=regressor)
+
         with self.assertRaises(ValueError) as cm:
-            pcovr.fit(self.X, np.column_stack((self.Y, self.Y)))
+            pcovr.fit(self.X, Y_triple)
         self.assertEqual(
             str(cm.exception),
             "The regressor coefficients have a shape incompatible with the supplied "
             "target space. The coefficients have shape %r and the targets have shape %r"
-            % (regressor.coef_.shape, np.column_stack((self.Y, self.Y)).shape),
+            % (regressor.coef_.shape, Y_triple.shape),
         )
 
 

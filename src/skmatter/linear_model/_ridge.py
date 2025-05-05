@@ -3,11 +3,10 @@ from joblib import Parallel, delayed
 from sklearn.base import BaseEstimator, MultiOutputMixin, RegressorMixin
 from sklearn.metrics import check_scoring
 from sklearn.model_selection import KFold, check_cv
-from sklearn.utils import check_array
-from sklearn.utils.validation import check_is_fitted
+from sklearn.utils.validation import check_is_fitted, validate_data
 
 
-class Ridge2FoldCV(BaseEstimator, MultiOutputMixin, RegressorMixin):
+class Ridge2FoldCV(RegressorMixin, MultiOutputMixin, BaseEstimator):
     r"""Ridge regression with an efficient 2-fold cross-validation method using the SVD
     solver.
 
@@ -20,7 +19,7 @@ class Ridge2FoldCV(BaseEstimator, MultiOutputMixin, RegressorMixin):
     while the alpha value is determined with a 2-fold cross-validation from a list of
     alpha values. It is more efficient version than doing 2-fold cross-validation
     naively The algorithmic trick is to reuse the matrices obtained by SVD for each
-    regularization paramater :param alpha: The 2-fold CV can be broken donw to
+    regularization paramater :param alpha: The 2-fold CV can be broken down to
 
     .. math::
 
@@ -136,6 +135,11 @@ class Ridge2FoldCV(BaseEstimator, MultiOutputMixin, RegressorMixin):
         self.shuffle = shuffle
         self.n_jobs = n_jobs
 
+    def __sklearn_tags__(self):
+        tags = super().__sklearn_tags__()
+        tags.target_tags.single_output = False
+        return tags
+
     def _more_tags(self):
         return {"multioutput_only": True}
 
@@ -166,7 +170,7 @@ class Ridge2FoldCV(BaseEstimator, MultiOutputMixin, RegressorMixin):
                 "[0,1)"
             )
 
-        X, y = self._validate_data(X, y, y_numeric=True, multi_output=True)
+        X, y = validate_data(self, X, y, y_numeric=True, multi_output=True)
         self.n_samples_in_, self.n_features_in_ = X.shape
 
         # check_scoring uses estimators scoring function if the scorer is None, this is
@@ -195,7 +199,7 @@ class Ridge2FoldCV(BaseEstimator, MultiOutputMixin, RegressorMixin):
             Training data, where n_samples is the number of samples
             and n_features is the number of features.
         """
-        X = check_array(X)
+        X = validate_data(self, X, reset=False)
 
         check_is_fitted(self, ["coef_"])
 

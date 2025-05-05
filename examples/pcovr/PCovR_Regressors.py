@@ -24,13 +24,12 @@ from skmatter.decomposition import PCovR
 mixing = 0.5
 
 X, y = load_diabetes(return_X_y=True)
-y = y.reshape(X.shape[0], -1)
 
 X_scaler = StandardScaler()
 X_scaled = X_scaler.fit_transform(X)
 
 y_scaler = StandardScaler()
-y_scaled = y_scaler.fit_transform(y)
+y_scaled = y_scaler.fit_transform(y.reshape(-1, 1))
 
 
 # %%

@@ -19,7 +19,7 @@ authors = [
     {name = "Michele Ceriotti"}
 ]
 readme = "README.rst"
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 license = {text = "BSD-3-Clause"}
 classifiers = [
     "Development Status :: 4 - Beta",
@@ -38,8 +38,8 @@ classifiers = [
     "Topic :: Scientific/Engineering",
 ]
 dependencies = [
-    "scikit-learn < 1.6.0",
-    "scipy < 1.15.0",
+    "scikit-learn >= 1.6.0",
+    "scipy >= 1.15.0",  # explicit to adhere to scikit-learn dependencies
 ]
 dynamic = ["version"]
 
@@ -75,9 +75,6 @@ include = [
 [tool.coverage.xml]
 output = 'tests/coverage.xml'
 
-[tool.pytest.ini_options]
-testpaths = "tests"
-
 [tool.isort]
 skip = "__init__.py"
 profile = "black"
@@ -86,6 +83,15 @@ indent = 4
 include_trailing_comma = true
 lines_after_imports = 2
 known_first_party = "skmatter"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = [
+    "--cov",
+    "--cov-append",
+    "--cov-report=",
+    "--import-mode=append",
+]
 
 [tool.ruff]
 exclude = ["docs/src/examples/"]

@@ -1,7 +1,12 @@
 import numpy as np
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.preprocessing._data import KernelCenterer
-from sklearn.utils.validation import FLOAT_DTYPES, _check_sample_weight, check_is_fitted
+from sklearn.utils.validation import (
+    FLOAT_DTYPES,
+    _check_sample_weight,
+    check_is_fitted,
+    validate_data,
+)
 
 
 class StandardFlexibleScaler(TransformerMixin, BaseEstimator):
@@ -128,7 +133,8 @@ class StandardFlexibleScaler(TransformerMixin, BaseEstimator):
         self : object
             Fitted scaler.
         """
-        X = self._validate_data(
+        X = validate_data(
+            self,
             X,
             copy=self.copy,
             estimator=self,
@@ -181,7 +187,8 @@ class StandardFlexibleScaler(TransformerMixin, BaseEstimator):
             Transformed array.
         """
         copy = copy if copy is not None else self.copy
-        X = self._validate_data(
+        X = validate_data(
+            self,
             X,
             reset=False,
             copy=copy,
@@ -298,7 +305,7 @@ class KernelNormalizer(KernelCenterer):
         self : object
             Fitted transformer.
         """
-        K = self._validate_data(K, copy=True, dtype=FLOAT_DTYPES, reset=False)
+        K = validate_data(self, K, copy=True, dtype=FLOAT_DTYPES, reset=False)
 
         if sample_weight is not None:
             self.sample_weight_ = _check_sample_weight(sample_weight, K, dtype=K.dtype)
@@ -350,7 +357,7 @@ class KernelNormalizer(KernelCenterer):
             Transformed array
         """
         check_is_fitted(self)
-        K = self._validate_data(K, copy=copy, dtype=FLOAT_DTYPES, reset=False)
+        K = validate_data(self, K, copy=copy, dtype=FLOAT_DTYPES, reset=False)
 
         if self.with_center:
             K_pred_cols = np.average(K, weights=self.sample_weight_, axis=1)[
@@ -391,7 +398,7 @@ class KernelNormalizer(KernelCenterer):
         return self.transform(K, copy)
 
 
-class SparseKernelCenterer(TransformerMixin):
+class SparseKernelCenterer(TransformerMixin, BaseEstimator):
     r"""Kernel centering method for sparse kernels, similar to
     :class:`KernelFlexibleCenterer`.
 

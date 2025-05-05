@@ -255,7 +255,7 @@ class KernelPCovRInfrastructureTest(KernelPCovRBaseTest):
 
         # Dimension mismatch
         with self.assertRaises(ValueError) as cm:
-            kpcovr.fit(self.X, self.Y[:, 0])
+            kpcovr.fit(self.X, np.zeros(self.Y.shape + (2,)))
         self.assertTrue(
             str(cm.exception),
             "The regressor coefficients have a dimension incompatible "

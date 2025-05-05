@@ -83,8 +83,13 @@ from scipy.linalg import eigh
 from scipy.sparse.linalg import eigsh
 from sklearn.base import BaseEstimator, MetaEstimatorMixin
 from sklearn.feature_selection._base import SelectorMixin
-from sklearn.utils import check_array, check_random_state, check_X_y, safe_mask
-from sklearn.utils.validation import FLOAT_DTYPES, as_float_array, check_is_fitted
+from sklearn.utils import check_random_state, safe_mask
+from sklearn.utils.validation import (
+    FLOAT_DTYPES,
+    as_float_array,
+    check_is_fitted,
+    validate_data,
+)
 
 from .utils import (
     X_orthogonalizer,
@@ -157,11 +162,6 @@ class GreedySelector(SelectorMixin, MetaEstimatorMixin, BaseEstimator):
         self.n_to_select = n_to_select
         self.score_threshold = score_threshold
         self.score_threshold_type = score_threshold_type
-        if self.score_threshold_type not in ["relative", "absolute"]:
-            raise ValueError(
-                "invalid score_threshold_type, expected one of 'relative' or 'absolute'"
-            )
-
         self.full = full
         self.progress_bar = progress_bar
         self.random_state = random_state
@@ -184,6 +184,11 @@ class GreedySelector(SelectorMixin, MetaEstimatorMixin, BaseEstimator):
         -------
         self : object
         """
+        if self.score_threshold_type not in ["relative", "absolute"]:
+            raise ValueError(
+                "invalid score_threshold_type, expected one of 'relative' or 'absolute'"
+            )
+
         if self.selection_type == "feature":
             self._axis = 1
         elif self.selection_type == "sample":
@@ -204,8 +209,7 @@ class GreedySelector(SelectorMixin, MetaEstimatorMixin, BaseEstimator):
         params = dict(ensure_min_samples=2, ensure_min_features=2, dtype=FLOAT_DTYPES)
 
         if hasattr(self, "mixing") or y is not None:
-            X, y = self._validate_data(X, y, **params)
-            X, y = check_X_y(X, y, multi_output=True)
+            X, y = validate_data(self, X, y, multi_output=True, **params)
 
             if len(y.shape) == 1:
                 # force y to have multi_output 2D format even when it's 1D, since
@@ -214,7 +218,7 @@ class GreedySelector(SelectorMixin, MetaEstimatorMixin, BaseEstimator):
                 y = y.reshape((len(y), 1))
 
         else:
-            X = check_array(X, **params)
+            X = validate_data(self, X, **params)
 
         if self.full and self.score_threshold is not None:
             raise ValueError(
@@ -308,7 +312,7 @@ class GreedySelector(SelectorMixin, MetaEstimatorMixin, BaseEstimator):
 
         mask = self.get_support()
 
-        X = check_array(X)
+        X = validate_data(self, X, reset=False)
 
         if len(X.shape) == 1:
             if self._axis == 0:
@@ -486,6 +490,11 @@ class GreedySelector(SelectorMixin, MetaEstimatorMixin, BaseEstimator):
             "requires_y": False,
         }
 
+    def __sklearn_tags__(self):
+        tags = super().__sklearn_tags__()
+        tags.target_tags.required = False
+        return tags
+
 
 class _CUR(GreedySelector):
     """Transformer that performs Greedy Selection by choosing features
@@ -551,8 +560,7 @@ class _CUR(GreedySelector):
 
         Parameters
         ----------
-        X : numpy.ndarray of shape [n_samples, n_features]
-            The input samples.
+        X : ignored
         y : ignored
 
         Returns
@@ -560,6 +568,7 @@ class _CUR(GreedySelector):
         score : numpy.ndarray of (n_to_select_from_)
             :math:`\pi` importance for the given samples or features
         """
+        validate_data(self, X, reset=False)  # present for API consistency
         return self.pi_
 
     def _init_greedy_search(self, X, y, n_to_select):
@@ -734,6 +743,7 @@ class _PCovCUR(GreedySelector):
         score : numpy.ndarray of (n_to_select_from_)
             :math:`\pi` importance for the given samples or features
         """
+        validate_data(self, X, reset=False)  # present for API consistency
         return self.pi_
 
     def _init_greedy_search(self, X, y, n_to_select):
@@ -927,6 +937,7 @@ class _FPS(GreedySelector):
         -------
         hausdorff : Hausdorff distances
         """
+        validate_data(self, X, reset=False)
         return self.hausdorff_
 
     def get_distance(self):
@@ -1048,11 +1059,6 @@ class _PCovFPS(GreedySelector):
         full=False,
         random_state=0,
     ):
-        if mixing == 1.0:
-            raise ValueError(
-                "Mixing = 1.0 corresponds to traditional FPS."
-                "Please use the FPS class."
-            )
 
         self.mixing = mixing
         self.initialize = initialize
@@ -1066,6 +1072,17 @@ class _PCovFPS(GreedySelector):
             full=full,
             random_state=random_state,
         )
+
+    def fit(self, X, y=None, warm_start=False):
+        if self.mixing == 1.0:
+            raise ValueError(
+                "Mixing = 1.0 corresponds to traditional FPS. Please use the FPS class."
+            )
+
+        return super().fit(X, y)
+
+    # docstring is inherited and set from the base class
+    fit.__doc__ = GreedySelector.fit.__doc__
 
     def score(self, X, y=None):
         """Returns the Hausdorff distances of all samples to previous selections.
@@ -1083,6 +1100,8 @@ class _PCovFPS(GreedySelector):
         -------
         hausdorff : Hausdorff distances
         """
+        validate_data(self, X, reset=False)
+
         return self.hausdorff_
 
     def get_distance(self):
@@ -1159,3 +1178,8 @@ class _PCovFPS(GreedySelector):
         return {
             "requires_y": True,
         }
+
+    def __sklearn_tags__(self):
+        tags = super().__sklearn_tags__()
+        tags.target_tags.required = True
+        return tags
