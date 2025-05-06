@@ -33,10 +33,11 @@ print(Y.shape)
 
 model = MultiOutputClassifier(LogisticRegression())
 model.fit(X_scaled, Y)
-print(model.predict(X_scaled))
+print(model.score(X_scaled, Y))
 
 model2 = PCovC(mixing=0.5, classifier=MultiOutputClassifier(LogisticRegression()), n_components=2)
 model2.fit(X_scaled, Y)
+print(model2.score(X_scaled, Y))
 
 # model = KernelPCovC(mixing=0.5, center=False, kernel="linear", classifier=LogisticRegression(), n_components=2)
 # model.fit(X_scaled, Y)

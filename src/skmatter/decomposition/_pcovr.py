@@ -1,12 +1,11 @@
 import numpy as np
 
-from sklearn.base import check_X_y, check_array
+from sklearn.base import check_array
 from sklearn.linear_model import LinearRegression, Ridge, RidgeCV
-from sklearn.utils.validation import check_is_fitted
+from sklearn.utils.validation import check_is_fitted, validate_data
 
 from skmatter.decomposition import _BasePCov
 from skmatter.utils import check_lr_fit
-
 
 class PCovR(_BasePCov):
     r"""Principal Covariates Regression, as described in [deJong1992]_
