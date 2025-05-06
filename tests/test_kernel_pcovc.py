@@ -13,10 +13,7 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.svm import SVC
 from sklearn.linear_model import RidgeClassifier
 
-import sys
-sys.path.append('scikit-matter')
-from src.skmatter.decomposition._pcovc import PCovC
-from src.skmatter.decomposition._kernel_pcovc import KernelPCovC
+from skmatter.decomposition import PCovC, KernelPCovC
 
 class KernelPCovCBaseTest(unittest.TestCase):
     def __init__(self, *args, **kwargs):

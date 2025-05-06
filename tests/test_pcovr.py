@@ -10,9 +10,7 @@ from sklearn.linear_model import Ridge
 from sklearn.preprocessing import StandardScaler
 from sklearn.utils.validation import check_X_y
 
-import sys
-sys.path.append('scikit-matter')
-from src.skmatter.decomposition._pcovr import PCovR
+from skmatter.decomposition import PCovR
 
 class PCovRBaseTest(unittest.TestCase):
     def __init__(self, *args, **kwargs):
