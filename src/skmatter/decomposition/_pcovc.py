@@ -243,6 +243,7 @@ class PCovC(_BasePCov):
             passed, it is assumed that `W = np.linalg.lstsq(X, Z, self.tol)[0]`
         """
         X, y = validate_data(self, X, y, multi_output=True)
+        print(self.n_features_in_)
         super()._fit_utils(X, y)
 
         compatible_classifiers = (
@@ -407,7 +408,7 @@ class PCovC(_BasePCov):
             raise ValueError("Either X or T must be supplied.")
 
         if X is not None:
-            X = check_array(X)
+            X = validate_data(self, X, reset=False)
             scores = X @ self.pxz_
         else:
             T = check_array(T)
@@ -427,8 +428,10 @@ class PCovC(_BasePCov):
             raise ValueError("Either X or T must be supplied.")
 
         if X is not None:
+            X = validate_data(self, X, reset=False)
             return self.classifier_.predict(X @ self.pxt_)
         else:
+            T = check_array(T)
             return self.classifier_.predict(T)
 
     def transform(self, X=None):
@@ -468,4 +471,8 @@ class PCovC(_BasePCov):
         score : float
             Mean accuracy of ``self.predict(X)`` w.r.t. `Y`.
         """
+        print(self.n_features_in_)
+
+        X, Y = validate_data(self, X, Y, reset=False)
+
         return accuracy_score(Y, self.predict(X), sample_weight=sample_weight)

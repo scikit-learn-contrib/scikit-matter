@@ -1,6 +1,6 @@
 import numpy as np
 
-from sklearn.base import check_array
+from sklearn.utils import check_array
 from sklearn.linear_model import LinearRegression, Ridge, RidgeCV
 from sklearn.utils.validation import check_is_fitted, validate_data
 

@@ -345,7 +345,7 @@ class KernelPCovC(PCovC):
             raise ValueError("Either X or T must be supplied.")
 
         if X is not None:
-            X = check_array(X)
+            X = validate_data(self, X, reset=False)
             K = self._get_kernel(X, self.X_fit_)
             if self.center:
                 K = self.centerer_.transform(K)
@@ -364,7 +364,7 @@ class KernelPCovC(PCovC):
             raise ValueError("Either X or T must be supplied.")
 
         if X is not None:
-            X = check_array(X)
+            X = validate_data(self, X, reset=False)
             K = self._get_kernel(X, self.X_fit_)
             if self.center:
                 K = self.centerer_.transform(K)
@@ -391,7 +391,7 @@ class KernelPCovC(PCovC):
         """
         check_is_fitted(self, ["pkt_", "X_fit_"])
 
-        X = check_array(X)
+        X = validate_data(self, X, reset=False)
         K = self._get_kernel(X, self.X_fit_)
 
         if self.center:
@@ -400,6 +400,8 @@ class KernelPCovC(PCovC):
         return K @ self.pkt_
 
     def score(self, X, Y, sample_weight=None):
+        X, Y = validate_data(self, X, Y, reset=False)
+
         return accuracy_score(Y, self.predict(X), sample_weight=sample_weight)
 
     def _decompose_truncated(self, mat):
