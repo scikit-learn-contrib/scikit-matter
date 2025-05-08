@@ -273,7 +273,7 @@ class PCovC(_BasePCov):
                 classifier = self.classifier
 
             self.z_classifier_ = check_cl_fit(
-                classifier, X, y
+                classifier, None, X, y
             )  # its linear classifier on x and y to get Pxz
 
             if isinstance(self.z_classifier_, MultiOutputClassifier):

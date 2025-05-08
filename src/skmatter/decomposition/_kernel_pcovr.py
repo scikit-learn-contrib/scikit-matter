@@ -215,13 +215,13 @@ class KernelPCovR(_BasePCA, LinearModel):
         """Fit the model with the computed kernel and approximated properties."""
         K_tilde = pcovr_kernel(mixing=self.mixing, X=K, Y=Yhat, kernel="precomputed")
 
-        if self._fit_svd_solver == "full":
+        if self.fit_svd_solver_ == "full":
             _, S, Vt = self._decompose_full(K_tilde)
-        elif self._fit_svd_solver in ["arpack", "randomized"]:
+        elif self.fit_svd_solver_ in ["arpack", "randomized"]:
             _, S, Vt = self._decompose_truncated(K_tilde)
         else:
             raise ValueError(
-                "Unrecognized svd_solver='{0}'" "".format(self._fit_svd_solver)
+                "Unrecognized svd_solver='{0}'" "".format(self.fit_svd_solver_)
             )
 
         U = Vt.T
@@ -358,21 +358,21 @@ class KernelPCovR(_BasePCA, LinearModel):
             if W is None:
                 W = np.linalg.lstsq(K, Yhat, self.tol)[0]
         # Handle svd_solver
-        self._fit_svd_solver = self.svd_solver
-        if self._fit_svd_solver == "auto":
+        self.fit_svd_solver_ = self.svd_solver
+        if self.fit_svd_solver_ == "auto":
             # Small problem or self.n_components_ == 'mle', just call full PCA
             if (
                 max(self.n_samples_in_, self.n_features_in_) <= 500
                 or self.n_components_ == "mle"
             ):
-                self._fit_svd_solver = "full"
+                self.fit_svd_solver_ = "full"
             elif self.n_components_ >= 1 and self.n_components_ < 0.8 * max(
                 self.n_samples_in_, self.n_features_in_
             ):
-                self._fit_svd_solver = "randomized"
+                self.fit_svd_solver_ = "randomized"
             # This is also the case of self.n_components_ in (0,1)
             else:
-                self._fit_svd_solver = "full"
+                self.fit_svd_solver_ = "full"
 
         self._fit(K, Yhat, W)
 
@@ -536,7 +536,7 @@ class KernelPCovR(_BasePCA, LinearModel):
 
         random_state = check_random_state(self.random_state)
 
-        if self._fit_svd_solver == "arpack":
+        if self.fit_svd_solver_ == "arpack":
             v0 = _init_arpack_v0(min(mat.shape), random_state)
             U, S, Vt = svds(mat, k=self.n_components_, tol=self.tol, v0=v0)
             # svds doesn't abide by scipy.linalg.svd/randomized_svd

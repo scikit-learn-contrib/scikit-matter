@@ -5,7 +5,7 @@ from sklearn.exceptions import NotFittedError
 import numpy as np
 
 
-def check_cl_fit(classifier, X, y):
+def check_cl_fit(classifier, K, X, y):
     r"""
     Checks that a (linear) classifier is fitted, and if not,
     fits it with the provided data
@@ -49,7 +49,11 @@ def check_cl_fit(classifier, X, y):
 
     except NotFittedError:
         fitted_classifier = clone(classifier)
-        fitted_classifier.fit(X, y)
+
+        if K is None:
+            fitted_classifier.fit(X, y)
+        else:
+            fitted_classifier.fit(K, y)
 
     return fitted_classifier
 

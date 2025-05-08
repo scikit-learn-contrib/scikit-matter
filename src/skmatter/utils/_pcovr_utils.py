@@ -115,7 +115,6 @@ def check_krr_fit(regressor, K, X, y):
         # Check compatibility with K
 
         fitted_regressor._validate_data(X, y, reset=False, multi_output=True)
-        print("Pass")
 
         # Check compatibility with y
         if fitted_regressor.dual_coef_.ndim != y.ndim:

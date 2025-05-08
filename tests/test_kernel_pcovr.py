@@ -418,7 +418,7 @@ class KernelPCovRTestSVDSolvers(KernelPCovRBaseTest):
                 else:
                     kpcovr.fit(self.X, self.Y)
 
-                self.assertTrue(kpcovr._fit_svd_solver == solver)
+                self.assertTrue(kpcovr.fit_svd_solver_ == solver)
 
     def test_bad_solver(self):
         """
