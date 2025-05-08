@@ -7,6 +7,7 @@ from sklearn.utils.validation import check_is_fitted, validate_data
 from skmatter.decomposition import _BasePCov
 from skmatter.utils import check_lr_fit
 
+
 class PCovR(_BasePCov):
     r"""Principal Covariates Regression, as described in [deJong1992]_
     determines a latent-space projection :math:`\mathbf{T}` which

@@ -1,6 +1,5 @@
 import numpy as np
 from sklearn import clone
-from sklearn.base import check_X_y
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
 from sklearn.metrics import accuracy_score
 from sklearn.linear_model import (
@@ -17,7 +16,7 @@ from sklearn.calibration import column_or_1d
 from sklearn.naive_bayes import LabelBinarizer
 from sklearn.multioutput import MultiOutputClassifier
 from sklearn.utils import check_array
-from sklearn.utils.validation import check_is_fitted
+from sklearn.utils.validation import check_is_fitted, validate_data
 
 from skmatter.decomposition import _BasePCov
 from skmatter.utils import check_cl_fit
@@ -243,7 +242,7 @@ class PCovC(_BasePCov):
             Classification weights, optional when classifier=`precomputed`. If not
             passed, it is assumed that `W = np.linalg.lstsq(X, Z, self.tol)[0]`
         """
-        X, y = check_X_y(X, y, multi_output=True)
+        X, y = validate_data(self, X, y, multi_output=True)
         super()._fit_utils(X, y)
 
         compatible_classifiers = (
@@ -293,9 +292,7 @@ class PCovC(_BasePCov):
         self._label_binarizer = LabelBinarizer(neg_label=-1, pos_label=1)
         Y = self._label_binarizer.fit_transform(y)  # check if we need this
         if not self._label_binarizer.y_type_.startswith("multilabel"):
-            print(y)
             y = column_or_1d(y, warn=True)
-            print(y)
 
         if self.space_ == "feature":
             self._fit_feature_space(X, Y.reshape(Z.shape), Z)
