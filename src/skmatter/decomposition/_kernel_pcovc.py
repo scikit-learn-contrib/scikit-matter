@@ -3,6 +3,7 @@ import numbers
 
 from scipy import linalg
 import scipy.sparse as sp
+from sklearn import clone
 from sklearn.metrics import accuracy_score
 from sklearn.calibration import LinearSVC
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
@@ -182,7 +183,9 @@ class KernelPCovC(PCovC):
                 W = np.hstack([est_.coef_.T for est_ in self.z_classifier_.estimators_])
                 Z = K @ W  # computes Z, basically Z=XPxz
             else:
-                W = self.z_classifier_.coef_.T.reshape(K.shape[1], -1)
+                print("Coef: " + str(self.z_classifier_.coef_.shape))
+                W = self.z_classifier_.coef_.T.reshape(self.n_samples_in_, -1)
+                print("W: " + str(W.shape))
                 Z = self.z_classifier_.decision_function(K).reshape(K.shape[0], -1)
 
             # Use this instead of `self.classifier_.predict(K)`
@@ -202,9 +205,8 @@ class KernelPCovC(PCovC):
             #     self.z_classifier_.X_fit_ = self.X_fit_
             #     self.z_classifier_._check_n_features(self.X_fit_, reset=True)
         else:
-            Z = (
-                K @ W
-            )  # Do we want precomputed classifier to be trained on K and Y, X and Y?
+            Z = K @ W
+            # Do we want precomputed classifier to be trained on K and Y, X and Y?
             if W is None:
                 W = np.linalg.lstsq(K, Z, self.tol)[0]
 
@@ -238,11 +240,10 @@ class KernelPCovC(PCovC):
             self.ptx_ = self.pt__ @ X
 
         # self.classifier_ = check_cl_fit(classifier, K @ self.pkt_, y) # Extract weights to get Ptz
-        self.classifier_ = LogisticRegression().fit(K @ self.pkt_, y)
-        # if self.classifier != "precomputed":
-        #     self.classifier_ = clone(classifier).fit(K @ self.pkt_, y)
-        # else:
-        #     self.classifier_ = SVC().fit(K @ self.pkt_, y)
+        if self.classifier != "precomputed":
+            self.classifier_ = clone(classifier).fit(K @ self.pkt_, y)
+        else:
+            self.classifier_ = LogisticRegression().fit(K @ self.pkt_, y)
         # self.classifier_._validate_data(K @ self.pkt_, y, reset=False)
 
         if isinstance(self.classifier_, MultiOutputClassifier):

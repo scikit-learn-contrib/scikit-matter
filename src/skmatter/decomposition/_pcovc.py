@@ -306,6 +306,7 @@ class PCovC(_BasePCov):
 
         # original: self.classifier_ = check_cl_fit(classifier, X @ self.pxt_, y=y)
         # we don't want to copy ALl parameters of classifier, such as n_features_in, since we are re-fitting it on T, y
+        
         if self.classifier != "precomputed":
             self.classifier_ = clone(classifier).fit(X @ self.pxt_, y)
         else:
