@@ -17,6 +17,7 @@ from sklearn.naive_bayes import LabelBinarizer
 from sklearn.multioutput import MultiOutputClassifier
 from sklearn.utils import check_array
 from sklearn.utils.validation import check_is_fitted, validate_data
+from sklearn.utils._array_api import get_namespace
 
 from skmatter.decomposition import _BasePCov
 from skmatter.utils import check_cl_fit
@@ -242,7 +243,8 @@ class PCovC(_BasePCov):
             Classification weights, optional when classifier=`precomputed`. If not
             passed, it is assumed that `W = np.linalg.lstsq(X, Z, self.tol)[0]`
         """
-        X, y = validate_data(self, X, y, multi_output=True)
+        print("Insdie: " + str(y))
+        X, y = validate_data(self, X, y, y_numeric=False, multi_output=True)
         print(self.n_features_in_)
         super()._fit_utils(X, y)
 
@@ -306,7 +308,7 @@ class PCovC(_BasePCov):
 
         # original: self.classifier_ = check_cl_fit(classifier, X @ self.pxt_, y=y)
         # we don't want to copy ALl parameters of classifier, such as n_features_in, since we are re-fitting it on T, y
-        
+
         if self.classifier != "precomputed":
             self.classifier_ = clone(classifier).fit(X @ self.pxt_, y)
         else:
@@ -404,6 +406,8 @@ class PCovC(_BasePCov):
     def decision_function(self, X=None, T=None):
         """Predicts confidence scores from X or T."""
         check_is_fitted(self, attributes=["_label_binarizer", "pxz_", "ptz_"])
+        
+        xp, _ = get_namespace(X)
 
         if X is None and T is None:
             raise ValueError("Either X or T must be supplied.")
@@ -416,7 +420,7 @@ class PCovC(_BasePCov):
             scores = T @ self.ptz_
 
         return (
-            np.reshape(scores, (-1,))
+            xp.reshape(scores, (-1,))
             if (scores.ndim > 1 and scores.shape[1] == 1)
             else scores
         )

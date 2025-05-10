@@ -162,6 +162,32 @@ class KernelPCovCInfrastructureTest(KernelPCovCBaseTest):
         self.assertTrue(check_X_y(self.X, T, multi_output=True))
         self.assertTrue(T.shape[-1] == n_components)
 
+    def test_Z_shape(self):
+        """Check that KPCovC returns an evidence matrix consistent with the number of samples
+        and the number of classes.
+        """
+        n_components = 5
+        pcovc = self.model(n_components=n_components, tol=1e-12)
+        pcovc.fit(self.X, self.Y)
+
+        # Shape (n_samples, ) for binary classifcation
+        Z = pcovc.decision_function(self.X)
+
+        self.assertTrue(Z.ndim == 1)
+        self.assertTrue(Z.shape[0] == self.X.shape[0])
+
+        # Modify Y so that it now contains three classes
+        Y_multiclass = self.Y.copy()
+        Y_multiclass[0] = 2
+        pcovc.fit(self.X, Y_multiclass)
+        n_classes = len(np.unique(Y_multiclass))
+
+        # Shape (n_samples, n_classes) for multiclass classification
+        Z = pcovc.decision_function(self.X)
+
+        self.assertTrue(Z.ndim == 2)
+        self.assertTrue((Z.shape[0], Z.shape[1]) == (self.X.shape[0], n_classes))
+
     def test_no_centerer(self):
         """Tests that when center=False, no centerer exists."""
         kpcovc = self.model(center=False)

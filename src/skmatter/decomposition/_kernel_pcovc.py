@@ -23,13 +23,12 @@ from sklearn.utils import check_array, check_random_state, column_or_1d
 from sklearn.utils.validation import check_is_fitted, validate_data
 from scipy.sparse.linalg import svds
 from sklearn.decomposition._pca import _infer_dimension
-from sklearn.metrics.pairwise import pairwise_kernels
 from sklearn.utils._arpack import _init_arpack_v0
 from sklearn.utils.extmath import randomized_svd, stable_cumsum, svd_flip
-from sklearn.metrics import accuracy_score
 
 from skmatter.utils import check_cl_fit, pcovr_kernel
 from skmatter.utils import pcovr_kernel
+from sklearn.utils._array_api import get_namespace
 
 from skmatter.preprocessing import KernelNormalizer
 from skmatter.decomposition import PCovC
@@ -174,7 +173,6 @@ class KernelPCovC(PCovC):
 
             # Check if classifier is fitted; if not, fit with precomputed K
             # to avoid needing to compute the kernel a second time
-
             self.z_classifier_ = check_cl_fit(
                 classifier, K, X, y
             )  # Pkz as weights - fits on K, y
@@ -184,7 +182,10 @@ class KernelPCovC(PCovC):
                 Z = K @ W  # computes Z, basically Z=XPxz
             else:
                 print("Coef: " + str(self.z_classifier_.coef_.shape))
-                W = self.z_classifier_.coef_.T.reshape(self.n_samples_in_, -1)
+                # this fails with prefit classifier on X, y, since weights are shape (1, n_features)
+                # and K_features != X_features
+                # In KPCovR, this is OK since Kernel Ridge Regression
+                W = self.z_classifier_.coef_.T.reshape(K.shape[1], -1)
                 print("W: " + str(W.shape))
                 Z = self.z_classifier_.decision_function(K).reshape(K.shape[0], -1)
 
@@ -205,10 +206,10 @@ class KernelPCovC(PCovC):
             #     self.z_classifier_.X_fit_ = self.X_fit_
             #     self.z_classifier_._check_n_features(self.X_fit_, reset=True)
         else:
-            Z = K @ W
+            Z = X @ W
             # Do we want precomputed classifier to be trained on K and Y, X and Y?
             if W is None:
-                W = np.linalg.lstsq(K, Z, self.tol)[0]
+                W = np.linalg.lstsq(X, Z, self.tol)[0]
 
         self._label_binarizer = LabelBinarizer(neg_label=-1, pos_label=1)
         Y = self._label_binarizer.fit_transform(y)
@@ -342,6 +343,8 @@ class KernelPCovC(PCovC):
     def decision_function(self, X=None, T=None):
         check_is_fitted(self, attributes=["_label_binarizer", "pkz_", "ptz_"])
 
+        xp, _ = get_namespace(X)
+
         if X is None and T is None:
             raise ValueError("Either X or T must be supplied.")
 
@@ -350,12 +353,17 @@ class KernelPCovC(PCovC):
             K = self._get_kernel(X, self.X_fit_)
             if self.center:
                 K = self.centerer_.transform(K)
-
-            return K @ self.pkz_
+            scores = K @ self.pkz_
 
         else:
             T = check_array(T)
-            return T @ self.ptz_
+            scores = T @ self.ptz_
+
+        return (
+            xp.reshape(scores, (-1,))
+            if (scores.ndim > 1 and scores.shape[1] == 1)
+            else scores
+        )
 
     def predict(self, X=None, T=None):
         """Predicts class values from X or T."""
