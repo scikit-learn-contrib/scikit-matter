@@ -26,7 +26,7 @@ from sklearn.decomposition._pca import _infer_dimension
 from sklearn.utils._arpack import _init_arpack_v0
 from sklearn.utils.extmath import randomized_svd, stable_cumsum, svd_flip
 
-from skmatter.utils import check_cl_fit, pcovr_kernel
+from skmatter.utils import check_kcl_fit, pcovr_kernel
 from skmatter.utils import pcovr_kernel
 from sklearn.utils._array_api import get_namespace
 
@@ -137,7 +137,6 @@ class KernelPCovC(PCovC):
             self.n_components_ = self.n_components
 
         K = self._get_kernel(X)
-
         if self.center:
             self.centerer_ = KernelNormalizer()
             K = self.centerer_.fit_transform(K)
@@ -173,7 +172,7 @@ class KernelPCovC(PCovC):
 
             # Check if classifier is fitted; if not, fit with precomputed K
             # to avoid needing to compute the kernel a second time
-            self.z_classifier_ = check_cl_fit(
+            self.z_classifier_ = check_kcl_fit(
                 classifier, K, X, y
             )  # Pkz as weights - fits on K, y
 
@@ -187,7 +186,11 @@ class KernelPCovC(PCovC):
                 # In KPCovR, this is OK since Kernel Ridge Regression
                 W = self.z_classifier_.coef_.T.reshape(K.shape[1], -1)
                 print("W: " + str(W.shape))
-                Z = self.z_classifier_.decision_function(K).reshape(K.shape[0], -1)
+                print(W[:7])
+
+                Z = (
+                    K @ W
+                )  # self.z_classifier_.decision_function(K).reshape(K.shape[0], -1)
 
             # Use this instead of `self.classifier_.predict(K)`
             # so that we can handle the case of the pre-fitted classifier
@@ -206,10 +209,13 @@ class KernelPCovC(PCovC):
             #     self.z_classifier_.X_fit_ = self.X_fit_
             #     self.z_classifier_._check_n_features(self.X_fit_, reset=True)
         else:
-            Z = X @ W
+            print("Hii")
             # Do we want precomputed classifier to be trained on K and Y, X and Y?
             if W is None:
-                W = np.linalg.lstsq(X, Z, self.tol)[0]
+                W = np.linalg.lstsq(K, Z, self.tol)[0]
+            print("W2: " + str(W.shape))
+            print(W[:7])
+            Z = K @ W
 
         self._label_binarizer = LabelBinarizer(neg_label=-1, pos_label=1)
         Y = self._label_binarizer.fit_transform(y)
@@ -336,9 +342,6 @@ class KernelPCovC(PCovC):
 
     def inverse_transform(self, T):
         return T @ self.ptx_
-
-        # K = super().inverse_transform(T)
-        # return np.dot(K, self.inverse_coef_)
 
     def decision_function(self, X=None, T=None):
         check_is_fitted(self, attributes=["_label_binarizer", "pkz_", "ptz_"])

@@ -15,7 +15,7 @@ from ._pcovr_utils import (
     pcovr_kernel,
 )
 
-from ._pcovc_utils import check_cl_fit
+from ._pcovc_utils import check_cl_fit, check_kcl_fit
 
 from ._progress_bar import (
     get_progress_bar,

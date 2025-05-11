@@ -11,8 +11,10 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.linear_model import LogisticRegression
 from sklearn.svm import SVC
 from sklearn.linear_model import RidgeClassifier
+from sklearn.metrics.pairwise import pairwise_kernels
 
 from skmatter.decomposition import PCovC, KernelPCovC
+from skmatter.preprocessing import KernelNormalizer
 
 
 class KernelPCovCBaseTest(unittest.TestCase):
@@ -207,21 +209,27 @@ class KernelPCovCInfrastructureTest(KernelPCovCBaseTest):
         _ = kpcovc.score(self.X, self.Y)
 
     def test_prefit_classifier(self):
+        # in KPCovR, this essentially works with a kernel ridge regressor prefit on X, Y
+        # But, in KPCovC, our classifiers don't compute the kernel for us, hence we need
+        # to basically only allow prefit classifiers on K, y
+
+        # center = false for level comparison with kernel computed externally (don't need to write extra code, lines 141-143 of KPCovC)
+        kernel_params = {"kernel": "rbf", "gamma": 0.1, "degree": 3, "coef0": 0}
+
+        K = pairwise_kernels(self.X, metric="rbf", filter_params=True, **kernel_params)
         classifier = LogisticRegression()
-        # this fails since we are trying to call decision_function(K) on a classifier fitted with X
-        # see line 340 of kernel_pcovr
-        classifier.fit(self.X, self.Y)
-        print(classifier.n_features_in_)
-        kpcovc = self.model(mixing=0.5, classifier=classifier, kernel="rbf", gamma=0.1)
+        classifier.fit(K, self.Y)
+
+        kpcovc = KernelPCovC(mixing=0.5, classifier=classifier, **kernel_params)
         kpcovc.fit(self.X, self.Y)
 
-        Yhat_classifier = classifier.predict(self.X).reshape(self.X.shape[0], -1)
-        W_classifier = classifier.coef_.reshape(self.X.shape[1], -1)
+        Z_classifier = classifier.decision_function(K).reshape(K.shape[0], -1)
+        W_classifier = classifier.coef_.T.reshape(K.shape[1], -1)
 
-        Yhat_kpcovc = kpcovc.classifier_.predict(self.X).reshape(self.X.shape[0], -1)
-        W_kpcovc = kpcovc.classifier_.coef_.reshape(self.X.shape[1], -1)
+        Z_kpcovc = kpcovc.z_classifier_.decision_function(K).reshape(K.shape[0], -1)
+        W_kpcovc = kpcovc.z_classifier_.coef_.T.reshape(K.shape[1], -1)
 
-        self.assertTrue(np.allclose(Yhat_classifier, Yhat_kpcovc))
+        self.assertTrue(np.allclose(Z_classifier, Z_kpcovc))
         self.assertTrue(np.allclose(W_classifier, W_kpcovc))
 
     def test_classifier_modifications(self):
@@ -305,27 +313,24 @@ class KernelPCovCInfrastructureTest(KernelPCovCBaseTest):
         )
 
     def test_precomputed_classification(self):
-        classifier = LogisticRegression()
-        classifier.fit(self.X, self.Y)
-        Yhat = classifier.predict(self.X)
-        W = classifier.coef_.reshape(self.X.shape[1], -1)
+        kernel_params = {"kernel": "rbf", "gamma": 0.1, "degree": 3, "coef0": 0}
 
-        kpcovc1 = self.model(
-            mixing=0.5,
-            classifier="precomputed",
-            kernel="rbf",
-            gamma=0.1,
-            n_components=1,
-        )
+        K = pairwise_kernels(self.X, metric="rbf", filter_params=True, **kernel_params)
+
+        classifier = LogisticRegression()
+        classifier.fit(K, self.Y)
+        Yhat = classifier.predict(K)
+        W = classifier.coef_.T.reshape(K.shape[1], -1)
+
+        kpcovc1 = KernelPCovC(mixing=0.5, classifier="precomputed", **kernel_params)
         kpcovc1.fit(self.X, Yhat, W)
         t1 = kpcovc1.transform(self.X)
 
-        kpcovc2 = self.model(
-            mixing=0.5, classifier=classifier, kernel="rbf", gamma=0.1, n_components=1
-        )
+        kpcovc2 = KernelPCovC(mixing=0.5, classifier=classifier, **kernel_params)
         kpcovc2.fit(self.X, self.Y)
         t2 = kpcovc2.transform(self.X)
 
+        print(np.linalg.norm(t1 - t2))
         self.assertTrue(np.linalg.norm(t1 - t2) < self.error_tol)
 
 
@@ -338,11 +343,12 @@ class KernelTests(KernelPCovCBaseTest):
         def _linear_kernel(X, Y):
             return X @ Y.T
 
-        # kernel_params = {
-        #     "poly": {"degree": 2},
-        #     "rbf": {"gamma": 3.0},
-        #     "sigmoid": {"gamma": 3.0, "coef0": 0.5},
-        # }
+        kernel_params = {
+            "poly": {"degree": 2},
+            "rbf": {"gamma": 3.0},
+            "sigmoid": {"gamma": 3.0, "coef0": 0.5},
+        }
+
         for kernel in ["linear", "poly", "rbf", "sigmoid", "cosine", _linear_kernel]:
             with self.subTest(kernel=kernel):
                 kpcovc = KernelPCovC(
@@ -350,9 +356,7 @@ class KernelTests(KernelPCovCBaseTest):
                     n_components=2,
                     classifier=LogisticRegression(),
                     kernel=kernel,
-                    degree=2,
-                    gamma=3.0,
-                    coef0=0.5,
+                    **kernel_params.get(kernel, {}),
                 )
                 kpcovc.fit(self.X, self.Y)
 

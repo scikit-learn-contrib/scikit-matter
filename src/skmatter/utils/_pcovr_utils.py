@@ -31,7 +31,7 @@ def check_lr_fit(regressor, X, y):
     Raises
     ------
     ValueError
-        If the fitted regressor's coefficients dimensions are incompatible with the
+        If the fitted regressor's coefficients have a dimension incompatible with the
         target space.
     """
     try:
@@ -100,7 +100,7 @@ def check_krr_fit(regressor, K, X, y):
     Raises
     ------
     ValueError
-        If the fitted regressor's coefficients dimensions are incompatible with the
+        If the fitted regressor's coefficients have a dimension incompatible with the
         target space.
 
     Notes
@@ -113,7 +113,6 @@ def check_krr_fit(regressor, K, X, y):
         fitted_regressor = deepcopy(regressor)
 
         # Check compatibility with K
-
         fitted_regressor._validate_data(X, y, reset=False, multi_output=True)
 
         # Check compatibility with y

@@ -477,7 +477,7 @@ class PCovCInfrastructureTest(PCovCBaseTest):
         classifier = LogisticRegression()
         classifier.fit(self.X, self.Y)
         Yhat = classifier.predict(self.X)
-        W = classifier.coef_.reshape(self.X.shape[1], -1)
+        W = classifier.coef_.T.reshape(self.X.shape[1], -1)
         pcovc1 = self.model(mixing=0.5, classifier="precomputed", n_components=1)
         pcovc1.fit(self.X, Yhat, W)
         t1 = pcovc1.transform(self.X)

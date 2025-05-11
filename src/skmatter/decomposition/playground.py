@@ -17,20 +17,39 @@ from sklearn.metrics import accuracy_score
 from _kernel_pcovr import KernelPCovR
 
 from skmatter.decomposition import KernelPCovC, KernelPCovR, PCovR, PCovC
-X, Y = get_dataset3(return_X_y=True)
+X, Y = get_dataset(return_X_y=True)
 scaler = StandardScaler()
 X_scaled = scaler.fit_transform(X)
 
-print(X_scaled.shape)
-p = PCovR(regressor=LinearRegression())
-p.fit(X_scaled, Y)
-print(p.n_features_in_)
+classifier = LogisticRegression()
+classifier.fit(X_scaled, Y)
 
-ke = PCovC(mixing=0.5,classifier=LinearSVC(), n_components=2)
-ke.fit(X_scaled, Y)
-ke.score(X_scaled, Y)
+Yhat = classifier.predict(X_scaled)
+W = classifier.coef_.reshape(X_scaled.shape[1], -1)
+pcovc1 = PCovC(mixing=0.5, classifier="precomputed", n_components=1)
+pcovc1.fit(X_scaled, Yhat, W)
+t1 = pcovc1.transform(X_scaled)
+print(pcovc1.score(X_scaled, Y))
 
+pcovc2 = PCovC(mixing=0.5, classifier=classifier, n_components=1)
+pcovc2.fit(X_scaled, Y)
+t2 = pcovc2.transform(X_scaled)
+print(pcovc2.score(X_scaled, Y))
 
-# T = ke.transform(X_scaled)
-# X = ke.inverse_transform(T)
-# print((X-X_scaled)[:10])
+print(np.linalg.norm(t1-t2))
+
+# classifier = LinearRegression()
+# classifier.fit(X_scaled, Y)
+
+# Yhat = classifier.predict(X_scaled)
+# W = classifier.coef_.reshape(X_scaled.shape[1], -1)
+# pcovc1 = PCovR(mixing=0.5, regressor="precomputed", n_components=1)
+# pcovc1.fit(X_scaled, Yhat, W)
+# t1 = pcovc1.transform(X_scaled)
+# print(pcovc1.score(X_scaled, Y))
+
+# pcovc2 = PCovR(mixing=0.5, regressor=classifier, n_components=1)
+# pcovc2.fit(X_scaled, Y)
+# t2 = pcovc2.transform(X_scaled)
+# print(pcovc2.score(X_scaled, Y))
+

@@ -243,9 +243,7 @@ class PCovC(_BasePCov):
             Classification weights, optional when classifier=`precomputed`. If not
             passed, it is assumed that `W = np.linalg.lstsq(X, Z, self.tol)[0]`
         """
-        print("Insdie: " + str(y))
         X, y = validate_data(self, X, y, y_numeric=False, multi_output=True)
-        print(self.n_features_in_)
         super()._fit_utils(X, y)
 
         compatible_classifiers = (
@@ -276,21 +274,19 @@ class PCovC(_BasePCov):
                 classifier = self.classifier
 
             self.z_classifier_ = check_cl_fit(
-                classifier, None, X, y
+                classifier, X, y
             )  # its linear classifier on x and y to get Pxz
 
             if isinstance(self.z_classifier_, MultiOutputClassifier):
                 W = np.hstack([est_.coef_.T for est_ in self.z_classifier_.estimators_])
-                Z = X @ W  # computes Z, basically Z=XPxz
-
             else:
                 W = self.z_classifier_.coef_.T.reshape(X.shape[1], -1)
-                Z = self.z_classifier_.decision_function(X).reshape(X.shape[0], -1)
+            Z = X @ W
 
         else:
-            Z = X @ W
             if W is None:
                 W = np.linalg.lstsq(X, Z, self.tol)[0]  # W = weights for Pxz
+            Z = X @ W
 
         self._label_binarizer = LabelBinarizer(neg_label=-1, pos_label=1)
         Y = self._label_binarizer.fit_transform(y)  # check if we need this
@@ -314,7 +310,6 @@ class PCovC(_BasePCov):
         else:
             # if precomputed, use default classifier to predict y from T
             self.classifier_ = LogisticRegression().fit(X @ self.pxt_, y)
-        print(self.classifier_)
 
         # self.classifier_ = LogisticRegression().fit(X @ self.pxt_, y)
         # check_cl_fit(classifier., X @ self.pxt_, y=y) #Has Ptz as weights
@@ -406,7 +401,7 @@ class PCovC(_BasePCov):
     def decision_function(self, X=None, T=None):
         """Predicts confidence scores from X or T."""
         check_is_fitted(self, attributes=["_label_binarizer", "pxz_", "ptz_"])
-        
+
         xp, _ = get_namespace(X)
 
         if X is None and T is None:
@@ -476,8 +471,6 @@ class PCovC(_BasePCov):
         score : float
             Mean accuracy of ``self.predict(X)`` w.r.t. `Y`.
         """
-        print(self.n_features_in_)
-
         X, Y = validate_data(self, X, Y, reset=False)
 
         return accuracy_score(Y, self.predict(X), sample_weight=sample_weight)
