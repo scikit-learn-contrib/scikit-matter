@@ -113,7 +113,7 @@ def check_krr_fit(regressor, K, X, y):
         fitted_regressor = deepcopy(regressor)
 
         # Check compatibility with K
-        fitted_regressor._validate_data(X, y, reset=False, multi_output=True)
+        validate_data(fitted_regressor, X, y, reset=False, multi_output=True)
 
         # Check compatibility with y
         if fitted_regressor.dual_coef_.ndim != y.ndim:

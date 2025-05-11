@@ -1,6 +1,6 @@
 from copy import deepcopy
 from sklearn import clone
-from sklearn.base import check_is_fitted
+from sklearn.utils.validation import check_is_fitted, validate_data
 from sklearn.exceptions import NotFittedError
 import numpy as np
 
@@ -36,7 +36,7 @@ def check_cl_fit(classifier, X, y):
         fitted_classifier = deepcopy(classifier)
 
         # Check compatibility with X
-        fitted_classifier._validate_data(X, y, reset=False, multi_output=True)
+        validate_data(fitted_classifier, X, y, reset=False, multi_output=True)
 
         # Check compatibility with y
         # dimension of classifier coefficients is always 2, hence we don't
@@ -48,15 +48,17 @@ def check_cl_fit(classifier, X, y):
             if fitted_classifier.coef_.shape[0] != 1:
                 raise ValueError(
                     "For binary classification, expected classifier coefficients "
-                    "to have shape (1, %d) but got shape %r"
-                    % (X.shape[1], fitted_classifier.coef_.shape)
+                    "to have shape (1, "
+                    f"{X.shape[1]}) but got shape "
+                    f"{fitted_classifier.coef_.shape}"
                 )
         else:
             if fitted_classifier.coef_.shape[0] != n_classes:
                 raise ValueError(
                     "For multiclass classification, expected classifier coefficients "
-                    "to have shape (%d, %d) but got shape %r"
-                    % (n_classes, X.shape[1], fitted_classifier.coef_.shape)
+                    "to have shape "
+                    f"({n_classes}, {X.shape[1]}) but got shape "
+                    f"{fitted_classifier.coef_.shape}"
                 )
 
     except NotFittedError:
@@ -97,7 +99,7 @@ def check_kcl_fit(classifier, K, X, y):
         fitted_classifier = deepcopy(classifier)
 
         # Check compatibility with K
-        fitted_classifier._validate_data(K, y, reset=False, multi_output=True)
+        validate_data(fitted_classifier, K, y, reset=False, multi_output=True)
 
         # Check compatibility with y
         # dimension of classifier coefficients is always 2, hence we don't
@@ -109,15 +111,17 @@ def check_kcl_fit(classifier, K, X, y):
             if fitted_classifier.coef_.shape[0] != 1:
                 raise ValueError(
                     "For binary classification, expected classifier coefficients "
-                    "to have shape (1, %d) but got shape %r"
-                    % (X.shape[1], fitted_classifier.coef_.shape)
+                    "to have shape (1, "
+                    f"{X.shape[1]}) but got shape "
+                    f"{fitted_classifier.coef_.shape}"
                 )
         else:
             if fitted_classifier.coef_.shape[0] != n_classes:
                 raise ValueError(
                     "For multiclass classification, expected classifier coefficients "
-                    "to have shape (%d, %d) but got shape %r"
-                    % (n_classes, X.shape[1], fitted_classifier.coef_.shape)
+                    "to have shape "
+                    f"({n_classes}, {X.shape[1]}) but got shape "
+                    f"{fitted_classifier.coef_.shape}"
                 )
 
     except NotFittedError:

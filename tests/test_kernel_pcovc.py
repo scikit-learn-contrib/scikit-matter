@@ -330,7 +330,6 @@ class KernelPCovCInfrastructureTest(KernelPCovCBaseTest):
         kpcovc2.fit(self.X, self.Y)
         t2 = kpcovc2.transform(self.X)
 
-        print(np.linalg.norm(t1 - t2))
         self.assertTrue(np.linalg.norm(t1 - t2) < self.error_tol)
 
 

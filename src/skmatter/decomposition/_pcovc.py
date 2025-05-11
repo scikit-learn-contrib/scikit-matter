@@ -472,5 +472,4 @@ class PCovC(_BasePCov):
             Mean accuracy of ``self.predict(X)`` w.r.t. `Y`.
         """
         X, Y = validate_data(self, X, Y, reset=False)
-
         return accuracy_score(Y, self.predict(X), sample_weight=sample_weight)

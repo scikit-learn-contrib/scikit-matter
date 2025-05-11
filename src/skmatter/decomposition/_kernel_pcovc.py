@@ -114,13 +114,9 @@ class KernelPCovC(PCovC):
         U = Vt.T
 
         P = (self.mixing * np.eye(K.shape[0])) + (1.0 - self.mixing) * (W @ Z.T)
-        # print("P: " +str(P.shape))
-        # print("U: " + str(U.shape))
-
         S_inv = np.array([1.0 / s if s > self.tol else 0.0 for s in S])
 
         self.pkt_ = P @ U @ np.sqrt(np.diagflat(S_inv))
-        # print("Pkt: "+str(self.pkt_.shape))
         T = K @ self.pkt_
         self.pt__ = np.linalg.lstsq(T, np.eye(T.shape[0]), rcond=self.tol)[0]
 
@@ -186,7 +182,6 @@ class KernelPCovC(PCovC):
                 # In KPCovR, this is OK since Kernel Ridge Regression
                 W = self.z_classifier_.coef_.T.reshape(K.shape[1], -1)
                 print("W: " + str(W.shape))
-                print(W[:7])
 
                 Z = (
                     K @ W
@@ -209,12 +204,10 @@ class KernelPCovC(PCovC):
             #     self.z_classifier_.X_fit_ = self.X_fit_
             #     self.z_classifier_._check_n_features(self.X_fit_, reset=True)
         else:
-            print("Hii")
             # Do we want precomputed classifier to be trained on K and Y, X and Y?
             if W is None:
                 W = np.linalg.lstsq(K, Z, self.tol)[0]
             print("W2: " + str(W.shape))
-            print(W[:7])
             Z = K @ W
 
         self._label_binarizer = LabelBinarizer(neg_label=-1, pos_label=1)
