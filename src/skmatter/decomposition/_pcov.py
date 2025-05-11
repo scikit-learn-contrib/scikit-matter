@@ -42,7 +42,7 @@ class _BasePCov(_BasePCA, LinearModel):
 
     # this contains the common functionality for PCovR and PCovC fit methods,
     # but leaves the rest of the fit functionality to the subclass
-    def _fit_utils(self, X, y):
+    def _fit_utils(self, X):
         # saved for inverse transformations from the latent space,
         # should be zero in the case that the features have been properly centered
         self.mean_ = np.mean(X, axis=0)
@@ -90,7 +90,7 @@ class _BasePCov(_BasePCA, LinearModel):
             else:
                 self.space_ = "sample"
 
-    def _fit_feature_space(self, X, Y, Yhat):
+    def _fit_feature_space(self, X, Y, Yhat, compute_pty_=True):
         Ct, iCsqrt = pcovr_covariance(
             mixing=self.mixing,
             X=X,
@@ -126,9 +126,11 @@ class _BasePCov(_BasePCA, LinearModel):
 
         self.pxt_ = np.linalg.multi_dot([iCsqrt, Vt.T, S_sqrt])
         self.ptx_ = np.linalg.multi_dot([S_sqrt_inv, Vt, Csqrt])
-        self.pty_ = np.linalg.multi_dot([S_sqrt_inv, Vt, iCsqrt, X.T, Y])
 
-    def _fit_sample_space(self, X, Y, Yhat, W):
+        if compute_pty_:
+            self.pty_ = np.linalg.multi_dot([S_sqrt_inv, Vt, iCsqrt, X.T, Y])
+
+    def _fit_sample_space(self, X, Y, Yhat, W, compute_pty_=True):
         Kt = pcovr_kernel(mixing=self.mixing, X=X, Y=Yhat)
 
         if self.fit_svd_solver_ == "full":
@@ -152,7 +154,8 @@ class _BasePCov(_BasePCA, LinearModel):
 
         self.pxt_ = P @ T
         self.ptx_ = T.T @ X
-        self.pty_ = T.T @ Y
+        if compute_pty_:
+            self.pty_ = T.T @ Y
 
     # exactly same in PCovR/PCovC
     def _decompose_truncated(self, mat):

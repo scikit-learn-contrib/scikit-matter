@@ -21,6 +21,7 @@ from sklearn.multioutput import MultiOutputClassifier
 from sklearn.utils import check_array
 from sklearn.utils.validation import check_is_fitted, validate_data
 from sklearn.utils._array_api import get_namespace
+from sklearn.utils.multiclass import check_classification_targets, type_of_target
 
 from skmatter.decomposition import _BasePCov
 from skmatter.utils import check_cl_fit
@@ -247,8 +248,10 @@ class PCovC(LinearClassifierMixin, _BasePCov):
             passed, it is assumed that `W = np.linalg.lstsq(X, Z, self.tol)[0]`
         """
         X, y = validate_data(self, X, y, y_numeric=False, multi_output=True)
+        check_classification_targets(y)
         self.classes_ = np.unique(y)
-        super()._fit_utils(X, y)
+
+        super()._fit_utils(X)
 
         compatible_classifiers = (
             LinearDiscriminantAnalysis,
@@ -292,15 +295,10 @@ class PCovC(LinearClassifierMixin, _BasePCov):
                 W = np.linalg.lstsq(X, Z, self.tol)[0]  # W = weights for Pxz
             Z = X @ W
 
-        self._label_binarizer = LabelBinarizer(neg_label=-1, pos_label=1)
-        Y = self._label_binarizer.fit_transform(y)  # check if we need this
-        if not self._label_binarizer.y_type_.startswith("multilabel"):
-            y = column_or_1d(y, warn=True)
-
         if self.space_ == "feature":
-            self._fit_feature_space(X, Y.reshape(Z.shape), Z)
+            self._fit_feature_space(X, y, Z)
         else:
-            self._fit_sample_space(X, Y.reshape(Z.shape), Z, W)
+            self._fit_sample_space(X, y, Z, W)
 
         # instead of using linear regression solution, refit with the classifier
         # and steal weights to get ptz
@@ -325,9 +323,10 @@ class PCovC(LinearClassifierMixin, _BasePCov):
             self.pxz_ = self.pxt_ @ self.ptz_
         else:
             self.ptz_ = self.classifier_.coef_.T
+
             self.pxz_ = self.pxt_ @ self.ptz_
 
-        if len(Y.shape) == 1:
+        if len(y.shape) == 1 and type_of_target(y) == "binary":
             self.pxz_ = self.pxz_.reshape(
                 X.shape[1],
             )
@@ -360,7 +359,7 @@ class PCovC(LinearClassifierMixin, _BasePCov):
                                 \mathbf{U}_\mathbf{\tilde{C}}^T
                                 (\mathbf{X}^T \mathbf{X})^{\frac{1}{2}}
         """
-        return super()._fit_feature_space(X, Y, Z)
+        return super()._fit_feature_space(X, Y, Z, compute_pty_=False)
 
     def _fit_sample_space(self, X, Y, Z, W):
         r"""In sample-space PCovC, the projectors are determined by:
@@ -381,7 +380,7 @@ class PCovC(LinearClassifierMixin, _BasePCov):
             \mathbf{P}_{TX} = \mathbf{\Lambda}_\mathbf{\tilde{K}}^{-\frac{1}{2}}
                                 \mathbf{U}_\mathbf{\tilde{K}}^T \mathbf{X}
         """
-        return super()._fit_sample_space(X, Y, Z, W)
+        return super()._fit_sample_space(X, Y, Z, W, compute_pty_=False)
 
     def inverse_transform(self, T):
         r"""Transform data back to its original space.
@@ -404,29 +403,21 @@ class PCovC(LinearClassifierMixin, _BasePCov):
 
     def decision_function(self, X=None, T=None):
         """Predicts confidence scores from X or T."""
-        check_is_fitted(self, attributes=["_label_binarizer", "pxz_", "ptz_"])
-
-        xp, _ = get_namespace(X)
+        check_is_fitted(self, attributes=["pxz_", "ptz_"])
 
         if X is None and T is None:
             raise ValueError("Either X or T must be supplied.")
 
         if X is not None:
             X = validate_data(self, X, reset=False)
-            scores = X @ self.pxz_
+            return X @ self.pxz_
         else:
             T = check_array(T)
-            scores = T @ self.ptz_
-
-        return (
-            xp.reshape(scores, (-1,))
-            if (scores.ndim > 1 and scores.shape[1] == 1)
-            else scores
-        )
+            return T @ self.ptz_
 
     def predict(self, X=None, T=None):
         """Predicts the property labels using classification on T."""
-        check_is_fitted(self, attributes=["_label_binarizer", "pxz_", "ptz_"])
+        check_is_fitted(self, attributes=["pxz_", "ptz_"])
 
         if X is None and T is None:
             raise ValueError("Either X or T must be supplied.")

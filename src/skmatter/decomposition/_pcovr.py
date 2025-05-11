@@ -227,7 +227,7 @@ class PCovR(_BasePCov):
             passed, it is assumed that `W = np.linalg.lstsq(X, Y, self.tol)[0]`
         """
         X, Y = validate_data(self, X, Y, y_numeric=True, multi_output=True)
-        super()._fit_utils(X, Y)
+        super()._fit_utils(X)
 
         compatible_regressors = (LinearRegression, Ridge, RidgeCV)
 

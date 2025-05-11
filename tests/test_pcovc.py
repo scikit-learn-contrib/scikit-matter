@@ -449,8 +449,8 @@ class PCovCInfrastructureTest(PCovCBaseTest):
 
     def test_Y_Shape(self):
         pcovc = self.model()
-        self.Y = np.vstack(self.Y)
-        pcovc.fit(self.X, self.Y)
+        Y = np.vstack(self.Y)
+        pcovc.fit(self.X, Y)
 
         self.assertEqual(pcovc.pxz_.shape[0], self.X.shape[1])
         self.assertEqual(pcovc.ptz_.shape[0], pcovc.n_components_)
