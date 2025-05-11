@@ -10,6 +10,9 @@ from sklearn.linear_model import (
     LogisticRegressionCV,
     SGDClassifier,
 )
+
+from sklearn.linear_model._base import LinearClassifierMixin
+
 from sklearn.svm import LinearSVC
 
 from sklearn.calibration import column_or_1d
@@ -23,7 +26,7 @@ from skmatter.decomposition import _BasePCov
 from skmatter.utils import check_cl_fit
 
 
-class PCovC(_BasePCov):
+class PCovC(LinearClassifierMixin, _BasePCov):
     r"""Principal Covariates Classification determines a latent-space projection :math:`\mathbf{T}`
     which minimizes a combined loss in supervised and unsupervised tasks.
 
@@ -244,6 +247,7 @@ class PCovC(_BasePCov):
             passed, it is assumed that `W = np.linalg.lstsq(X, Z, self.tol)[0]`
         """
         X, y = validate_data(self, X, y, y_numeric=False, multi_output=True)
+        self.classes_ = np.unique(y)
         super()._fit_utils(X, y)
 
         compatible_classifiers = (
@@ -447,29 +451,3 @@ class PCovC(_BasePCov):
             and n_features is the number of features.
         """
         return super().transform(X)
-
-    def score(self, X, Y, sample_weight=None):
-        r"""Return the mean accuracy on the given test data and labels.
-
-        In multi-label classification, this is the subset accuracy
-        which is a harsh metric since you require for each sample that
-        each label set be correctly predicted.
-
-        Parameters
-        ----------
-        X : array-like of shape (n_samples, n_features)
-            Test samples.
-
-        Y : array-like of shape (n_samples,) or (n_samples, n_outputs)
-            True labels for `X`.
-
-        sample_weight : array-like of shape (n_samples,), default=None
-            Sample weights.
-
-        Returns
-        -------
-        score : float
-            Mean accuracy of ``self.predict(X)`` w.r.t. `Y`.
-        """
-        X, Y = validate_data(self, X, Y, reset=False)
-        return accuracy_score(Y, self.predict(X), sample_weight=sample_weight)
