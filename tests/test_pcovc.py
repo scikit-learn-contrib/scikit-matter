@@ -242,7 +242,6 @@ class PCovCSpaceTest(PCovCBaseTest):
                 # so these are similar (within approximately 0.001), but not exactly the same.
                 # I think this is because transform and inverse_transform depend on Pxt and Ptx,
                 # which in turn depend on Z, which is a matrix of class likelihoods (so maybe there is some rounding problems)
-
                 self.assertTrue(
                     np.allclose(
                         pcovc_ss.inverse_transform(pcovc_ss.transform(self.X)),
@@ -485,6 +484,7 @@ class PCovCInfrastructureTest(PCovCBaseTest):
         pcovc2 = self.model(mixing=0.5, classifier=classifier, n_components=1)
         pcovc2.fit(self.X, self.Y)
         t2 = pcovc2.transform(self.X)
+
         self.assertTrue(np.linalg.norm(t1 - t2) < self.error_tol)
 
     def test_classifier_modifications(self):
