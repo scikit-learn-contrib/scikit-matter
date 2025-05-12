@@ -5,7 +5,9 @@ import numpy as np
 from sklearn import exceptions
 from sklearn.datasets import load_breast_cancer as get_dataset
 from sklearn.decomposition import PCA
-from sklearn.linear_model import LogisticRegression
+from sklearn.linear_model import LogisticRegression, RidgeClassifier
+from sklearn.svm import LinearSVC
+
 from sklearn.naive_bayes import GaussianNB
 from sklearn.preprocessing import StandardScaler
 from sklearn.utils.validation import check_X_y
@@ -18,7 +20,7 @@ class PCovCBaseTest(unittest.TestCase):
         super().__init__(*args, **kwargs)
 
         self.model = (
-            lambda mixing=0.5, classifier=LogisticRegression(), **kwargs: PCovC(
+            lambda mixing=0.5, classifier=RidgeClassifier(), **kwargs: PCovC(
                 mixing=mixing, classifier=classifier, **kwargs
             )
         )

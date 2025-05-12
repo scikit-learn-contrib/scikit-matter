@@ -5,7 +5,7 @@ from sklearn.calibration import LinearSVC
 from sklearn.discriminant_analysis import StandardScaler
 from sklearn.exceptions import NotFittedError
 from sklearn.kernel_ridge import KernelRidge
-from sklearn.linear_model import LogisticRegression, LinearRegression
+from sklearn.linear_model import LogisticRegression, LinearRegression, RidgeClassifier
 from sklearn.multioutput import MultiOutputClassifier
 from sklearn.naive_bayes import GaussianNB
 from sklearn.svm import SVC
@@ -21,22 +21,16 @@ X, Y = get_dataset(return_X_y=True)
 scaler = StandardScaler()
 X_scaled = scaler.fit_transform(X)
 
-classifier = LogisticRegression()
-classifier.fit(X_scaled, Y)
+classifier = RidgeClassifier()
+pcovc = PCovC(mixing=1.0, n_components=X_scaled.shape[-1], space="feature", classifier=classifier)
 
-Yhat = classifier.predict(X_scaled)
-W = classifier.coef_.reshape(X_scaled.shape[1], -1)
-pcovc1 = PCovC(mixing=0.5, classifier="precomputed", n_components=1)
-pcovc1.fit(X_scaled, Yhat, W)
-t1 = pcovc1.transform(X_scaled)
-print(pcovc1.score(X_scaled, Y))
+# classifier.fit(X_scaled, Y)
+# print(classifier.coef_.shape)
 
-pcovc2 = PCovC(mixing=0.5, classifier=classifier, n_components=1)
-pcovc2.fit(X_scaled, Y)
-t2 = pcovc2.transform(X_scaled)
-print(pcovc2.score(X_scaled, Y))
 
-print(np.linalg.norm(t1-t2))
+
+pcovc.fit(X_scaled, Y)
+Yp = pcovc.predict(X_scaled)
 
 # classifier = LinearRegression()
 # classifier.fit(X_scaled, Y)

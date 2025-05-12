@@ -288,12 +288,11 @@ class PCovC(LinearClassifierMixin, _BasePCov):
                 W = np.hstack([est_.coef_.T for est_ in self.z_classifier_.estimators_])
             else:
                 W = self.z_classifier_.coef_.T.reshape(X.shape[1], -1)
-            Z = X @ W
 
         else:
             if W is None:
                 W = np.linalg.lstsq(X, Z, self.tol)[0]  # W = weights for Pxz
-            Z = X @ W
+        Z = X @ W
 
         if self.space_ == "feature":
             self._fit_feature_space(X, y, Z)
