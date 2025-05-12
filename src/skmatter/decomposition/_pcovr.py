@@ -3,12 +3,13 @@ import numpy as np
 from sklearn.utils import check_array
 from sklearn.linear_model import LinearRegression, Ridge, RidgeCV
 from sklearn.utils.validation import check_is_fitted, validate_data
+from sklearn.base import MultiOutputMixin
 
 from skmatter.decomposition import _BasePCov
 from skmatter.utils import check_lr_fit
 
 
-class PCovR(_BasePCov):
+class PCovR(MultiOutputMixin, _BasePCov):
     r"""Principal Covariates Regression, as described in [deJong1992]_
     determines a latent-space projection :math:`\mathbf{T}` which
     minimizes a combined loss in supervised and unsupervised tasks.

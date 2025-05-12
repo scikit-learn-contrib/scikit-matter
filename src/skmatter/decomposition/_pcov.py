@@ -19,7 +19,7 @@ from sklearn.utils.validation import check_is_fitted
 from skmatter.utils import pcovr_covariance, pcovr_kernel
 
 
-class _BasePCov(_BasePCA, LinearModel, MultiOutputMixin):
+class _BasePCov(_BasePCA, LinearModel):
     def __init__(
         self,
         mixing=0.5,
