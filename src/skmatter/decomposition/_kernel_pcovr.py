@@ -1,24 +1,14 @@
-import numbers
-
 import numpy as np
-from scipy import linalg
-from scipy.sparse.linalg import svds
-from sklearn.decomposition._base import _BasePCA
-from sklearn.decomposition._pca import _infer_dimension
+
 from sklearn.exceptions import NotFittedError
 from sklearn.kernel_ridge import KernelRidge
-from sklearn.linear_model._base import LinearModel
-from sklearn.metrics.pairwise import pairwise_kernels
-from sklearn.utils import check_random_state
-from sklearn.utils._arpack import _init_arpack_v0
-from sklearn.utils.extmath import randomized_svd, stable_cumsum, svd_flip
 from sklearn.utils.validation import _check_n_features, check_is_fitted, validate_data
 
-from skmatter.preprocessing import KernelNormalizer
-from skmatter.utils import check_krr_fit, pcovr_kernel
+from skmatter.utils import check_krr_fit
+from skmatter.decomposition import _BaseKPCov
 
 
-class KernelPCovR(_BasePCA, LinearModel):
+class KernelPCovR(_BaseKPCov):
     r"""Kernel Principal Covariates Regression, as described in [Helfrecht2020]_
     determines a latent-space projection :math:`\mathbf{T}` which minimizes a combined
     loss in supervised and unsupervised tasks in the reproducing kernel Hilbert space
@@ -181,57 +171,23 @@ class KernelPCovR(_BasePCA, LinearModel):
         iterated_power="auto",
         random_state=None,
     ):
-        self.mixing = mixing
-        self.n_components = n_components
-
-        self.svd_solver = svd_solver
-        self.tol = tol
-        self.iterated_power = iterated_power
-        self.random_state = random_state
-        self.center = center
-
-        self.kernel = kernel
-        self.gamma = gamma
-        self.degree = degree
-        self.coef0 = coef0
-        self.kernel_params = kernel_params
-
-        self.n_jobs = n_jobs
-
-        self.fit_inverse_transform = fit_inverse_transform
-
-        self.regressor = regressor
-
-    def _get_kernel(self, X, Y=None):
-        if callable(self.kernel):
-            params = self.kernel_params or {}
-        else:
-            params = {"gamma": self.gamma, "degree": self.degree, "coef0": self.coef0}
-        return pairwise_kernels(
-            X, Y, metric=self.kernel, filter_params=True, n_jobs=self.n_jobs, **params
+        super().__init__(
+            mixing=mixing,
+            n_components=n_components,
+            svd_solver=svd_solver,
+            tol=tol,
+            iterated_power=iterated_power,
+            random_state=random_state,
+            center=center,
+            kernel=kernel,
+            gamma=gamma,
+            degree=degree,
+            coef0=coef0,
+            kernel_params=kernel_params,
+            n_jobs=n_jobs,
+            fit_inverse_transform=fit_inverse_transform,
         )
-
-    def _fit(self, K, Yhat, W):
-        """Fit the model with the computed kernel and approximated properties."""
-        K_tilde = pcovr_kernel(mixing=self.mixing, X=K, Y=Yhat, kernel="precomputed")
-
-        if self.fit_svd_solver_ == "full":
-            _, S, Vt = self._decompose_full(K_tilde)
-        elif self.fit_svd_solver_ in ["arpack", "randomized"]:
-            _, S, Vt = self._decompose_truncated(K_tilde)
-        else:
-            raise ValueError(
-                "Unrecognized svd_solver='{0}'" "".format(self.fit_svd_solver_)
-            )
-
-        U = Vt.T
-
-        P = (self.mixing * np.eye(K.shape[0])) + (1.0 - self.mixing) * (W @ Yhat.T)
-        S_inv = np.array([1.0 / s if s > self.tol else 0.0 for s in S])
-
-        self.pkt_ = P @ U @ np.sqrt(np.diagflat(S_inv))
-        T = K @ self.pkt_
-        self.pt__ = np.linalg.lstsq(T, np.eye(T.shape[0]), rcond=self.tol)[0]
+        self.regressor = regressor
 
     def fit(self, X, Y, W=None):
         r"""Fit the model with X and Y.
@@ -263,29 +219,14 @@ class KernelPCovR(_BasePCA, LinearModel):
         self: object
             Returns the instance itself.
         """
+        X, Y = validate_data(self, X, Y, y_numeric=True, multi_output=True)
+
+        K = super()._fit_utils(X)
+
         if self.regressor not in ["precomputed", None] and not isinstance(
             self.regressor, KernelRidge
         ):
             raise ValueError("Regressor must be an instance of `KernelRidge`")
-
-        X, Y = validate_data(self, X, Y, y_numeric=True, multi_output=True)
-        self.X_fit_ = X.copy()
-
-        if self.n_components is None:
-            if self.svd_solver != "arpack":
-                self.n_components_ = X.shape[0]
-            else:
-                self.n_components_ = X.shape[0] - 1
-        else:
-            self.n_components_ = self.n_components
-
-        K = self._get_kernel(X)
-
-        if self.center:
-            self.centerer_ = KernelNormalizer()
-            K = self.centerer_.fit_transform(K)
-
-        self.n_samples_in_, self.n_features_in_ = X.shape
 
         if self.regressor != "precomputed":
             if self.regressor is None:
@@ -354,22 +295,6 @@ class KernelPCovR(_BasePCA, LinearModel):
             Yhat = Y.copy()
             if W is None:
                 W = np.linalg.lstsq(K, Yhat, self.tol)[0]
-        # Handle svd_solver
-        self.fit_svd_solver_ = self.svd_solver
-        if self.fit_svd_solver_ == "auto":
-            # Small problem or self.n_components_ == 'mle', just call full PCA
-            if (
-                max(self.n_samples_in_, self.n_features_in_) <= 500
-                or self.n_components_ == "mle"
-            ):
-                self.fit_svd_solver_ = "full"
-            elif self.n_components_ >= 1 and self.n_components_ < 0.8 * max(
-                self.n_samples_in_, self.n_features_in_
-            ):
-                self.fit_svd_solver_ = "randomized"
-            # This is also the case of self.n_components_ in (0,1)
-            else:
-                self.fit_svd_solver_ = "full"
 
         self._fit(K, Yhat, W)
 
@@ -407,15 +332,7 @@ class KernelPCovR(_BasePCA, LinearModel):
             New data, where n_samples is the number of samples
             and n_features is the number of features.
         """
-        check_is_fitted(self, ["pkt_", "X_fit_"])
-
-        X = validate_data(self, X, reset=False)
-        K = self._get_kernel(X, self.X_fit_)
-
-        if self.center:
-            K = self.centerer_.transform(K)
-
-        return K @ self.pkt_
+        return super().transform(X)
 
     def inverse_transform(self, T):
         r"""Transform input data back to its original space.
@@ -439,7 +356,7 @@ class KernelPCovR(_BasePCA, LinearModel):
         -------
         X_original : numpy.ndarray, shape (n_samples, n_features)
         """
-        return T @ self.ptx_
+        return super().inverse_transform(T)
 
     def score(self, X, y):
         r"""Computes the (negative) loss values for KernelPCovR on the given predictor
@@ -500,118 +417,3 @@ class KernelPCovR(_BasePCA, LinearModel):
         Lkpca = np.trace(K_VV - 2 * K_VN @ w + w.T @ K_VV @ w) / np.trace(K_VV)
 
         return -sum([Lkpca, Lkrr])
-
-    def _decompose_truncated(self, mat):
-        if not 1 <= self.n_components_ <= self.n_samples_in_:
-            raise ValueError(
-                "n_components=%r must be between 1 and "
-                "n_samples=%r with "
-                "svd_solver='%s'"
-                % (
-                    self.n_components_,
-                    self.n_samples_in_,
-                    self.svd_solver,
-                )
-            )
-        elif not isinstance(self.n_components_, numbers.Integral):
-            raise ValueError(
-                "n_components=%r must be of type int "
-                "when greater than or equal to 1, was of type=%r"
-                % (self.n_components_, type(self.n_components_))
-            )
-        elif self.svd_solver == "arpack" and self.n_components_ == self.n_samples_in_:
-            raise ValueError(
-                "n_components=%r must be strictly less than "
-                "n_samples=%r with "
-                "svd_solver='%s'"
-                % (
-                    self.n_components_,
-                    self.n_samples_in_,
-                    self.svd_solver,
-                )
-            )
-
-        random_state = check_random_state(self.random_state)
-
-        if self.fit_svd_solver_ == "arpack":
-            v0 = _init_arpack_v0(min(mat.shape), random_state)
-            U, S, Vt = svds(mat, k=self.n_components_, tol=self.tol, v0=v0)
-            # svds doesn't abide by scipy.linalg.svd/randomized_svd
-            # conventions, so reverse its outputs.
-            S = S[::-1]
-            # flip eigenvectors' sign to enforce deterministic output
-            U, Vt = svd_flip(U[:, ::-1], Vt[::-1])
-
-        # We have already eliminated all other solvers, so this must be "randomized"
-        else:
-            # sign flipping is done inside
-            U, S, Vt = randomized_svd(
-                mat,
-                n_components=self.n_components_,
-                n_iter=self.iterated_power,
-                flip_sign=True,
-                random_state=random_state,
-            )
-
-        U[:, S < self.tol] = 0.0
-        Vt[S < self.tol] = 0.0
-        S[S < self.tol] = 0.0
-
-        return U, S, Vt
-
-    def _decompose_full(self, mat):
-        if self.n_components_ != "mle":
-            if not (0 <= self.n_components_ <= self.n_samples_in_):
-                raise ValueError(
-                    "n_components=%r must be between 1 and "
-                    "n_samples=%r with "
-                    "svd_solver='%s'"
-                    % (
-                        self.n_components_,
-                        self.n_samples_in_,
-                        self.svd_solver,
-                    )
-                )
-            elif self.n_components_ >= 1:
-                if not isinstance(self.n_components_, numbers.Integral):
-                    raise ValueError(
-                        "n_components=%r must be of type int "
-                        "when greater than or equal to 1, "
-                        "was of type=%r"
-                        % (self.n_components_, type(self.n_components_))
-                    )
-
-        U, S, Vt = linalg.svd(mat, full_matrices=False)
-        U[:, S < self.tol] = 0.0
-        Vt[S < self.tol] = 0.0
-        S[S < self.tol] = 0.0
-
-        # flip eigenvectors' sign to enforce deterministic output
-        U, Vt = svd_flip(U, Vt)
-
-        # Get variance explained by singular values
-        explained_variance_ = (S**2) / (self.n_samples_in_ - 1)
-        total_var = explained_variance_.sum()
-        explained_variance_ratio_ = explained_variance_ / total_var
-
-        # Postprocess the number of components required
-        if self.n_components_ == "mle":
-            self.n_components_ = _infer_dimension(
-                explained_variance_, self.n_samples_in_
-            )
-        elif 0 < self.n_components_ < 1.0:
-            # number of components for which the cumulated explained
-            # variance percentage is superior to the desired threshold
-            # side='right' ensures that number of features selected
-            # their variance is always greater than self.n_components_ float
-            # passed. More discussion in issue: #15669
-            ratio_cumsum = stable_cumsum(explained_variance_ratio_)
-            self.n_components_ = (
-                np.searchsorted(ratio_cumsum, self.n_components_, side="right") + 1
-            )
-
-        return (
-            U[:, : self.n_components_],
-            S[: self.n_components_],
-            Vt[: self.n_components_],
-        )

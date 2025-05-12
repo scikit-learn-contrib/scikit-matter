@@ -26,6 +26,7 @@ The module includes:
 """
 
 from ._pcov import _BasePCov
+from ._kpcov import _BaseKPCov
 
 from ._pcovr import PCovR
 from ._kernel_pcovr import KernelPCovR
@@ -44,4 +45,5 @@ __all__ = [
     "PCovC",
     "KernelPCovC",
     "_BasePCov",
+    "_Base_KPCov"
 ]

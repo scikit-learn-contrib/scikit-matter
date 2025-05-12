@@ -1,7 +1,6 @@
 import numpy as np
 from sklearn import clone
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
-from sklearn.metrics import accuracy_score
 from sklearn.linear_model import (
     Perceptron,
     RidgeClassifier,
@@ -14,13 +13,9 @@ from sklearn.linear_model import (
 from sklearn.linear_model._base import LinearClassifierMixin
 
 from sklearn.svm import LinearSVC
-
-from sklearn.calibration import column_or_1d
-from sklearn.naive_bayes import LabelBinarizer
 from sklearn.multioutput import MultiOutputClassifier
 from sklearn.utils import check_array
 from sklearn.utils.validation import check_is_fitted, validate_data
-from sklearn.utils._array_api import get_namespace
 from sklearn.utils.multiclass import check_classification_targets, type_of_target
 
 from skmatter.decomposition import _BasePCov
@@ -322,7 +317,6 @@ class PCovC(LinearClassifierMixin, _BasePCov):
             self.pxz_ = self.pxt_ @ self.ptz_
         else:
             self.ptz_ = self.classifier_.coef_.T
-
             self.pxz_ = self.pxt_ @ self.ptz_
 
         if len(y.shape) == 1 and type_of_target(y) == "binary":
@@ -413,7 +407,7 @@ class PCovC(LinearClassifierMixin, _BasePCov):
             return X @ self.pxz_ + self.classifier_.intercept_
         else:
             T = check_array(T)
-            return T @ self.ptz_ + self.classifier_.intercept
+            return T @ self.ptz_ + self.classifier_.intercept_
 
     def predict(self, X=None, T=None):
         """Predicts the property labels using classification on T."""

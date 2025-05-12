@@ -213,7 +213,6 @@ class KernelPCovCInfrastructureTest(KernelPCovCBaseTest):
         # But, in KPCovC, our classifiers don't compute the kernel for us, hence we need
         # to basically only allow prefit classifiers on K, y
 
-        # center = false for level comparison with kernel computed externally (don't need to write extra code, lines 141-143 of KPCovC)
         kernel_params = {"kernel": "rbf", "gamma": 0.1, "degree": 3, "coef0": 0}
 
         K = pairwise_kernels(self.X, metric="rbf", filter_params=True, **kernel_params)
@@ -279,14 +278,17 @@ class KernelPCovCInfrastructureTest(KernelPCovCBaseTest):
         self.assertTrue(kpcovc.classifier_ is not None)
 
     def test_incompatible_coef_shape(self):
-        classifier1 = LogisticRegression()
+        kernel_params = {"kernel": "rbf", "gamma": 0.1, "degree": 3, "coef0": 0}
+
+        K = pairwise_kernels(self.X, metric="rbf", filter_params=True, **kernel_params)
 
         # Modify Y to be multiclass
         Y_multiclass = self.Y.copy()
-        Y_multiclass[0] = 2
+        Y_multiclass[0] = 2 
 
-        classifier1.fit(self.X, Y_multiclass)
-        kpcovc1 = self.model(mixing=0.5, classifier=classifier1, kernel="rbf")
+        classifier1 = LogisticRegression()
+        classifier1.fit(K, Y_multiclass)
+        kpcovc1 = self.model(mixing=0.5, classifier=classifier1, **kernel_params)
 
         # Binary classification shape mismatch
         with self.assertRaises(ValueError) as cm:
@@ -299,8 +301,8 @@ class KernelPCovCInfrastructureTest(KernelPCovCBaseTest):
         )
 
         classifier2 = LogisticRegression()
-        classifier2.fit(self.X, self.Y)
-        kpcovc2 = self.model(mixing=0.5, classifier=classifier2, kernel="rbf")
+        classifier2.fit(K, self.Y)
+        kpcovc2 = self.model(mixing=0.5, classifier=classifier2)
 
         # Multiclass classification shape mismatch
         with self.assertRaises(ValueError) as cm:
