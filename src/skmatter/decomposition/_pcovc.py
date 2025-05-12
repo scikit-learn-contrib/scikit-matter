@@ -409,10 +409,11 @@ class PCovC(LinearClassifierMixin, _BasePCov):
 
         if X is not None:
             X = validate_data(self, X, reset=False)
-            return X @ self.pxz_
+            # Or self.classifier_.decision_function(X @ self.pxt_)
+            return X @ self.pxz_ + self.classifier_.intercept_
         else:
             T = check_array(T)
-            return T @ self.ptz_
+            return T @ self.ptz_ + self.classifier_.intercept
 
     def predict(self, X=None, T=None):
         """Predicts the property labels using classification on T."""

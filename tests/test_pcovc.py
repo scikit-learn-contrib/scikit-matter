@@ -20,7 +20,7 @@ class PCovCBaseTest(unittest.TestCase):
         super().__init__(*args, **kwargs)
 
         self.model = (
-            lambda mixing=0.5, classifier=RidgeClassifier(), **kwargs: PCovC(
+            lambda mixing=0.5, classifier=LogisticRegression(), **kwargs: PCovC(
                 mixing=mixing, classifier=classifier, **kwargs
             )
         )
