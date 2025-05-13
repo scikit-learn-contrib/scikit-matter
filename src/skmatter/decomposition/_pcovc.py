@@ -9,9 +9,7 @@ from sklearn.linear_model import (
     LogisticRegressionCV,
     SGDClassifier,
 )
-
 from sklearn.linear_model._base import LinearClassifierMixin
-
 from sklearn.svm import LinearSVC
 from sklearn.multioutput import MultiOutputClassifier
 from sklearn.utils import check_array
@@ -211,8 +209,8 @@ class PCovC(LinearClassifierMixin, _BasePCov):
         )
         self.classifier = classifier
 
-    def fit(self, X, y, W=None):
-        r"""Fit the model with X and y. Depending on the dimensions of X, calls either
+    def fit(self, X, Y, W=None):
+        r"""Fit the model with X and Y. Depending on the dimensions of X, calls either
         `_fit_feature_space` or `_fit_sample_space`
 
         Parameters
@@ -226,7 +224,7 @@ class PCovC(LinearClassifierMixin, _BasePCov):
             to have unit variance, otherwise :math:`\mathbf{X}` should be
             scaled so that each feature has a variance of 1 / n_features.
 
-        y : numpy.ndarray, shape (n_samples, n_properties)
+        Y : numpy.ndarray, shape (n_samples, n_properties)
             Training data, where n_samples is the number of samples and n_properties is
             the number of properties
 
@@ -240,11 +238,11 @@ class PCovC(LinearClassifierMixin, _BasePCov):
 
         W : numpy.ndarray, shape (n_features, n_properties)
             Classification weights, optional when classifier=`precomputed`. If not
-            passed, it is assumed that `W = np.linalg.lstsq(X, Z, self.tol)[0]`
+            passed, it is assumed that `W = np.linalg.lstsq(X, Y, self.tol)[0]`
         """
-        X, y = validate_data(self, X, y, y_numeric=False, multi_output=True)
-        check_classification_targets(y)
-        self.classes_ = np.unique(y)
+        X, Y = validate_data(self, X, Y, y_numeric=False, multi_output=True)
+        check_classification_targets(Y)
+        self.classes_ = np.unique(Y)
 
         super()._fit_utils(X)
 
@@ -275,24 +273,23 @@ class PCovC(LinearClassifierMixin, _BasePCov):
             else:
                 classifier = self.classifier
 
-            self.z_classifier_ = check_cl_fit(
-                classifier, X, y
-            )  # its linear classifier on x and y to get Pxz
+            self.z_classifier_ = check_cl_fit(classifier, X, Y)
 
             if isinstance(self.z_classifier_, MultiOutputClassifier):
                 W = np.hstack([est_.coef_.T for est_ in self.z_classifier_.estimators_])
             else:
                 W = self.z_classifier_.coef_.T.reshape(X.shape[1], -1)
-
         else:
             if W is None:
-                W = np.linalg.lstsq(X, Z, self.tol)[0]  # W = weights for Pxz
+                # this, or W = np.linalg.lstsq(X, Z, self.tol)[0]?
+                W = np.linalg.lstsq(X, Y, self.tol)[0]
+
         Z = X @ W
 
         if self.space_ == "feature":
-            self._fit_feature_space(X, y, Z)
+            self._fit_feature_space(X, Y, Z)
         else:
-            self._fit_sample_space(X, y, Z, W)
+            self._fit_sample_space(X, Y, Z, W)
 
         # instead of using linear regression solution, refit with the classifier
         # and steal weights to get ptz
@@ -302,10 +299,10 @@ class PCovC(LinearClassifierMixin, _BasePCov):
         # we don't want to copy ALl parameters of classifier, such as n_features_in, since we are re-fitting it on T, y
 
         if self.classifier != "precomputed":
-            self.classifier_ = clone(classifier).fit(X @ self.pxt_, y)
+            self.classifier_ = clone(classifier).fit(X @ self.pxt_, Y)
         else:
             # if precomputed, use default classifier to predict y from T
-            self.classifier_ = LogisticRegression().fit(X @ self.pxt_, y)
+            self.classifier_ = LogisticRegression().fit(X @ self.pxt_, Y)
 
         # self.classifier_ = LogisticRegression().fit(X @ self.pxt_, y)
         # check_cl_fit(classifier., X @ self.pxt_, y=y) #Has Ptz as weights
@@ -319,7 +316,7 @@ class PCovC(LinearClassifierMixin, _BasePCov):
             self.ptz_ = self.classifier_.coef_.T
             self.pxz_ = self.pxt_ @ self.ptz_
 
-        if len(y.shape) == 1 and type_of_target(y) == "binary":
+        if len(Y.shape) == 1 and type_of_target(Y) == "binary":
             self.pxz_ = self.pxz_.reshape(
                 X.shape[1],
             )

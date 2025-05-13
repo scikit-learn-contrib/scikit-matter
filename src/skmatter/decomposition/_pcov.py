@@ -3,6 +3,7 @@ import warnings
 
 import numpy as np
 from numpy.linalg import LinAlgError
+
 from scipy.linalg import sqrtm as MatrixSqrt
 from scipy import linalg
 from scipy.linalg import sqrtm as MatrixSqrt
@@ -158,6 +159,23 @@ class _BasePCov(_BasePCA, LinearModel):
             self.pty_ = T.T @ Y
 
     # exactly same in PCovR/PCovC
+    def inverse_transform(self, T):
+        if np.max(np.abs(self.mean_)) > self.tol:
+            warnings.warn(
+                "This class does not automatically un-center data, and your data mean "
+                "is greater than the supplied tolerance, so the inverse transformation "
+                "will be off by the original data mean.",
+                stacklevel=1,
+            )
+
+        return T @ self.ptx_
+
+    # exactly the same in PCovR/PCovC
+    def transform(self, X=None):
+        check_is_fitted(self, ["pxt_", "mean_"])
+        return super().transform(X)
+
+    # exactly same in PCovR/PCovC
     def _decompose_truncated(self, mat):
         if not 1 <= self.n_components_ <= min(self.n_samples_in_, self.n_features_in_):
             raise ValueError(
@@ -272,20 +290,3 @@ class _BasePCov(_BasePCA, LinearModel):
             S[: self.n_components_],
             Vt[: self.n_components_],
         )
-
-    # exactly same in PCovR/PCovC
-    def inverse_transform(self, T):
-        if np.max(np.abs(self.mean_)) > self.tol:
-            warnings.warn(
-                "This class does not automatically un-center data, and your data mean "
-                "is greater than the supplied tolerance, so the inverse transformation "
-                "will be off by the original data mean.",
-                stacklevel=1,
-            )
-
-        return T @ self.ptx_
-
-    # exactly the same in PCovR/PCovC
-    def transform(self, X=None):
-        check_is_fitted(self, ["pxt_", "mean_"])
-        return super().transform(X)

@@ -1,5 +1,6 @@
 import numbers
 import numpy as np
+
 from scipy import linalg
 from scipy.sparse.linalg import svds
 import scipy.sparse as sp
@@ -137,10 +138,6 @@ class _BaseKPCov(_BasePCA, LinearModel):
         self.pt__ = np.linalg.lstsq(T, np.eye(T.shape[0]), rcond=self.tol)[0]
 
     # exactly same in KPCovR/KPCovC
-    def inverse_transform(self, T):
-        return T @ self.ptx_
-
-    # exactly same in KPCovR/KPCovC
     def transform(self, X=None):
         check_is_fitted(self, ["pkt_", "X_fit_"])
 
@@ -151,6 +148,10 @@ class _BaseKPCov(_BasePCA, LinearModel):
             K = self.centerer_.transform(K)
 
         return K @ self.pkt_
+
+    # exactly same in KPCovR/KPCovC
+    def inverse_transform(self, T):
+        return T @ self.ptx_
 
     # exactly same in KPCovR/KPCovC (slightly different from _BasePCov's implementation)
     def _decompose_truncated(self, mat):
