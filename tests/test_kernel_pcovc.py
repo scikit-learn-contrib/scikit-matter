@@ -284,7 +284,7 @@ class KernelPCovCInfrastructureTest(KernelPCovCBaseTest):
 
         # Modify Y to be multiclass
         Y_multiclass = self.Y.copy()
-        Y_multiclass[0] = 2 
+        Y_multiclass[0] = 2
 
         classifier1 = LogisticRegression()
         classifier1.fit(K, Y_multiclass)

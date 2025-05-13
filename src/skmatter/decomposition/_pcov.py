@@ -6,7 +6,6 @@ from numpy.linalg import LinAlgError
 
 from scipy.linalg import sqrtm as MatrixSqrt
 from scipy import linalg
-from scipy.linalg import sqrtm as MatrixSqrt
 from scipy.sparse.linalg import svds
 
 from sklearn.decomposition._base import _BasePCA
@@ -41,8 +40,8 @@ class _BasePCov(_BasePCA, LinearModel):
         self.random_state = random_state
         self.whiten = whiten
 
-    # this contains the common functionality for PCovR and PCovC fit methods,
-    # but leaves the rest of the fit functionality to the subclass
+    # this contains the common functionality for the PCovR and PCovC fit methods,
+    # but leaves the rest of the functionality to the subclass
     def _fit_utils(self, X):
         # saved for inverse transformations from the latent space,
         # should be zero in the case that the features have been properly centered
@@ -158,7 +157,6 @@ class _BasePCov(_BasePCA, LinearModel):
         if compute_pty_:
             self.pty_ = T.T @ Y
 
-    # exactly same in PCovR/PCovC
     def inverse_transform(self, T):
         if np.max(np.abs(self.mean_)) > self.tol:
             warnings.warn(
@@ -170,12 +168,10 @@ class _BasePCov(_BasePCA, LinearModel):
 
         return T @ self.ptx_
 
-    # exactly the same in PCovR/PCovC
     def transform(self, X=None):
         check_is_fitted(self, ["pxt_", "mean_"])
         return super().transform(X)
 
-    # exactly same in PCovR/PCovC
     def _decompose_truncated(self, mat):
         if not 1 <= self.n_components_ <= min(self.n_samples_in_, self.n_features_in_):
             raise ValueError(
@@ -232,7 +228,6 @@ class _BasePCov(_BasePCA, LinearModel):
 
         return U, S, Vt
 
-    # exactly same in PCovR/PCovC
     def _decompose_full(self, mat):
         if self.n_components_ == "mle":
             if self.n_samples_in_ < self.n_features_in_:

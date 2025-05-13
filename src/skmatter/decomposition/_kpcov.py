@@ -12,7 +12,7 @@ from sklearn.utils import check_random_state
 from sklearn.utils._arpack import _init_arpack_v0
 from sklearn.utils.extmath import randomized_svd, stable_cumsum, svd_flip
 from sklearn.utils.validation import check_is_fitted
-from sklearn.utils.validation import check_is_fitted, validate_data
+from sklearn.utils.validation import validate_data
 from sklearn.metrics.pairwise import pairwise_kernels
 
 from skmatter.utils import pcovr_kernel

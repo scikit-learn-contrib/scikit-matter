@@ -104,12 +104,12 @@ class PCovR(RegressorMixin, MultiOutputMixin, _BasePCov):
         is used as the regressor.
 
     iterated_power : int or 'auto', default='auto'
-         Number of iterations for the power method computed by svd_solver ==
-         'randomized'. Must be of range [0, infinity).
+        Number of iterations for the power method computed by svd_solver ==
+        'randomized'. Must be of range [0, infinity).
 
     random_state : int, :class:`numpy.random.RandomState` instance or None, default=None
-         Used when the 'arpack' or 'randomized' solvers are used. Pass an int for
-         reproducible results across multiple function calls.
+        Used when the 'arpack' or 'randomized' solvers are used. Pass an int for
+        reproducible results across multiple function calls.
 
     whiten : boolean, deprecated
 
@@ -135,13 +135,13 @@ class PCovR(RegressorMixin, MultiOutputMixin, _BasePCov):
         the projector, or weights, from the input space :math:`\mathbf{X}` to the
         latent-space projection :math:`\mathbf{T}`
 
-    pty_ : numpy.ndarray of size :math:`({n_{components}, n_{properties}})`
-        the projector, or weights, from the latent-space projection :math:`\mathbf{T}`
-        to the properties :math:`\mathbf{Y}`
-
     pxy_ : numpy.ndarray of size :math:`({n_{samples}, n_{properties}})`
         the projector, or weights, from the input space :math:`\mathbf{X}` to the
         properties :math:`\mathbf{Y}`
+
+    pty_ : numpy.ndarray of size :math:`({n_{components}, n_{properties}})`
+        the projector, or weights, from the latent-space projection :math:`\mathbf{T}`
+        to the properties :math:`\mathbf{Y}`
 
     explained_variance_ : numpy.ndarray of shape (n_components,)
         The amount of variance explained by each of the selected components.
@@ -170,7 +170,7 @@ class PCovR(RegressorMixin, MultiOutputMixin, _BasePCov):
            [-1.02805338,  1.06736871],
            [ 0.98166504, -4.98307078],
            [-2.9963189 ,  1.98238856]])
-    """
+    """  # NoQa: E501
 
     def __init__(
         self,

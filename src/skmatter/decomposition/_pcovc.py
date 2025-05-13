@@ -32,8 +32,8 @@ class PCovC(LinearClassifierMixin, _BasePCov):
             (1 - \alpha) \mathbf{Z}\mathbf{Z}^T
 
     where :math:`\alpha` is a mixing parameter, :math:`\mathbf{X}` is an input matrix of shape
-    :math:`(n_{samples}, n_{features})`, and :math:`\mathbf{Z}` is an evidence tensor of shape
-    :math:`(n_{samples}, n_{classes}, n_{labels})`. For :math:`(n_{samples} < n_{features})`,
+    :math:`(n_{samples}, n_{features})`, and :math:`\mathbf{Z}` is a matrix of class confidence scores
+    of shape :math:`(n_{samples}, n_{classes})`. For :math:`(n_{samples} < n_{features})`,
     this can be more efficiently computed using the eigendecomposition of a modified covariance matrix
     :math:`\mathbf{\tilde{C}}`
 
@@ -95,36 +95,36 @@ class PCovC(LinearClassifierMixin, _BasePCov):
         Must be of range [0.0, infinity).
 
     space: {'feature', 'sample', 'auto'}, default='auto'
-            whether to compute the PCovC in `sample` or `feature` space
-            default=`sample` when :math:`{n_{samples} < n_{features}}` and
-            `feature` when :math:`{n_{features} < n_{samples}}`
+        whether to compute the PCovC in `sample` or `feature` space
+        default=`sample` when :math:`{n_{samples} < n_{features}}` and
+        `feature` when :math:`{n_{features} < n_{samples}}`
 
     classifier: {`RidgeClassifier`, `RidgeClassifierCV`, `LogisticRegression`,
-            `LogisticRegressionCV`, `SGDClassifier`, `LinearSVC`, `precomputed`}, default=None
-            classifier for computing :math:`{\mathbf{Z}}`. The classifier should be one
-            `sklearn.linear_model.RidgeClassifier`, `sklearn.linear_model.RidgeClassifierCV`,
-            `sklearn.linear_model.LogisticRegression`, `sklearn.linear_model.LogisticRegressionCV`,
-            `sklearn.linear_model.SGDClassifier`, or `sklearn.svm.LinearSVC`. If a pre-fitted classifier
-            is provided, it is used to compute :math:`{\mathbf{Y}}`.
-            Note that any pre-fitting of the classifier will be lost if `PCovC` is
-            within a composite estimator that enforces cloning, e.g.,
-            `sklearn.compose.TransformedTargetclassifier` or
-            `sklearn.pipeline.Pipeline` with model caching.
-            In such cases, the classifier will be re-fitted on the same
-            training data as the composite estimator.
-            If `precomputed`, we assume that the `y` passed to the `fit` function
-            is the classified form of the targets :math:`{\mathbf{\hat{Y}}}`.
-            If None, ``sklearn.linear_model.LogisticRegression()``
-            is used as the classifier.
+        `LogisticRegressionCV`, `SGDClassifier`, `LinearSVC`, `precomputed`}, default=None
+        classifier for computing :math:`{\mathbf{Z}}`. The classifier should be one
+        `sklearn.linear_model.RidgeClassifier`, `sklearn.linear_model.RidgeClassifierCV`,
+        `sklearn.linear_model.LogisticRegression`, `sklearn.linear_model.LogisticRegressionCV`,
+        `sklearn.linear_model.SGDClassifier`, or `sklearn.svm.LinearSVC`. If a pre-fitted classifier
+        is provided, it is used to compute :math:`{\mathbf{Z}}`.
+        Note that any pre-fitting of the classifier will be lost if `PCovC` is
+        within a composite estimator that enforces cloning, e.g.,
+        `sklearn.compose.TransformedTargetclassifier` or
+        `sklearn.pipeline.Pipeline` with model caching.
+        In such cases, the classifier will be re-fitted on the same
+        training data as the composite estimator.
+        If `precomputed`, we assume that the `y` passed to the `fit` function
+        is the classified form of the targets :math:`{\mathbf{\hat{Y}}}`.
+        If None, ``sklearn.linear_model.LogisticRegression()``
+        is used as the classifier.
 
     iterated_power : int or 'auto', default='auto'
-         Number of iterations for the power method computed by
-         svd_solver == 'randomized'.
-         Must be of range [0, infinity).
+        Number of iterations for the power method computed by
+        svd_solver == 'randomized'.
+        Must be of range [0, infinity).
 
     random_state : int, RandomState instance or None, default=None
-         Used when the 'arpack' or 'randomized' solvers are used. Pass an int
-         for reproducible results across multiple function calls.
+        Used when the 'arpack' or 'randomized' solvers are used. Pass an int
+        for reproducible results across multiple function calls.
 
     whiten : boolean, deprecated
 
@@ -138,9 +138,9 @@ class PCovC(LinearClassifierMixin, _BasePCov):
         Must be of range [0.0, infinity).
 
     space: {'feature', 'sample', 'auto'}, default='auto'
-            whether to compute the PCovC in `sample` or `feature` space
-            default=`sample` when :math:`{n_{samples} < n_{features}}` and
-            `feature` when :math:`{n_{features} < n_{samples}}`
+        whether to compute the PCovC in `sample` or `feature` space
+        default=`sample` when :math:`{n_{samples} < n_{features}}` and
+        `feature` when :math:`{n_{features} < n_{samples}}`
 
     n_components_ : int
         The estimated number of components, which equals the parameter
@@ -148,16 +148,16 @@ class PCovC(LinearClassifierMixin, _BasePCov):
         if n_components is None.
 
     pxt_ : ndarray of size :math:`({n_{features}, n_{components}})`
-           the projector, or weights, from the input space :math:`\mathbf{X}`
-           to the latent-space projection :math:`\mathbf{T}`
-
-    ptz_ : ndarray of size :math:`({n_{components}, n_{classes}})`
-          the projector, or weights, from the latent-space projection
-          :math:`\mathbf{T}` to the class likelihoods :math:`\mathbf{Z}`
+        the projector, or weights, from the input space :math:`\mathbf{X}`
+        to the latent-space projection :math:`\mathbf{T}`
 
     pxz_ : ndarray of size :math:`({n_{features}, n_{classes}})`
-           the projector, or weights, from the input space :math:`\mathbf{X}`
-           to the class likelihoods :math:`\mathbf{Z}`
+        the projector, or weights, from the input space :math:`\mathbf{X}`
+        to the class confidence scores :math:`\mathbf{Z}`
+
+    ptz_ : ndarray of size :math:`({n_{components}, n_{classes}})`
+        the projector, or weights, from the latent-space projection
+        :math:`\mathbf{T}` to the class confidence scores :math:`\mathbf{Z}`
 
     explained_variance_ : ndarray of shape (n_components,)
         The amount of variance explained by each of the selected components.
@@ -172,17 +172,18 @@ class PCovC(LinearClassifierMixin, _BasePCov):
     >>> import numpy as np
     >>> from skmatter.decomposition import PCovC
     >>> X = np.array([[-1, 0, -2, 3], [3, -2, 0, 1], [-3, 0, -1, -1], [1, 3, 0, -2]])
-    >>> Y = np.array([[0], [1], [2], [0]])
+    >>> X = StandardScaler().fit_transform(X)
+    >>> Y = np.array([0, 1, 2, 0])
     >>> pcovc = PCovC(mixing=0.1, n_components=2)
     >>> pcovc.fit(X, Y)
     PCovC(mixing=0.1, n_components=2)
     >>> pcovc.transform(X)
-    array([[-0.32189393  0.81738389]
-           [ 3.13455213 -0.40636372]
-           [-2.2883084  -1.51562597]
-           [-0.5243498   1.1046058 ]])
+    array([[-0.4794854  -0.46228114]
+           [ 1.9416966   0.2532831 ]
+           [-1.08744947  0.89117784]
+           [-0.37476173 -0.6821798 ]])
     >>> pcovc.predict(X)
-    array([[0], [1], [2], [0]])
+    array([0 1 2 0])
     """  # NoQa: E501
 
     def __init__(
@@ -280,15 +281,13 @@ class PCovC(LinearClassifierMixin, _BasePCov):
             else:
                 W = self.z_classifier_.coef_.T.reshape(X.shape[1], -1)
 
-            # original: self.classifier_ = check_cl_fit(classifier, X @ self.pxt_, y=y)
-            # we don't want to copy ALl parameters of classifier, such as n_features_in, since we are re-fitting it on T, y
+            # we don't want to copy all parameters of classifier, such as n_features_in, since we are re-fitting it on T and Y
             self.classifier_ = clone(classifier)
         else:
             if W is None:
-                # this, or W = np.linalg.lstsq(X, Z, self.tol)[0]?
                 W = np.linalg.lstsq(X, Y, self.tol)[0]
 
-            # if precomputed, use default classifier to predict y from T
+            # if precomputed, use default classifier to predict Y from T
             self.classifier_ = LogisticRegression()
 
         Z = X @ W
@@ -299,11 +298,8 @@ class PCovC(LinearClassifierMixin, _BasePCov):
             self._fit_sample_space(X, Y, Z, W)
 
         # instead of using linear regression solution, refit with the classifier
-        # and steal weights to get ptz
+        # and steal weights to get pxz and ptz
         self.classifier_.fit(X @ self.pxt_, Y)
-
-        # self.classifier_ = LogisticRegression().fit(X @ self.pxt_, y)
-        # check_cl_fit(classifier., X @ self.pxt_, y=y) #Has Ptz as weights
 
         if isinstance(self.classifier_, MultiOutputClassifier):
             self.ptz_ = np.hstack(
