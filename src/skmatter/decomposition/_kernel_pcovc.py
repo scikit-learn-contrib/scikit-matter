@@ -275,10 +275,14 @@ class KernelPCovC(LinearClassifierMixin, _BaseKPCov):
                 W = np.hstack([est_.coef_.T for est_ in self.z_classifier_.estimators_])
             else:
                 W = self.z_classifier_.coef_.T.reshape(K.shape[1], -1)
+
+            self.classifier_ = clone(classifier)
         else:
             # this, or W = np.linalg.lstsq(K, Z, self.tol)[0]?
             if W is None:
                 W = np.linalg.lstsq(K, Y, self.tol)[0]
+
+            self.classifier_ = LogisticRegression()
 
         Z = K @ W
 
@@ -290,10 +294,8 @@ class KernelPCovC(LinearClassifierMixin, _BaseKPCov):
             self.ptx_ = self.pt__ @ X
 
         # self.classifier_ = check_cl_fit(classifier, K @ self.pkt_, y) # Extract weights to get Ptz
-        if self.classifier != "precomputed":
-            self.classifier_ = clone(classifier).fit(K @ self.pkt_, Y)
-        else:
-            self.classifier_ = LogisticRegression().fit(K @ self.pkt_, Y)
+        self.classifier_.fit(K @ self.pkt_, Y)
+
         # self.classifier_._validate_data(K @ self.pkt_, y, reset=False)
 
         if isinstance(self.classifier_, MultiOutputClassifier):

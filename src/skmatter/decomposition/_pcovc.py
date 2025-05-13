@@ -183,7 +183,7 @@ class PCovC(LinearClassifierMixin, _BasePCov):
            [-0.5243498   1.1046058 ]])
     >>> pcovc.predict(X)
     array([[0], [1], [2], [0]])
-    """
+    """  # NoQa: E501
 
     def __init__(
         self,
@@ -279,10 +279,17 @@ class PCovC(LinearClassifierMixin, _BasePCov):
                 W = np.hstack([est_.coef_.T for est_ in self.z_classifier_.estimators_])
             else:
                 W = self.z_classifier_.coef_.T.reshape(X.shape[1], -1)
+
+            # original: self.classifier_ = check_cl_fit(classifier, X @ self.pxt_, y=y)
+            # we don't want to copy ALl parameters of classifier, such as n_features_in, since we are re-fitting it on T, y
+            self.classifier_ = clone(classifier)
         else:
             if W is None:
                 # this, or W = np.linalg.lstsq(X, Z, self.tol)[0]?
                 W = np.linalg.lstsq(X, Y, self.tol)[0]
+
+            # if precomputed, use default classifier to predict y from T
+            self.classifier_ = LogisticRegression()
 
         Z = X @ W
 
@@ -293,16 +300,7 @@ class PCovC(LinearClassifierMixin, _BasePCov):
 
         # instead of using linear regression solution, refit with the classifier
         # and steal weights to get ptz
-        # what to do when classifier = precomputed?
-
-        # original: self.classifier_ = check_cl_fit(classifier, X @ self.pxt_, y=y)
-        # we don't want to copy ALl parameters of classifier, such as n_features_in, since we are re-fitting it on T, y
-
-        if self.classifier != "precomputed":
-            self.classifier_ = clone(classifier).fit(X @ self.pxt_, Y)
-        else:
-            # if precomputed, use default classifier to predict y from T
-            self.classifier_ = LogisticRegression().fit(X @ self.pxt_, Y)
+        self.classifier_.fit(X @ self.pxt_, Y)
 
         # self.classifier_ = LogisticRegression().fit(X @ self.pxt_, y)
         # check_cl_fit(classifier., X @ self.pxt_, y=y) #Has Ptz as weights
