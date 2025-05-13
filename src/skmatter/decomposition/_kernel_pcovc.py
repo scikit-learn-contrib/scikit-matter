@@ -17,7 +17,7 @@ from sklearn.utils.validation import check_is_fitted, validate_data
 from sklearn.linear_model._base import LinearClassifierMixin
 from sklearn.utils.multiclass import check_classification_targets, type_of_target
 
-from skmatter.utils import check_kcl_fit
+from skmatter.utils import check_cl_fit
 from skmatter.decomposition import _BaseKPCov
 
 
@@ -94,7 +94,7 @@ class KernelPCovC(LinearClassifierMixin, _BaseKPCov):
 
             # Check if classifier is fitted; if not, fit with precomputed K
             # to avoid needing to compute the kernel a second time
-            self.z_classifier_ = check_kcl_fit(classifier, K, X, y)
+            self.z_classifier_ = check_cl_fit(classifier, K, y)
 
             if isinstance(self.z_classifier_, MultiOutputClassifier):
                 W = np.hstack([est_.coef_.T for est_ in self.z_classifier_.estimators_])

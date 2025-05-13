@@ -297,7 +297,7 @@ class KernelPCovCInfrastructureTest(KernelPCovCBaseTest):
             str(cm.exception),
             "For binary classification, expected classifier coefficients "
             "to have shape (1, %d) but got shape %r"
-            % (self.X.shape[1], classifier1.coef_.shape),
+            % (K.shape[1], classifier1.coef_.shape),
         )
 
         classifier2 = LogisticRegression()
@@ -311,7 +311,7 @@ class KernelPCovCInfrastructureTest(KernelPCovCBaseTest):
             str(cm.exception),
             "For multiclass classification, expected classifier coefficients "
             "to have shape (%d, %d) but got shape %r"
-            % (len(np.unique(Y_multiclass)), self.X.shape[1], classifier2.coef_.shape),
+            % (len(np.unique(Y_multiclass)), K.shape[1], classifier2.coef_.shape),
         )
 
     def test_precomputed_classification(self):
