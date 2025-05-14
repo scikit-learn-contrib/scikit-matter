@@ -25,21 +25,19 @@ The module includes:
   original PCovR method, proposed in [Helfrecht2020]_.
 """
 
-from ._pcov import _BasePCov
+from ._pcov import _BasePCov, pcovr_covariance, pcovr_kernel
 
 from ._pcovr import PCovR
 from ._kernel_pcovr import KernelPCovR
 
 from ._pcovc import PCovC
 
-from ._pcov import pcovr_covariance, pcovr_kernel
-
 
 __all__ = [
+    "_BasePCov",
     "pcovr_covariance",
     "pcovr_kernel",
     "PCovR",
     "KernelPCovR",
     "PCovC",
-    "_BasePCov",
 ]

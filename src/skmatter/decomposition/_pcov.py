@@ -38,9 +38,10 @@ class _BasePCov(_BasePCA, LinearModel):
         self.random_state = random_state
         self.whiten = whiten
 
-    # this contains the common functionality for the PCovR and PCovC fit methods,
-    # but leaves the rest of the functionality to the subclass
     def _fit_utils(self, X):
+        """Contains the common functionality for the PCovR and PCovC fit methods,
+        but leaves the rest of the functionality to the subclass.
+        """
         # saved for inverse transformations from the latent space,
         # should be zero in the case that the features have been properly centered
         self.mean_ = np.mean(X, axis=0)
@@ -152,6 +153,7 @@ class _BasePCov(_BasePCA, LinearModel):
 
         self.pxt_ = P @ T
         self.ptx_ = T.T @ X
+
         if compute_pty_:
             self.pty_ = T.T @ Y
 
@@ -168,6 +170,7 @@ class _BasePCov(_BasePCA, LinearModel):
 
     def transform(self, X=None):
         check_is_fitted(self, ["pxt_", "mean_"])
+
         return super().transform(X)
 
     def _decompose_truncated(self, mat):

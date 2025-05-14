@@ -291,7 +291,6 @@ class PCovC(LinearClassifierMixin, _BasePCov):
 
         # instead of using linear regression solution, refit with the
         # classifier and steal weights to get pxz and ptz
-
         self.classifier_ = clone(classifier).fit(X @ self.pxt_, Y)
 
         self.ptz_ = self.classifier_.coef_.T

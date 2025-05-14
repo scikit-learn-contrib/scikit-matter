@@ -40,11 +40,13 @@ class KernelPCovR(_BasePCA, LinearModel):
     ----------
     mixing : float, default=0.5
         mixing parameter, as described in PCovR as :math:`{\alpha}`
+
     n_components : int, float or str, default=None
         Number of components to keep.
         if n_components is not set all components are kept::
 
             n_components == n_samples
+
     svd_solver : {'auto', 'full', 'arpack', 'randomized'}, default='auto'
         If auto :
             The solver is selected by a default policy based on `X.shape` and
@@ -62,6 +64,7 @@ class KernelPCovR(_BasePCA, LinearModel):
             0 < n_components < min(X.shape)
         If randomized :
             run randomized SVD by the method of Halko et al.
+
     regressor : {instance of `sklearn.kernel_ridge.KernelRidge`, `precomputed`, None}, default=None
         The regressor to use for computing
         the property predictions :math:`\hat{\mathbf{Y}}`.
@@ -72,36 +75,47 @@ class KernelPCovR(_BasePCA, LinearModel):
 
         If `precomputed`, we assume that the `y` passed to the `fit` function
         is the regressed form of the targets :math:`{\mathbf{\hat{Y}}}`.
+
     kernel : "linear" | "poly" | "rbf" | "sigmoid" | "cosine" | "precomputed"
         Kernel. Default="linear".
+
     gamma : float, default=None
         Kernel coefficient for rbf, poly and sigmoid kernels. Ignored by other
         kernels.
+
     degree : int, default=3
         Degree for poly kernels. Ignored by other kernels.
+
     coef0 : float, default=1
         Independent term in poly and sigmoid kernels.
         Ignored by other kernels.
+
     kernel_params : mapping of str to any, default=None
         Parameters (keyword arguments) and values for kernel passed as
         callable object. Ignored by other kernels.
+
     center : bool, default=False
             Whether to center any computed kernels
+
     fit_inverse_transform : bool, default=False
         Learn the inverse transform for non-precomputed kernels.
         (i.e. learn to find the pre-image of a point)
+
     tol : float, default=1e-12
         Tolerance for singular values computed by svd_solver == 'arpack'
         and for matrix inversions.
         Must be of range [0.0, infinity).
+
     n_jobs : int, default=None
         The number of parallel jobs to run.
         :obj:`None` means 1 unless in a :obj:`joblib.parallel_backend` context.
         ``-1`` means using all processors.
+
     iterated_power : int or 'auto', default='auto'
         Number of iterations for the power method computed by
         svd_solver == 'randomized'.
         Must be of range [0, infinity).
+
     random_state : int, :class:`numpy.random.RandomState` instance or None, default=None
         Used when the 'arpack' or 'randomized' solvers are used. Pass an int
         for reproducible results across multiple function calls.
@@ -111,18 +125,23 @@ class KernelPCovR(_BasePCA, LinearModel):
     pt__: numpy.darray of size :math:`({n_{components}, n_{components}})`
            pseudo-inverse of the latent-space projection, which
            can be used to contruct projectors from latent-space
+
     pkt_: numpy.ndarray of size :math:`({n_{samples}, n_{components}})`
            the projector, or weights, from the input kernel :math:`\mathbf{K}`
            to the latent-space projection :math:`\mathbf{T}`
+
     pky_: numpy.ndarray of size :math:`({n_{samples}, n_{properties}})`
            the projector, or weights, from the input kernel :math:`\mathbf{K}`
            to the properties :math:`\mathbf{Y}`
+
     pty_: numpy.ndarray of size :math:`({n_{components}, n_{properties}})`
           the projector, or weights, from the latent-space projection
           :math:`\mathbf{T}` to the properties :math:`\mathbf{Y}`
+
     ptx_: numpy.ndarray of size :math:`({n_{components}, n_{features}})`
          the projector, or weights, from the latent-space projection
          :math:`\mathbf{T}` to the feature matrix :math:`\mathbf{X}`
+
     X_fit_: numpy.ndarray of shape (n_samples, n_features)
         The data used to fit the model. This attribute is used to build kernels
         from new data.
@@ -133,12 +152,10 @@ class KernelPCovR(_BasePCA, LinearModel):
     >>> from skmatter.decomposition import KernelPCovR
     >>> from skmatter.preprocessing import StandardFlexibleScaler as SFS
     >>> from sklearn.kernel_ridge import KernelRidge
-    >>>
     >>> X = np.array([[-1, 1, -3, 1], [1, -2, 1, 2], [-2, 0, -2, -2], [1, 0, 2, -1]])
     >>> X = SFS().fit_transform(X)
     >>> Y = np.array([[0, -5], [-1, 1], [1, -5], [-3, 2]])
     >>> Y = SFS(column_wise=True).fit_transform(Y)
-    >>>
     >>> kpcovr = KernelPCovR(
     ...     mixing=0.1,
     ...     n_components=2,
@@ -248,6 +265,7 @@ class KernelPCovR(_BasePCA, LinearModel):
             means and scaled. If features are related, the matrix should be scaled
             to have unit variance, otherwise :math:`\mathbf{X}` should be
             scaled so that each feature has a variance of 1 / n_features.
+
         Y : numpy.ndarray, shape (n_samples, n_properties)
             Training data, where n_samples is the number of samples and
             n_properties is the number of properties
@@ -256,6 +274,7 @@ class KernelPCovR(_BasePCA, LinearModel):
             means and scaled. If features are related, the matrix should be scaled
             to have unit variance, otherwise :math:`\mathbf{Y}` should be
             scaled so that each feature has a variance of 1 / n_features.
+
         W : numpy.ndarray, shape (n_samples, n_properties)
             Regression weights, optional when regressor=`precomputed`. If not
             passed, it is assumed that `W = np.linalg.lstsq(K, Y, self.tol)[0]`
@@ -463,6 +482,7 @@ class KernelPCovR(_BasePCA, LinearModel):
         ----------
         X : numpy.ndarray
             independent (predictor) variable
+
         Y : numpy.ndarray
             dependent (response) variable
 
