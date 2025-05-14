@@ -1,5 +1,5 @@
 from sklearn.utils.estimator_checks import parametrize_with_checks
-from skmatter.decomposition import PCovR, PCovC, KernelPCovR, KernelPCovC
+from skmatter.decomposition import KernelPCovC, KernelPCovR, PCovC, PCovR
 from skmatter.feature_selection import CUR as fCUR
 from skmatter.feature_selection import FPS as fFPS
 from skmatter.feature_selection import PCovCUR as fPCovCUR

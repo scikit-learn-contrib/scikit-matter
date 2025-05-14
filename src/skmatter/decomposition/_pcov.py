@@ -3,14 +3,12 @@ import warnings
 
 import numpy as np
 from numpy.linalg import LinAlgError
-
-from scipy.linalg import sqrtm as MatrixSqrt
 from scipy import linalg
+from scipy.linalg import sqrtm as MatrixSqrt
 from scipy.sparse.linalg import svds
-
 from sklearn.decomposition._base import _BasePCA
-from sklearn.linear_model._base import LinearModel
 from sklearn.decomposition._pca import _infer_dimension
+from sklearn.linear_model._base import LinearModel
 from sklearn.utils import check_random_state
 from sklearn.utils._arpack import _init_arpack_v0
 from sklearn.utils.extmath import randomized_svd, stable_cumsum, svd_flip
