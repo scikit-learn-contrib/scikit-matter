@@ -283,7 +283,6 @@ class PCovC(LinearClassifierMixin, _BasePCov):
                 W = W.reshape(X.shape[1], -1)
 
         Z = X @ W
-
         if self.space_ == "feature":
             self._fit_feature_space(X, Y, Z)
         else:
@@ -292,6 +291,7 @@ class PCovC(LinearClassifierMixin, _BasePCov):
         # instead of using linear regression solution, refit with the
         # classifier and steal weights to get pxz and ptz
 
+        print("PCovc"+str(self.ptx_[:10][1]))
         self.classifier_ = clone(classifier).fit(X @ self.pxt_, Y)
 
         self.ptz_ = self.classifier_.coef_.T

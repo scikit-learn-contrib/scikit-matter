@@ -73,9 +73,10 @@ class _BaseKPCov(_BasePCA, LinearModel):
             X, Y, metric=self.kernel, filter_params=True, n_jobs=self.n_jobs, **params
         )
 
-    # this contains the common functionality for KPCovR and KPCovC fit methods,
-    # but leaves the rest of the fit functionality to the subclass
     def _fit_utils(self, X):
+        """This contains the common functionality for KPCovR and KPCovC fit methods,
+        but leaves the rest of the fit functionality to the subclass.
+        """
         self.X_fit_ = X.copy()
 
         if self.n_components is None:

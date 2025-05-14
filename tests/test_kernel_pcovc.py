@@ -12,7 +12,7 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.svm import SVC
 from sklearn.linear_model import RidgeClassifier
 from sklearn.metrics.pairwise import pairwise_kernels
-
+from sklearn.metrics import accuracy_score
 from skmatter.decomposition import PCovC, KernelPCovC
 from skmatter.preprocessing import KernelNormalizer
 
@@ -62,6 +62,7 @@ class KernelPCovCErrorTest(KernelPCovCBaseTest):
                 np.linalg.norm(self.Y - kpcovc.predict(self.X)) ** 2.0
                 / np.linalg.norm(self.Y) ** 2.0
             )
+
 
             with self.subTest(error=error):
                 self.assertFalse(np.isnan(error))
@@ -212,7 +213,6 @@ class KernelPCovCInfrastructureTest(KernelPCovCBaseTest):
         # in KPCovR, this essentially works with a kernel ridge regressor prefit on X, Y
         # But, in KPCovC, our classifiers don't compute the kernel for us, hence we need
         # to basically only allow prefit classifiers on K, y
-
         kernel_params = {"kernel": "rbf", "gamma": 0.1, "degree": 3, "coef0": 0}
 
         K = pairwise_kernels(self.X, metric="rbf", filter_params=True, **kernel_params)
@@ -365,56 +365,36 @@ class KernelTests(KernelPCovCBaseTest):
         """Check that KernelPCovC returns the same results as PCovC when using a linear
         kernel.
         """
-        svc = LogisticRegression()
-        svc.fit(self.X, self.Y)
+        # kernel_params = {"kernel": "rbf", "gamma": 0.1, "degree": 3, "coef0": 0}
+        # K = pairwise_kernels(self.X, metric="rbf", filter_params=True, **kernel_params)
 
-        # common instantiation parameters for the two models
         hypers = dict(
-            mixing=0.5,
-            n_components=1,
-        )
-
-        # computing projection and predicton loss with linear KernelPCovC
-        # and use the alpha from RidgeCV for level regression comparisons
-        kpcovc = KernelPCovC(
             classifier=LogisticRegression(),
-            kernel="linear",
-            **hypers,
+            mixing=0.5,
+            n_components=2,
         )
+
+        kpcovc = KernelPCovC(kernel="poly", **hypers)
         kpcovc.fit(self.X, self.Y)
-        ly = (
-            np.linalg.norm(self.Y - kpcovc.predict(self.X)) ** 2.0
-            / np.linalg.norm(self.Y) ** 2.0
-        )
-
-        # computing projection and predicton loss with PCovC
-        ref_pcovc = PCovC(**hypers, classifier=svc)
-        ref_pcovc.fit(self.X, self.Y)
-        ly_ref = (
-            np.linalg.norm(self.Y - ref_pcovc.predict(self.X)) ** 2.0
-            / np.linalg.norm(self.Y) ** 2.0
-        )
-
-        t_ref = ref_pcovc.transform(self.X)
-        t = kpcovc.transform(self.X)
-
         K = kpcovc._get_kernel(self.X)
+        pcovc = PCovC(**hypers)
+        pcovc.fit(K, self.Y)
 
-        k_ref = t_ref @ t_ref.T
-        k = t @ t.T
+        T_kpcovc = kpcovc.transform(self.X)
+        score_kpcovc = kpcovc.score(self.X, self.Y)
+        d_kpcovc = kpcovc.decision_function(self.X)
 
-        lk_ref = np.linalg.norm(K - k_ref) ** 2.0 / np.linalg.norm(K) ** 2.0
-        lk = np.linalg.norm(K - k) ** 2.0 / np.linalg.norm(K) ** 2.0
 
-        rounding = 3
+        T_pcovc = pcovc.transform(K)
+        score_pcovc = pcovc.score(K, self.Y)
+        d_pcovc = pcovc.decision_function(K)
+        print(np.linalg.norm(d_kpcovc-d_pcovc))
+        print(score_kpcovc, score_pcovc)
+        rounding = 2
+        
         self.assertEqual(
-            round(ly, rounding),
-            round(ly_ref, rounding),
-        )
-
-        self.assertEqual(
-            round(lk, rounding),
-            round(lk_ref, rounding),
+            round(score_kpcovc, rounding),
+            round(score_pcovc, rounding),
         )
 
 

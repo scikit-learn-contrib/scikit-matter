@@ -286,39 +286,29 @@ class KernelPCovC(LinearClassifierMixin, _BaseKPCov):
 
             # Check if classifier is fitted; if not, fit with precomputed K
             self.z_classifier_ = check_cl_fit(classifier, K, Y)
-
-            if isinstance(self.z_classifier_, MultiOutputClassifier):
-                W = np.hstack([est_.coef_.T for est_ in self.z_classifier_.estimators_])
-            else:
-                W = self.z_classifier_.coef_.T.reshape(K.shape[1], -1)
+            W = self.z_classifier_.coef_.T.reshape(K.shape[1], -1)
 
             self.classifier_ = clone(classifier)
         else:
+            # If precomputed, use default classifier to predict Y from T
+            classifier = LogisticRegression()
             if W is None:
-                W = np.linalg.lstsq(K, Y, self.tol)[0]
-
-            # if classifier is precomputed, use default classifier to predict Y from T
-            self.classifier_ = LogisticRegression()
+                W = LogisticRegression().fit(X, Y).coef_.T
+                W = W.reshape(X.shape[1], -1)
 
         Z = K @ W
 
         self._fit(K, Z, W)
 
         self.ptk_ = self.pt__ @ K
-
+        print("KPCovc"+str(self.ptk_[:10][1]))
         if self.fit_inverse_transform:
             self.ptx_ = self.pt__ @ X
 
-        self.classifier_.fit(K @ self.pkt_, Y)
+        self.classifier_ = clone(classifier).fit(K @ self.pkt_, Y)
 
-        if isinstance(self.classifier_, MultiOutputClassifier):
-            self.ptz_ = np.hstack(
-                [est_.coef_.T for est_ in self.classifier_.estimators_]
-            )
-            self.pkz_ = self.pkt_ @ self.ptz_
-        else:
-            self.ptz_ = self.classifier_.coef_.T
-            self.pkz_ = self.pkt_ @ self.ptz_
+        self.ptz_ = self.classifier_.coef_.T
+        self.pkz_ = self.pkt_ @ self.ptz_
 
         if len(Y.shape) == 1 and type_of_target(Y) == "binary":
             self.pkz_ = self.pkz_.reshape(
@@ -398,6 +388,8 @@ class KernelPCovC(LinearClassifierMixin, _BaseKPCov):
             K = self._get_kernel(X, self.X_fit_)
             if self.center:
                 K = self.centerer_.transform(K)
+
+            # Or self.classifier_.decision_function(K @ self.pxt_)
             return K @ self.pkz_ + self.classifier_.intercept_
 
         else:

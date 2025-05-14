@@ -90,6 +90,8 @@ class KernelPCovRErrorTest(KernelPCovRBaseTest):
 
             error = np.linalg.norm(K - t @ t.T) ** 2.0 / np.linalg.norm(K) ** 2.0
             x_error = np.linalg.norm(self.X - x) ** 2.0 / np.linalg.norm(self.X) ** 2.0
+            print(np.linalg.norm(K - t @ t.T) ** 2.0 / np.linalg.norm(K) ** 2.0)
+
 
             with self.subTest(error=error):
                 self.assertFalse(np.isnan(error))
