@@ -6,7 +6,6 @@ from sklearn import exceptions
 from sklearn.datasets import load_breast_cancer as get_dataset
 from sklearn.decomposition import PCA
 from sklearn.linear_model import LogisticRegression
-
 from sklearn.naive_bayes import GaussianNB
 from sklearn.preprocessing import StandardScaler
 from sklearn.utils.validation import check_X_y
@@ -231,18 +230,6 @@ class PCovCSpaceTest(PCovCBaseTest):
                     n_components=2, mixing=alpha, tol=1e-12, space="feature"
                 )
                 pcovc_fs.fit(self.X, self.Y)
-
-                # if(alpha > 0.5):
-                #     print(np.isclose(
-                #             pcovc_ss.transform(self.X),
-                #             pcovc_fs.transform(self.X),
-                #             self.error_tol
-                #         ))
-
-                # failing for all alpha values
-                # so these are similar (within approximately 0.001), but not exactly the same.
-                # I think this is because transform and inverse_transform depend on Pxt and Ptx,
-                # which in turn depend on Z, which is a matrix of class likelihoods (so maybe there is some rounding problems)
                 self.assertTrue(
                     np.allclose(
                         pcovc_ss.inverse_transform(pcovc_ss.transform(self.X)),
@@ -301,8 +288,6 @@ class PCovCTestSVDSolvers(PCovCBaseTest):
             pcovc = self.model(
                 n_components="mle", classifier=LogisticRegression(), svd_solver="full"
             )
-            # changed X[:2], Y[:2] to X[:20], Y[:20] since first two rows of classes only had class 1 as target,
-            # thus error was thrown
             pcovc.fit(self.X[:20], self.Y[:20])
         self.assertEqual(
             str(cm.exception),
@@ -401,13 +386,13 @@ class PCovCInfrastructureTest(PCovCBaseTest):
             pcovc.fit(X, self.Y)
             self.assertEqual(
                 str(w[0].message),
-                "This class does not automatically center data, and your data mean is "
-                "greater than the supplied tolerance.",
+                "This class does not automatically center data, and your data "
+                "mean is greater than the supplied tolerance.",
             )
 
     def test_T_shape(self):
-        """Check that PCovC returns a latent space projection consistent with the shape
-        of the input matrix.
+        """Check that PCovC returns a latent space projection consistent with
+        the shape of the input matrix.
         """
         n_components = 5
         pcovc = self.model(n_components=n_components, tol=1e-12)
@@ -417,8 +402,8 @@ class PCovCInfrastructureTest(PCovCBaseTest):
         self.assertTrue(T.shape[-1] == n_components)
 
     def test_Z_shape(self):
-        """Check that PCovC returns an evidence matrix consistent with the number of samples
-        and the number of classes.
+        """Check that PCovC returns an evidence matrix consistent with the
+        number of samples and the number of classes.
         """
         n_components = 5
         pcovc = self.model(n_components=n_components, tol=1e-12)

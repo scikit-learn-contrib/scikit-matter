@@ -1,9 +1,8 @@
 import numpy as np
-
-from sklearn.utils import check_array
-from sklearn.linear_model import LinearRegression, Ridge, RidgeCV
-from sklearn.utils.validation import check_is_fitted, validate_data
 from sklearn.base import MultiOutputMixin, RegressorMixin
+from sklearn.linear_model import LinearRegression, Ridge, RidgeCV
+from sklearn.utils import check_array
+from sklearn.utils.validation import check_is_fitted, validate_data
 
 from skmatter.decomposition import _BasePCov
 from skmatter.utils import check_lr_fit

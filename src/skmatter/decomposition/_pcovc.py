@@ -2,18 +2,18 @@ import numpy as np
 from sklearn import clone
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
 from sklearn.linear_model import (
+    LogisticRegression,
+    LogisticRegressionCV,
     Perceptron,
     RidgeClassifier,
     RidgeClassifierCV,
-    LogisticRegression,
-    LogisticRegressionCV,
     SGDClassifier,
 )
 from sklearn.linear_model._base import LinearClassifierMixin
 from sklearn.svm import LinearSVC
 from sklearn.utils import check_array
-from sklearn.utils.validation import check_is_fitted, validate_data
 from sklearn.utils.multiclass import check_classification_targets, type_of_target
+from sklearn.utils.validation import check_is_fitted, validate_data
 
 from skmatter.decomposition import _BasePCov
 from skmatter.utils import check_cl_fit
@@ -218,29 +218,28 @@ class PCovC(LinearClassifierMixin, _BasePCov):
         self.classifier = classifier
 
     def fit(self, X, Y, W=None):
-        r"""Fit the model with X and Y. Depending on the dimensions of X, calls either
-        `_fit_feature_space` or `_fit_sample_space`
+        r"""Fit the model with X and Y. Depending on the dimensions of X,
+        calls either `_fit_feature_space` or `_fit_sample_space`.
 
         Parameters
         ----------
         X : numpy.ndarray, shape (n_samples, n_features)
-            Training data, where n_samples is the number of samples and n_features is
-            the number of features.
+            Training data, where n_samples is the number of samples and
+            n_features is the number of features.
 
             It is suggested that :math:`\mathbf{X}` be centered by its column-
-            means and scaled. If features are related, the matrix should be scaled
-            to have unit variance, otherwise :math:`\mathbf{X}` should be
-            scaled so that each feature has a variance of 1 / n_features.
+            means and scaled. If features are related, the matrix should be
+            scaled to have unit variance, otherwise :math:`\mathbf{X}` should
+            be scaled so that each feature has a variance of 1 / n_features.
 
         Y : numpy.ndarray, shape (n_samples,)
             Training data, where n_samples is the number of samples.
 
         W : numpy.ndarray, shape (n_features, n_properties)
-            Classification weights, optional when classifier=`precomputed`. If not
-            passed, it is assumed that the weights will be taken from a linear classifier
-            fit between X and Y
+            Classification weights, optional when classifier=`precomputed`. If
+            not passed, it is assumed that the weights will be taken from a
+            linear classifier fit between X and Y
         """
-
         X, Y = validate_data(self, X, Y, y_numeric=False)
         check_classification_targets(Y)
         self.classes_ = np.unique(Y)
@@ -280,7 +279,8 @@ class PCovC(LinearClassifierMixin, _BasePCov):
             # If precomputed, use default classifier to predict Y from T
             classifier = LogisticRegression()
             if W is None:
-                W = LogisticRegression().fit(X, Y).coef_.T.reshape(X.shape[1], -1)
+                W = LogisticRegression().fit(X, Y).coef_.T
+                W = W.reshape(X.shape[1], -1)
 
         Z = X @ W
 
@@ -289,8 +289,8 @@ class PCovC(LinearClassifierMixin, _BasePCov):
         else:
             self._fit_sample_space(X, Y, Z, W)
 
-        # instead of using linear regression solution, refit with the classifier
-        # and steal weights to get pxz and ptz
+        # instead of using linear regression solution, refit with the
+        # classifier and steal weights to get pxz and ptz
 
         self.classifier_ = clone(classifier).fit(X @ self.pxt_, Y)
 
@@ -404,8 +404,8 @@ class PCovC(LinearClassifierMixin, _BasePCov):
     def transform(self, X=None):
         """Apply dimensionality reduction to X.
 
-        ``X`` is projected on the first principal components as determined by the
-        modified PCovC distances.
+        ``X`` is projected on the first principal components as determined by
+        the modified PCovC distances.
 
         Parameters
         ----------

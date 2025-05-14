@@ -1,8 +1,9 @@
 from copy import deepcopy
-from sklearn import clone
-from sklearn.utils.validation import check_is_fitted, validate_data
-from sklearn.exceptions import NotFittedError
+
 import numpy as np
+from sklearn import clone
+from sklearn.exceptions import NotFittedError
+from sklearn.utils.validation import check_is_fitted, validate_data
 
 
 def check_cl_fit(classifier, X, y):
@@ -22,8 +23,8 @@ def check_cl_fit(classifier, X, y):
     Returns
     -------
     fitted_classifier : object
-        The fitted classifier. If input classifier was already fitted and compatible with
-        the data, returns a deep copy. Otherwise returns a newly fitted classifier.
+        The fitted classifier. If input classifier was already fitted and compatible
+        with the data, returns a deep copy. Otherwise returns a newly fitted classifier.
 
     Raises
     ------
