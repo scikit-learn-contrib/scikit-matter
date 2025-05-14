@@ -1,15 +1,28 @@
 import numpy as np
 
-from sklearn.exceptions import NotFittedError
-from sklearn.kernel_ridge import KernelRidge
-from sklearn.utils.validation import _check_n_features, check_is_fitted, validate_data
+from sklearn import clone
+from sklearn.calibration import LinearSVC
+from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
+from sklearn.multioutput import MultiOutputClassifier
+from sklearn.linear_model import (
+    Perceptron,
+    RidgeClassifier,
+    RidgeClassifierCV,
+    LogisticRegression,
+    LogisticRegressionCV,
+    SGDClassifier,
+)
+from sklearn.utils import check_array
+from sklearn.utils.validation import check_is_fitted, validate_data
+from sklearn.linear_model._base import LinearClassifierMixin
+from sklearn.utils.multiclass import check_classification_targets, type_of_target
 
-from skmatter.utils import check_krr_fit
+from skmatter.utils import check_cl_fit
 from skmatter.decomposition import _BaseKPCov
 
 
-class KernelPCovR(_BaseKPCov):
-    r"""Kernel Principal Covariates Regression, as described in [Helfrecht2020]_
+class KernelPCovC(LinearClassifierMixin, _BaseKPCov):
+    r"""Kernel Principal Covariates Classification
     determines a latent-space projection :math:`\mathbf{T}` which minimizes a combined
     loss in supervised and unsupervised tasks in the reproducing kernel Hilbert space
     (RKHS).
@@ -19,18 +32,18 @@ class KernelPCovR(_BaseKPCov):
 
     .. math::
       \mathbf{\tilde{K}} = \alpha \mathbf{K} +
-            (1 - \alpha) \mathbf{\hat{Y}}\mathbf{\hat{Y}}^T
+            (1 - \alpha) \mathbf{Z}\mathbf{Z}^T
 
     where :math:`\alpha` is a mixing parameter,
     :math:`\mathbf{K}` is the input kernel of shape :math:`(n_{samples}, n_{samples})`
-    and :math:`\mathbf{\hat{Y}}` is the target matrix of shape
-    :math:`(n_{samples}, n_{properties})`.
+    and :math:`\mathbf{Z}` is a matrix of class confidence scores of shape 
+    :math:`(n_{samples}, n_{classes})`
 
     Parameters
     ----------
     mixing : float, default=0.5
-        mixing parameter, as described in PCovR as :math:`{\alpha}`
-        
+        mixing parameter, as described in PCovC as :math:`{\alpha}`
+
     n_components : int, float or str, default=None
         Number of components to keep.
         if n_components is not set all components are kept::
@@ -55,21 +68,28 @@ class KernelPCovR(_BaseKPCov):
         If randomized :
             run randomized SVD by the method of Halko et al.
 
-    regressor : {instance of `sklearn.kernel_ridge.KernelRidge`, `precomputed`, None}, default=None
-        The regressor to use for computing
-        the property predictions :math:`\hat{\mathbf{Y}}`.
-        A pre-fitted regressor may be provided.
-        If the regressor is not `None`, its kernel parameters
-        (`kernel`, `gamma`, `degree`, `coef0`, and `kernel_params`)
-        must be identical to those passed directly to `KernelPCovR`.
-
+    classifier: {`RidgeClassifier`, `RidgeClassifierCV`, `LogisticRegression`,
+        `LogisticRegressionCV`, `SGDClassifier`, `LinearSVC`, `precomputed`}, default=None
+        classifier for computing :math:`{\mathbf{Z}}`. The classifier should be one
+        `sklearn.linear_model.RidgeClassifier`, `sklearn.linear_model.RidgeClassifierCV`,
+        `sklearn.linear_model.LogisticRegression`, `sklearn.linear_model.LogisticRegressionCV`,
+        `sklearn.linear_model.SGDClassifier`, or `sklearn.svm.LinearSVC`. If a pre-fitted classifier
+        is provided, it is used to compute :math:`{\mathbf{Z}}`.
+        Note that any pre-fitting of the classifier will be lost if `PCovC` is
+        within a composite estimator that enforces cloning, e.g.,
+        `sklearn.compose.TransformedTargetclassifier` or
+        `sklearn.pipeline.Pipeline` with model caching.
+        In such cases, the classifier will be re-fitted on the same
+        training data as the composite estimator.
         If `precomputed`, we assume that the `y` passed to the `fit` function
-        is the regressed form of the targets :math:`{\mathbf{\hat{Y}}}`.
+        is the classified form of the targets :math:`{\mathbf{\hat{Y}}}`.
+        If None, ``sklearn.linear_model.LogisticRegression()``
+        is used as the classifier.
 
-    kernel : {"linear", "poly", "rbf", "sigmoid", "cosine", "precomputed"}, default="linear"
+    kernel : {"linear", "poly", "rbf", "sigmoid", "cosine", "precomputed"}, default="linear
         Kernel.
 
-    gamma : float, default=None
+    gamma : {'scale', 'auto'} or float, default=None
         Kernel coefficient for rbf, poly and sigmoid kernels. Ignored by other
         kernels.
 
@@ -120,13 +140,13 @@ class KernelPCovR(_BaseKPCov):
         the projector, or weights, from the input kernel :math:`\mathbf{K}`
         to the latent-space projection :math:`\mathbf{T}`
 
-    pky_: numpy.ndarray of size :math:`({n_{samples}, n_{properties}})`
+    pkz_: numpy.ndarray of size :math:`({n_{samples}, n_{classes}})`
         the projector, or weights, from the input kernel :math:`\mathbf{K}`
-        to the properties :math:`\mathbf{Y}`
+        to the class confidence scores :math:`\mathbf{Z}`
 
-    pty_: numpy.ndarray of size :math:`({n_{components}, n_{properties}})`
+    ptz_: numpy.ndarray of size :math:`({n_{components}, n_{classes}})`
         the projector, or weights, from the latent-space projection
-        :math:`\mathbf{T}` to the properties :math:`\mathbf{Y}`
+        :math:`\mathbf{T}` to the class confidence scores :math:`\mathbf{Z}`
 
     ptx_: numpy.ndarray of size :math:`({n_{components}, n_{features}})`
         the projector, or weights, from the latent-space projection
@@ -139,37 +159,28 @@ class KernelPCovR(_BaseKPCov):
     Examples
     --------
     >>> import numpy as np
-    >>> from skmatter.decomposition import KernelPCovR
-    >>> from skmatter.preprocessing import StandardFlexibleScaler as SFS
-    >>> from sklearn.kernel_ridge import KernelRidge
-    >>>
-    >>> X = np.array([[-1, 1, -3, 1], [1, -2, 1, 2], [-2, 0, -2, -2], [1, 0, 2, -1]])
-    >>> X = SFS().fit_transform(X)
-    >>> Y = np.array([[0, -5], [-1, 1], [1, -5], [-3, 2]])
-    >>> Y = SFS(column_wise=True).fit_transform(Y)
-    >>>
-    >>> kpcovr = KernelPCovR(
+    >>> from skmatter.decomposition import KernelPCovC
+    >>> from sklearn.preprocessing import StandardScaler
+    >>> X = np.array([[-2, 3, -1, 0], [2, 0, -3, 1], [3, 0, -1, 3], [2, -2, 1, 0]])
+    >>> X = scaler.fit_transform(X)
+    >>> Y = np.array([[2], [0], [1], [2]])
+    >>> kpcovc = KernelPCovC(
     ...     mixing=0.1,
     ...     n_components=2,
-    ...     regressor=KernelRidge(kernel="rbf", gamma=1),
     ...     kernel="rbf",
     ...     gamma=1,
     ... )
-    >>> kpcovr.fit(X, Y)
-    KernelPCovR(gamma=1, kernel='rbf', mixing=0.1, n_components=2,
-                regressor=KernelRidge(gamma=1, kernel='rbf'))
-    >>> kpcovr.transform(X)
-    array([[-0.61261285, -0.18937908],
-           [ 0.45242098,  0.25453465],
-           [-0.77871824,  0.04847559],
-           [ 0.91186937, -0.21211816]])
-    >>> kpcovr.predict(X)
-    array([[ 0.5100212 , -0.99488463],
-           [-0.18992219,  0.82064368],
-           [ 1.11923584, -1.04798016],
-           [-1.5635827 ,  1.11078662]])
-    >>> round(kpcovr.score(X, Y), 5)
-    np.float64(-0.52039)
+    >>> kpcovc.fit(X, Y)
+    KernelPCovC(gamma=1, kernel='rbf', mixing=0.1, n_components=2)
+    >>> kpcovc.transform(X)
+    array([[-4.45970689e-01  8.95327566e-06]
+           [ 4.52745933e-01  5.54810948e-01]
+           [ 4.52881359e-01 -5.54708315e-01]
+           [-4.45921092e-01 -7.32157649e-05]])
+    >>> kpcovc.predict(X)
+    array([2 0 1 2])
+    >>> kpcovc.score(X, Y)
+    1.0
     """  # NoQa: E501
 
     def __init__(
@@ -177,7 +188,7 @@ class KernelPCovR(_BaseKPCov):
         mixing=0.5,
         n_components=None,
         svd_solver="auto",
-        regressor=None,
+        classifier=None,
         kernel="linear",
         gamma=None,
         degree=3,
@@ -206,7 +217,7 @@ class KernelPCovR(_BaseKPCov):
             n_jobs=n_jobs,
             fit_inverse_transform=fit_inverse_transform,
         )
-        self.regressor = regressor
+        self.classifier = classifier
 
     def fit(self, X, Y, W=None):
         r"""Fit the model with X and Y.
@@ -221,6 +232,7 @@ class KernelPCovR(_BaseKPCov):
             means and scaled. If features are related, the matrix should be scaled
             to have unit variance, otherwise :math:`\mathbf{X}` should be
             scaled so that each feature has a variance of 1 / n_features.
+
         Y : numpy.ndarray, shape (n_samples, n_properties)
             Training data, where n_samples is the number of samples and
             n_properties is the number of properties
@@ -229,8 +241,9 @@ class KernelPCovR(_BaseKPCov):
             means and scaled. If features are related, the matrix should be scaled
             to have unit variance, otherwise :math:`\mathbf{Y}` should be
             scaled so that each feature has a variance of 1 / n_features.
+
         W : numpy.ndarray, shape (n_samples, n_properties)
-            Regression weights, optional when regressor=`precomputed`. If not
+            Classification weights, optional when classifier=`precomputed`. If not
             passed, it is assumed that `W = np.linalg.lstsq(K, Y, self.tol)[0]`
 
         Returns
@@ -238,102 +251,102 @@ class KernelPCovR(_BaseKPCov):
         self: object
             Returns the instance itself.
         """
-        X, Y = validate_data(self, X, Y, y_numeric=True, multi_output=True)
+        X, Y = validate_data(self, X, Y, y_numeric=False, multi_output=True)
+        check_classification_targets(Y)
+        self.classes_ = np.unique(Y)
 
         K = super()._fit_utils(X)
 
-        if self.regressor not in ["precomputed", None] and not isinstance(
-            self.regressor, KernelRidge
+        compatible_classifiers = (
+            LinearDiscriminantAnalysis,
+            LinearSVC,
+            LogisticRegression,
+            LogisticRegressionCV,
+            MultiOutputClassifier,
+            Perceptron,
+            RidgeClassifier,
+            RidgeClassifierCV,
+            SGDClassifier,
+        )
+
+        if self.classifier not in ["precomputed", None] and not isinstance(
+            self.classifier, compatible_classifiers
         ):
-            raise ValueError("Regressor must be an instance of `KernelRidge`")
+            raise ValueError(
+                "Classifier must be an instance of `"
+                f"{'`, `'.join(c.__name__ for c in compatible_classifiers)}`"
+                ", or `precomputed`"
+            )
 
-        if self.regressor != "precomputed":
-            if self.regressor is None:
-                regressor = KernelRidge(
-                    kernel=self.kernel,
-                    gamma=self.gamma,
-                    degree=self.degree,
-                    coef0=self.coef0,
-                    kernel_params=self.kernel_params,
-                )
+        if self.classifier != "precomputed":
+            if self.classifier is None:
+                classifier = LogisticRegression()
             else:
-                regressor = self.regressor
-                kernel_attrs = ["kernel", "gamma", "degree", "coef0", "kernel_params"]
-                if not all(
-                    [
-                        getattr(self, attr) == getattr(regressor, attr)
-                        for attr in kernel_attrs
-                    ]
-                ):
-                    raise ValueError(
-                        "Kernel parameter mismatch: the regressor has kernel "
-                        "parameters {%s} and KernelPCovR was initialized with kernel "
-                        "parameters {%s}"
-                        % (
-                            ", ".join(
-                                [
-                                    "%s: %r" % (attr, getattr(regressor, attr))
-                                    for attr in kernel_attrs
-                                ]
-                            ),
-                            ", ".join(
-                                [
-                                    "%s: %r" % (attr, getattr(self, attr))
-                                    for attr in kernel_attrs
-                                ]
-                            ),
-                        )
-                    )
+                classifier = self.classifier
 
-            # Check if regressor is fitted; if not, fit with precomputed K
-            # to avoid needing to compute the kernel a second time
-            self.regressor_ = check_krr_fit(regressor, K, X, Y)
-            W = self.regressor_.dual_coef_.reshape(self.n_samples_in_, -1)
+            # Check if classifier is fitted; if not, fit with precomputed K
+            self.z_classifier_ = check_cl_fit(classifier, K, Y)
 
-            # Use this instead of `self.regressor_.predict(K)`
-            # so that we can handle the case of the pre-fitted regressor
-            Yhat = K @ W
+            if isinstance(self.z_classifier_, MultiOutputClassifier):
+                W = np.hstack([est_.coef_.T for est_ in self.z_classifier_.estimators_])
+            else:
+                W = self.z_classifier_.coef_.T.reshape(K.shape[1], -1)
 
-            # When we have an unfitted regressor,
-            # we fit it with a precomputed K
-            # so we must subsequently "reset" it so that
-            # it will work on the particular X
-            # of the KPCovR call. The dual coefficients are kept.
-            # Can be bypassed if the regressor is pre-fitted.
-            try:
-                check_is_fitted(regressor)
-            except NotFittedError:
-                self.regressor_.set_params(**regressor.get_params())
-                self.regressor_.X_fit_ = self.X_fit_
-                _check_n_features(self.regressor_, self.X_fit_, reset=True)
+            self.classifier_ = clone(classifier)
         else:
-            Yhat = Y.copy()
             if W is None:
-                W = np.linalg.lstsq(K, Yhat, self.tol)[0]
+                W = np.linalg.lstsq(K, Y, self.tol)[0]
 
-        self._fit(K, Yhat, W)
+            # if classifier is precomputed, use default classifier to predict Y from T
+            self.classifier_ = LogisticRegression()
+
+        Z = K @ W
+
+        self._fit(K, Z, W)
 
         self.ptk_ = self.pt__ @ K
-        self.pty_ = self.pt__ @ Y
 
         if self.fit_inverse_transform:
             self.ptx_ = self.pt__ @ X
 
-        self.pky_ = self.pkt_ @ self.pty_
+        self.classifier_.fit(K @ self.pkt_, Y)
+
+        if isinstance(self.classifier_, MultiOutputClassifier):
+            self.ptz_ = np.hstack(
+                [est_.coef_.T for est_ in self.classifier_.estimators_]
+            )
+            self.pkz_ = self.pkt_ @ self.ptz_
+        else:
+            self.ptz_ = self.classifier_.coef_.T
+            self.pkz_ = self.pkt_ @ self.ptz_
+
+        if len(Y.shape) == 1 and type_of_target(Y) == "binary":
+            self.pkz_ = self.pkz_.reshape(
+                K.shape[1],
+            )
+            self.ptz_ = self.ptz_.reshape(
+                self.n_components_,
+            )
 
         self.components_ = self.pkt_.T  # for sklearn compatibility
         return self
 
-    def predict(self, X=None):
-        """Predicts the property values"""
-        check_is_fitted(self, ["pky_", "pty_"])
+    def predict(self, X=None, T=None):
+        """Predicts the property labels using classification on T."""
+        check_is_fitted(self, ["pkz_", "ptz_"])
 
-        X = validate_data(self, X, reset=False)
-        K = self._get_kernel(X, self.X_fit_)
-        if self.center:
-            K = self.centerer_.transform(K)
+        if X is None and T is None:
+            raise ValueError("Either X or T must be supplied.")
 
-        return K @ self.pky_
+        if X is not None:
+            X = validate_data(self, X, reset=False)
+            K = self._get_kernel(X, self.X_fit_)
+            if self.center:
+                K = self.centerer_.transform(K)
+
+            return self.classifier_.predict(K @ self.pkt_)
+        else:
+            return self.classifier_.predict(T)
 
     def transform(self, X):
         """Apply dimensionality reduction to X.
@@ -373,62 +386,20 @@ class KernelPCovR(_BaseKPCov):
         """
         return super().inverse_transform(T)
 
-    def score(self, X, y):
-        r"""Computes the (negative) loss values for KernelPCovR on the given predictor
-        and response variables. The loss in :math:`\mathbf{K}`, as explained in
-        [Helfrecht2020]_ does not correspond to a traditional Gram loss
-        :math:`\mathbf{K} - \mathbf{TT}^T`. Indicating the kernel between set A and B as
-        :math:`\mathbf{K}_{AB}`, the projection of set A as :math:`\mathbf{T}_A`, and
-        with N and V as the train and validation/test set, one obtains
+    def decision_function(self, X=None, T=None):
+        """Predicts confidence scores from X or T."""
+        check_is_fitted(self, attributes=["pkz_", "ptz_"])
 
-        .. math::
-            \ell=\frac{\operatorname{Tr}\left[\mathbf{K}_{VV} - 2
-            \mathbf{K}_{VN} \mathbf{T}_N
-                (\mathbf{T}_N^T \mathbf{T}_N)^{-1} \mathbf{T}_V^T
-            +\mathbf{T}_V(\mathbf{T}_N^T \mathbf{T}_N)^{-1}  \mathbf{T}_N^T
-            \mathbf{K}_{NN} \mathbf{T}_N (\mathbf{T}_N^T \mathbf{T}_N)^{-1}
-            \mathbf{T}_V^T\right]}{\operatorname{Tr}(\mathbf{K}_{VV})}
+        if X is None and T is None:
+            raise ValueError("Either X or T must be supplied.")
 
-        The negative loss is returned for easier use in sklearn pipelines, e.g., a grid
-        search, where methods named 'score' are meant to be maximized.
+        if X is not None:
+            X = validate_data(self, X, reset=False)
+            K = self._get_kernel(X, self.X_fit_)
+            if self.center:
+                K = self.centerer_.transform(K)
+            return K @ self.pkz_ + self.classifier_.intercept_
 
-        Parameters
-        ----------
-        X : numpy.ndarray
-            independent (predictor) variable
-        Y : numpy.ndarray
-            dependent (response) variable
-
-        Returns
-        -------
-        L : float
-            Negative sum of the KPCA and KRR losses, with the KPCA loss determined by
-            the reconstruction of the kernel
-        """
-        check_is_fitted(self, ["pkt_", "X_fit_"])
-
-        X = validate_data(self, X, reset=False)
-
-        K_NN = self._get_kernel(self.X_fit_, self.X_fit_)
-        K_VN = self._get_kernel(X, self.X_fit_)
-        K_VV = self._get_kernel(X)
-
-        if self.center:
-            K_NN = self.centerer_.transform(K_NN)
-            K_VN = self.centerer_.transform(K_VN)
-            K_VV = self.centerer_.transform(K_VV)
-
-        ypred = K_VN @ self.pky_
-        Lkrr = np.linalg.norm(y - ypred) ** 2 / np.linalg.norm(y) ** 2
-
-        t_n = K_NN @ self.pkt_
-        t_v = K_VN @ self.pkt_
-
-        w = (
-            t_n
-            @ np.linalg.lstsq(t_n.T @ t_n, np.eye(t_n.shape[1]), rcond=self.tol)[0]
-            @ t_v.T
-        )
-        Lkpca = np.trace(K_VV - 2 * K_VN @ w + w.T @ K_VV @ w) / np.trace(K_VV)
-
-        return -sum([Lkpca, Lkrr])
+        else:
+            T = check_array(T)
+            return T @ self.ptz_ + self.classifier_.intercept_

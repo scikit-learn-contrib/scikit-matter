@@ -7,7 +7,7 @@ from sklearn.kernel_ridge import KernelRidge
 from sklearn.linear_model import Ridge, RidgeCV
 from sklearn.utils.validation import check_X_y
 
-from skmatter.decomposition import KernelPCovR, PCovR
+from skmatter.decomposition import PCovR, KernelPCovR
 from skmatter.preprocessing import StandardFlexibleScaler as SFS
 
 
@@ -59,7 +59,6 @@ class KernelPCovRErrorTest(KernelPCovRBaseTest):
         for mixing in np.linspace(0, 1, 6):
             kpcovr = KernelPCovR(mixing=mixing, n_components=2, tol=1e-12)
             kpcovr.fit(self.X, self.Y)
-
             error = (
                 np.linalg.norm(self.Y - kpcovr.predict(self.X)) ** 2.0
                 / np.linalg.norm(self.Y) ** 2.0
@@ -419,7 +418,7 @@ class KernelPCovRTestSVDSolvers(KernelPCovRBaseTest):
                 else:
                     kpcovr.fit(self.X, self.Y)
 
-                self.assertTrue(kpcovr._fit_svd_solver == solver)
+                self.assertTrue(kpcovr.fit_svd_solver_ == solver)
 
     def test_bad_solver(self):
         """
