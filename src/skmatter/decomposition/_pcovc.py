@@ -11,7 +11,6 @@ from sklearn.linear_model import (
 )
 from sklearn.linear_model._base import LinearClassifierMixin
 from sklearn.svm import LinearSVC
-from sklearn.multioutput import MultiOutputClassifier
 from sklearn.utils import check_array
 from sklearn.utils.validation import check_is_fitted, validate_data
 from sklearn.utils.multiclass import check_classification_targets, type_of_target
@@ -99,21 +98,19 @@ class PCovC(LinearClassifierMixin, _BasePCov):
         default=`sample` when :math:`{n_{samples} < n_{features}}` and
         `feature` when :math:`{n_{features} < n_{samples}}`
 
-    classifier: {`RidgeClassifier`, `RidgeClassifierCV`, `LogisticRegression`,
-        `LogisticRegressionCV`, `SGDClassifier`, `LinearSVC`, `precomputed`}, default=None
-        classifier for computing :math:`{\mathbf{Z}}`. The classifier should be one
-        `sklearn.linear_model.RidgeClassifier`, `sklearn.linear_model.RidgeClassifierCV`,
+    classifier: {`LogisticRegression`, `LogisticRegressionCV`, `LinearSVC`, `LinearDiscriminantAnalysis`,
+        `RidgeClassifier`, `RidgeClassifierCV`, `SGDClassifier`, `Perceptron`, `precomputed`}, default=None
+        classifier for computing :math:`{\mathbf{Z}}`. The classifier should be one of
         `sklearn.linear_model.LogisticRegression`, `sklearn.linear_model.LogisticRegressionCV`,
-        `sklearn.linear_model.SGDClassifier`, or `sklearn.svm.LinearSVC`. If a pre-fitted classifier
+        `sklearn.svm.LinearSVC`, `sklearn.discriminant_analysis.LinearDiscriminantAnalysis`,
+        `sklearn.linear_model.RidgeClassifier`, `sklearn.linear_model.RidgeClassifierCV`,
+        `sklearn.linear_model.SGDClassifier`, or `Perceptron`. If a pre-fitted classifier
         is provided, it is used to compute :math:`{\mathbf{Z}}`.
         Note that any pre-fitting of the classifier will be lost if `PCovC` is
         within a composite estimator that enforces cloning, e.g.,
-        `sklearn.compose.TransformedTargetclassifier` or
         `sklearn.pipeline.Pipeline` with model caching.
         In such cases, the classifier will be re-fitted on the same
         training data as the composite estimator.
-        If `precomputed`, we assume that the `y` passed to the `fit` function
-        is the classified form of the targets :math:`{\mathbf{\hat{Y}}}`.
         If None, ``sklearn.linear_model.LogisticRegression()``
         is used as the classifier.
 
@@ -147,15 +144,24 @@ class PCovC(LinearClassifierMixin, _BasePCov):
         n_components, or the lesser value of n_features and n_samples
         if n_components is None.
 
+    classifier : estimator object
+        The linear classifier passed for fitting.
+
+    z_classifier_ : estimator object
+        The linear classifier fit between X and Y.
+
+    classifier_ : estimator object
+        The linear classifier fit between T and Y.
+
     pxt_ : ndarray of size :math:`({n_{features}, n_{components}})`
         the projector, or weights, from the input space :math:`\mathbf{X}`
         to the latent-space projection :math:`\mathbf{T}`
 
-    pxz_ : ndarray of size :math:`({n_{features}, n_{classes}})`
+    pxz_ : ndarray of size :math: `({n_{features}, })` or `({n_{features}, n_{classes}})`
         the projector, or weights, from the input space :math:`\mathbf{X}`
         to the class confidence scores :math:`\mathbf{Z}`
 
-    ptz_ : ndarray of size :math:`({n_{components}, n_{classes}})`
+    ptz_ : ndarray of size :math: ``({n_{components}, })` or `({n_{components}, n_{classes}})`
         the projector, or weights, from the latent-space projection
         :math:`\mathbf{T}` to the class confidence scores :math:`\mathbf{Z}`
 
@@ -171,6 +177,7 @@ class PCovC(LinearClassifierMixin, _BasePCov):
     --------
     >>> import numpy as np
     >>> from skmatter.decomposition import PCovC
+    >>> from sklearn.preprocessing import StandardScaler
     >>> X = np.array([[-1, 0, -2, 3], [3, -2, 0, 1], [-3, 0, -1, -1], [1, 3, 0, -2]])
     >>> X = StandardScaler().fit_transform(X)
     >>> Y = np.array([0, 1, 2, 0])
@@ -178,12 +185,12 @@ class PCovC(LinearClassifierMixin, _BasePCov):
     >>> pcovc.fit(X, Y)
     PCovC(mixing=0.1, n_components=2)
     >>> pcovc.transform(X)
-    array([[-0.4794854  -0.46228114]
-           [ 1.9416966   0.2532831 ]
-           [-1.08744947  0.89117784]
-           [-0.37476173 -0.6821798 ]])
+    array([[-0.4794854 , -0.46228114],
+           [ 1.9416966 ,  0.2532831 ],
+           [-1.08744947,  0.89117784],
+           [-0.37476173, -0.6821798 ]])
     >>> pcovc.predict(X)
-    array([0 1 2 0])
+    array([0, 1, 2, 0])
     """  # NoQa: E501
 
     def __init__(
@@ -225,38 +232,30 @@ class PCovC(LinearClassifierMixin, _BasePCov):
             to have unit variance, otherwise :math:`\mathbf{X}` should be
             scaled so that each feature has a variance of 1 / n_features.
 
-        Y : numpy.ndarray, shape (n_samples, n_properties)
-            Training data, where n_samples is the number of samples and n_properties is
-            the number of properties
-
-            It is suggested that :math:`\mathbf{X}` be centered by its column-means and
-            scaled. If features are related, the matrix should be scaled to have unit
-            variance, otherwise :math:`\mathbf{Y}` should be scaled so that each feature
-            has a variance of 1 / n_features.
-
-            If the passed classifier = `precomputed`, it is assumed that Y is the
-            classified form of the properties, :math:`{\mathbf{\hat{Y}}}`.
+        Y : numpy.ndarray, shape (n_samples,)
+            Training data, where n_samples is the number of samples.
 
         W : numpy.ndarray, shape (n_features, n_properties)
             Classification weights, optional when classifier=`precomputed`. If not
-            passed, it is assumed that `W = np.linalg.lstsq(X, Y, self.tol)[0]`
+            passed, it is assumed that the weights will be taken from a linear classifier
+            fit between X and Y
         """
-        X, Y = validate_data(self, X, Y, y_numeric=False, multi_output=True)
+
+        X, Y = validate_data(self, X, Y, y_numeric=False)
         check_classification_targets(Y)
         self.classes_ = np.unique(Y)
 
         super()._fit_utils(X)
 
         compatible_classifiers = (
-            LinearDiscriminantAnalysis,
-            LinearSVC,
             LogisticRegression,
             LogisticRegressionCV,
-            MultiOutputClassifier,
-            Perceptron,
+            LinearSVC,
+            LinearDiscriminantAnalysis,
             RidgeClassifier,
             RidgeClassifierCV,
             SGDClassifier,
+            Perceptron,
         )
 
         if self.classifier not in ["precomputed", None] and not isinstance(
@@ -275,20 +274,13 @@ class PCovC(LinearClassifierMixin, _BasePCov):
                 classifier = self.classifier
 
             self.z_classifier_ = check_cl_fit(classifier, X, Y)
+            W = self.z_classifier_.coef_.T.reshape(X.shape[1], -1)
 
-            if isinstance(self.z_classifier_, MultiOutputClassifier):
-                W = np.hstack([est_.coef_.T for est_ in self.z_classifier_.estimators_])
-            else:
-                W = self.z_classifier_.coef_.T.reshape(X.shape[1], -1)
-
-            # we don't want to copy all parameters of classifier, such as n_features_in, since we are re-fitting it on T and Y
-            self.classifier_ = clone(classifier)
         else:
+            # If precomputed, use default classifier to predict Y from T
+            classifier = LogisticRegression()
             if W is None:
-                W = np.linalg.lstsq(X, Y, self.tol)[0]
-
-            # if precomputed, use default classifier to predict Y from T
-            self.classifier_ = LogisticRegression()
+                W = LogisticRegression().fit(X, Y).coef_.T.reshape(X.shape[1], -1)
 
         Z = X @ W
 
@@ -299,16 +291,11 @@ class PCovC(LinearClassifierMixin, _BasePCov):
 
         # instead of using linear regression solution, refit with the classifier
         # and steal weights to get pxz and ptz
-        self.classifier_.fit(X @ self.pxt_, Y)
 
-        if isinstance(self.classifier_, MultiOutputClassifier):
-            self.ptz_ = np.hstack(
-                [est_.coef_.T for est_ in self.classifier_.estimators_]
-            )
-            self.pxz_ = self.pxt_ @ self.ptz_
-        else:
-            self.ptz_ = self.classifier_.coef_.T
-            self.pxz_ = self.pxt_ @ self.ptz_
+        self.classifier_ = clone(classifier).fit(X @ self.pxt_, Y)
+
+        self.ptz_ = self.classifier_.coef_.T
+        self.pxz_ = self.pxt_ @ self.ptz_
 
         if len(Y.shape) == 1 and type_of_target(Y) == "binary":
             self.pxz_ = self.pxz_.reshape(

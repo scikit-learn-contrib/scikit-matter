@@ -5,8 +5,7 @@ import numpy as np
 from sklearn import exceptions
 from sklearn.datasets import load_breast_cancer as get_dataset
 from sklearn.decomposition import PCA
-from sklearn.linear_model import LogisticRegression, RidgeClassifier
-from sklearn.svm import LinearSVC
+from sklearn.linear_model import LogisticRegression
 
 from sklearn.naive_bayes import GaussianNB
 from sklearn.preprocessing import StandardScaler
@@ -216,8 +215,8 @@ class PCovCSpaceTest(PCovCBaseTest):
 
                 self.assertTrue(
                     np.allclose(
-                        pcovc_ss.predict(self.X),
-                        pcovc_fs.predict(self.X),
+                        pcovc_ss.decision_function(self.X),
+                        pcovc_fs.decision_function(self.X),
                         self.error_tol,
                     )
                 )
@@ -522,9 +521,10 @@ class PCovCInfrastructureTest(PCovCBaseTest):
         self.assertEqual(
             str(cm.exception),
             "Classifier must be an instance of "
-            "`LinearDiscriminantAnalysis`, `LinearSVC`, `LogisticRegression`, "
-            "`LogisticRegressionCV`, `MultiOutputClassifier`, `Perceptron`, "
-            "`RidgeClassifier`, `RidgeClassifierCV`, `SGDClassifier`, or `precomputed`",
+            "`LogisticRegression`, `LogisticRegressionCV`, `LinearSVC`, "
+            "`LinearDiscriminantAnalysis`, `RidgeClassifier`, "
+            "`RidgeClassifierCV`, `SGDClassifier`, `Perceptron`, "
+            "or `precomputed`",
         )
 
     def test_none_classifier(self):
