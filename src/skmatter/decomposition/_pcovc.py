@@ -69,6 +69,7 @@ class PCovC(LinearClassifierMixin, _BasePCov):
     n_components : int, float or str, default=None
         Number of components to keep.
         if n_components is not set all components are kept::
+
             n_components == min(n_samples, n_features)
 
     svd_solver : {'auto', 'full', 'arpack', 'randomized'}, default='auto'
@@ -157,20 +158,20 @@ class PCovC(LinearClassifierMixin, _BasePCov):
         the projector, or weights, from the input space :math:`\mathbf{X}`
         to the latent-space projection :math:`\mathbf{T}`
 
-    pxz_ : ndarray of size :math: `({n_{features}, })` or `({n_{features}, n_{classes}})`
+    pxz_ : ndarray of size :math:`({n_{features}, })` or :math:`({n_{features}, n_{classes}})`
         the projector, or weights, from the input space :math:`\mathbf{X}`
         to the class confidence scores :math:`\mathbf{Z}`
 
-    ptz_ : ndarray of size :math: ``({n_{components}, })` or `({n_{components}, n_{classes}})`
+    ptz_ : ndarray of size :math:`({n_{components}, })` or :math:`({n_{components}, n_{classes}})`
         the projector, or weights, from the latent-space projection
         :math:`\mathbf{T}` to the class confidence scores :math:`\mathbf{Z}`
 
-    explained_variance_ : ndarray of shape (n_components,)
+    explained_variance_ : numpy.ndarray of shape (n_components,)
         The amount of variance explained by each of the selected components.
         Equal to n_components largest eigenvalues
         of the PCovC-modified covariance matrix of :math:`\mathbf{X}`.
 
-    singular_values_ : ndarray of shape (n_components,)
+    singular_values_ : numpy.ndarray of shape (n_components,)
         The singular values corresponding to each of the selected components.
 
     Examples

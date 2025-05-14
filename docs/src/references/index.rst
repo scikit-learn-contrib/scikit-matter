@@ -11,7 +11,8 @@ API Reference
   selection
   linear_models
   clustering
-  decomposition
+  pcovc_decomposition
+  pcovr_decomposition
   metrics
   neighbors
   datasets

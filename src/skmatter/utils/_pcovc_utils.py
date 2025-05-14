@@ -30,7 +30,7 @@ def check_cl_fit(classifier, X, y):
     ------
     ValueError
         If the fitted classifiers's coefficients have a shape incompatible with the
-        number of classes or number of features.
+        number of features in X or the number of classes in y.
     """
     try:
         check_is_fitted(classifier)
@@ -39,10 +39,8 @@ def check_cl_fit(classifier, X, y):
         # Check compatibility with X
         validate_data(fitted_classifier, X, y, reset=False, multi_output=True)
 
-        # Check compatibility with y
-        # dimension of classifier coefficients is always 2, hence we don't
-        # need to check dimension for match with Y
-        # We need to double check this...
+        # Check compatibility with the number of features in X and the number of
+        # classes in y
         n_classes = len(np.unique(y))
 
         if n_classes == 2:

@@ -142,12 +142,10 @@ class KernelPCovR(_BaseKPCov):
     >>> from skmatter.decomposition import KernelPCovR
     >>> from skmatter.preprocessing import StandardFlexibleScaler as SFS
     >>> from sklearn.kernel_ridge import KernelRidge
-    >>>
     >>> X = np.array([[-1, 1, -3, 1], [1, -2, 1, 2], [-2, 0, -2, -2], [1, 0, 2, -1]])
     >>> X = SFS().fit_transform(X)
     >>> Y = np.array([[0, -5], [-1, 1], [1, -5], [-3, 2]])
     >>> Y = SFS(column_wise=True).fit_transform(Y)
-    >>>
     >>> kpcovr = KernelPCovR(
     ...     mixing=0.1,
     ...     n_components=2,
@@ -221,6 +219,7 @@ class KernelPCovR(_BaseKPCov):
             means and scaled. If features are related, the matrix should be scaled
             to have unit variance, otherwise :math:`\mathbf{X}` should be
             scaled so that each feature has a variance of 1 / n_features.
+
         Y : numpy.ndarray, shape (n_samples, n_properties)
             Training data, where n_samples is the number of samples and
             n_properties is the number of properties
@@ -229,6 +228,7 @@ class KernelPCovR(_BaseKPCov):
             means and scaled. If features are related, the matrix should be scaled
             to have unit variance, otherwise :math:`\mathbf{Y}` should be
             scaled so that each feature has a variance of 1 / n_features.
+
         W : numpy.ndarray, shape (n_samples, n_properties)
             Regression weights, optional when regressor=`precomputed`. If not
             passed, it is assumed that `W = np.linalg.lstsq(K, Y, self.tol)[0]`
@@ -396,6 +396,7 @@ class KernelPCovR(_BaseKPCov):
         ----------
         X : numpy.ndarray
             independent (predictor) variable
+
         Y : numpy.ndarray
             dependent (response) variable
 
