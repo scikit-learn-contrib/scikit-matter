@@ -69,6 +69,7 @@ class PCovC(LinearClassifierMixin, _BasePCov):
     n_components : int, float or str, default=None
         Number of components to keep.
         if n_components is not set all components are kept::
+        
             n_components == min(n_samples, n_features)
 
     svd_solver : {'auto', 'full', 'arpack', 'randomized'}, default='auto'
@@ -161,7 +162,7 @@ class PCovC(LinearClassifierMixin, _BasePCov):
         the projector, or weights, from the input space :math:`\mathbf{X}`
         to the class confidence scores :math:`\mathbf{Z}`
 
-    ptz_ : ndarray of size :math: ``({n_{components}, })` or `({n_{components}, n_{classes}})`
+    ptz_ : ndarray of size :math: `({n_{components}, })` or `({n_{components}, n_{classes}})`
         the projector, or weights, from the latent-space projection
         :math:`\mathbf{T}` to the class confidence scores :math:`\mathbf{Z}`
 
