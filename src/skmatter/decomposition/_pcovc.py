@@ -69,7 +69,7 @@ class PCovC(LinearClassifierMixin, _BasePCov):
     n_components : int, float or str, default=None
         Number of components to keep.
         if n_components is not set all components are kept::
-        
+
             n_components == min(n_samples, n_features)
 
     svd_solver : {'auto', 'full', 'arpack', 'randomized'}, default='auto'
