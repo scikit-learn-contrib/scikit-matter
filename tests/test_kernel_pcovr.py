@@ -92,7 +92,6 @@ class KernelPCovRErrorTest(KernelPCovRBaseTest):
             x_error = np.linalg.norm(self.X - x) ** 2.0 / np.linalg.norm(self.X) ** 2.0
             print(np.linalg.norm(K - t @ t.T) ** 2.0 / np.linalg.norm(K) ** 2.0)
 
-
             with self.subTest(error=error):
                 self.assertFalse(np.isnan(error))
             with self.subTest(error=error, alpha=round(mixing, 4)):
@@ -362,11 +361,13 @@ class KernelTests(KernelPCovRBaseTest):
         t_ref = ref_pcovr.transform(self.X)
         t = kpcovr.transform(self.X)
 
+        print(np.linalg.norm(t_ref-t))
         K = kpcovr._get_kernel(self.X)
 
         k_ref = t_ref @ t_ref.T
         k = t @ t.T
 
+        
         lk_ref = np.linalg.norm(K - k_ref) ** 2.0 / np.linalg.norm(K) ** 2.0
         lk = np.linalg.norm(K - k) ** 2.0 / np.linalg.norm(K) ** 2.0
 
@@ -375,6 +376,8 @@ class KernelTests(KernelPCovRBaseTest):
             round(ly, rounding),
             round(ly_ref, rounding),
         )
+
+        print(lk, lk_ref)
 
         self.assertEqual(
             round(lk, rounding),

@@ -131,6 +131,13 @@ class _BasePCov(_BasePCA, LinearModel):
 
     def _fit_sample_space(self, X, Y, Yhat, W, compute_pty_=True):
         Kt = pcovr_kernel(mixing=self.mixing, X=X, Y=Yhat)
+       # Kt = pcovr_kernel(mixing=self.mixing, X=X, Y=Yhat)
+
+        print("PCovC X: "+str(X[:5, 0]))
+        print("PCovC Yhat: "+str(Yhat[:5, 0]))
+
+        print("PcovC Kt: "+str(Kt[:5, 0]))
+
         if self.fit_svd_solver_ == "full":
             U, S, Vt = self._decompose_full(Kt)
         elif self.fit_svd_solver_ in ["arpack", "randomized"]:
@@ -152,6 +159,8 @@ class _BasePCov(_BasePCA, LinearModel):
 
         self.pxt_ = P @ T
         self.ptx_ = T.T @ X
+
+        print("PcovC pxt: "+str(self.pxt_[:5, 0]))
 
         if compute_pty_:
             self.pty_ = T.T @ Y

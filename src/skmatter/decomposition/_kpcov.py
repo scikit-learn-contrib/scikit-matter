@@ -114,11 +114,18 @@ class _BaseKPCov(_BasePCA, LinearModel):
         return K
 
     # exactly same in KPCovR/KPCovC
-    def _fit(self, K, Z, W):
+    def _fit(self, K, Yhat, W):
         """
         Fit the model with the computed kernel and approximated properties.
         """
-        K_tilde = pcovr_kernel(mixing=self.mixing, X=K, Y=Z, kernel="precomputed")
+   
+        K_tilde = pcovr_kernel(mixing=self.mixing, X=K, Y=Yhat, kernel="precomputed")
+
+        print("KPCovC K: "+str(K[:5, 0]))
+        print("KPCovC Yhat: "+str(Yhat[:5, 0]))
+
+        print("KPCovC K_tilde: "+str(K_tilde[:5, 0]))
+
 
         if self.fit_svd_solver_ == "full":
             _, S, Vt = self._decompose_full(K_tilde)
@@ -131,10 +138,11 @@ class _BaseKPCov(_BasePCA, LinearModel):
 
         U = Vt.T
 
-        P = (self.mixing * np.eye(K.shape[0])) + (1.0 - self.mixing) * (W @ Z.T)
+        P = (self.mixing * np.eye(K.shape[0])) + (1.0 - self.mixing) * (W @ Yhat.T)
         S_inv = np.array([1.0 / s if s > self.tol else 0.0 for s in S])
 
         self.pkt_ = P @ U @ np.sqrt(np.diagflat(S_inv))
+        print("KPcovC pkt: "+str(self.pkt_[:5, 0]))
         T = K @ self.pkt_
         self.pt__ = np.linalg.lstsq(T, np.eye(T.shape[0]), rcond=self.tol)[0]
 
@@ -147,6 +155,8 @@ class _BaseKPCov(_BasePCA, LinearModel):
 
         if self.center:
             K = self.centerer_.transform(K)
+
+        print("KPCovc transform: "+str(K[:5, 0]))
 
         return K @ self.pkt_
 

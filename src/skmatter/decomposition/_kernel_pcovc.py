@@ -194,7 +194,7 @@ class KernelPCovC(LinearClassifierMixin, _BaseKPCov):
         degree=3,
         coef0=1,
         kernel_params=None,
-        center=False,
+        center=True,
         fit_inverse_transform=False,
         tol=1e-12,
         n_jobs=None,
@@ -288,20 +288,19 @@ class KernelPCovC(LinearClassifierMixin, _BaseKPCov):
             self.z_classifier_ = check_cl_fit(classifier, K, Y)
             W = self.z_classifier_.coef_.T.reshape(K.shape[1], -1)
 
-            self.classifier_ = clone(classifier)
         else:
             # If precomputed, use default classifier to predict Y from T
             classifier = LogisticRegression()
             if W is None:
-                W = LogisticRegression().fit(X, Y).coef_.T
-                W = W.reshape(X.shape[1], -1)
+                W = LogisticRegression().fit(K, Y).coef_.T
+                W = W.reshape(K.shape[1], -1)
 
         Z = K @ W
 
         self._fit(K, Z, W)
 
         self.ptk_ = self.pt__ @ K
-        print("KPCovc"+str(self.ptk_[:10][1]))
+        #("KPCovc"+str(self.ptk_[:10][1]))
         if self.fit_inverse_transform:
             self.ptx_ = self.pt__ @ X
 
@@ -388,6 +387,7 @@ class KernelPCovC(LinearClassifierMixin, _BaseKPCov):
             K = self._get_kernel(X, self.X_fit_)
             if self.center:
                 K = self.centerer_.transform(K)
+            #print("KPCovC decision function: "+str(K[:1]))
 
             # Or self.classifier_.decision_function(K @ self.pxt_)
             return K @ self.pkz_ + self.classifier_.intercept_

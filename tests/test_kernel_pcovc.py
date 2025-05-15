@@ -125,6 +125,7 @@ class KernelPCovCErrorTest(KernelPCovCBaseTest):
             w = t @ np.linalg.pinv(t.T @ t, rcond=kpcovc.tol) @ t.T
             Lkpca = np.trace(K - K @ w) / np.trace(K)
 
+            print(kpcovc.score(self.X, self.Y), -sum([Lkpca, Lkrr]))
             # this is only true for in-sample data
             self.assertTrue(
                 np.isclose(
@@ -374,27 +375,48 @@ class KernelTests(KernelPCovCBaseTest):
             n_components=2,
         )
 
-        kpcovc = KernelPCovC(kernel="poly", **hypers)
+        kpcovc = KernelPCovC(kernel="linear", **hypers)
         kpcovc.fit(self.X, self.Y)
         K = kpcovc._get_kernel(self.X)
-        pcovc = PCovC(**hypers)
-        pcovc.fit(K, self.Y)
+        print(K[:5, 0])
+        K = KernelNormalizer().fit_transform(K)
+        print(K[:5, 0])
 
-        T_kpcovc = kpcovc.transform(self.X)
-        score_kpcovc = kpcovc.score(self.X, self.Y)
-        d_kpcovc = kpcovc.decision_function(self.X)
+        ly = (
+            np.linalg.norm(self.Y - kpcovc.predict(self.X)) ** 2.0
+            / np.linalg.norm(self.Y) ** 2.0
+        )
 
+        ref_pcovc = PCovC(**hypers)
+        ref_pcovc.fit(self.X, self.Y)
 
-        T_pcovc = pcovc.transform(K)
-        score_pcovc = pcovc.score(K, self.Y)
-        d_pcovc = pcovc.decision_function(K)
-        print(np.linalg.norm(d_kpcovc-d_pcovc))
-        print(score_kpcovc, score_pcovc)
-        rounding = 2
-        
+        ly_ref = (
+            np.linalg.norm(self.Y - ref_pcovc.predict(self.X)) ** 2.0
+            / np.linalg.norm(self.Y) ** 2.0
+        )
+
+        t_ref = ref_pcovc.transform(self.X)
+        t = kpcovc.transform(self.X)
+
+        print(np.linalg.norm(t_ref-t))
+
+        k_ref = t_ref @ t_ref.T
+        k = t @ t.T
+
+        print(t_ref-t)
+
+        lk_ref = np.linalg.norm(K - k_ref) ** 2.0 / np.linalg.norm(K) ** 2.0
+        lk = np.linalg.norm(K - k) ** 2.0 / np.linalg.norm(K) ** 2.0
+
+        rounding = 3
         self.assertEqual(
-            round(score_kpcovc, rounding),
-            round(score_pcovc, rounding),
+            round(ly, rounding),
+            round(ly_ref, rounding),
+        )
+
+        self.assertEqual(
+            round(lk, rounding),
+            round(lk_ref, rounding),
         )
 
 

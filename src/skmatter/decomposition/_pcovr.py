@@ -380,6 +380,8 @@ class PCovR(RegressorMixin, MultiOutputMixin, _BasePCov):
             New data, where n_samples is the number of samples
             and n_features is the number of features.
         """
+        print("PCovr transform: "+str(X[:5, 0]))
+
         return super().transform(X)
 
     def score(self, X, y, T=None):
