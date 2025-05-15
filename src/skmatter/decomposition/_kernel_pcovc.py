@@ -36,7 +36,7 @@ class KernelPCovC(LinearClassifierMixin, _BaseKPCov):
 
     where :math:`\alpha` is a mixing parameter,
     :math:`\mathbf{K}` is the input kernel of shape :math:`(n_{samples}, n_{samples})`
-    and :math:`\mathbf{Z}` is a matrix of class confidence scores of shape 
+    and :math:`\mathbf{Z}` is a matrix of class confidence scores of shape
     :math:`(n_{samples}, n_{classes})`
 
     Parameters
@@ -77,12 +77,9 @@ class KernelPCovC(LinearClassifierMixin, _BaseKPCov):
         is provided, it is used to compute :math:`{\mathbf{Z}}`.
         Note that any pre-fitting of the classifier will be lost if `PCovC` is
         within a composite estimator that enforces cloning, e.g.,
-        `sklearn.compose.TransformedTargetclassifier` or
         `sklearn.pipeline.Pipeline` with model caching.
         In such cases, the classifier will be re-fitted on the same
         training data as the composite estimator.
-        If `precomputed`, we assume that the `y` passed to the `fit` function
-        is the classified form of the targets :math:`{\mathbf{\hat{Y}}}`.
         If None, ``sklearn.linear_model.LogisticRegression()``
         is used as the classifier.
 
@@ -140,11 +137,11 @@ class KernelPCovC(LinearClassifierMixin, _BaseKPCov):
         the projector, or weights, from the input kernel :math:`\mathbf{K}`
         to the latent-space projection :math:`\mathbf{T}`
 
-    pkz_: numpy.ndarray of size :math:`({n_{samples}, n_{classes}})`
+    pkz_: numpy.ndarray of size :math:`({n_{samples}, })` or :math:`({n_{samples}, n_{classes}})`
         the projector, or weights, from the input kernel :math:`\mathbf{K}`
         to the class confidence scores :math:`\mathbf{Z}`
 
-    ptz_: numpy.ndarray of size :math:`({n_{components}, n_{classes}})`
+    ptz_: numpy.ndarray of size :math:`({n_{components}, })` or :math:`({n_{components}, n_{classes}})`
         the projector, or weights, from the latent-space projection
         :math:`\mathbf{T}` to the class confidence scores :math:`\mathbf{Z}`
 
@@ -233,18 +230,13 @@ class KernelPCovC(LinearClassifierMixin, _BaseKPCov):
             to have unit variance, otherwise :math:`\mathbf{X}` should be
             scaled so that each feature has a variance of 1 / n_features.
 
-        Y : numpy.ndarray, shape (n_samples, n_properties)
-            Training data, where n_samples is the number of samples and
-            n_properties is the number of properties
+        Y : numpy.ndarray, shape (n_samples,)
+            Training data, where n_samples is the number of samples.
 
-            It is suggested that :math:`\mathbf{X}` be centered by its column-
-            means and scaled. If features are related, the matrix should be scaled
-            to have unit variance, otherwise :math:`\mathbf{Y}` should be
-            scaled so that each feature has a variance of 1 / n_features.
-
-        W : numpy.ndarray, shape (n_samples, n_properties)
-            Classification weights, optional when classifier=`precomputed`. If not
-            passed, it is assumed that `W = np.linalg.lstsq(K, Y, self.tol)[0]`
+        W : numpy.ndarray, shape (n_features, n_properties)
+            Classification weights, optional when classifier=`precomputed`. If
+            not passed, it is assumed that the weights will be taken from a
+            linear classifier fit between K and Y
 
         Returns
         -------
@@ -300,7 +292,7 @@ class KernelPCovC(LinearClassifierMixin, _BaseKPCov):
         self._fit(K, Z, W)
 
         self.ptk_ = self.pt__ @ K
-        #("KPCovc"+str(self.ptk_[:10][1]))
+        # ("KPCovc"+str(self.ptk_[:10][1]))
         if self.fit_inverse_transform:
             self.ptx_ = self.pt__ @ X
 
@@ -387,7 +379,7 @@ class KernelPCovC(LinearClassifierMixin, _BaseKPCov):
             K = self._get_kernel(X, self.X_fit_)
             if self.center:
                 K = self.centerer_.transform(K)
-            #print("KPCovC decision function: "+str(K[:1]))
+            # print("KPCovC decision function: "+str(K[:1]))
 
             # Or self.classifier_.decision_function(K @ self.pxt_)
             return K @ self.pkz_ + self.classifier_.intercept_

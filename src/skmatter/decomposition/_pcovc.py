@@ -316,7 +316,7 @@ class PCovC(LinearClassifierMixin, _BasePCov):
             \mathbf{\tilde{C}} = \alpha \mathbf{X}^T \mathbf{X} +
             (1 - \alpha) \left(\left(\mathbf{X}^T
             \mathbf{X}\right)^{-\frac{1}{2}} \mathbf{X}^T
-            \mathbf{Z}\mathbf{Z}}^T \mathbf{X} \left(\mathbf{X}^T
+            \mathbf{Z}\mathbf{Z}^T \mathbf{X} \left(\mathbf{X}^T
             \mathbf{X}\right)^{-\frac{1}{2}}\right)
 
         where
