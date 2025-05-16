@@ -67,19 +67,13 @@ class KernelPCovC(LinearClassifierMixin, _BaseKPCov):
             0 < n_components < min(X.shape)
         If randomized :
             run randomized SVD by the method of Halko et al.
+    
+    classifier: {`LogisticRegression`, `LogisticRegressionCV`, `LinearSVC`, `LinearDiscriminantAnalysis`,
+        `RidgeClassifier`, `RidgeClassifierCV`, `SGDClassifier`, `Perceptron`, `precomputed`}, default=None
+        The classifier to use for computing
+        the evidence :math:`{\mathbf{Z}}`.
+        A pre-fitted classifier may be provided.
 
-    classifier: {`RidgeClassifier`, `RidgeClassifierCV`, `LogisticRegression`,
-        `LogisticRegressionCV`, `SGDClassifier`, `LinearSVC`, `precomputed`}, default=None
-        classifier for computing :math:`{\mathbf{Z}}`. The classifier should be one
-        `sklearn.linear_model.RidgeClassifier`, `sklearn.linear_model.RidgeClassifierCV`,
-        `sklearn.linear_model.LogisticRegression`, `sklearn.linear_model.LogisticRegressionCV`,
-        `sklearn.linear_model.SGDClassifier`, or `sklearn.svm.LinearSVC`. If a pre-fitted classifier
-        is provided, it is used to compute :math:`{\mathbf{Z}}`.
-        Note that any pre-fitting of the classifier will be lost if `PCovC` is
-        within a composite estimator that enforces cloning, e.g.,
-        `sklearn.pipeline.Pipeline` with model caching.
-        In such cases, the classifier will be re-fitted on the same
-        training data as the composite estimator.
         If None, ``sklearn.linear_model.LogisticRegression()``
         is used as the classifier.
 
@@ -129,6 +123,16 @@ class KernelPCovC(LinearClassifierMixin, _BaseKPCov):
 
     Attributes
     ----------
+    classifier : estimator object
+        The linear classifier passed for fitting. If pre-fitted, it is assummed
+        to be fit on a precomputed kernel K and Y.
+
+    z_classifier_ : estimator object
+        The linear classifier fit between the computed kernel K and Y.
+
+    classifier_ : estimator object
+        The linear classifier fit between T and Y.
+
     pt__: numpy.darray of size :math:`({n_{components}, n_{components}})`
         pseudo-inverse of the latent-space projection, which
         can be used to contruct projectors from latent-space
@@ -236,7 +240,7 @@ class KernelPCovC(LinearClassifierMixin, _BaseKPCov):
         W : numpy.ndarray, shape (n_features, n_properties)
             Classification weights, optional when classifier=`precomputed`. If
             not passed, it is assumed that the weights will be taken from a
-            linear classifier fit between K and Y
+            linear classifier fit between K and Y.
 
         Returns
         -------

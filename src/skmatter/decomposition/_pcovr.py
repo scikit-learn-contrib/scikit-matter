@@ -258,6 +258,7 @@ class PCovR(RegressorMixin, MultiOutputMixin, _BasePCov):
 
             W = self.regressor_.coef_.T.reshape(X.shape[1], -1)
             Yhat = self.regressor_.predict(X).reshape(X.shape[0], -1)
+            print("PCovR Yhat: "+str(Yhat[:5,0]))
         else:
             Yhat = Y.copy()
             if W is None:

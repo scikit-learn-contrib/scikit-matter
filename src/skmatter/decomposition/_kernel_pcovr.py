@@ -293,6 +293,7 @@ class KernelPCovR(_BaseKPCov):
             # Use this instead of `self.regressor_.predict(K)`
             # so that we can handle the case of the pre-fitted regressor
             Yhat = K @ W
+            print("KPCovR Yhat: "+str(Yhat[:5,0]))
 
             # When we have an unfitted regressor,
             # we fit it with a precomputed K

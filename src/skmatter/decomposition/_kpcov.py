@@ -113,7 +113,6 @@ class _BaseKPCov(_BasePCA, LinearModel):
                 self.fit_svd_solver_ = "full"
         return K
 
-    # exactly same in KPCovR/KPCovC
     def _fit(self, K, Yhat, W):
         """
         Fit the model with the computed kernel and approximated properties.
@@ -146,7 +145,6 @@ class _BaseKPCov(_BasePCA, LinearModel):
         T = K @ self.pkt_
         self.pt__ = np.linalg.lstsq(T, np.eye(T.shape[0]), rcond=self.tol)[0]
 
-    # exactly same in KPCovR/KPCovC
     def transform(self, X=None):
         check_is_fitted(self, ["pkt_", "X_fit_"])
 
@@ -160,11 +158,9 @@ class _BaseKPCov(_BasePCA, LinearModel):
 
         return K @ self.pkt_
 
-    # exactly same in KPCovR/KPCovC
     def inverse_transform(self, T):
         return T @ self.ptx_
 
-    # exactly same in KPCovR/KPCovC (slightly different from _BasePCov's implementation)
     def _decompose_truncated(self, mat):
         if not 1 <= self.n_components_ <= self.n_samples_in_:
             raise ValueError(
@@ -223,7 +219,6 @@ class _BaseKPCov(_BasePCA, LinearModel):
 
         return U, S, Vt
 
-    # exactly same in KPCovR/KPCovC (slightly different from _BasePCov's implementation)
     def _decompose_full(self, mat):
         if self.n_components_ != "mle":
             if not (0 <= self.n_components_ <= self.n_samples_in_):
