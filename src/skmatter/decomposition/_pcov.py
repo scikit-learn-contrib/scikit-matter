@@ -38,7 +38,7 @@ class _BasePCov(_BasePCA, LinearModel):
         self.random_state = random_state
         self.whiten = whiten
 
-    def _fit_utils(self, X):
+    def fit(self, X):
         """Contains the common functionality for the PCovR and PCovC fit methods,
         but leaves the rest of the functionality to the subclass.
         """

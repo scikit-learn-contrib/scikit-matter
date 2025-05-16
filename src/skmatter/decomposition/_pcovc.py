@@ -149,10 +149,10 @@ class PCovC(LinearClassifierMixin, _BasePCov):
         The linear classifier passed for fitting.
 
     z_classifier_ : estimator object
-        The linear classifier fit between X and Y.
+        The linear classifier fit between :math:`\mathbf{X}` and :math:`\mathbf{Y}`.
 
     classifier_ : estimator object
-        The linear classifier fit between T and Y.
+        The linear classifier fit between :math:`\mathbf{T}` and  :math:`\mathbf{Y}`.
 
     pxt_ : ndarray of size :math:`({n_{features}, n_{components}})`
         the projector, or weights, from the input space :math:`\mathbf{X}`
@@ -239,13 +239,28 @@ class PCovC(LinearClassifierMixin, _BasePCov):
         W : numpy.ndarray, shape (n_features, n_properties)
             Classification weights, optional when classifier=`precomputed`. If
             not passed, it is assumed that the weights will be taken from a
-            linear classifier fit between X and Y
+            linear classifier fit between :math:`\mathbf{X}` and :math:`\mathbf{Y}`
+
+        Notes
+        -----
+        Note the relationship between :math:`\mathbf{X}`, :math:`\mathbf{Y}`,
+        :math:`\mathbf{Z}`, and :math:`\mathbf{W}`. The classification weights
+        :math:`\mathbf{W}`, obtained through a linear classifier fit between
+        :math:`\mathbf{X}` and :math:`\mathbf{Y}`, are used to compute:
+
+        .. math::
+            \mathbf{Z} = \mathbf{X} \mathbf{W}
+
+        Next, :math:`\mathbf{Z}` is used in either `_fit_feature_space` or
+        `_fit_sample_space` as our approximation of :math:`\mathbf{Y}`.
+        Finally, we refit a classifier on :math:`\mathbf{T}` and :math:`\mathbf{Y}`
+        to obtain :math:`\mathbf{P}_{XZ}` and :math:`\mathbf{P}_{TZ}`
         """
         X, Y = validate_data(self, X, Y, y_numeric=False)
         check_classification_targets(Y)
         self.classes_ = np.unique(Y)
 
-        super()._fit_utils(X)
+        super().fit(X)
 
         compatible_classifiers = (
             LogisticRegression,
