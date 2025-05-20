@@ -43,6 +43,19 @@ The representations were computed with [C1]_ using the hyperparameters:
 
 Of the 2'520 resulting features, 100 were selected via FPS using [C2]_.
 
+Chemical Properties
+-------------------
+
+The CSD-1000R dataset consists of 100 atomic environments selected from crystal structures in the Cambridge Structural Database (CSD). These environments represent a diverse set of chemical compositions and bonding types, including:
+
+- Metals, metalloids, and non-metals
+- Covalent, ionic, and metallic bonding environments
+- Various coordination numbers and geometries
+
+The dataset captures local chemical environments relevant for modeling properties such as nuclear magnetic resonance (NMR) chemical shieldings, aiding in the understanding of structure-property relationships in materials chemistry.
+
+For more detailed chemical information, users can refer to the original Cambridge Structural Database or the publication by Ceriotti et al. (2019).
+
 References
 ----------
 
