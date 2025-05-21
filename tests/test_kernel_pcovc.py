@@ -63,7 +63,6 @@ class KernelPCovCErrorTest(KernelPCovCBaseTest):
                 / np.linalg.norm(self.Y) ** 2.0
             )
 
-
             with self.subTest(error=error):
                 self.assertFalse(np.isnan(error))
             with self.subTest(error=error, alpha=round(mixing, 4)):
@@ -115,21 +114,12 @@ class KernelPCovCErrorTest(KernelPCovCBaseTest):
             )
 
             kpcovc.fit(self.X, self.Y)
-            K = kpcovc._get_kernel(self.X)
-
-            y = kpcovc.predict(self.X)
-            Lkrr = np.linalg.norm(self.Y - y) ** 2 / np.linalg.norm(self.Y) ** 2
-
-            t = kpcovc.transform(self.X)
-
-            w = t @ np.linalg.pinv(t.T @ t, rcond=kpcovc.tol) @ t.T
-            Lkpca = np.trace(K - K @ w) / np.trace(K)
-
-            print(kpcovc.score(self.X, self.Y), -sum([Lkpca, Lkrr]))
-            # this is only true for in-sample data
+            y_pred = kpcovc.predict(self.X)
             self.assertTrue(
                 np.isclose(
-                    kpcovc.score(self.X, self.Y), -sum([Lkpca, Lkrr]), self.error_tol
+                    kpcovc.score(self.X, self.Y),
+                    accuracy_score(y_pred, self.Y),
+                    self.error_tol,
                 )
             )
 
@@ -398,12 +388,12 @@ class KernelTests(KernelPCovCBaseTest):
         t_ref = ref_pcovc.transform(self.X)
         t = kpcovc.transform(self.X)
 
-        print(np.linalg.norm(t_ref-t))
+        print(np.linalg.norm(t_ref - t))
 
         k_ref = t_ref @ t_ref.T
         k = t @ t.T
 
-        print(t_ref-t)
+        print(t_ref - t)
 
         lk_ref = np.linalg.norm(K - k_ref) ** 2.0 / np.linalg.norm(K) ** 2.0
         lk = np.linalg.norm(K - k) ** 2.0 / np.linalg.norm(K) ** 2.0
