@@ -131,7 +131,6 @@ class _BasePCov(_BasePCA, LinearModel):
 
     def _fit_sample_space(self, X, Y, Yhat, W, compute_pty_=True):
         Kt = pcovr_kernel(mixing=self.mixing, X=X, Y=Yhat)
-       # Kt = pcovr_kernel(mixing=self.mixing, X=X, Y=Yhat)
 
         print("PCovC X: "+str(X[:5, 0]))
         print("PCovC Yhat: "+str(Yhat[:5, 0]))

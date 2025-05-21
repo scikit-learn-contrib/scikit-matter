@@ -367,7 +367,7 @@ class KernelTests(KernelPCovRBaseTest):
         k_ref = t_ref @ t_ref.T
         k = t @ t.T
 
-        
+
         lk_ref = np.linalg.norm(K - k_ref) ** 2.0 / np.linalg.norm(K) ** 2.0
         lk = np.linalg.norm(K - k) ** 2.0 / np.linalg.norm(K) ** 2.0
 

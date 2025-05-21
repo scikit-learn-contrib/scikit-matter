@@ -117,7 +117,6 @@ class _BaseKPCov(_BasePCA, LinearModel):
         """
         Fit the model with the computed kernel and approximated properties.
         """
-   
         K_tilde = pcovr_kernel(mixing=self.mixing, X=K, Y=Yhat, kernel="precomputed")
 
         print("KPCovC K: "+str(K[:5, 0]))
@@ -154,7 +153,7 @@ class _BaseKPCov(_BasePCA, LinearModel):
         if self.center:
             K = self.centerer_.transform(K)
 
-        print("KPCovc transform: "+str(K[:5, 0]))
+        #print("KPCovc transform: "+str(K[:5, 0]))
 
         return K @ self.pkt_
 

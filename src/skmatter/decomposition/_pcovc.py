@@ -431,5 +431,5 @@ class PCovC(LinearClassifierMixin, _BasePCov):
             New data, where n_samples is the number of samples
             and n_features is the number of features.
         """
-        print("PCovc transform: "+str(X[:5, 0]))
+        #print("PCovc transform: "+str(X[:5, 0]))
         return super().transform(X)
