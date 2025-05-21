@@ -31,12 +31,7 @@ You can then ``import skmatter`` and use scikit-matter in your projects!
 
 Tests
 -----
-We are testing our code for Python 3.8 and 3.12 on  `Windows Server 2019`_, `macOS 11`_
-and `Ubuntu LTS 22.04`_.
-
-.. _`Windows Server 2019`: https://github.com/actions/runner-images/blob/main/images/win/Windows2019-Readme.md
-.. _`macOS 11`: https://github.com/actions/runner-images/blob/main/images/macos/macos-11-Readme.md
-.. _`Ubuntu LTS 22.04`: https://github.com/actions/runner-images/blob/main/images/linux/Ubuntu2204-Readme.md
+We are testing our code for Python 3.10 and 3.13 on the latest versions of Ubuntu, macOS and Windows.
 
 .. marker-issues
 
