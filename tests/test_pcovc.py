@@ -461,10 +461,10 @@ class PCovCInfrastructureTest(PCovCBaseTest):
     def test_precomputed_classification(self):
         classifier = LogisticRegression()
         classifier.fit(self.X, self.Y)
-        Yhat = classifier.predict(self.X)
+
         W = classifier.coef_.T.reshape(self.X.shape[1], -1)
         pcovc1 = self.model(mixing=0.5, classifier="precomputed", n_components=1)
-        pcovc1.fit(self.X, Yhat, W)
+        pcovc1.fit(self.X, self.Y, W)
         t1 = pcovc1.transform(self.X)
 
         pcovc2 = self.model(mixing=0.5, classifier=classifier, n_components=1)
@@ -472,6 +472,14 @@ class PCovCInfrastructureTest(PCovCBaseTest):
         t2 = pcovc2.transform(self.X)
 
         self.assertTrue(np.linalg.norm(t1 - t2) < self.error_tol)
+
+        # Now check for match when W is not passed:
+        pcovc3 = self.model(mixing=0.5, classifier="precomputed", n_components=1)
+        pcovc3.fit(self.X, self.Y)
+        t3 = pcovc3.transform(self.X)
+
+        self.assertTrue(np.linalg.norm(t3 - t2) < self.error_tol)
+        self.assertTrue(np.linalg.norm(t3 - t1) < self.error_tol)
 
     def test_classifier_modifications(self):
         classifier = LogisticRegression()
