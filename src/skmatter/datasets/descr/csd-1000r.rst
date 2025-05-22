@@ -32,7 +32,7 @@ The representations were computed with [C1]_ using the hyperparameters:
 +---------------------------+------------+
 | max_angular:              |      6     |
 +---------------------------+------------+
-| gaussian_sigma_constant": |     0.4    |
+| gaussian_sigma_constant:  |     0.4    |
 +---------------------------+------------+
 | gaussian_sigma_type:      |  "Constant"|
 +---------------------------+------------+
@@ -123,3 +123,6 @@ Reference Code
     properties_select = [
         frames[fi].arrays["CS_local"][ci] for fi, ci in zip(f_selected, ci_selected)
     ]
+
+
+.. [Ceriotti2019] Ceriotti, M. et al. Science Advances, 2019.
