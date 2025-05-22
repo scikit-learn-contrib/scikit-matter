@@ -31,7 +31,8 @@ You can then ``import skmatter`` and use scikit-matter in your projects!
 
 Tests
 -----
-We are testing our code for Python 3.10 and 3.13 on the latest versions of Ubuntu, macOS and Windows.
+We are testing our code for Python 3.10 and 3.13 on the latest versions of Ubuntu, 
+macOS and Windows.
 
 .. marker-issues
 
