@@ -25,7 +25,7 @@ The representations were computed with [C1]_ using the hyperparameters:
 
 +---------------------------+------------+
 | key                       |   value    |
-+---------------------------+------------+
++===========================+============+
 | interaction_cutoff:       |    3.5     |
 +---------------------------+------------+
 | max_radial:               |      6     |
@@ -46,17 +46,20 @@ Of the 2'520 resulting features, 100 were selected via FPS using [C2]_.
 Chemical Properties
 -------------------
 
-The CSD-1000R dataset consists of 100 atomic environments selected from crystal structures in the Cambridge Structural Database (CSD) [C3]_. These environments represent a diverse set of chemical compositions and bonding types, including:
+The CSD-1000R dataset consists of 100 atomic environments selected from crystal structures 
+in the Cambridge Structural Database (CSD) [C3]_. These environments represent a diverse set 
+of chemical compositions and bonding types, including:
 
 - Metals, metalloids, and non-metals
 - Covalent, ionic, and metallic bonding environments
 - Various coordination numbers and geometries
 
-The dataset captures local chemical environments relevant for modeling properties such as nuclear magnetic resonance (NMR) chemical shieldings, aiding in the understanding of structure-property relationships in materials chemistry.
+The dataset captures local chemical environments relevant for modeling properties such as 
+nuclear magnetic resonance (NMR) chemical shieldings, aiding in the understanding of 
+structure-property relationships in materials chemistry.
 
-For more detailed chemical information, users can refer to the original Cambridge Structural Database [C3]_ or the publication by Ceriotti et al. (2019) [C4]_
-
-
+For more detailed chemical information, users can refer to the original Cambridge 
+Structural Database [C3]_ or the publication by Ceriotti et al. (2019) [C4]_.
 
 References
 ----------
@@ -65,8 +68,8 @@ References
 .. [C2] https://github.com/lab-cosmo/scikit-matter commit 4ed1d92
 .. [C3] https://www.ccdc.cam.ac.uk/structures/
 .. [C4] https://www.nature.com/articles/s41597-019-0224-1
-
-
+.. [Ceriotti2019] M. Ceriotti et al. "Chemical Shifts in Molecular Solids by Machine Learning Datasets",
+    Materials Cloud Archive 2019.0023/v2 (2019), https://doi.org/10.24435/materialscloud:2019.0023/v2.
 
 Reference Code
 --------------
@@ -123,6 +126,3 @@ Reference Code
     properties_select = [
         frames[fi].arrays["CS_local"][ci] for fi, ci in zip(f_selected, ci_selected)
     ]
-
-
-.. [Ceriotti2019] Ceriotti, M. et al. Science Advances, 2019.
