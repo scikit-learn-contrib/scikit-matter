@@ -110,9 +110,7 @@ class _BasePCov(_BasePCA, LinearModel):
         elif self.fit_svd_solver_ in ["arpack", "randomized"]:
             U, S, Vt = self._decompose_truncated(Ct)
         else:
-            raise ValueError(
-                "Unrecognized svd_solver='{0}'" "".format(self.fit_svd_solver_)
-            )
+            raise ValueError(f"Unrecognized svd_solver='{self.fit_svd_solver_}'")
 
         self.singular_values_ = np.sqrt(S.copy())
         self.explained_variance_ = S / (X.shape[0] - 1)
