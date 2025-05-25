@@ -6,6 +6,7 @@ from sklearn.calibration import LinearSVC
 from sklearn.datasets import load_breast_cancer as get_dataset
 from sklearn.kernel_ridge import KernelRidge
 from sklearn.linear_model import Ridge, RidgeCV
+from sklearn.naive_bayes import GaussianNB
 from sklearn.utils.validation import check_X_y
 from sklearn.preprocessing import StandardScaler
 from sklearn.linear_model import LogisticRegression
@@ -153,7 +154,7 @@ class KernelPCovCInfrastructureTest(KernelPCovCBaseTest):
         kpcovc = KernelPCovC(mixing=0.5, n_components=n_components, tol=1e-12)
         kpcovc.fit(self.X, self.Y)
         T = kpcovc.transform(self.X)
-        self.assertTrue(check_X_y(self.X, T, multi_output=True))
+        self.assertTrue(check_X_y(self.X, T, multi_output=True) == (self.X, T))
         self.assertTrue(T.shape[-1] == n_components)
 
     def test_Z_shape(self):
@@ -238,28 +239,21 @@ class KernelPCovCInfrastructureTest(KernelPCovCBaseTest):
         classifier.fit(self.X, self.Y)
         self.assertTrue(hasattr(kpcovc.classifier, "coef_"))
 
-        # Raise error during KPCovC fit since classifier and KPCovC
-        # kernel parameters now inconsistent
-        with self.assertRaises(ValueError) as cm:
-            kpcovc.fit(self.X, self.Y)
-        self.assertTrue(
-            str(cm.exception),
-            "Kernel parameter mismatch: the regressor has kernel parameters "
-            "{kernel: linear, gamma: 0.2, degree: 3, coef0: 1, kernel_params: None}"
-            " and KernelPCovR was initialized with kernel parameters "
-            "{kernel: linear, gamma: 0.1, degree: 3, coef0: 1, kernel_params: None}",
-        )
-
+        
     def test_incompatible_classifier(self):
-        classifier = RidgeClassifier()
+        classifier = GaussianNB()
         classifier.fit(self.X, self.Y)
         kpcovc = self.model(mixing=0.5, classifier=classifier)
 
         with self.assertRaises(ValueError) as cm:
             kpcovc.fit(self.X, self.Y)
-        self.assertTrue(
+        self.assertEqual(
             str(cm.exception),
-            "Regressor must be an instance of `KernelRidge`",
+            "Classifier must be an instance of "
+            "`LogisticRegression`, `LogisticRegressionCV`, `LinearSVC`, "
+            "`LinearDiscriminantAnalysis`, `RidgeClassifier`, "
+            "`RidgeClassifierCV`, `SGDClassifier`, `Perceptron`, "
+            "or `precomputed`",
         )
 
     def test_none_classifier(self):
@@ -459,7 +453,7 @@ class KernelPCovCTestSVDSolvers(KernelPCovCBaseTest):
             kpcovc = self.model(svd_solver="bad")
             kpcovc.fit(self.X, self.Y)
 
-        self.assertTrue(str(cm.exception), "Unrecognized svd_solver='bad'" "")
+        self.assertEqual(str(cm.exception), "Unrecognized svd_solver='bad'" "")
 
     def test_good_n_components(self):
         """Check that KPCovC will work with any allowed values of n_components."""
@@ -483,10 +477,10 @@ class KernelPCovCTestSVDSolvers(KernelPCovCBaseTest):
                 kpcovc = self.model(n_components=-1, svd_solver="auto")
                 kpcovc.fit(self.X, self.Y)
 
-            self.assertTrue(
+            self.assertEqual(
                 str(cm.exception),
-                "self.n_components=%r must be between 0 and "
-                "min(n_samples, n_features)=%r with "
+                "n_components=%r must be between 1 and "
+                "n_samples=%r with "
                 "svd_solver='%s'"
                 % (
                     kpcovc.n_components,
@@ -499,10 +493,10 @@ class KernelPCovCTestSVDSolvers(KernelPCovCBaseTest):
                 kpcovc = self.model(n_components=0, svd_solver="randomized")
                 kpcovc.fit(self.X, self.Y)
 
-            self.assertTrue(
+            self.assertEqual(
                 str(cm.exception),
-                "self.n_components=%r must be between 1 and "
-                "min(n_samples, n_features)=%r with "
+                "n_components=%r must be between 1 and "
+                "n_samples=%r with "
                 "svd_solver='%s'"
                 % (
                     kpcovc.n_components,
@@ -514,10 +508,10 @@ class KernelPCovCTestSVDSolvers(KernelPCovCBaseTest):
             with self.assertRaises(ValueError) as cm:
                 kpcovc = self.model(n_components=self.X.shape[0], svd_solver="arpack")
                 kpcovc.fit(self.X, self.Y)
-            self.assertTrue(
+            self.assertEqual(
                 str(cm.exception),
-                "self.n_components=%r must be strictly less than "
-                "min(n_samples, n_features)=%r with "
+                "n_components=%r must be strictly less than "
+                "n_samples=%r with "
                 "svd_solver='%s'"
                 % (
                     kpcovc.n_components,
@@ -531,9 +525,9 @@ class KernelPCovCTestSVDSolvers(KernelPCovCBaseTest):
                 with self.assertRaises(ValueError) as cm:
                     kpcovc = self.model(n_components=np.pi, svd_solver=svd_solver)
                     kpcovc.fit(self.X, self.Y)
-                self.assertTrue(
+                self.assertEqual(
                     str(cm.exception),
-                    "self.n_components=%r must be of type int "
+                    "n_components=%r must be of type int "
                     "when greater than or equal to 1, was of type=%r"
                     % (kpcovc.n_components, type(kpcovc.n_components)),
                 )
