@@ -392,7 +392,7 @@ class PCovRInfrastructureTest(PCovRBaseTest):
         pcovr = self.model(n_components=n_components, tol=1e-12)
         pcovr.fit(self.X, self.Y)
         T = pcovr.transform(self.X)
-        self.assertTrue(check_X_y(self.X, T, multi_output=True))
+        self.assertTrue(check_X_y(self.X, T, multi_output=True) == (self.X, T))
         self.assertTrue(T.shape[-1] == n_components)
 
     def test_default_ncomponents(self):
