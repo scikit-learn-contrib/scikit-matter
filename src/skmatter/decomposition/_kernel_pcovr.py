@@ -284,6 +284,10 @@ class KernelPCovR(_BasePCA, LinearModel):
         self: object
             Returns the instance itself.
         """
+        X, Y = validate_data(self, X, Y, y_numeric=True, multi_output=True)
+
+        K = super().fit(X)
+
         if self.regressor not in ["precomputed", None] and not isinstance(
             self.regressor, KernelRidge
         ):

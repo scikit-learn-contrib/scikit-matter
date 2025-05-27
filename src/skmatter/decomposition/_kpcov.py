@@ -4,6 +4,8 @@ import numpy as np
 from scipy import linalg
 from scipy.sparse.linalg import svds
 import scipy.sparse as sp
+from sklearn.exceptions import NotFittedError
+from sklearn.preprocessing import StandardScaler
 
 from sklearn.decomposition._base import _BasePCA
 from sklearn.linear_model._base import LinearModel
@@ -17,6 +19,10 @@ from sklearn.metrics.pairwise import pairwise_kernels
 
 from skmatter.utils import pcovr_kernel
 from skmatter.preprocessing import KernelNormalizer
+
+"""
+We may need to modify _fit().
+"""
 
 
 class _BaseKPCov(_BasePCA, LinearModel):
@@ -69,11 +75,12 @@ class _BaseKPCov(_BasePCA, LinearModel):
                 self.gamma_ = self.gamma
             params = {"gamma": self.gamma_, "degree": self.degree, "coef0": self.coef0}
 
+        
         return pairwise_kernels(
             X, Y, metric=self.kernel, filter_params=True, n_jobs=self.n_jobs, **params
         )
 
-    def _fit_utils(self, X):
+    def fit(self, X):
         """This contains the common functionality for KPCovR and KPCovC fit methods,
         but leaves the rest of the fit functionality to the subclass.
         """
@@ -119,11 +126,9 @@ class _BaseKPCov(_BasePCA, LinearModel):
         """
         K_tilde = pcovr_kernel(mixing=self.mixing, X=K, Y=Yhat, kernel="precomputed")
 
-        print("KPCovC K: "+str(K[:5, 0]))
-        print("KPCovC Yhat: "+str(Yhat[:5, 0]))
-
-        print("KPCovC K_tilde: "+str(K_tilde[:5, 0]))
-
+        print("KPCovC K: " + str(K[:5, 0]))
+        print("KPCovC Yhat: " + str(Yhat[:5, 0]))
+        print("KPCovC K_tilde: " + str(K_tilde[:5, 0]))
 
         if self.fit_svd_solver_ == "full":
             _, S, Vt = self._decompose_full(K_tilde)
@@ -140,7 +145,7 @@ class _BaseKPCov(_BasePCA, LinearModel):
         S_inv = np.array([1.0 / s if s > self.tol else 0.0 for s in S])
 
         self.pkt_ = P @ U @ np.sqrt(np.diagflat(S_inv))
-        print("KPcovC pkt: "+str(self.pkt_[:5, 0]))
+        print("KPcovC pkt: " + str(self.pkt_[:5, 0]))
         T = K @ self.pkt_
         self.pt__ = np.linalg.lstsq(T, np.eye(T.shape[0]), rcond=self.tol)[0]
 
@@ -153,11 +158,18 @@ class _BaseKPCov(_BasePCA, LinearModel):
         if self.center:
             K = self.centerer_.transform(K)
 
-        #print("KPCovc transform: "+str(K[:5, 0]))
+        #  print("KPCovc transform: "+str(K[:5]))
 
         return K @ self.pkt_
 
     def inverse_transform(self, T):
+        if not self.fit_inverse_transform:
+            raise NotFittedError(
+                "The fit_inverse_transform parameter was not"
+                " set to True when instantiating and hence "
+                "the inverse transform is not available."
+            )
+
         return T @ self.ptx_
 
     def _decompose_truncated(self, mat):
