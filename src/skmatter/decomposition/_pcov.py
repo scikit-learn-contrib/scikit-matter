@@ -130,11 +130,10 @@ class _BasePCov(_BasePCA, LinearModel):
             self.pty_ = np.linalg.multi_dot([S_sqrt_inv, Vt, iCsqrt, X.T, Y])
 
     def _fit_sample_space(self, X, Y, Yhat, W, compute_pty_=True):
+       # Kt = pcovr_kernel(mixing=self.mixing, X=X, Y=Yhat)
         Kt = pcovr_kernel(mixing=self.mixing, X=X, Y=Yhat)
-
         print("PCovC X: "+str(X[:5, 0]))
         print("PCovC Yhat: "+str(Yhat[:5, 0]))
-
         print("PcovC Kt: "+str(Kt[:5, 0]))
 
         if self.fit_svd_solver_ == "full":

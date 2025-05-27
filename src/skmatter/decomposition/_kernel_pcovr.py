@@ -240,7 +240,7 @@ class KernelPCovR(_BaseKPCov):
         """
         X, Y = validate_data(self, X, Y, y_numeric=True, multi_output=True)
 
-        K = super()._fit_utils(X)
+        K = super().fit(X)
 
         if self.regressor not in ["precomputed", None] and not isinstance(
             self.regressor, KernelRidge

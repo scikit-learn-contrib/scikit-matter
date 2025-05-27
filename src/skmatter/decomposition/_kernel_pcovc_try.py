@@ -16,12 +16,16 @@ from sklearn.utils import check_array
 from sklearn.utils.validation import check_is_fitted, validate_data
 from sklearn.linear_model._base import LinearClassifierMixin
 from sklearn.utils.multiclass import check_classification_targets, type_of_target
-
+from scipy import linalg
+from scipy.sparse.linalg import svds
+import scipy.sparse as sp
+from skmatter.preprocessing import KernelNormalizer
 from skmatter.utils import check_cl_fit
-from skmatter.decomposition import _BaseKPCov
+from skmatter.decomposition import _BaseKPCov, _BasePCov
 
+from sklearn.metrics.pairwise import pairwise_kernels
 
-class KernelPCovC(LinearClassifierMixin, _BaseKPCov):
+class KernelPCovC(LinearClassifierMixin, _BasePCov):
     r"""Kernel Principal Covariates Classification
     determines a latent-space projection :math:`\mathbf{T}` which minimizes a combined
     loss in supervised and unsupervised tasks in the reproducing kernel Hilbert space
@@ -202,24 +206,44 @@ class KernelPCovC(LinearClassifierMixin, _BaseKPCov):
         iterated_power="auto",
         random_state=None,
     ):
-        super().__init__(
-            mixing=mixing,
-            n_components=n_components,
-            svd_solver=svd_solver,
-            tol=tol,
-            iterated_power=iterated_power,
-            random_state=random_state,
-            center=center,
-            kernel=kernel,
-            gamma=gamma,
-            degree=degree,
-            coef0=coef0,
-            kernel_params=kernel_params,
-            n_jobs=n_jobs,
-            fit_inverse_transform=fit_inverse_transform,
-        )
+
+        self.mixing=mixing
+        self.n_components=n_components
+        self.svd_solver=svd_solver
+        self.tol=tol
+        self.iterated_power=iterated_power
+        self.random_state=random_state
+        self.center=center
+        self.kernel=kernel
+        self.gamma=gamma
+        self.space="auto"
+        self.degree=degree
+        self.coef0=coef0
+        self.kernel_params=kernel_params
+        self.n_jobs=n_jobs
+        self.fit_inverse_transform=fit_inverse_transform
         self.classifier = classifier
 
+    def _get_kernel(self, X, Y=None):
+        sparse = sp.issparse(X)
+
+        if callable(self.kernel):
+            params = self.kernel_params or {}
+        else:
+            # from BaseSVC:
+            if self.gamma == "scale":
+                X_var = (X.multiply(X)).mean() - (X.mean()) ** 2 if sparse else X.var()
+                self.gamma_ = 1.0 / (X.shape[1] * X_var) if X_var != 0 else 1.0
+            elif self.gamma == "auto":
+                self.gamma_ = 1.0 / X.shape[1]
+            else:
+                self.gamma_ = self.gamma
+            params = {"gamma": self.gamma_, "degree": self.degree, "coef0": self.coef0}
+
+        return pairwise_kernels(
+            X, Y, metric=self.kernel, filter_params=True, n_jobs=self.n_jobs, **params
+        )
+    
     def fit(self, X, Y, W=None):
         r"""Fit the model with X and Y.
 
@@ -251,17 +275,22 @@ class KernelPCovC(LinearClassifierMixin, _BaseKPCov):
         check_classification_targets(Y)
         self.classes_ = np.unique(Y)
 
-        K = super().fit(X)
-       
+        K = self._get_kernel(X)
+        self.centerer_ = KernelNormalizer()
+        K = self.centerer_.fit_transform(K)
+
+        super().fit(X)
+
         compatible_classifiers = (
+            LinearDiscriminantAnalysis,
+            LinearSVC,
             LogisticRegression,
             LogisticRegressionCV,
-            LinearSVC,
-            LinearDiscriminantAnalysis,
+            MultiOutputClassifier,
+            Perceptron,
             RidgeClassifier,
             RidgeClassifierCV,
             SGDClassifier,
-            Perceptron,
         )
 
         if self.classifier not in ["precomputed", None] and not isinstance(
@@ -291,18 +320,16 @@ class KernelPCovC(LinearClassifierMixin, _BaseKPCov):
                 W = W.reshape(K.shape[1], -1)
 
         Z = K @ W
-        
-        self._fit(K, Z, W)
 
-        self.ptk_ = self.pt__ @ K
-        # ("KPCovc"+str(self.ptk_[:10][1]))
-        if self.fit_inverse_transform:
-            self.ptx_ = self.pt__ @ X
+        if self.space_ == "feature":
+            self._fit_feature_space(K, Y, Z)
+        else:
+            self._fit_sample_space(K, Y, Z, W)
 
-        self.classifier_ = clone(classifier).fit(K @ self.pkt_, Y)
+        self.classifier_ = clone(classifier).fit(K @ self.pxt_, Y)
 
         self.ptz_ = self.classifier_.coef_.T
-        self.pkz_ = self.pkt_ @ self.ptz_
+        self.pkz_ = self.pxt_ @ self.ptz_
 
         if len(Y.shape) == 1 and type_of_target(Y) == "binary":
             self.pkz_ = self.pkz_.reshape(
@@ -312,7 +339,7 @@ class KernelPCovC(LinearClassifierMixin, _BaseKPCov):
                 self.n_components_,
             )
 
-        self.components_ = self.pkt_.T  # for sklearn compatibility
+        self.components_ = self.pxt_.T  # for sklearn compatibility
         return self
 
     def predict(self, X=None, T=None):
@@ -324,11 +351,11 @@ class KernelPCovC(LinearClassifierMixin, _BaseKPCov):
 
         if X is not None:
             X = validate_data(self, X, reset=False)
-            K = self._get_kernel(X, self.X_fit_)
+            K = self._get_kernel(X)
             if self.center:
                 K = self.centerer_.transform(K)
 
-            return self.classifier_.predict(K @ self.pkt_)
+            return self.classifier_.predict(K @ self.pxt_)
         else:
             return self.classifier_.predict(T)
 
@@ -344,7 +371,15 @@ class KernelPCovC(LinearClassifierMixin, _BaseKPCov):
             New data, where n_samples is the number of samples
             and n_features is the number of features.
         """
-        return super().transform(X)
+        X = validate_data(self, X, reset=False)
+        K = self._get_kernel(X)
+
+        if self.center:
+            K = self.centerer_.transform(K)
+
+        #print("KPCovc transform: "+str(K[:5, 0]))
+
+        return K @ self.pxt_
 
     def inverse_transform(self, T):
         r"""Transform input data back to its original space.
@@ -368,18 +403,18 @@ class KernelPCovC(LinearClassifierMixin, _BaseKPCov):
         -------
         X_original : numpy.ndarray, shape (n_samples, n_features)
         """
-        return super().inverse_transform(T)
+        return T @ self.ptx_
 
     def decision_function(self, X=None, T=None):
         """Predicts confidence scores from X or T."""
-        check_is_fitted(self, attributes=["pkz_", "ptz_"])
+        check_is_fitted(self, attributes=["ptz_"])
 
         if X is None and T is None:
             raise ValueError("Either X or T must be supplied.")
 
         if X is not None:
             X = validate_data(self, X, reset=False)
-            K = self._get_kernel(X, self.X_fit_)
+            K = self._get_kernel(X)
             if self.center:
                 K = self.centerer_.transform(K)
             # print("KPCovC decision function: "+str(K[:1]))
