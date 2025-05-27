@@ -45,3 +45,9 @@ References
     Michele Ceriotti, "Improving Sample and Feature Selection with Principal Covariates
     Regression" 2021 Mach. Learn.: Sci. Technol. 2 035038.
     https://iopscience.iop.org/article/10.1088/2632-2153/abfe7c.
+
+.. [Jorgensen2025]
+    Christian Jorgensen, Arthur Y. Lin, and Rose K. Cersonsky,
+    "Interpretable Visualizations of Data Spaces for Classification Problems"
+    2025 arXiv. 2503.05861
+    https://doi.org/10.48550/arXiv.2503.05861.

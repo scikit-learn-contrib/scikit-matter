@@ -20,7 +20,8 @@ from skmatter.utils import check_cl_fit
 
 
 class PCovC(LinearClassifierMixin, _BasePCov):
-    r"""Principal Covariates Classification determines a latent-space projection :math:`\mathbf{T}`
+    r"""Principal Covariates Classification, as described in [Jorgensen2025]_,
+    determines a latent-space projection :math:`\mathbf{T}`
     which minimizes a combined loss in supervised and unsupervised tasks.
 
     This projection is determined by the eigendecomposition of a modified gram
@@ -219,8 +220,16 @@ class PCovC(LinearClassifierMixin, _BasePCov):
         self.classifier = classifier
 
     def fit(self, X, Y, W=None):
-        r"""Fit the model with X and Y. Depending on the dimensions of X,
-        calls either `_fit_feature_space` or `_fit_sample_space`.
+        r"""Fit the model with X and Y. Note that W is taken from the
+        coefficients of a linear classifier fit between X and Y to compute
+        Z:
+
+        .. math::
+            \mathbf{Z} = \mathbf{X} \mathbf{W}
+
+        We then call either `_fit_feature_space` or `_fit_sample_space`,
+        using Z as our approximation of Y. Finally, we refit a classifier on
+        T and Y to obtain :math:`\mathbf{P}_{TZ}`.
 
         Parameters
         ----------
@@ -237,24 +246,9 @@ class PCovC(LinearClassifierMixin, _BasePCov):
             Training data, where n_samples is the number of samples.
 
         W : numpy.ndarray, shape (n_features, n_properties)
-            Classification weights, optional when classifier=`precomputed`. If
+            Classification weights, optional when classifier= `precomputed`. If
             not passed, it is assumed that the weights will be taken from a
             linear classifier fit between :math:`\mathbf{X}` and :math:`\mathbf{Y}`
-
-        Notes
-        -----
-        Note the relationship between :math:`\mathbf{X}`, :math:`\mathbf{Y}`,
-        :math:`\mathbf{Z}`, and :math:`\mathbf{W}`. The classification weights
-        :math:`\mathbf{W}`, obtained through a linear classifier fit between
-        :math:`\mathbf{X}` and :math:`\mathbf{Y}`, are used to compute:
-
-        .. math::
-            \mathbf{Z} = \mathbf{X} \mathbf{W}
-
-        Next, :math:`\mathbf{Z}` is used in either `_fit_feature_space` or
-        `_fit_sample_space` as our approximation of :math:`\mathbf{Y}`.
-        Finally, we refit a classifier on :math:`\mathbf{T}` and :math:`\mathbf{Y}`
-        to obtain :math:`\mathbf{P}_{XZ}` and :math:`\mathbf{P}_{TZ}`
         """
         X, Y = validate_data(self, X, Y, y_numeric=False)
         check_classification_targets(Y)
