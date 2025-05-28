@@ -47,7 +47,7 @@ References
     https://iopscience.iop.org/article/10.1088/2632-2153/abfe7c.
 
 .. [Jorgensen2025]
-    Christian Jorgensen, Arthur Y. Lin, and Rose K. Cersonsky,
+    Christian Jorgensen, Arthur Y. Lin, Rhushil Vasavada, and Rose K. Cersonsky,
     "Interpretable Visualizations of Data Spaces for Classification Problems"
-    2025 arXiv. 2503.05861
+    2025 arXiv. 2503.05861.
     https://doi.org/10.48550/arXiv.2503.05861.

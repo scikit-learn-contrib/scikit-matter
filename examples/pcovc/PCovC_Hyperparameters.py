@@ -2,7 +2,7 @@
 # coding: utf-8
 
 """
-PCovC with the Iris Dataset
+PCovC Hyperparameter Tuning
 ===========================
 """
 # %%
@@ -32,16 +32,6 @@ n_components = 2
 # ``sklearn``.
 
 X, y = load_iris(return_X_y=True)
-print(load_iris().DESCR)
-
-# %%
-#
-# Scale Feature Data
-# ------------------
-#
-# Below, we transform the Iris feature data to have a mean of zero and
-# standard deviation of one, while preserving relative relationships
-# between feature values.
 
 scaler = StandardScaler()
 X_scaled = scaler.fit_transform(X)
@@ -51,9 +41,6 @@ X_scaled = scaler.fit_transform(X)
 # PCA
 # ---
 #
-# We use Principal Component Analysis to reduce the Iris feature
-# data to two features that retain as much information as possible
-# about the original dataset.
 
 pca = PCA(n_components=n_components)
 
@@ -118,12 +105,6 @@ fig.subplots_adjust(wspace=0)
 # we see the varying decision boundaries produced by the
 # respective PCovC classifiers.
 
-soft_dots = ["#ff3333", "#339933", "#3333ff"]
-soft_fill = ["#f5bcbc", "#b7d4b7", "#bcbcf5"]
-
-cmap_dots = LinearSegmentedColormap.from_list("SoftDots", soft_dots)
-cmap_fill = LinearSegmentedColormap.from_list("SoftFill", soft_fill)
-
 mixing = 0.5
 n_models = 4
 fig, axes = plt.subplots(1, n_models, figsize=(4 * n_models, 4))
@@ -157,10 +138,9 @@ for id in range(0, n_models):
         ax=graph,
         response_method="predict",
         grid_resolution=1000,
-        cmap=cmap_fill,
     )
 
-    scatter = graph.scatter(T[:, 0], T[:, 1], c=y, cmap=cmap_dots)
+    scatter = graph.scatter(T[:, 0], T[:, 1], c=y)
 
     graph.set_xlabel("PCov$_1$")
     graph.set_xticks([])

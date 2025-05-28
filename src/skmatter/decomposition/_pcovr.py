@@ -349,7 +349,7 @@ class PCovR(RegressorMixin, MultiOutputMixin, _BasePCov):
 
         Returns
         -------
-        X_original ndarray, shape (n_samples, n_features)
+        X_original : numpy.ndarray, shape (n_samples, n_features)
         """
         return super().inverse_transform(T)
 

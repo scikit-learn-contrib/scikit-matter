@@ -100,8 +100,7 @@ class PCovC(LinearClassifierMixin, _BasePCov):
         default=`sample` when :math:`{n_{samples} < n_{features}}` and
         `feature` when :math:`{n_{features} < n_{samples}}`
 
-    classifier: {`LogisticRegression`, `LogisticRegressionCV`, `LinearSVC`, `LinearDiscriminantAnalysis`,
-        `RidgeClassifier`, `RidgeClassifierCV`, `SGDClassifier`, `Perceptron`, `precomputed`}, default=None
+    classifier: estimator object or `precomputed`, default=None
         classifier for computing :math:`{\mathbf{Z}}`. The classifier should be one of
         `sklearn.linear_model.LogisticRegression`, `sklearn.linear_model.LogisticRegressionCV`,
         `sklearn.svm.LinearSVC`, `sklearn.discriminant_analysis.LinearDiscriminantAnalysis`,
@@ -377,12 +376,35 @@ class PCovC(LinearClassifierMixin, _BasePCov):
 
         Returns
         -------
-        X_original ndarray, shape (n_samples, n_features)
+        X_original : numpy.ndarray, shape (n_samples, n_features)
         """
         return super().inverse_transform(T)
 
     def decision_function(self, X=None, T=None):
-        """Predicts confidence scores from X or T."""
+        r"""Predicts confidence scores from X or T.
+
+        .. math::
+            \mathbf{Z} = \mathbf{T} \mathbf{P}_{TZ}
+                       = \mathbf{X} \mathbf{P}_{XT} \mathbf{P}_{TZ}
+                       = \mathbf{X} \mathbf{P}_{XZ}
+
+        Parameters
+        ----------
+        X : ndarray, shape(n_samples, n_features)
+            Original data for which we want to get confidence scores,
+            where n_samples is the number of samples and n_features is the
+            number of features.
+        T : ndarray, shape (n_samples, n_components)
+            Projected data for which we want to get confidence scores,
+            where n_samples is the number of samples and n_components is the
+            number of components.
+
+        Returns
+        -------
+        Z : numpy.ndarray, shape (n_samples,) or (n_samples, n_classes)
+            Confidence scores. For binary classification, has shape `(n_samples,)`,
+            for multiclass classification, has shape `(n_samples, n_classes)`
+        """
         check_is_fitted(self, attributes=["pxz_", "ptz_"])
 
         if X is None and T is None:
