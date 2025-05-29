@@ -115,7 +115,7 @@ models = {
     Perceptron(random_state=random_state): "Single-Layer Perceptron",
 }
 
-for id in range(0, n_models):
+for id in range(0, len(models)):
     model = list(models)[id]
 
     pcovc = PCovC(
@@ -155,3 +155,4 @@ axs[0].legend(
 )
 
 fig.subplots_adjust(wspace=0.04)
+plt.show()
