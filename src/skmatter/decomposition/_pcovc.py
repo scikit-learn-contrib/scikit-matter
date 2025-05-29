@@ -14,7 +14,7 @@ from sklearn.svm import LinearSVC
 from sklearn.utils import check_array
 from sklearn.utils.multiclass import check_classification_targets, type_of_target
 from sklearn.utils.validation import check_is_fitted, validate_data
-
+from sklearn.multioutput import MultiOutputClassifier
 from skmatter.decomposition import _BasePCov
 from skmatter.utils import check_cl_fit
 
@@ -307,7 +307,7 @@ class PCovC(LinearClassifierMixin, _BasePCov):
         # instead of using linear regression solution, refit with the
         # classifier and steal weights to get pxz and ptz
 
-       # print("PCovc"+str(self.ptx_[:10][1]))
+        # print("PCovc"+str(self.ptx_[:10][1]))
         self.classifier_ = clone(classifier).fit(X @ self.pxt_, Y)
 
         self.ptz_ = self.classifier_.coef_.T
@@ -397,7 +397,7 @@ class PCovC(LinearClassifierMixin, _BasePCov):
 
         if X is not None:
             X = validate_data(self, X, reset=False)
-           # print("PCovC decision function: "+str(X[:1]))
+            # print("PCovC decision function: "+str(X[:1]))
 
             # Or self.classifier_.decision_function(X @ self.pxt_)
             return X @ self.pxz_ + self.classifier_.intercept_
@@ -431,5 +431,5 @@ class PCovC(LinearClassifierMixin, _BasePCov):
             New data, where n_samples is the number of samples
             and n_features is the number of features.
         """
-        #print("PCovc transform: "+str(X[:5, 0]))
+        # print("PCovc transform: "+str(X[:5, 0]))
         return super().transform(X)

@@ -19,6 +19,7 @@ from sklearn.utils.multiclass import check_classification_targets, type_of_targe
 
 from skmatter.utils import check_cl_fit
 from skmatter.decomposition import _BaseKPCov
+from sklearn.preprocessing import StandardScaler
 
 
 class KernelPCovC(LinearClassifierMixin, _BaseKPCov):
@@ -195,7 +196,7 @@ class KernelPCovC(LinearClassifierMixin, _BaseKPCov):
         degree=3,
         coef0=1,
         kernel_params=None,
-        center=True,
+        center=False,
         fit_inverse_transform=False,
         tol=1e-12,
         n_jobs=None,
@@ -291,7 +292,7 @@ class KernelPCovC(LinearClassifierMixin, _BaseKPCov):
                 W = W.reshape(K.shape[1], -1)
 
         Z = K @ W
-        
+
         self._fit(K, Z, W)
 
         self.ptk_ = self.pt__ @ K
