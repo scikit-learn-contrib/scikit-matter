@@ -1,5 +1,5 @@
-Hybrid Mapping Techniques (PCovR and PCovC)
-===========================================
+Hybrid Mapping Techniques
+=========================
 
 .. _PCovR-api:
 

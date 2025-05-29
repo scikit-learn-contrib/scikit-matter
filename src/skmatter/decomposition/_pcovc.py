@@ -100,7 +100,7 @@ class PCovC(LinearClassifierMixin, _BasePCov):
         default=`sample` when :math:`{n_{samples} < n_{features}}` and
         `feature` when :math:`{n_{features} < n_{samples}}`
 
-    classifier: estimator object or `precomputed`, default=None
+    classifier: `estimator object` or `precomputed`, default=None
         classifier for computing :math:`{\mathbf{Z}}`. The classifier should be one of
         `sklearn.linear_model.LogisticRegression`, `sklearn.linear_model.LogisticRegressionCV`,
         `sklearn.svm.LinearSVC`, `sklearn.discriminant_analysis.LinearDiscriminantAnalysis`,
