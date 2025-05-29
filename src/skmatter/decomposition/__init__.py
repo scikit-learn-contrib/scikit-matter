@@ -11,8 +11,7 @@ that incorporates target information, such that the resulting embedding could
 be tuned using a mixing parameter α to improve performance in regression tasks
 (:math:`\alpha = 0` corresponding to linear regression and :math:`\alpha = 1`
 corresponding to PCA). Also provided is Principal Covariates Classification (PCovC),
-proposed in [Jorgensen2025]_, which adapts PCovR for use in classification tasks by
-leveraging the evidence :math:`\mathbf{Z}` as an approximation of :math:`\mathbf{Y}`.
+proposed in [Jorgensen2025]_, which can similarly be used for classification problems.
 
 [Helfrecht2020]_ introduced the non-linear version of PCovR,
 Kernel Principal Covariates Regression (KPCovR), where the mixing parameter α
@@ -26,8 +25,8 @@ The module includes:
   a low-dimensional projection of the feature vectors that simultaneously minimises
   information loss and error in predicting the target properties using only the
   latent space vectors :math:`\mathbf{T}`.
-* :ref:`PCovC-api` the Principal Covariates Classification. Adapts PCovR for
-  classification tasks, proposed in [Jorgensen2025]_.
+* :ref:`PCovC-api` the standard Principal Covariates Classification, proposed in
+  [Jorgensen2025]_.
 * :ref:`KPCovR-api` the Kernel Principal Covariates Regression.
   A kernel-based variation on the
   original PCovR method, proposed in [Helfrecht2020]_.
