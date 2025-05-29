@@ -94,3 +94,18 @@ T_pcovc = pcovc.transform(X_scaled)
 fig, axis = plt.subplots()
 axis.scatter(T_pcovc[:, 0], T_pcovc[:, 1], c=y)
 axis.set(xlabel="PCov$_1$", ylabel="PCov$_2$")
+
+# %%
+#
+# A side-by-side comparison of the
+# three techniques (PCA, LDA, and PCovC):
+
+n_models = 3
+
+fig, axes = plt.subplots(1, n_models, figsize=(6 * n_models, 5))
+axes[0].scatter(T_pca[:, 0], T_pca[:, 1], c=y)
+axes[0].set_title("PCA")
+axes[1].scatter(-T_lda[:], np.zeros(len(T_lda[:])), c=y)
+axes[1].set_title("LDA")
+axes[2].scatter(T_pcovc[:, 0], T_pcovc[:, 1], c=y)
+axes[2].set_title("PCovC")
