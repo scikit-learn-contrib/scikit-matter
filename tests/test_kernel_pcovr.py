@@ -214,7 +214,7 @@ class KernelPCovRInfrastructureTest(KernelPCovRBaseTest):
         # Fitting regressor outside KPCovR fits the KPCovR regressor
         regressor.fit(self.X, self.Y)
         self.assertTrue(hasattr(kpcovr.regressor, "dual_coef_"))
-        self.maxDiff =  None
+
         # Raise error during KPCovR fit since regressor and KPCovR
         # kernel parameters now inconsistent
         with self.assertRaises(ValueError) as cm:
@@ -253,7 +253,6 @@ class KernelPCovRInfrastructureTest(KernelPCovRBaseTest):
         regressor.fit(self.X, self.Y[:, 0])
         kpcovr = self.model(mixing=0.5, regressor=regressor)
 
-        self.maxDiff = None
         # Dimension mismatch
         print(self.Y.shape,np.zeros(self.Y.shape + (2,)).shape )
         with self.assertRaises(ValueError) as cm:
