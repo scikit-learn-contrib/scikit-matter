@@ -13,6 +13,10 @@ The rules for CHANGELOG file:
 
 0.3.0 (XXXX/XX/XX)
 ------------------
+- Add ``_BasePCov`` class (#248)
+- Add ``PCovC`` class that inherits shared functionality from ``_BasePCov`` (#248)
+- Add ``PCovC`` testing suite and examples (#248)
+- Modify ``PCovR`` to inherit shared functionality from ``_BasePCov_`` (#248)
 - Update to sklearn >= 1.6.0 and scipy >= 1.15.0 (#239)
 - Fixed moved function import from scipy and bump scipy dependency to 1.15.0 (#236)
 - Fix rendering issues for `SparseKDE` and `QuickShift` (#236)

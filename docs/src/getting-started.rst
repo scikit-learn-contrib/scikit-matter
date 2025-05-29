@@ -37,10 +37,10 @@ Notebook Examples
 .. include:: examples/reconstruction/index.rst
    :start-line: 4
 
-.. _getting_started-pcovr:
+.. _getting_started-hybrid:
 
-Principal Covariates Regression
--------------------------------
+Hybrid Mapping Techniques
+-------------------------
 
 .. automodule:: skmatter.decomposition
    :noindex:
@@ -49,4 +49,6 @@ Notebook Examples
 ^^^^^^^^^^^^^^^^^
 
 .. include:: examples/pcovr/index.rst
+   :start-line: 4
+.. include:: examples/pcovc/index.rst
    :start-line: 4
