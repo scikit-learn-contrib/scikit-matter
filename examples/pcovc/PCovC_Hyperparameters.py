@@ -69,7 +69,7 @@ axis.legend(
 n_mixing = 5
 mixing_params = [0, 0.25, 0.50, 0.75, 1]
 
-fig, axes = plt.subplots(1, n_mixing, figsize=(4 * n_mixing, 4), sharey="row")
+fig, axs = plt.subplots(1, n_mixing, figsize=(4 * n_mixing, 4), sharey="row")
 
 for id in range(0, n_mixing):
     mixing = mixing_params[id]
@@ -84,14 +84,14 @@ for id in range(0, n_mixing):
     pcovc.fit(X_scaled, y)
     T = pcovc.transform(X_scaled)
 
-    axes[id].set_xticks([])
-    axes[id].set_yticks([])
+    axs[id].set_xticks([])
+    axs[id].set_yticks([])
 
-    axes[id].set_title(r"$\alpha=$" + str(mixing))
-    axes[id].set_xlabel("PCov$_1$")
-    axes[id].scatter(T[:, 0], T[:, 1], c=y)
+    axs[id].set_title(r"$\alpha=$" + str(mixing))
+    axs[id].set_xlabel("PCov$_1$")
+    axs[id].scatter(T[:, 0], T[:, 1], c=y)
 
-axes[0].set_ylabel("PCov$_2$")
+axs[0].set_ylabel("PCov$_2$")
 
 fig.subplots_adjust(wspace=0)
 
@@ -106,8 +106,7 @@ fig.subplots_adjust(wspace=0)
 # respective PCovC classifiers.
 
 mixing = 0.5
-n_models = 4
-fig, axes = plt.subplots(1, n_models, figsize=(4 * n_models, 4))
+fig, axs = plt.subplots(1, 4, figsize=(16, 4))
 
 models = {
     RidgeClassifierCV(): "Ridge Classification",
@@ -129,7 +128,7 @@ for id in range(0, n_models):
     pcovc.fit(X_scaled, y)
     T = pcovc.transform(X_scaled)
 
-    graph = axes[id]
+    graph = axs[id]
     graph.set_title(models[model])
 
     DecisionBoundaryDisplay.from_estimator(
@@ -146,8 +145,8 @@ for id in range(0, n_models):
     graph.set_xticks([])
     graph.set_yticks([])
 
-axes[0].set_ylabel("PCov$_2$")
-axes[0].legend(
+axs[0].set_ylabel("PCov$_2$")
+axs[0].legend(
     scatter.legend_elements()[0],
     load_iris().target_names,
     loc="lower right",
