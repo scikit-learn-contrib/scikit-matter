@@ -10,6 +10,7 @@ from sklearn.linear_model import (
     SGDClassifier,
 )
 from sklearn.linear_model._base import LinearClassifierMixin
+from sklearn.multioutput import MultiOutputClassifier
 from sklearn.svm import LinearSVC
 from sklearn.utils import check_array
 from sklearn.utils.multiclass import check_classification_targets, type_of_target
@@ -258,7 +259,7 @@ class PCovC(LinearClassifierMixin, _BasePCov):
             not passed, it is assumed that the weights will be taken from a
             linear classifier fit between :math:`\mathbf{X}` and :math:`\mathbf{Y}`
         """
-        X, Y = validate_data(self, X, Y, y_numeric=False)
+        X, Y = validate_data(self, X, Y, multi_output=True, y_numeric=False)
         check_classification_targets(Y)
         self.classes_ = np.unique(Y)
 
@@ -269,6 +270,7 @@ class PCovC(LinearClassifierMixin, _BasePCov):
             LogisticRegressionCV,
             LinearSVC,
             LinearDiscriminantAnalysis,
+            MultiOutputClassifier,
             RidgeClassifier,
             RidgeClassifierCV,
             SGDClassifier,
@@ -285,22 +287,39 @@ class PCovC(LinearClassifierMixin, _BasePCov):
             )
 
         if self.classifier != "precomputed":
-            if self.classifier is None:
+            if self.classifier is None and Y.ndim < 2:
                 classifier = LogisticRegression()
+            elif self.classifier is None and Y.ndim >= 2:
+                classifier = MultiOutputClassifier(estimator=LogisticRegression())
             else:
                 classifier = self.classifier
 
             self.z_classifier_ = check_cl_fit(classifier, X, Y)
-            W = self.z_classifier_.coef_.T
+
+            if isinstance(self.z_classifier_, MultiOutputClassifier):
+                W = np.hstack([est_.coef_.T for est_ in self.z_classifier_.estimators_])
+                print(W.shape)
+            else:
+                W = self.z_classifier_.coef_.T.reshape(X.shape[1], -1)
 
         else:
             # If precomputed, use default classifier to predict Y from T
-            classifier = LogisticRegression()
-            if W is None:
-                W = LogisticRegression().fit(X, Y).coef_.T
+            # check for the case of 2D Y -- we need to make sure that this is MultiOutputClassifier instead
+            if Y.ndim >= 2:
+                classifier = MultiOutputClassifier(estimator=LogisticRegression)
+                if W is None:
+                    _ = MultiOutputClassifier(estimator=LogisticRegression).fit(X, Y)
+                    W = np.hstack([est_.coef_.T for est_ in _.estimators_])
+            else:
+                classifier = LogisticRegression()
+                if W is None:
+                    W = LogisticRegression().fit(X, Y).coef_.T
+                    W = W.reshape(X.shape[1], -1)
 
+        # print(f"X {X.shape}")
+        # print(f"W {W.shape}")
         Z = X @ W
-
+        # print(f"Z {Z.shape}")
         if self.space_ == "feature":
             self._fit_feature_space(X, Y, Z)
         else:
@@ -310,8 +329,19 @@ class PCovC(LinearClassifierMixin, _BasePCov):
         # classifier and steal weights to get pxz and ptz
         self.classifier_ = clone(classifier).fit(X @ self.pxt_, Y)
 
-        self.ptz_ = self.classifier_.coef_.T
-        self.pxz_ = self.pxt_ @ self.ptz_
+        if isinstance(self.classifier_, MultiOutputClassifier):
+            self.ptz_ = np.hstack(
+                [est_.coef_.T for est_ in self.classifier_.estimators_]
+            )
+            # print(f"pxt {self.pxt_.shape}")
+            # print(f"ptz {self.ptz_.shape}")
+            self.pxz_ = self.pxt_ @ self.ptz_
+            # print(f"pxz {self.pxz_.shape}")
+
+        else:
+            self.ptz_ = self.classifier_.coef_.T
+            # print(self.ptz_.shape)
+            self.pxz_ = self.pxt_ @ self.ptz_
 
         if len(Y.shape) == 1 and type_of_target(Y) == "binary":
             self.pxz_ = self.pxz_.reshape(
@@ -422,10 +452,35 @@ class PCovC(LinearClassifierMixin, _BasePCov):
         if X is not None:
             X = validate_data(self, X, reset=False)
             # Or self.classifier_.decision_function(X @ self.pxt_)
-            return X @ self.pxz_ + self.classifier_.intercept_
+            Z = X @ self.pxz_
         else:
             T = check_array(T)
-            return T @ self.ptz_ + self.classifier_.intercept_
+            Z = T @ self.ptz_
+
+        if isinstance(self.classifier_, MultiOutputClassifier):
+
+            n_outputs = len(self.classifier_.estimators_)
+            n_classes = Z.shape[1] // n_outputs
+            print(Z.shape)
+            # unpack to 3d
+            Z = Z.reshape(Z.shape[0], n_outputs, n_classes)
+            print(Z.shape)
+
+            # add the intercept for estimator in MultiOutputClassifier
+            for i, est_ in enumerate(self.classifier_.estimators_):
+                # print(Z[:, i, :][0, :])
+                Z[:, i, :] += est_.intercept_
+                # print(Z)
+                # print()
+                print(est_.intercept_)
+                # print()
+                # print(Z[:, i, :][0, :])
+            # swap order of Z axesfrom (n_samples, n_outputs, n_classes) to (n_samples, n_classes, n_outputs) as in paper
+
+            return Z.transpose(0, 2, 1)
+
+        print(self.classifier_.intercept_)
+        return Z + self.classifier_.intercept_
 
     def predict(self, X=None, T=None):
         """Predicts the property labels using classification on T."""
