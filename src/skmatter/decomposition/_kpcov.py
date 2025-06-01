@@ -1,6 +1,7 @@
 import numbers
 import numpy as np
 
+from abc import ABCMeta, abstractmethod
 from scipy import linalg
 from scipy.sparse.linalg import svds
 import scipy.sparse as sp
@@ -20,12 +21,10 @@ from sklearn.metrics.pairwise import pairwise_kernels
 from skmatter.utils import pcovr_kernel
 from skmatter.preprocessing import KernelNormalizer
 
-"""
-We may need to modify _fit().
-"""
 
+class _BaseKPCov(_BasePCA, LinearModel, metaclass=ABCMeta):
 
-class _BaseKPCov(_BasePCA, LinearModel):
+    @abstractmethod
     def __init__(
         self,
         mixing=0.5,
@@ -75,11 +74,11 @@ class _BaseKPCov(_BasePCA, LinearModel):
                 self.gamma_ = self.gamma
             params = {"gamma": self.gamma_, "degree": self.degree, "coef0": self.coef0}
 
-        
         return pairwise_kernels(
             X, Y, metric=self.kernel, filter_params=True, n_jobs=self.n_jobs, **params
         )
 
+    @abstractmethod
     def fit(self, X):
         """This contains the common functionality for KPCovR and KPCovC fit methods,
         but leaves the rest of the fit functionality to the subclass.
@@ -142,7 +141,7 @@ class _BaseKPCov(_BasePCA, LinearModel):
         U = Vt.T
 
         P = (self.mixing * np.eye(K.shape[0])) + (1.0 - self.mixing) * (W @ Yhat.T)
-        print("KPCovC P: "+str(P[:5, 0]))
+        print("KPCovC P: " + str(P[:5, 0]))
 
         S_inv = np.array([1.0 / s if s > self.tol else 0.0 for s in S])
 
