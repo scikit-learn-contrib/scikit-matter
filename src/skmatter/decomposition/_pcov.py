@@ -1,3 +1,4 @@
+from abc import ABCMeta, abstractmethod
 import numbers
 import warnings
 
@@ -17,7 +18,9 @@ from sklearn.utils.validation import check_is_fitted
 from skmatter.utils import pcovr_covariance, pcovr_kernel
 
 
-class _BasePCov(_BasePCA, LinearModel):
+class _BasePCov(_BasePCA, LinearModel, metaclass=ABCMeta):
+
+    @abstractmethod
     def __init__(
         self,
         mixing=0.5,
@@ -38,6 +41,7 @@ class _BasePCov(_BasePCA, LinearModel):
         self.random_state = random_state
         self.whiten = whiten
 
+    @abstractmethod
     def fit(self, X):
         """Contains the common functionality for the PCovR and PCovC fit methods,
         but leaves the rest of the functionality to the subclass.
@@ -128,11 +132,11 @@ class _BasePCov(_BasePCA, LinearModel):
             self.pty_ = np.linalg.multi_dot([S_sqrt_inv, Vt, iCsqrt, X.T, Y])
 
     def _fit_sample_space(self, X, Y, Yhat, W, compute_pty_=True):
-       # Kt = pcovr_kernel(mixing=self.mixing, X=X, Y=Yhat)
+        # Kt = pcovr_kernel(mixing=self.mixing, X=X, Y=Yhat)
         Kt = pcovr_kernel(mixing=self.mixing, X=X, Y=Yhat)
-        print("PCovC X: "+str(X[:5, 0]))
-        print("PCovC Yhat: "+str(Yhat[:5, 0]))
-        print("PcovC Kt: "+str(Kt[:5, 0]))
+        print("PCovC X: " + str(X[:5, 0]))
+        print("PCovC Yhat: " + str(Yhat[:5, 0]))
+        print("PcovC Kt: " + str(Kt[:5, 0]))
 
         if self.fit_svd_solver_ == "full":
             U, S, Vt = self._decompose_full(Kt)
@@ -150,13 +154,16 @@ class _BasePCov(_BasePCA, LinearModel):
         )
 
         P = (self.mixing * X.T) + (1.0 - self.mixing) * W @ Yhat.T
-        print("PCovC P: "+str(P[:5, 0]))
+        print("PCovC P: " + str(P[:5, 0]))
         S_sqrt_inv = np.diagflat([1.0 / np.sqrt(s) if s > self.tol else 0.0 for s in S])
         T = Vt.T @ S_sqrt_inv
 
         self.pxt_ = P @ T
         self.ptx_ = T.T @ X
 
+        print("PcovC pxt: " + str(self.pxt_[:5, 0]))
+
+>>>>>>> 4ff6377 (Changing _BasePCov and _BaseKPCov to be abstract base classes)
         if compute_pty_:
             self.pty_ = T.T @ Y
 
