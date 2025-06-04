@@ -35,6 +35,7 @@ __all__ = [
     "pcovr_kernel",
     "check_krr_fit",
     "check_lr_fit",
+    "check_cl_fit"
     "X_orthogonalizer",
     "Y_sample_orthogonalizer",
     "Y_feature_orthogonalizer",

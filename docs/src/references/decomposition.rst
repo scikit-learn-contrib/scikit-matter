@@ -54,3 +54,19 @@ Kernel PCovR
     .. automethod:: predict
     .. automethod:: inverse_transform
     .. automethod:: score
+
+.. _KPCovC-api:
+
+Kernel PCovC
+------------
+
+.. autoclass:: skmatter.decomposition.KernelPCovC
+    :show-inheritance:
+    :special-members:
+
+    .. automethod:: fit
+    .. automethod:: transform
+    .. automethod:: predict
+    .. automethod:: inverse_transform
+    .. automethod:: decision_function
+    .. automethod:: score

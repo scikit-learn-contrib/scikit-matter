@@ -14,7 +14,6 @@ from sklearn.svm import LinearSVC
 from sklearn.utils import check_array
 from sklearn.utils.multiclass import check_classification_targets, type_of_target
 from sklearn.utils.validation import check_is_fitted, validate_data
-
 from skmatter.decomposition import _BasePCov
 from skmatter.utils import check_cl_fit
 
