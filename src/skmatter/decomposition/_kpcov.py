@@ -145,8 +145,9 @@ class _BaseKPCov(_BasePCA, LinearModel, metaclass=ABCMeta):
 
         S_inv = np.array([1.0 / s if s > self.tol else 0.0 for s in S])
 
+        print([s if s > self.tol else 0.0 for s in S])
         self.pkt_ = P @ U @ np.sqrt(np.diagflat(S_inv))
-        print("KPcovC pkt: " + str(self.pkt_[:5, 0]))
+        
         T = K @ self.pkt_
         self.pt__ = np.linalg.lstsq(T, np.eye(T.shape[0]), rcond=self.tol)[0]
 
@@ -158,8 +159,6 @@ class _BaseKPCov(_BasePCA, LinearModel, metaclass=ABCMeta):
 
         if self.center:
             K = self.centerer_.transform(K)
-
-        #  print("KPCovc transform: "+str(K[:5]))
 
         return K @ self.pkt_
 
