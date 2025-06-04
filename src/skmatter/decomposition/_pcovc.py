@@ -292,7 +292,7 @@ class PCovC(LinearClassifierMixin, _BasePCov):
                 W = W.reshape(X.shape[1], -1)
 
         Z = X @ W
-
+        
         if self.space_ == "feature":
             self._fit_feature_space(X, Y, Z)
         else:
@@ -412,7 +412,6 @@ class PCovC(LinearClassifierMixin, _BasePCov):
 
         if X is not None:
             X = validate_data(self, X, reset=False)
-
             # Or self.classifier_.decision_function(X @ self.pxt_)
             return X @ self.pxz_ + self.classifier_.intercept_
         else:
