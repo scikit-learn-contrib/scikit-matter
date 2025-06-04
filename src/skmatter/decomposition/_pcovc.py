@@ -20,7 +20,8 @@ from skmatter.utils import check_cl_fit
 
 
 class PCovC(LinearClassifierMixin, _BasePCov):
-    r"""Principal Covariates Classification determines a latent-space projection :math:`\mathbf{T}`
+    r"""Principal Covariates Classification, as described in [Jorgensen2025]_,
+    determines a latent-space projection :math:`\mathbf{T}`
     which minimizes a combined loss in supervised and unsupervised tasks.
 
     This projection is determined by the eigendecomposition of a modified gram
@@ -99,8 +100,7 @@ class PCovC(LinearClassifierMixin, _BasePCov):
         default=`sample` when :math:`{n_{samples} < n_{features}}` and
         `feature` when :math:`{n_{features} < n_{samples}}`
 
-    classifier: {`LogisticRegression`, `LogisticRegressionCV`, `LinearSVC`, `LinearDiscriminantAnalysis`,
-        `RidgeClassifier`, `RidgeClassifierCV`, `SGDClassifier`, `Perceptron`, `precomputed`}, default=None
+    classifier: `estimator object` or `precomputed`, default=None
         classifier for computing :math:`{\mathbf{Z}}`. The classifier should be one of
         `sklearn.linear_model.LogisticRegression`, `sklearn.linear_model.LogisticRegressionCV`,
         `sklearn.svm.LinearSVC`, `sklearn.discriminant_analysis.LinearDiscriminantAnalysis`,
@@ -219,8 +219,16 @@ class PCovC(LinearClassifierMixin, _BasePCov):
         self.classifier = classifier
 
     def fit(self, X, Y, W=None):
-        r"""Fit the model with X and Y. Depending on the dimensions of X,
-        calls either `_fit_feature_space` or `_fit_sample_space`.
+        r"""Fit the model with X and Y. Note that W is taken from the
+        coefficients of a linear classifier fit between X and Y to compute
+        Z:
+
+        .. math::
+            \mathbf{Z} = \mathbf{X} \mathbf{W}
+
+        We then call either `_fit_feature_space` or `_fit_sample_space`,
+        using Z as our approximation of Y. Finally, we refit a classifier on
+        T and Y to obtain :math:`\mathbf{P}_{TZ}`.
 
         Parameters
         ----------
@@ -237,24 +245,9 @@ class PCovC(LinearClassifierMixin, _BasePCov):
             Training data, where n_samples is the number of samples.
 
         W : numpy.ndarray, shape (n_features, n_properties)
-            Classification weights, optional when classifier=`precomputed`. If
+            Classification weights, optional when classifier= `precomputed`. If
             not passed, it is assumed that the weights will be taken from a
             linear classifier fit between :math:`\mathbf{X}` and :math:`\mathbf{Y}`
-
-        Notes
-        -----
-        Note the relationship between :math:`\mathbf{X}`, :math:`\mathbf{Y}`,
-        :math:`\mathbf{Z}`, and :math:`\mathbf{W}`. The classification weights
-        :math:`\mathbf{W}`, obtained through a linear classifier fit between
-        :math:`\mathbf{X}` and :math:`\mathbf{Y}`, are used to compute:
-
-        .. math::
-            \mathbf{Z} = \mathbf{X} \mathbf{W}
-
-        Next, :math:`\mathbf{Z}` is used in either `_fit_feature_space` or
-        `_fit_sample_space` as our approximation of :math:`\mathbf{Y}`.
-        Finally, we refit a classifier on :math:`\mathbf{T}` and :math:`\mathbf{Y}`
-        to obtain :math:`\mathbf{P}_{XZ}` and :math:`\mathbf{P}_{TZ}`
         """
         X, Y = validate_data(self, X, Y, y_numeric=False)
         check_classification_targets(Y)
@@ -299,6 +292,7 @@ class PCovC(LinearClassifierMixin, _BasePCov):
                 W = W.reshape(X.shape[1], -1)
 
         Z = X @ W
+        
         if self.space_ == "feature":
             self._fit_feature_space(X, Y, Z)
         else:
@@ -382,12 +376,35 @@ class PCovC(LinearClassifierMixin, _BasePCov):
 
         Returns
         -------
-        X_original ndarray, shape (n_samples, n_features)
+        X_original : numpy.ndarray, shape (n_samples, n_features)
         """
         return super().inverse_transform(T)
 
     def decision_function(self, X=None, T=None):
-        """Predicts confidence scores from X or T."""
+        r"""Predicts confidence scores from X or T.
+
+        .. math::
+            \mathbf{Z} = \mathbf{T} \mathbf{P}_{TZ}
+                       = \mathbf{X} \mathbf{P}_{XT} \mathbf{P}_{TZ}
+                       = \mathbf{X} \mathbf{P}_{XZ}
+
+        Parameters
+        ----------
+        X : ndarray, shape(n_samples, n_features)
+            Original data for which we want to get confidence scores,
+            where n_samples is the number of samples and n_features is the
+            number of features.
+        T : ndarray, shape (n_samples, n_components)
+            Projected data for which we want to get confidence scores,
+            where n_samples is the number of samples and n_components is the
+            number of components.
+
+        Returns
+        -------
+        Z : numpy.ndarray, shape (n_samples,) or (n_samples, n_classes)
+            Confidence scores. For binary classification, has shape `(n_samples,)`,
+            for multiclass classification, has shape `(n_samples, n_classes)`
+        """
         check_is_fitted(self, attributes=["pxz_", "ptz_"])
 
         if X is None and T is None:
@@ -395,7 +412,6 @@ class PCovC(LinearClassifierMixin, _BasePCov):
 
         if X is not None:
             X = validate_data(self, X, reset=False)
-
             # Or self.classifier_.decision_function(X @ self.pxt_)
             return X @ self.pxz_ + self.classifier_.intercept_
         else:

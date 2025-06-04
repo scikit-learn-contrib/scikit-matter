@@ -1,5 +1,5 @@
-Principal Covariates Regression (PCovR) and Classification (PCovC)
-==================================================================
+Hybrid Mapping Techniques
+=========================
 
 .. _PCovR-api:
 

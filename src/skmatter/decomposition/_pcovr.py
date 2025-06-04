@@ -9,7 +9,7 @@ from skmatter.utils import check_lr_fit
 
 
 class PCovR(RegressorMixin, MultiOutputMixin, _BasePCov):
-    r"""Principal Covariates Regression, as described in [deJong1992]_
+    r"""Principal Covariates Regression, as described in [deJong1992]_,
     determines a latent-space projection :math:`\mathbf{T}` which
     minimizes a combined loss in supervised and unsupervised tasks.
 
@@ -225,7 +225,7 @@ class PCovR(RegressorMixin, MultiOutputMixin, _BasePCov):
             regressed form of the properties, :math:`{\mathbf{\hat{Y}}}`.
 
         W : numpy.ndarray, shape (n_features, n_properties)
-            Regression weights, optional when regressor=`precomputed`. If not
+            Regression weights, optional when regressor= `precomputed`. If not
             passed, it is assumed that `W = np.linalg.lstsq(X, Y, self.tol)[0]`
         """
         X, Y = validate_data(self, X, Y, y_numeric=True, multi_output=True)
@@ -349,7 +349,7 @@ class PCovR(RegressorMixin, MultiOutputMixin, _BasePCov):
 
         Returns
         -------
-        X_original ndarray, shape (n_samples, n_features)
+        X_original : numpy.ndarray, shape (n_samples, n_features)
         """
         return super().inverse_transform(T)
 
@@ -379,7 +379,6 @@ class PCovR(RegressorMixin, MultiOutputMixin, _BasePCov):
             New data, where n_samples is the number of samples
             and n_features is the number of features.
         """
-
         return super().transform(X)
 
     def score(self, X, y, T=None):

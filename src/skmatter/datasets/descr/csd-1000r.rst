@@ -25,14 +25,14 @@ The representations were computed with [C1]_ using the hyperparameters:
 
 +---------------------------+------------+
 | key                       |   value    |
-+---------------------------+------------+
++===========================+============+
 | interaction_cutoff:       |    3.5     |
 +---------------------------+------------+
 | max_radial:               |      6     |
 +---------------------------+------------+
 | max_angular:              |      6     |
 +---------------------------+------------+
-| gaussian_sigma_constant": |     0.4    |
+| gaussian_sigma_constant:  |     0.4    |
 +---------------------------+------------+
 | gaussian_sigma_type:      |  "Constant"|
 +---------------------------+------------+
@@ -43,11 +43,31 @@ The representations were computed with [C1]_ using the hyperparameters:
 
 Of the 2'520 resulting features, 100 were selected via FPS using [C2]_.
 
+Chemical Properties
+-------------------
+
+The CSD-1000R dataset consists of 100 atomic environments selected from crystal
+structures in the Cambridge Structural Database (CSD) [C3]_. These environments
+represent a diverse set of chemical compositions and bonding types, including:
+
+- Metals, metalloids, and non-metals
+- Covalent, ionic, and metallic bonding environments
+- Various coordination numbers and geometries
+
+The dataset captures local chemical environments relevant for modeling properties
+such as nuclear magnetic resonance (NMR) chemical shieldings, aiding in the
+understanding of structure-property relationships in materials chemistry.
+
+For more detailed chemical information, users can refer to the original Cambridge
+Structural Database [C3]_ or the publication by Ceriotti et al. (2019) [C4]_.
+
 References
 ----------
 
 .. [C1] https://github.com/lab-cosmo/librascal commit ade202a6
 .. [C2] https://github.com/lab-cosmo/scikit-matter commit 4ed1d92
+.. [C3] https://www.ccdc.cam.ac.uk/structures/
+.. [C4] https://www.nature.com/articles/s41597-019-0224-1
 
 Reference Code
 --------------
