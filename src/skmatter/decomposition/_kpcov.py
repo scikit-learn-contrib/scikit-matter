@@ -142,6 +142,8 @@ class _BaseKPCov(_BasePCA, LinearModel):
         U = Vt.T
 
         P = (self.mixing * np.eye(K.shape[0])) + (1.0 - self.mixing) * (W @ Yhat.T)
+        print("KPCovC P: "+str(P[:5, 0]))
+
         S_inv = np.array([1.0 / s if s > self.tol else 0.0 for s in S])
 
         self.pkt_ = P @ U @ np.sqrt(np.diagflat(S_inv))
