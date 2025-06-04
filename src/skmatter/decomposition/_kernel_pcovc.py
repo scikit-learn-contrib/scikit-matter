@@ -383,7 +383,6 @@ class KernelPCovC(LinearClassifierMixin, _BaseKPCov):
             K = self._get_kernel(X, self.X_fit_)
             if self.center:
                 K = self.centerer_.transform(K)
-            # print("KPCovC decision function: "+str(K[:1]))
 
             # Or self.classifier_.decision_function(K @ self.pxt_)
             return K @ self.pkz_ + self.classifier_.intercept_

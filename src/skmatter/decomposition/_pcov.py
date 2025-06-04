@@ -163,7 +163,6 @@ class _BasePCov(_BasePCA, LinearModel, metaclass=ABCMeta):
 
         print("PcovC pxt: " + str(self.pxt_[:5, 0]))
 
->>>>>>> 4ff6377 (Changing _BasePCov and _BaseKPCov to be abstract base classes)
         if compute_pty_:
             self.pty_ = T.T @ Y
 
