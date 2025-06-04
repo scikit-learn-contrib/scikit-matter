@@ -287,10 +287,11 @@ class PCovC(LinearClassifierMixin, _BasePCov):
             )
 
         if self.classifier != "precomputed":
-            if self.classifier is None and Y.ndim < 2:
-                classifier = LogisticRegression()
-            elif self.classifier is None and Y.ndim >= 2:
-                classifier = MultiOutputClassifier(estimator=LogisticRegression())
+            if self.classifier is None:
+                if Y.ndim < 2:
+                    classifier = LogisticRegression()
+                else:
+                    classifier = MultiOutputClassifier(estimator=LogisticRegression())
             else:
                 classifier = self.classifier
 
@@ -298,28 +299,28 @@ class PCovC(LinearClassifierMixin, _BasePCov):
 
             if isinstance(self.z_classifier_, MultiOutputClassifier):
                 W = np.hstack([est_.coef_.T for est_ in self.z_classifier_.estimators_])
-                print(W.shape)
             else:
                 W = self.z_classifier_.coef_.T.reshape(X.shape[1], -1)
 
         else:
-            # If precomputed, use default classifier to predict Y from T
-            # check for the case of 2D Y -- we need to make sure that this is MultiOutputClassifier instead
-            if Y.ndim >= 2:
-                classifier = MultiOutputClassifier(estimator=LogisticRegression)
-                if W is None:
-                    _ = MultiOutputClassifier(estimator=LogisticRegression).fit(X, Y)
-                    W = np.hstack([est_.coef_.T for est_ in _.estimators_])
-            else:
+            if Y.ndim < 2:
+                # if self.classifier = "precomputed", use default classifier to predict Y from T
                 classifier = LogisticRegression()
                 if W is None:
                     W = LogisticRegression().fit(X, Y).coef_.T
                     W = W.reshape(X.shape[1], -1)
 
-        # print(f"X {X.shape}")
-        # print(f"W {W.shape}")
+            else:
+                classifier = MultiOutputClassifier(estimator=LogisticRegression())
+                if W is None:
+                    _ = MultiOutputClassifier(estimator=LogisticRegression).fit(X, Y)
+                    W = np.hstack([est_.coef_.T for est_ in _.estimators_])
+
+        print(f"X: {X.shape}")
+        print(f"W: {len(W), W[0]}")
+
         Z = X @ W
-        # print(f"Z {Z.shape}")
+
         if self.space_ == "feature":
             self._fit_feature_space(X, Y, Z)
         else:
@@ -451,36 +452,26 @@ class PCovC(LinearClassifierMixin, _BasePCov):
 
         if X is not None:
             X = validate_data(self, X, reset=False)
+
+            # this is similar to how MultiOutputClassifier handles predict_proba() if n_outputs > 1
+            if isinstance(self.classifier_, MultiOutputClassifier):
+                return [
+                    est_.decision_function(X @ self.pxt_)
+                    for est_ in self.classifier_.estimators_
+                ]
+
             # Or self.classifier_.decision_function(X @ self.pxt_)
-            Z = X @ self.pxz_
+            return X @ self.pxz_ + self.classifier_.intercept_
         else:
             T = check_array(T)
-            Z = T @ self.ptz_
+            
+            if isinstance(self.classifier_, MultiOutputClassifier):
+                return [
+                    est_.decision_function(T @ self.ptz_)
+                    for est_ in self.classifier_.estimators_
+                ]
 
-        if isinstance(self.classifier_, MultiOutputClassifier):
-
-            n_outputs = len(self.classifier_.estimators_)
-            n_classes = Z.shape[1] // n_outputs
-            print(Z.shape)
-            # unpack to 3d
-            Z = Z.reshape(Z.shape[0], n_outputs, n_classes)
-            print(Z.shape)
-
-            # add the intercept for estimator in MultiOutputClassifier
-            for i, est_ in enumerate(self.classifier_.estimators_):
-                # print(Z[:, i, :][0, :])
-                Z[:, i, :] += est_.intercept_
-                # print(Z)
-                # print()
-                print(est_.intercept_)
-                # print()
-                # print(Z[:, i, :][0, :])
-            # swap order of Z axesfrom (n_samples, n_outputs, n_classes) to (n_samples, n_classes, n_outputs) as in paper
-
-            return Z.transpose(0, 2, 1)
-
-        print(self.classifier_.intercept_)
-        return Z + self.classifier_.intercept_
+            return T @ self.ptz_ + self.classifier_.intercept_
 
     def predict(self, X=None, T=None):
         """Predicts the property labels using classification on T."""

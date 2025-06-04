@@ -534,7 +534,7 @@ class PCovCInfrastructureTest(PCovCBaseTest):
             str(cm.exception),
             "Classifier must be an instance of "
             "`LogisticRegression`, `LogisticRegressionCV`, `LinearSVC`, "
-            "`LinearDiscriminantAnalysis`, `RidgeClassifier`, "
+            "`LinearDiscriminantAnalysis`, `MultiOutputClassifier`, `RidgeClassifier`, "
             "`RidgeClassifierCV`, `SGDClassifier`, `Perceptron`, "
             "or `precomputed`",
         )
