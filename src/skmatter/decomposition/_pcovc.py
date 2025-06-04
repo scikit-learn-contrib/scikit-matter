@@ -14,7 +14,6 @@ from sklearn.svm import LinearSVC
 from sklearn.utils import check_array
 from sklearn.utils.multiclass import check_classification_targets, type_of_target
 from sklearn.utils.validation import check_is_fitted, validate_data
-from sklearn.multioutput import MultiOutputClassifier
 from skmatter.decomposition import _BasePCov
 from skmatter.utils import check_cl_fit
 
@@ -292,7 +291,7 @@ class PCovC(LinearClassifierMixin, _BasePCov):
                 W = W.reshape(X.shape[1], -1)
 
         Z = X @ W
-        
+
         if self.space_ == "feature":
             self._fit_feature_space(X, Y, Z)
         else:
