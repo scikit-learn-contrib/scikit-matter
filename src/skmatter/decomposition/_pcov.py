@@ -152,6 +152,7 @@ class _BasePCov(_BasePCA, LinearModel):
         )
 
         P = (self.mixing * X.T) + (1.0 - self.mixing) * W @ Yhat.T
+        print("PCovC P: "+str(P[:5, 0]))
         S_sqrt_inv = np.diagflat([1.0 / np.sqrt(s) if s > self.tol else 0.0 for s in S])
         T = Vt.T @ S_sqrt_inv
 
