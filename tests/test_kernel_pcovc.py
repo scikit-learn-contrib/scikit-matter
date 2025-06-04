@@ -364,8 +364,8 @@ class KernelTests(KernelPCovCBaseTest):
         # K = pairwise_kernels(self.X, metric="rbf", filter_params=True, **kernel_params)
 
         hypers = dict(
-            classifier=LogisticRegression(),
-            mixing=0.5,
+            classifier=LogisticRegression(fit_intercept=False),
+            mixing=1.0,
             n_components=2,
         )
 
