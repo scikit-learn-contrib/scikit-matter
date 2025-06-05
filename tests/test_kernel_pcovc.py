@@ -79,6 +79,7 @@ class KernelPCovCErrorTest(KernelPCovCBaseTest):
         prev_x_error = 10.0
 
         for mixing in np.linspace(0, 1, 6):
+            print(mixing)
             kpcovc = KernelPCovC(
                 mixing=mixing,
                 n_components=4,
@@ -369,7 +370,7 @@ class KernelTests(KernelPCovCBaseTest):
             n_components=2,
         )
 
-        kpcovc = KernelPCovC(kernel="linear", center=True, **hypers)
+        kpcovc = KernelPCovC(kernel="linear", **hypers)
         kpcovc.fit(self.X, self.Y)
         K = kpcovc._get_kernel(self.X)
         print(K[:5, 0])
@@ -403,10 +404,10 @@ class KernelTests(KernelPCovCBaseTest):
         lk = np.linalg.norm(K - k) ** 2.0 / np.linalg.norm(K) ** 2.0
 
         rounding = 3
-        # self.assertEqual(
-        #     round(ly, rounding),
-        #     round(ly_ref, rounding),
-        # )
+        self.assertEqual(
+            round(ly, rounding),
+            round(ly_ref, rounding),
+        )
 
         self.assertEqual(
             round(lk, rounding),
