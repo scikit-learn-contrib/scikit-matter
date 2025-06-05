@@ -9,7 +9,7 @@ from skmatter.decomposition import _BaseKPCov
 
 
 class KernelPCovR(_BaseKPCov):
-    r"""Kernel Principal Covariates Regression, as described in [Helfrecht2020]_
+    r"""Kernel Principal Covariates Regression, as described in [Helfrecht2020]_,
     determines a latent-space projection :math:`\mathbf{T}` which minimizes a combined
     loss in supervised and unsupervised tasks in the reproducing kernel Hilbert space
     (RKHS).
