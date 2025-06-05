@@ -23,7 +23,7 @@ from sklearn.preprocessing import StandardScaler
 
 
 class KernelPCovC(LinearClassifierMixin, _BaseKPCov):
-    r"""Kernel Principal Covariates Classification
+    r"""Kernel Principal Covariates Classification, as described in [Jorgensen2025]_,
     determines a latent-space projection :math:`\mathbf{T}` which minimizes a combined
     loss in supervised and unsupervised tasks in the reproducing kernel Hilbert space
     (RKHS).
@@ -68,7 +68,7 @@ class KernelPCovC(LinearClassifierMixin, _BaseKPCov):
             0 < n_components < min(X.shape)
         If randomized :
             run randomized SVD by the method of Halko et al.
-    
+
     classifier: {`LogisticRegression`, `LogisticRegressionCV`, `LinearSVC`, `LinearDiscriminantAnalysis`,
         `RidgeClassifier`, `RidgeClassifierCV`, `SGDClassifier`, `Perceptron`, `precomputed`}, default=None
         The classifier to use for computing
@@ -253,7 +253,7 @@ class KernelPCovC(LinearClassifierMixin, _BaseKPCov):
         self.classes_ = np.unique(Y)
 
         K = super().fit(X)
-       
+
         compatible_classifiers = (
             LogisticRegression,
             LogisticRegressionCV,
