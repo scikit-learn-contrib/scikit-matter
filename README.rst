@@ -98,7 +98,7 @@ Thanks goes to all people that make scikit-matter possible:
    :alt: Code coverage
    :target: https://codecov.io/gh/scikit-learn-contrib/scikit-matter/
 
-.. |docs| image:: https://img.shields.io/badge/documentation-latest-sucess
+.. |docs| image:: https://img.shields.io/badge/📚_documentation-latest-sucess
    :alt: Python
    :target: documentation_
 
