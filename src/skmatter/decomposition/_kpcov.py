@@ -6,7 +6,6 @@ from scipy import linalg
 from scipy.sparse.linalg import svds
 import scipy.sparse as sp
 from sklearn.exceptions import NotFittedError
-from sklearn.preprocessing import StandardScaler
 
 from sklearn.decomposition._base import _BasePCA
 from sklearn.linear_model._base import LinearModel
@@ -18,8 +17,14 @@ from sklearn.utils.validation import check_is_fitted
 from sklearn.utils.validation import validate_data
 from sklearn.metrics.pairwise import pairwise_kernels
 
-from skmatter.utils import pcovr_kernel
-from skmatter.preprocessing import KernelNormalizer
+import numpy as np
+from numpy.linalg import LinAlgError
+import scipy.sparse as sp
+from scipy import linalg
+from scipy.linalg import sqrtm as MatrixSqrt
+from scipy.sparse.linalg import svds
+
+from skmatter.utils import pcovr_kernel, pcovr_covariance
 
 
 class _BaseKPCov(_BasePCA, LinearModel, metaclass=ABCMeta):
@@ -57,27 +62,16 @@ class _BaseKPCov(_BasePCA, LinearModel, metaclass=ABCMeta):
         self.iterated_power = iterated_power
         self.random_state = random_state
 
-    # enables gamma = "scale" and "auto" in addition to KPCovR's implementation
     def _get_kernel(self, X, Y=None):
-        sparse = sp.issparse(X)
-
         if callable(self.kernel):
             params = self.kernel_params or {}
         else:
-            # from BaseSVC:
-            if self.gamma == "scale":
-                X_var = (X.multiply(X)).mean() - (X.mean()) ** 2 if sparse else X.var()
-                self.gamma_ = 1.0 / (X.shape[1] * X_var) if X_var != 0 else 1.0
-            elif self.gamma == "auto":
-                self.gamma_ = 1.0 / X.shape[1]
-            else:
-                self.gamma_ = self.gamma
-            params = {"gamma": self.gamma_, "degree": self.degree, "coef0": self.coef0}
+            params = {"gamma": getattr(self, "gamma_", self.gamma), "degree": self.degree, "coef0": self.coef0}
 
         return pairwise_kernels(
             X, Y, metric=self.kernel, filter_params=True, n_jobs=self.n_jobs, **params
         )
-
+    
     @abstractmethod
     def fit(self, X):
         """This contains the common functionality for KPCovR and KPCovC fit methods,
@@ -92,12 +86,6 @@ class _BaseKPCov(_BasePCA, LinearModel, metaclass=ABCMeta):
                 self.n_components_ = X.shape[0] - 1
         else:
             self.n_components_ = self.n_components
-
-        K = self._get_kernel(X)
-
-        if self.center:
-            self.centerer_ = KernelNormalizer()
-            K = self.centerer_.fit_transform(K)
 
         self.n_samples_in_, self.n_features_in_ = X.shape
 
@@ -117,9 +105,48 @@ class _BaseKPCov(_BasePCA, LinearModel, metaclass=ABCMeta):
             # This is also the case of self.n_components_ in (0,1)
             else:
                 self.fit_svd_solver_ = "full"
-        return K
 
-    def _fit(self, K, Yhat, W):
+    def _fit_covariance(self, K, Z):
+        """
+        Fit the model with the computed kernel and approximated properties. Uses Covariance Matrix
+        """
+        print(f"KPCovC K: {K[:5, 0]}")
+        Ct, iCsqrt = pcovr_covariance(
+            mixing=self.mixing,
+            X=K,
+            Y=Z,
+            rcond=self.tol,
+            return_isqrt=True,
+        )
+        try:
+            Csqrt = np.linalg.lstsq(iCsqrt, np.eye(len(iCsqrt)), rcond=None)[0]
+
+        # if we can avoid recomputing Csqrt, we should, but sometimes we
+        # run into a singular matrix, which is what we do here
+        except LinAlgError:
+            Csqrt = np.real(MatrixSqrt(K.T @ K))
+
+        if self.fit_svd_solver_ == "full":
+            U, S, Vt = self._decompose_full(Ct)
+        elif self.fit_svd_solver_ in ["arpack", "randomized"]:
+            U, S, Vt = self._decompose_truncated(Ct)
+        else:
+            raise ValueError(f"Unrecognized svd_solver='{self.fit_svd_solver_}'")
+
+        S_sqrt = np.diagflat([np.sqrt(s) if s > self.tol else 0.0 for s in S])
+        S_sqrt_inv = np.diagflat([1.0 / np.sqrt(s) if s > self.tol else 0.0 for s in S])
+
+        self.pkt_ = np.linalg.multi_dot([iCsqrt, Vt.T, S_sqrt])
+        self.ptk_ = np.linalg.multi_dot([S_sqrt_inv, Vt, Csqrt])
+
+        # if self.mixing == 1.0:
+        #     lambda_i = np.sqrt(S) 
+        #     self.pkt_ = self.pkt_ / np.sqrt(lambda_i)[np.newaxis, :]
+
+        T = K @ self.pkt_
+        self.pt__ = np.linalg.lstsq(T, np.eye(T.shape[0]), rcond=self.tol)[0]
+
+    def _fit_gram(self, K, Yhat, W):
         """
         Fit the model with the computed kernel and approximated properties.
         """
@@ -145,11 +172,12 @@ class _BaseKPCov(_BasePCA, LinearModel, metaclass=ABCMeta):
 
         S_inv = np.array([1.0 / s if s > self.tol else 0.0 for s in S])
 
-        print([s if s > self.tol else 0.0 for s in S])
         self.pkt_ = P @ U @ np.sqrt(np.diagflat(S_inv))
-        
+
         T = K @ self.pkt_
         self.pt__ = np.linalg.lstsq(T, np.eye(T.shape[0]), rcond=self.tol)[0]
+        # np.linalg.lstsq(K @ self.pkt_, np.eye(K @ self.pkt_.shape[0]), rcond=self.tol)[0]
+        # self.ptx = self.pt__ @ X
 
     def transform(self, X=None):
         check_is_fitted(self, ["pkt_", "X_fit_"])
