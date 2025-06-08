@@ -162,7 +162,7 @@ def pcovr_covariance(
         \mathbf{\hat{Y}}\mathbf{\hat{Y}}^T \mathbf{X} \left(\mathbf{X}^T
         \mathbf{X}\right)^{-\frac{1}{2}}\right)
 
-    where :math:`\mathbf{\hat{Y}}`` are the properties obtained by linear regression.
+    where :math:`\mathbf{\hat{Y}}` are the properties obtained by linear regression.
 
     Parameters
     ----------

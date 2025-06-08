@@ -17,6 +17,25 @@ from sklearn.utils.validation import _check_n_features, check_is_fitted, validat
 from ..preprocessing import KernelNormalizer
 from ..utils import check_krr_fit, pcovr_kernel
 
+import numpy as np
+from numpy.linalg import LinAlgError
+from scipy import linalg
+from scipy.linalg import sqrtm as MatrixSqrt
+from scipy.sparse.linalg import svds
+from sklearn.decomposition._base import _BasePCA
+from sklearn.decomposition._pca import _infer_dimension
+from sklearn.linear_model._base import LinearModel
+from sklearn.utils import check_random_state
+from sklearn.utils._arpack import _init_arpack_v0
+from sklearn.utils.extmath import randomized_svd, stable_cumsum, svd_flip
+from sklearn.utils.validation import check_is_fitted
+
+from skmatter.utils import pcovr_covariance, pcovr_kernel
+from sklearn.metrics.pairwise import pairwise_kernels
+
+from skmatter.preprocessing import KernelNormalizer
+from skmatter.utils import pcovr_kernel
+
 
 class KernelPCovR(_BaseKPCov):
     r"""Kernel Principal Covariates Regression, as described in [Helfrecht2020]_,
@@ -286,7 +305,13 @@ class KernelPCovR(_BaseKPCov):
         """
         X, Y = validate_data(self, X, Y, y_numeric=True, multi_output=True)
 
-        K = super().fit(X)
+        super().fit(X)
+
+        K = super()._get_kernel(X)
+
+        if self.center:
+            self.centerer_ = KernelNormalizer()
+            K = self.centerer_.fit_transform(K)
 
         if self.regressor not in ["precomputed", None] and not isinstance(
             self.regressor, KernelRidge
@@ -377,24 +402,7 @@ class KernelPCovR(_BaseKPCov):
             if W is None:
                 W = np.linalg.lstsq(K, Yhat, self.tol)[0]
 
-        # Handle svd_solver
-        self._fit_svd_solver = self.svd_solver
-        if self._fit_svd_solver == "auto":
-            # Small problem or self.n_components_ == 'mle', just call full PCA
-            if (
-                max(self.n_samples_in_, self.n_features_in_) <= 500
-                or self.n_components_ == "mle"
-            ):
-                self._fit_svd_solver = "full"
-            elif self.n_components_ >= 1 and self.n_components_ < 0.8 * max(
-                self.n_samples_in_, self.n_features_in_
-            ):
-                self._fit_svd_solver = "randomized"
-            # This is also the case of self.n_components_ in (0,1)
-            else:
-                self._fit_svd_solver = "full"
-
-        self._fit(K, Yhat, W)
+        super()._fit_gram(K, Yhat, W)
 
         self.ptk_ = self.pt__ @ K
         self.pty_ = self.pt__ @ Y

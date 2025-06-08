@@ -289,9 +289,10 @@ class PCovC(LinearClassifierMixin, _BasePCov):
             if W is None:
                 W = LogisticRegression().fit(X, Y).coef_.T
                 W = W.reshape(X.shape[1], -1)
-
+        
         Z = X @ W
 
+        print(f"PCovC Z {Z[:5, 0]}")
         if self.space_ == "feature":
             self._fit_feature_space(X, Y, Z)
         else:
@@ -304,6 +305,10 @@ class PCovC(LinearClassifierMixin, _BasePCov):
         self.ptz_ = self.classifier_.coef_.T
         self.pxz_ = self.pxt_ @ self.ptz_
 
+        print(f"PCovC ptz: {self.ptz_.shape}")
+        print(f"PCovC classifier_ coef n_classes: {len(self.classifier_.classes_)}")
+
+        print(f"PCovC pxz: {self.pxz_.shape}")
         if len(Y.shape) == 1 and type_of_target(Y) == "binary":
             self.pxz_ = self.pxz_.reshape(
                 X.shape[1],
@@ -311,6 +316,7 @@ class PCovC(LinearClassifierMixin, _BasePCov):
             self.ptz_ = self.ptz_.reshape(
                 self.n_components_,
             )
+        print(f"PCovC pxz: {self.pxz_.shape}")
 
         self.components_ = self.pxt_.T  # for sklearn compatibility
         return self
