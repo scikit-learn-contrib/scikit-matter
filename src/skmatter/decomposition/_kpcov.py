@@ -66,12 +66,16 @@ class _BaseKPCov(_BasePCA, LinearModel, metaclass=ABCMeta):
         if callable(self.kernel):
             params = self.kernel_params or {}
         else:
-            params = {"gamma": getattr(self, "gamma_", self.gamma), "degree": self.degree, "coef0": self.coef0}
+            params = {
+                "gamma": getattr(self, "gamma_", self.gamma),
+                "degree": self.degree,
+                "coef0": self.coef0,
+            }
 
         return pairwise_kernels(
             X, Y, metric=self.kernel, filter_params=True, n_jobs=self.n_jobs, **params
         )
-    
+
     @abstractmethod
     def fit(self, X):
         """This contains the common functionality for KPCovR and KPCovC fit methods,
@@ -140,7 +144,7 @@ class _BaseKPCov(_BasePCA, LinearModel, metaclass=ABCMeta):
         self.ptk_ = np.linalg.multi_dot([S_sqrt_inv, Vt, Csqrt])
 
         # if self.mixing == 1.0:
-        #     lambda_i = np.sqrt(S) 
+        #     lambda_i = np.sqrt(S)
         #     self.pkt_ = self.pkt_ / np.sqrt(lambda_i)[np.newaxis, :]
 
         T = K @ self.pkt_

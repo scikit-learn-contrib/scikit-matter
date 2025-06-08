@@ -289,7 +289,7 @@ class PCovC(LinearClassifierMixin, _BasePCov):
             if W is None:
                 W = LogisticRegression().fit(X, Y).coef_.T
                 W = W.reshape(X.shape[1], -1)
-        
+
         Z = X @ W
 
         print(f"PCovC Z {Z[:5, 0]}")
