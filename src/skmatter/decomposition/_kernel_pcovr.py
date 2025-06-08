@@ -7,6 +7,25 @@ from sklearn.utils.validation import _check_n_features, check_is_fitted, validat
 from skmatter.utils import check_krr_fit
 from skmatter.decomposition import _BaseKPCov
 
+import numpy as np
+from numpy.linalg import LinAlgError
+from scipy import linalg
+from scipy.linalg import sqrtm as MatrixSqrt
+from scipy.sparse.linalg import svds
+from sklearn.decomposition._base import _BasePCA
+from sklearn.decomposition._pca import _infer_dimension
+from sklearn.linear_model._base import LinearModel
+from sklearn.utils import check_random_state
+from sklearn.utils._arpack import _init_arpack_v0
+from sklearn.utils.extmath import randomized_svd, stable_cumsum, svd_flip
+from sklearn.utils.validation import check_is_fitted
+
+from skmatter.utils import pcovr_covariance, pcovr_kernel
+from sklearn.metrics.pairwise import pairwise_kernels
+
+from skmatter.preprocessing import KernelNormalizer
+from skmatter.utils import pcovr_kernel
+
 
 class KernelPCovR(_BaseKPCov):
     r"""Kernel Principal Covariates Regression, as described in [Helfrecht2020]_,
@@ -30,7 +49,7 @@ class KernelPCovR(_BaseKPCov):
     ----------
     mixing : float, default=0.5
         mixing parameter, as described in PCovR as :math:`{\alpha}`
-        
+
     n_components : int, float or str, default=None
         Number of components to keep.
         if n_components is not set all components are kept::
@@ -240,7 +259,13 @@ class KernelPCovR(_BaseKPCov):
         """
         X, Y = validate_data(self, X, Y, y_numeric=True, multi_output=True)
 
-        K = super().fit(X)
+        super().fit(X)
+
+        K = super()._get_kernel(X)
+
+        if self.center:
+            self.centerer_ = KernelNormalizer()
+            K = self.centerer_.fit_transform(K)
 
         if self.regressor not in ["precomputed", None] and not isinstance(
             self.regressor, KernelRidge
@@ -311,7 +336,7 @@ class KernelPCovR(_BaseKPCov):
             if W is None:
                 W = np.linalg.lstsq(K, Yhat, self.tol)[0]
 
-        self._fit(K, Yhat, W)
+        super()._fit_gram(K, Yhat, W)
 
         self.ptk_ = self.pt__ @ K
         self.pty_ = self.pt__ @ Y
