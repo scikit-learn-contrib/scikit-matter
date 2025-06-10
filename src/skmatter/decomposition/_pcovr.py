@@ -227,7 +227,7 @@ class PCovR(RegressorMixin, MultiOutputMixin, _BasePCov):
             regressed form of the properties, :math:`{\mathbf{\hat{Y}}}`.
 
         W : numpy.ndarray, shape (n_features, n_properties)
-            Regression weights, optional when regressor= `precomputed`. If not
+            Regression weights, optional when regressor = `precomputed`. If not
             passed, it is assumed that `W = np.linalg.lstsq(X, Y, self.tol)[0]`
         """
         X, Y = validate_data(self, X, Y, y_numeric=True, multi_output=True)
