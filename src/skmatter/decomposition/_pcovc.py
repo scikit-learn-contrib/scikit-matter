@@ -121,8 +121,8 @@ class PCovC(LinearClassifierMixin, _BasePCov):
         `sklearn.pipeline.Pipeline` with model caching.
         In such cases, the classifier will be re-fitted on the same
         training data as the composite estimator.
-        If None, ``sklearn.linear_model.LogisticRegression()``
-        is used as the classifier.
+        If None and ``Y.ndim < 2``, ``sklearn.linear_model.LogisticRegression()`` is used.
+        If None and ``Y.ndim == 2``, ``sklearn.multioutput.MultiOutputClassifier()`` is used.
 
     iterated_power : int or 'auto', default='auto'
         Number of iterations for the power method computed by
@@ -167,11 +167,13 @@ class PCovC(LinearClassifierMixin, _BasePCov):
         the projector, or weights, from the input space :math:`\mathbf{X}`
         to the latent-space projection :math:`\mathbf{T}`
 
-    pxz_ : ndarray of size :math:`({n_{features}, })` or :math:`({n_{features}, n_{classes}})`
+    pxz_ : ndarray of size :math:`({n_{features}, })`, :math:`({n_{features}, n_{classes}})`, \
+            or :math:`({n_{components}, n_{classes}*n_{outputs}})`
         the projector, or weights, from the input space :math:`\mathbf{X}`
         to the class confidence scores :math:`\mathbf{Z}`
 
-    ptz_ : ndarray of size :math:`({n_{components}, })` or :math:`({n_{components}, n_{classes}})`
+    ptz_ : ndarray of size :math:`({n_{components}, })`, :math:`({n_{components}, n_{classes}})` \
+            or :math:`({n_{components}, n_{classes}*n_{outputs}})`
         the projector, or weights, from the latent-space projection
         :math:`\mathbf{T}` to the class confidence scores :math:`\mathbf{Z}`
 
@@ -251,13 +253,18 @@ class PCovC(LinearClassifierMixin, _BasePCov):
             scaled to have unit variance, otherwise :math:`\mathbf{X}` should
             be scaled so that each feature has a variance of 1 / n_features.
 
-        Y : numpy.ndarray, shape (n_samples,)
-            Training data, where n_samples is the number of samples.
+        Y : numpy.ndarray, shape (n_samples,) or (n_samples, n_outputs)
+            Training data, where n_samples is the number of samples and
+            n_outputs is the number of outputs. If classifier parameter is an instance
+            of ``sklearn.multioutput.MultiOutputClassifier()``, Y can be of shape
+            (n_samples, n_outputs).
 
         W : numpy.ndarray, shape (n_features, n_classes)
             Classification weights, optional when classifier is ``precomputed``. If
             not passed, it is assumed that the weights will be taken from a
-            linear classifier fit between :math:`\mathbf{X}` and :math:`\mathbf{Y}`
+            linear classifier fit between :math:`\mathbf{X}` and :math:`\mathbf{Y}`.
+            In the case of a multioutput classifier ``classifier``,
+           `` W = np.hstack([est_.coef_.T for est_ in classifier.estimators_])``.
         """
         X, Y = validate_data(self, X, Y, multi_output=True, y_numeric=False)
         check_classification_targets(Y)
@@ -317,7 +324,7 @@ class PCovC(LinearClassifierMixin, _BasePCov):
                     W = np.hstack([est_.coef_.T for est_ in _.estimators_])
 
         print(f"X: {X.shape}")
-        print(f"W: {len(W), W[0]}")
+        print(f"W: {W.shape}")
 
         Z = X @ W
 
@@ -344,6 +351,7 @@ class PCovC(LinearClassifierMixin, _BasePCov):
             # print(self.ptz_.shape)
             self.pxz_ = self.pxt_ @ self.ptz_
 
+        print(self.ptz_.shape)
         if len(Y.shape) == 1 and type_of_target(Y) == "binary":
             self.pxz_ = self.pxz_.reshape(
                 X.shape[1],
@@ -441,9 +449,12 @@ class PCovC(LinearClassifierMixin, _BasePCov):
 
         Returns
         -------
-        Z : numpy.ndarray, shape (n_samples,) or (n_samples, n_classes)
+        Z : numpy.ndarray, shape (n_samples,) or (n_samples, n_classes), or a list of \
+                n_outputs such arrays if n_outputs > 1
             Confidence scores. For binary classification, has shape `(n_samples,)`,
-            for multiclass classification, has shape `(n_samples, n_classes)`
+            for multiclass classification, has shape `(n_samples, n_classes)`. If n_outputs > 1,
+            the list returned can contain such arrays with differing shapes depending on the
+            number of classes in each output of Y.
         """
         check_is_fitted(self, attributes=["pxz_", "ptz_"])
 
@@ -464,11 +475,10 @@ class PCovC(LinearClassifierMixin, _BasePCov):
             return X @ self.pxz_ + self.classifier_.intercept_
         else:
             T = check_array(T)
-            
+
             if isinstance(self.classifier_, MultiOutputClassifier):
                 return [
-                    est_.decision_function(T @ self.ptz_)
-                    for est_ in self.classifier_.estimators_
+                    est_.decision_function(T) for est_ in self.classifier_.estimators_
                 ]
 
             return T @ self.ptz_ + self.classifier_.intercept_
