@@ -2,6 +2,16 @@
 
 .. raw:: html
 
+     <style>
+        /* Overriding bootstrap font color so that text appears white
+           in dark theme */
+        html[data-theme="dark"] .card-text {
+            color: #ced6dd;
+        }
+    </style>
+
+.. raw:: html
+
     <div class="container">
         <div class="row">
             <div class="col-sm d-flex">
