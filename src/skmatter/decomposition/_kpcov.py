@@ -143,9 +143,9 @@ class _BaseKPCov(_BasePCA, LinearModel, metaclass=ABCMeta):
         self.pkt_ = np.linalg.multi_dot([iCsqrt, Vt.T, S_sqrt])
         self.ptk_ = np.linalg.multi_dot([S_sqrt_inv, Vt, Csqrt])
 
-        # if self.mixing == 1.0:
-        #     lambda_i = np.sqrt(S)
-        #     self.pkt_ = self.pkt_ / np.sqrt(lambda_i)[np.newaxis, :]
+        if self.mixing == 1.0:
+            lambda_i = np.sqrt(S)
+            self.pkt_ = self.pkt_ / np.sqrt(lambda_i)[np.newaxis, :]
 
         T = K @ self.pkt_
         self.pt__ = np.linalg.lstsq(T, np.eye(T.shape[0]), rcond=self.tol)[0]
