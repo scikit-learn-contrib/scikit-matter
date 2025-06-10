@@ -399,6 +399,7 @@ class PCovC(LinearClassifierMixin, _BasePCov):
             Original data for which we want to get confidence scores,
             where n_samples is the number of samples and n_features is the
             number of features.
+
         T : ndarray, shape (n_samples, n_components)
             Projected data for which we want to get confidence scores,
             where n_samples is the number of samples and n_components is the

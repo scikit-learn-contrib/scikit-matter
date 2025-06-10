@@ -69,26 +69,25 @@ class KernelPCovC(LinearClassifierMixin, _BaseKPCov):
         If randomized :
             run randomized SVD by the method of Halko et al.
 
-    classifier: {`LogisticRegression`, `LogisticRegressionCV`, `LinearSVC`, `LinearDiscriminantAnalysis`,
-        `RidgeClassifier`, `RidgeClassifierCV`, `SGDClassifier`, `Perceptron`, `precomputed`}, default=None
+    classifier : {instance of `sklearn.svm.SVC`, None}, default=None
         The classifier to use for computing
         the evidence :math:`{\mathbf{Z}}`.
         A pre-fitted classifier may be provided.
+        If the classifier is not `None`, its kernel parameters
+        (`kernel`, `gamma`, `degree`, and `coef0`)
+        must be identical to those passed directly to `KernelPCovC`.
 
-        If None, ``sklearn.linear_model.LogisticRegression()``
-        is used as the classifier.
-
-    kernel : {"linear", "poly", "rbf", "sigmoid", "cosine", "precomputed"}, default="linear
+    kernel : {'linear', 'poly', 'rbf', 'sigmoid', 'precomputed'} or callable, default='rbf'
         Kernel.
 
-    gamma : {'scale', 'auto'} or float, default=None
+    gamma : {'scale', 'auto'} or float, default='scale'
         Kernel coefficient for rbf, poly and sigmoid kernels. Ignored by other
         kernels.
 
     degree : int, default=3
         Degree for poly kernels. Ignored by other kernels.
 
-    coef0 : float, default=1
+    coef0 : float, default=0.0
         Independent term in poly and sigmoid kernels.
         Ignored by other kernels.
 
@@ -223,6 +222,27 @@ class KernelPCovC(LinearClassifierMixin, _BaseKPCov):
         self.classifier = classifier
 
     def fit(self, X, Y):
+        r"""Fit the model with X and Y.
+
+        Parameters
+        ----------
+        X : numpy.ndarray, shape (n_samples, n_features)
+            Training data, where n_samples is the number of samples and
+            n_features is the number of features.
+
+            It is suggested that :math:`\mathbf{X}` be centered by its column-
+            means and scaled. If features are related, the matrix should be scaled
+            to have unit variance, otherwise :math:`\mathbf{X}` should be
+            scaled so that each feature has a variance of 1 / n_features.
+
+        Y : numpy.ndarray, shape (n_samples,)
+            Training data, where n_samples is the number of samples.
+
+        Returns
+        -------
+        self: object
+            Returns the instance itself.
+        """
         X, Y = validate_data(self, X, Y, y_numeric=False)
         check_classification_targets(Y)
         self.classes_ = np.unique(Y)
@@ -347,7 +367,7 @@ class KernelPCovC(LinearClassifierMixin, _BaseKPCov):
         """Apply dimensionality reduction to X.
 
         ``X`` is projected on the first principal components as determined by the
-        modified Kernel PCovR distances.
+        modified Kernel PCovC distances.
 
         Parameters
         ----------
@@ -382,7 +402,31 @@ class KernelPCovC(LinearClassifierMixin, _BaseKPCov):
         return super().inverse_transform(T)
 
     def decision_function(self, X=None, T=None):
-        """Predicts confidence scores from X or T."""
+        r"""Predicts confidence scores from X or T.
+
+        .. math::
+            \mathbf{Z} = \mathbf{T} \mathbf{P}_{TZ}
+                       = \mathbf{K} \mathbf{P}_{KT} \mathbf{P}_{TZ}
+                       = \mathbf{K} \mathbf{P}_{KZ}
+
+        Parameters
+        ----------
+        X : ndarray, shape(n_samples, n_features)
+            Original data for which we want to get confidence scores,
+            where n_samples is the number of samples and n_features is the
+            number of features.
+
+        T : ndarray, shape (n_samples, n_components)
+            Projected data for which we want to get confidence scores,
+            where n_samples is the number of samples and n_components is the
+            number of components.
+
+        Returns
+        -------
+        Z : numpy.ndarray, shape (n_samples,) or (n_samples, n_classes)
+            Confidence scores. For binary classification, has shape `(n_samples,)`,
+            for multiclass classification, has shape `(n_samples, n_classes)`
+        """
         check_is_fitted(self, attributes=["pkz_", "ptz_"])
 
         if X is None and T is None:
