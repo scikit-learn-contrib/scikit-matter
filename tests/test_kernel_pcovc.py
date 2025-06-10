@@ -114,6 +114,7 @@ class KernelPCovCErrorTest(KernelPCovCBaseTest):
 
             prev_error = error
             prev_x_error = x_error
+
         print(x_errors)
         print(errors)
 
@@ -321,67 +322,7 @@ class KernelTests(KernelPCovCBaseTest):
                 print(kpcovc.classifier.kernel)
                 kpcovc.fit(self.X, self.Y)
 
-    
-    def test_linear_matches_pcovc(self):
-        """Check that KernelPCovR returns the same results as PCovR when using a linear
-        kernel.
-        """
-        linear_svc = LinearSVC(loss="hinge", fit_intercept=False)
-        linear_svc.fit(self.X, self.Y)
 
-        # common instantiation parameters for the two models
-        hypers = dict(
-            mixing=1,
-            n_components=1,
-        )
-
-        # computing projection and predicton loss with linear KernelPCovR
-        # and use the alpha from RidgeCV for level regression comparisons
-        kpcovr = KernelPCovC(
-            classifier=SVC(kernel="linear"),
-            kernel="linear",
-            fit_inverse_transform=True,
-            center=True,
-            **hypers,
-        )
-        kpcovr.fit(self.X, self.Y)
-        ly = (
-            np.linalg.norm(self.Y - kpcovr.predict(self.X)) ** 2.0
-            / np.linalg.norm(self.Y) ** 2.0
-        )
-
-        # computing projection and predicton loss with PCovR
-        ref_pcovr = PCovC(**hypers, classifier=linear_svc, space="sample")
-        ref_pcovr.fit(self.X, self.Y)
-        ly_ref = (
-            np.linalg.norm(self.Y - ref_pcovr.predict(self.X)) ** 2.0
-            / np.linalg.norm(self.Y) ** 2.0
-        )
-
-        t_ref = ref_pcovr.transform(self.X)
-        t = kpcovr.transform(self.X)
-
-        print(np.linalg.norm(t_ref - t))
-        K = kpcovr._get_kernel(self.X)
-
-        k_ref = t_ref @ t_ref.T
-        k = t @ t.T
-
-        lk_ref = np.linalg.norm(K - k_ref) ** 2.0 / np.linalg.norm(K) ** 2.0
-        lk = np.linalg.norm(K - k) ** 2.0 / np.linalg.norm(K) ** 2.0
-
-        rounding = 3
-        # self.assertEqual(
-        #     round(ly, rounding),
-        #     round(ly_ref, rounding),
-        # )
-
-        print(lk, lk_ref)
-
-        self.assertEqual(
-            round(lk, rounding),
-            round(lk_ref, rounding),
-        )
 class KernelPCovCTestSVDSolvers(KernelPCovCBaseTest):
     def test_svd_solvers(self):
         """

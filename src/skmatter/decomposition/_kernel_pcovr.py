@@ -85,7 +85,7 @@ class KernelPCovR(_BaseKPCov):
         If `precomputed`, we assume that the `y` passed to the `fit` function
         is the regressed form of the targets :math:`{\mathbf{\hat{Y}}}`.
 
-    kernel : {"linear", "poly", "rbf", "sigmoid", "cosine", "precomputed"}, default="linear"
+    kernel : {'linear', 'poly', 'rbf', 'sigmoid', 'cosine', 'precomputed'} or callable, default='linear'
         Kernel.
 
     gamma : float, default=None
