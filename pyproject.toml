@@ -38,7 +38,7 @@ classifiers = [
     "Topic :: Scientific/Engineering",
 ]
 dependencies = [
-    "scikit-learn >= 1.6, < 1.7",
+    "scikit-learn >= 1.7",
     "scipy >= 1.15",  # explicit to adhere to scikit-learn dependencies
 ]
 dynamic = ["version"]
