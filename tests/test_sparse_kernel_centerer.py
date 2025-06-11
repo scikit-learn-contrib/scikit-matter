@@ -13,7 +13,8 @@ class SparseKernelTests(unittest.TestCase):
 
     def test_sample_weights(self):
         """Checks that sample weights of one are equal to the unweighted case and that
-        the nonuniform weights are different from the unweighted case"""
+        the nonuniform weights are different from the unweighted case.
+        """
         X = self.random_state.uniform(-1, 1, size=(4, 5))
         X_sparse = self.random_state.uniform(-1, 1, size=(3, 5))
 
@@ -40,7 +41,8 @@ class SparseKernelTests(unittest.TestCase):
 
     def test_invalid_sample_weights(self):
         """Checks that weights must be 1D array with the same length as the number of
-        samples"""
+        samples.
+        """
         X = self.random_state.uniform(-1, 1, size=(4, 5))
         X_sparse = self.random_state.uniform(-1, 1, size=(3, 5))
 
@@ -56,8 +58,7 @@ class SparseKernelTests(unittest.TestCase):
             model.fit_transform(Knm, Kmm, sample_weight=wts_dim)
 
     def test_Square_Kmm(self):
-        """Checks that the passed active kernel is square"""
-
+        """Checks that the passed active kernel is square."""
         X = self.random_state.uniform(-1, 1, size=(4, 5))
         X_sparse = self.random_state.uniform(-1, 1, size=(3, 5))
 
@@ -71,8 +72,8 @@ class SparseKernelTests(unittest.TestCase):
 
     def test_LatterDim(self):
         """Checks that a matrix must have the same latter dimension as its active
-        counterpart cannot be normalized."""
-
+        counterpart cannot be normalized.
+        """
         X = self.random_state.uniform(-1, 1, size=(4, 5))
         X_sparse = self.random_state.uniform(-1, 1, size=(3, 5))
 
@@ -84,12 +85,13 @@ class SparseKernelTests(unittest.TestCase):
             model.fit(Knm, Kmm)
         self.assertEqual(
             str(cm.exception),
-            "The reference kernel is not " "commensurate shape with the active kernel.",
+            "The reference kernel is not commensurate shape with the active kernel.",
         )
 
     def test_new_kernel(self):
-        """Checks that it is impossible to normalize
-        a matrix with a non-coincident size with the reference."""
+        """Checks that it is impossible to normalize a matrix with a non-coincident size
+        with the reference.
+        """
         X = self.random_state.uniform(-1, 1, size=(4, 5))
         X_sparse = self.random_state.uniform(-1, 1, size=(3, 5))
 
@@ -101,15 +103,15 @@ class SparseKernelTests(unittest.TestCase):
         model = model.fit(Knm, Kmm)
         with self.assertRaises(ValueError) as cm:
             model.transform(Knm2)
-        self.assertEquals(
+        self.assertEqual(
             str(cm.exception),
             "The reference kernel and received kernel have different shape",
         )
 
     def test_NotFittedError_transform(self):
-        """Checks that an error is returned when
-        trying to use the transform function
-        before the fit function"""
+        """Checks that an error is returned when trying to use the transform function
+        before the fit function
+        """
         K = self.random_state.uniform(0, 100, size=(3, 3))
         model = SparseKernelCenterer()
         with self.assertRaises(sklearn.exceptions.NotFittedError):
@@ -117,10 +119,9 @@ class SparseKernelTests(unittest.TestCase):
 
     def test_fit_transform(self):
         """Checks that the kernel is correctly normalized.
-        Compare with the value calculated
-        directly from the equation.
-        """
 
+        Compare with the value calculated directly from the equation.
+        """
         X = self.random_state.uniform(-1, 1, size=(4, 5))
         X_sparse = self.random_state.uniform(-1, 1, size=(3, 5))
 

@@ -6,6 +6,12 @@ References
     "Principal covariates regression: Part I. Theory", Chemom. intell. lab. syst. 14
     (1992) 155-164 https://doi.org/10.1016/0169-7439(92)80100-I
 
+.. [Gasparotto2014]
+    Piero Gasparotto, Michele Ceriotti,
+    "Recognizing molecular patterns by machine learning: An agnostic structural
+    definition of the hydrogen bond", J. Chem. Phys., 141 (17): 174110.
+    https://doi.org/10.1063/1.4900655.
+
 .. [Imbalzano2018]
     Giulio Imbalzano, Andrea Anelli, Daniele Giofré,Sinja Klees, Jörg Behler, and
     Michele Ceriotti, “Automatic selection of atomic fingerprints and reference
@@ -39,3 +45,9 @@ References
     Michele Ceriotti, "Improving Sample and Feature Selection with Principal Covariates
     Regression" 2021 Mach. Learn.: Sci. Technol. 2 035038.
     https://iopscience.iop.org/article/10.1088/2632-2153/abfe7c.
+
+.. [Jorgensen2025]
+    Christian Jorgensen, Arthur Y. Lin, Rhushil Vasavada, and Rose K. Cersonsky,
+    "Interpretable Visualizations of Data Spaces for Classification Problems"
+    2025 arXiv. 2503.05861.
+    https://doi.org/10.48550/arXiv.2503.05861.

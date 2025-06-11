@@ -4,20 +4,19 @@
 """
 Global Feature Reconstruction Error (GFRE) and Distortion (GFRD)
 ================================================================
-
-Example for the usage of the :class:`skmatter.metrics.global_reconstruction_error`
-as global feature reconstruction error (GFRE) and
+Example for the usage of the :class:`skmatter.metrics.global_reconstruction_error` as
+global feature reconstruction error (GFRE) and
 :class:`skmatter.metrics.global_reconstruction_distortion` global feature reconstruction
-distortion (GFRD). We apply the global reconstruction measures on the degenerate
-CH4 manifold dataset. This dataset was specifically constructed to be
-representable by a 4-body features (bispectrum) but not by a 3-body features
-(power spectrum). In other words the dataset contains environments which are
-different, but have the same 3-body features. For more details about the dataset
-please refer to `Pozdnyakov 2020 <https://doi.org/10.1103/PhysRevLett.125.166001>`_.
+distortion (GFRD). We apply the global reconstruction measures on the degenerate CH4
+manifold dataset. This dataset was specifically constructed to be representable by a
+4-body features (bispectrum) but not by a 3-body features (power spectrum). In other
+words the dataset contains environments which are different, but have the same 3-body
+features. For more details about the dataset please refer to `Pozdnyakov 2020
+<https://doi.org/10.1103/PhysRevLett.125.166001>`_.
 
 The ``skmatter`` dataset already contains the 3 and 4-body features computed with
-`librascal <https://github.com/lab-cosmo/librascal>`_ so we can load it and
-compare it with the GFRE/GFRD.
+`librascal <https://github.com/lab-cosmo/librascal>`_ so we can load it and compare it
+with the GFRE/GFRD.
 """
 # %%
 #

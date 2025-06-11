@@ -1,3 +1,4 @@
+*.coverage*
 *.pyc
 *.ipynb_checkpoints*
 __pycache__
@@ -10,3 +11,4 @@ __pycache__
 build/
 dist/
 docs/src/examples
+sg_execution_times.rst

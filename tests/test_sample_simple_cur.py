@@ -14,7 +14,7 @@ class TestCUR(unittest.TestCase):
 
     def test_sample_transform(self):
         """
-        This test checks that an error is raised when the transform function is used,
+        Check that an error is raised when the transform function is used,
         because sklearn does not support well transformers that change the number
         of samples with other classes like Pipeline
         """
@@ -29,10 +29,7 @@ class TestCUR(unittest.TestCase):
         )
 
     def test_restart(self):
-        """
-        This test checks that the model can be restarted with a new instance
-        """
-
+        """Check that the model can be restarted with a new instance"""
         ref_selector = CUR(n_to_select=self.n_select)
         ref_idx = ref_selector.fit(self.X).selected_idx_
 
@@ -45,10 +42,7 @@ class TestCUR(unittest.TestCase):
             self.assertEqual(selector.selected_idx_[i], ref_idx[i])
 
     def test_non_it(self):
-        """
-        This test checks that the model can be run non-iteratively
-        """
-
+        """Check that the model can be run non-iteratively."""
         K = self.X @ self.X.T
         _, UK = np.linalg.eigh(K)
         ref_idx = np.argsort(-(UK[:, -1] ** 2.0))[: self.n_select]

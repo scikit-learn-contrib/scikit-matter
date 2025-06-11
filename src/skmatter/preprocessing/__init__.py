@@ -1,4 +1,4 @@
-"""This module includes scaling, centering and normalization methods."""
+"""Scaling, centering and normalization methods."""
 
 from ._data import (
     KernelNormalizer,

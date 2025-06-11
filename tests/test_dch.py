@@ -21,16 +21,15 @@ class TestDirectionalConvexHull(unittest.TestCase):
         )
 
     def test_selected_idx_and_scores(self):
-        """
-        This test is a regression test that checks that DCH selects correct vertices and
-        gets correct distances from the `score_feature_matrix` and `score_samples`
-        functions.
+        """Regression test that checks that DCH selects correct vertices and gets
+        correct distances from the `score_feature_matrix` and `score_samples` functions.
         """
         selector = DirectionalConvexHull()
         selector.fit(self.T, self.y)
         self.assertTrue(np.allclose(selector.selected_idx_, self.idx))
 
-        feature_residuals = selector.score_feature_matrix(self.T)
+        # takes abs to avoid numerical noise changing the sign of PCA projections
+        feature_residuals = np.abs(selector.score_feature_matrix(self.T))
         val = np.max(
             np.abs(
                 (self.feature_residuals_100 - feature_residuals[100])
@@ -169,11 +168,9 @@ class TestDirectionalConvexHull(unittest.TestCase):
         self.assertTrue(np.all(distances >= -selector.tolerance))
 
     def test_score_function_warnings(self):
-        """
-        Ensure that calling `score_samples` with points outside the range causes an
+        """Ensure that calling `score_samples` with points outside the range causes an
         error.
         """
-
         selector = DirectionalConvexHull(low_dim_idx=[0])
         # high-dimensional dummy data, not important for the test
         X_high_dimensional = [1.0, 2.0, 3.0]

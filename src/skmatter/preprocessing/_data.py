@@ -1,7 +1,12 @@
 import numpy as np
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.preprocessing._data import KernelCenterer
-from sklearn.utils.validation import FLOAT_DTYPES, _check_sample_weight, check_is_fitted
+from sklearn.utils.validation import (
+    FLOAT_DTYPES,
+    _check_sample_weight,
+    check_is_fitted,
+    validate_data,
+)
 
 
 class StandardFlexibleScaler(TransformerMixin, BaseEstimator):
@@ -58,18 +63,14 @@ class StandardFlexibleScaler(TransformerMixin, BaseEstimator):
     ----------
     n_samples_in_: int
         Number of samples in the reference ndarray
-
     n_features_in_: int
         Number of features in the reference ndarray
-
-    mean_ : ndarray of shape (n_features,)
-        The mean value for each feature in the training set.
-        Equal to ndarray of zeros shape (n_features,) when ``with_mean=False``.
-
-    scale_ : ndarray of shape (n_features,), float  or None
-        The scaling factor, ndarray of shape (n_features,)
+    mean_ : numpy.ndarray of shape (n_features,)
+        The mean value for each feature in the training set. Equal to
+        :class:`numpy.ndarray` of zeros shape (n_features,) when ``with_mean=False``.
+    scale_ : numpy.ndarray of shape (n_features,), float  or None
+        The scaling factor, :class:`numpy.ndarray` of shape (n_features,)
         when `column_wise=True` or float  when `column_wise = False`.
-
     copy : bool, default=None
         Copy the input X or not.
 
@@ -117,14 +118,12 @@ class StandardFlexibleScaler(TransformerMixin, BaseEstimator):
 
         Parameters
         ----------
-        X : ndarray of shape (n_samples, n_features)
+        X : numpy.ndarray of shape (n_samples, n_features)
             The data used to compute the mean and standard deviation
             used for later scaling along the features axis.
-
         y: None
             Ignored.
-
-        sample_weight: ndarray of shape (n_samples,)
+        sample_weight: numpy.ndarray of shape (n_samples,)
             Weights for each sample. Sample weighting can be used to center
             (and scale) data using a weighted mean. Weights are internally
             normalized before preprocessing.
@@ -134,8 +133,8 @@ class StandardFlexibleScaler(TransformerMixin, BaseEstimator):
         self : object
             Fitted scaler.
         """
-
-        X = self._validate_data(
+        X = validate_data(
+            self,
             X,
             copy=self.copy,
             estimator=self,
@@ -177,10 +176,8 @@ class StandardFlexibleScaler(TransformerMixin, BaseEstimator):
         ----------
         X : {array-like, sparse matrix} of shape (n_samples, n_features)
             The data used to scale along the features axis.
-
         y: None
             Ignored.
-
         copy : bool, default=None
             Copy the input X or not.
 
@@ -189,9 +186,9 @@ class StandardFlexibleScaler(TransformerMixin, BaseEstimator):
         X : {array-like, sparse matrix} of shape (n_samples, n_features)
             Transformed array.
         """
-
         copy = copy if copy is not None else self.copy
-        X = self._validate_data(
+        X = validate_data(
+            self,
             X,
             reset=False,
             copy=copy,
@@ -207,18 +204,17 @@ class StandardFlexibleScaler(TransformerMixin, BaseEstimator):
         return (X - self.mean_) / self.scale_
 
     def inverse_transform(self, X_tr):
-        """Scale back the data to the original representation
+        """Scale back the data to the original representation.
 
         Parameters
         ----------
-        X_tr : ndarray of shape (n_samples, n_features)
+        X_tr : numpy.ndarray of shape (n_samples, n_features)
             Transformed matrix
 
         Returns
         -------
         X : original matrix
         """
-
         check_is_fitted(
             self, attributes=["n_samples_in_", "n_features_in_", "scale_", "mean_"]
         )
@@ -229,37 +225,33 @@ class StandardFlexibleScaler(TransformerMixin, BaseEstimator):
 
 
 class KernelNormalizer(KernelCenterer):
-    """Kernel centering method, similar to KernelCenterer,
+    r"""Kernel centering method, similar to KernelCenterer,
     but with additional scaling and ability to pass a set of sample weights.
 
-    Let :math:`K(x, z)` be a kernel defined by :math:`\\phi(x)^T \\phi(z)`,
-    where :math:`\\phi` is a function mapping x to a Hilbert space.
+    Let :math:`K(x, z)` be a kernel defined by :math:`\phi(x)^T \phi(z)`,
+    where :math:`\phi` is a function mapping x to a Hilbert space.
     KernelNormalizer centers (i.e., normalize to have zero mean) the data without
-    explicitly computing :math:`\\phi(x)`.
-    It is equivalent to centering and scaling :math:`\\phi(x)` with
+    explicitly computing :math:`\phi(x)`.
+    It is equivalent to centering and scaling :math:`\phi(x)` with
     sklearn.preprocessing.StandardScaler(with_std=False).
 
     Parameters
-    ---------
+    ----------
     with_center: bool, default=True
         If True, center the kernel matrix before scaling. If False, do not
         center the kernel
-
     with_trace: bool, default=True
         If True, scale the kernel so that the trace is equal to the number of
         samples. If False, do not scale the kernel
 
     Attributes
     ----------
-    K_fit_rows_ : ndarray of shape (n_samples,)
+    K_fit_rows_ : numpy.ndarray of shape (n_samples,)
         Average of each column of kernel matrix.
-
     K_fit_all_ : float
         Average of kernel matrix.
-
     sample_weight_ : float
         Sample weights (if provided during the fit)
-
     scale_ : float
         Scaling parameter used when 'with_trace'=True
         Calculated as np.trace(K) / K.shape[0]
@@ -299,24 +291,21 @@ class KernelNormalizer(KernelCenterer):
 
         Parameters
         ----------
-        K : ndarray of shape (n_samples, n_samples)
+        K : numpy.ndarray of shape (n_samples, n_samples)
             Kernel matrix.
-
         y : None
             Ignored.
-
-        sample_weight: ndarray of shape (n_samples,), default=None
-            Weights for each sample. Sample weighting can be used to center (and
-            scale) data using a weighted mean. Weights are internally normalized
-            before preprocessing.
+        sample_weight: numpy.ndarray of shape (n_samples,), default=None
+            Weights for each sample. Sample weighting can be used to center (and scale)
+            data using a weighted mean. Weights are internally normalized before
+            preprocessing.
 
         Returns
         -------
         self : object
             Fitted transformer.
         """
-
-        K = self._validate_data(K, copy=True, dtype=FLOAT_DTYPES, reset=False)
+        K = validate_data(self, K, copy=True, dtype=FLOAT_DTYPES, reset=False)
 
         if sample_weight is not None:
             self.sample_weight_ = _check_sample_weight(sample_weight, K, dtype=K.dtype)
@@ -357,20 +346,18 @@ class KernelNormalizer(KernelCenterer):
 
         Parameters
         ----------
-        K : ndarray of shape (n_samples1, n_samples2)
+        K : numpy.ndarray of shape (n_samples1, n_samples2)
             Kernel matrix.
-
         copy : bool, default=True
             Set to False to perform inplace computation.
 
         Returns
         -------
-        K_new : ndarray of shape (n_samples1, n_samples2)
+        K_new : numpy.ndarray of shape (n_samples1, n_samples2)
             Transformed array
         """
-
         check_is_fitted(self)
-        K = self._validate_data(K, copy=copy, dtype=FLOAT_DTYPES, reset=False)
+        K = validate_data(self, K, copy=copy, dtype=FLOAT_DTYPES, reset=False)
 
         if self.with_center:
             K_pred_cols = np.average(K, weights=self.sample_weight_, axis=1)[
@@ -390,33 +377,30 @@ class KernelNormalizer(KernelCenterer):
 
         Parameters
         ----------
-        K : ndarray of shape (n_samples, n_samples)
+        K : numpy.ndarray of shape (n_samples, n_samples)
             Kernel matrix.
-
         y : None
             Ignored.
-
-        sample_weight: ndarray of shape (n_samples,), default=None
+        sample_weight: numpy.ndarray of shape (n_samples,), default=None
             Weights for each sample. Sample weighting can be used to center (and
             scale) data using a weighted mean. Weights are internally normalized
             before preprocessing.
-
         \**fit_params:
             necessary for compatibility with the functions of the
             TransformerMixin class
 
         Returns
         -------
-        K_new : ndarray of shape (n_samples1, n_samples2)
+        K_new : numpy.ndarray of shape (n_samples1, n_samples2)
             Transformed array
         """
         self.fit(K, y, sample_weight=sample_weight)
         return self.transform(K, copy)
 
 
-class SparseKernelCenterer(TransformerMixin):
+class SparseKernelCenterer(TransformerMixin, BaseEstimator):
     r"""Kernel centering method for sparse kernels, similar to
-    KernelFlexibleCenterer.
+    :class:`KernelFlexibleCenterer`.
 
     The main disadvantage of kernel methods, which is widely used in machine
     learning it is that they quickly grow in time and space complexity with the
@@ -437,60 +421,49 @@ class SparseKernelCenterer(TransformerMixin):
     is possible to get a $N/M$ times improvement in the asymptotic by memory.
 
     Parameters
-    ---------
+    ----------
     with_center: bool, default=True
         If True, center the kernel matrix before scaling. If False, do not
         center the kernel
-
-    with_trace: bool, default=True
+    with_trace : bool, default=True
         If True, scale the kernel so that the trace is equal to the number of
         samples. If False, do not scale the kernel
-
-    rcond: float, default 1E-12
+    rcond : float, default 1E-12
         conditioning parameter to use when computing the Nystrom-approximated
         kernel for scaling
 
     Attributes
     ----------
-    K_fit_rows_ : ndarray of shape (n_samples,)
+    K_fit_rows_ : numpy.ndarray of shape (n_samples,)
         Average of each column of kernel matrix.
-
     K_fit_all_ : float
         Average of kernel matrix.
-
     sample_weight_ : float
         Sample weights (if provided during the fit)
-
     scale_ : float
         Scaling parameter used when 'with_trace'=True
         Calculated as np.trace(K) / K.shape[0]
-
     n_active_: int
         size of active set
     """
 
     def __init__(self, with_center=True, with_trace=True, rcond=1e-12):
-        """Initialize SparseKernelCenterer."""
-
         self.with_center = with_center
         self.with_trace = with_trace
         self.rcond = rcond
 
     def fit(self, Knm, Kmm, y=None, sample_weight=None):
-        """Fit KernelFlexibleCenterer
+        """Fit ``KernelFlexibleCenterer``
 
         Parameters
-        ---------
-        Knm: ndarray of shape (n_samples, n_active)
+        ----------
+        Knm : numpy.ndarray of shape (n_samples, n_active)
             Kernel matrix between the reference data set and the active set
-
-        Kmm: ndarray of shape (n_active, n_active)
+        Kmm : numpy.ndarray of shape (n_active, n_active)
             Kernel matrix between the active set and itself
-
         y : None
             Ignored.
-
-        sample_weight: ndarray of shape (n_samples,), default=None
+        sample_weight: numpy.ndarray of shape (n_samples,), default=None
             Weights for each sample. Sample weighting can be used to center (and
             scale) data using a weighted mean. Weights are internally normalized
             before preprocessing.
@@ -500,7 +473,6 @@ class SparseKernelCenterer(TransformerMixin):
         self : object
             Fitted transformer.
         """
-
         if Knm.shape[1] != Kmm.shape[0]:
             raise ValueError(
                 "The reference kernel is not commensurate shape with the "
@@ -536,16 +508,15 @@ class SparseKernelCenterer(TransformerMixin):
         """Centering our Kernel. Previously you should fit data.
 
         Parameters
-        ---------
-        Knm: ndarray of shape (n_samples, n_active)
+        ----------
+        Knm: numpy.ndarray of shape (n_samples, n_active)
             Kernel matrix between the reference data set and the active set
-
         y : None
             Ignored.
 
         Returns
         -------
-        K_new : ndarray of shape (n_samples, n_active)
+        K_new : numpy.ndarray of shape (n_samples, n_active)
             Transformed array
         """
         check_is_fitted(self, attributes=["scale_", "K_fit_rows_", "n_active_"])
@@ -563,28 +534,24 @@ class SparseKernelCenterer(TransformerMixin):
         r"""Fit to data, then transform it.
 
         Parameters
-        ---------
-        Knm: ndarray of shape (n_samples, n_active)
+        ----------
+        Knm: numpy.ndarray of shape (n_samples, n_active)
             Kernel matrix between the reference data set and the active set
-
-        Kmm: ndarray of shape (n_active, n_active)
+        Kmm: numpy.ndarray of shape (n_active, n_active)
             Kernel matrix between the active set and itself
-
         y : None
             Ignored.
-
-        sample_weight: ndarray of shape (n_samples,), default=None
+        sample_weight: numpy.ndarray of shape (n_samples,), default=None
             Weights for each sample. Sample weighting can be used to center (and
             scale) data using a weighted mean. Weights are internally normalized
             before preprocessing.
-
         \**fit_params:
             necessary for compatibility with the functions of the
             TransformerMixin class
 
         Returns
         -------
-        K_new : ndarray of shape (n_samples, n_active)
+        K_new : numpy.ndarray of shape (n_samples, n_active)
             Transformed array
         """
         self.fit(Knm=Knm, Kmm=Kmm, sample_weight=sample_weight)

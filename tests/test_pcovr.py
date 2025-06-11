@@ -24,7 +24,7 @@ class PCovRBaseTest(unittest.TestCase):
 
         self.X, self.Y = get_dataset(return_X_y=True)
         self.X = StandardScaler().fit_transform(self.X)
-        self.Y = StandardScaler().fit_transform(np.vstack(self.Y))
+        self.Y = StandardScaler().fit_transform(np.vstack(self.Y)).ravel()
 
     def setUp(self):
         pass
@@ -32,10 +32,7 @@ class PCovRBaseTest(unittest.TestCase):
 
 class PCovRErrorTest(PCovRBaseTest):
     def test_against_pca(self):
-        """
-        Tests that mixing = 1.0 corresponds to PCA
-        """
-
+        """Tests that mixing = 1.0 corresponds to PCA."""
         pcovr = PCovR(
             mixing=1.0, n_components=3, space="sample", svd_solver="full"
         ).fit(self.X, self.Y)
@@ -54,11 +51,9 @@ class PCovRErrorTest(PCovRBaseTest):
         )
 
     def test_simple_reconstruction(self):
+        """Check that PCovR with a full eigendecomposition at mixing=1 can fully
+        reconstruct the input matrix.
         """
-        This test checks that PCovR with a full eigendecomposition at mixing=1
-        can fully reconstruct the input matrix.
-        """
-
         for space in ["feature", "sample", "auto"]:
             with self.subTest(space=space):
                 pcovr = self.model(
@@ -73,8 +68,8 @@ class PCovRErrorTest(PCovRBaseTest):
 
     def test_simple_prediction(self):
         """
-        This test checks that PCovR with a full eigendecomposition at mixing=0
-        can fully reconstruct the input properties.
+        Check that PCovR with a full eigendecomposition at mixing=0
+        can reproduce a linear regression result.
         """
         for space in ["feature", "sample", "auto"]:
             with self.subTest(space=space):
@@ -92,7 +87,7 @@ class PCovRErrorTest(PCovRBaseTest):
 
     def test_lr_with_x_errors(self):
         """
-        This test checks that PCovR returns a non-null property prediction
+        Check that PCovR returns a non-null property prediction
         and that the prediction error increases with `mixing`
         """
         prev_error = -1.0
@@ -112,12 +107,9 @@ class PCovRErrorTest(PCovRBaseTest):
             prev_error = error
 
     def test_lr_with_t_errors(self):
+        """Check that PCovR returns a non-null property prediction from the latent space
+        projection and that the prediction error increases with `mixing`.
         """
-        This test checks that PCovR returns a non-null property prediction
-        from the latent space projection and that the prediction error
-        increases with `mixing`
-        """
-
         prev_error = -1.0
 
         for mixing in np.linspace(0, 1, 11):
@@ -136,11 +128,9 @@ class PCovRErrorTest(PCovRBaseTest):
             prev_error = error
 
     def test_reconstruction_errors(self):
+        """Check that PCovR returns a non-null reconstructed X and that the
+        reconstruction error decreases with `mixing`.
         """
-        This test checks that PCovR returns a non-null reconstructed X
-        and that the reconstruction error decreases with `mixing`
-        """
-
         prev_error = 1.0
 
         for mixing in np.linspace(0, 1, 11):
@@ -161,7 +151,7 @@ class PCovRErrorTest(PCovRBaseTest):
 class PCovRSpaceTest(PCovRBaseTest):
     def test_select_feature_space(self):
         """
-        This test checks that PCovR implements the feature space version
+        Check that PCovR implements the feature space version
         when :math:`n_{features} < n_{samples}``.
         """
         pcovr = self.model(n_components=2, tol=1e-12)
@@ -171,7 +161,7 @@ class PCovRSpaceTest(PCovRBaseTest):
 
     def test_select_sample_space(self):
         """
-        This test checks that PCovR implements the sample space version
+        Check that PCovR implements the sample space version
         when :math:`n_{features} > n_{samples}``.
         """
         pcovr = self.model(n_components=2, tol=1e-12)
@@ -183,7 +173,7 @@ class PCovRSpaceTest(PCovRBaseTest):
 
     def test_bad_space(self):
         """
-        This test checks that PCovR raises a ValueError when a non-valid
+        Check that PCovR raises a ValueError when a non-valid
         space is designated.
         """
         with self.assertRaises(ValueError):
@@ -192,7 +182,7 @@ class PCovRSpaceTest(PCovRBaseTest):
 
     def test_override_spaceselection(self):
         """
-        This test checks that PCovR implements the space provided in the
+        Check that PCovR implements the space provided in the
         constructor, overriding that chosen by the input dimensions.
         """
         pcovr = self.model(n_components=2, tol=1e-12, space="sample")
@@ -202,7 +192,7 @@ class PCovRSpaceTest(PCovRBaseTest):
 
     def test_spaces_equivalent(self):
         """
-        This test checks that the results from PCovR, regardless of the space,
+        Check that the results from PCovR, regardless of the space,
         are equivalent.
         """
         for alpha in np.linspace(0.01, 0.99, 11):
@@ -248,7 +238,7 @@ class PCovRSpaceTest(PCovRBaseTest):
 class PCovRTestSVDSolvers(PCovRBaseTest):
     def test_svd_solvers(self):
         """
-        This test checks that PCovR works with all svd_solver modes and assigns
+        Check that PCovR works with all svd_solver modes and assigns
         the right n_components
         """
         for solver in ["arpack", "full", "randomized", "auto"]:
@@ -263,7 +253,7 @@ class PCovRTestSVDSolvers(PCovRBaseTest):
 
     def test_bad_solver(self):
         """
-        This test checks that PCovR will not work with a solver that isn't in
+        Check that PCovR will not work with a solver that isn't in
         ['arpack', 'full', 'randomized', 'auto']
         """
         for space in ["feature", "sample"]:
@@ -274,11 +264,7 @@ class PCovRTestSVDSolvers(PCovRBaseTest):
             self.assertEqual(str(cm.exception), "Unrecognized svd_solver='bad'" "")
 
     def test_good_n_components(self):
-        """
-        This test checks that PCovR will work with any allowed values of
-        n_components.
-        """
-
+        """Check that PCovR will work with any allowed values of n_components."""
         # this one should pass
         pcovr = self.model(n_components=0.5, svd_solver="full")
         pcovr.fit(self.X, self.Y)
@@ -293,11 +279,7 @@ class PCovRTestSVDSolvers(PCovRBaseTest):
             pcovr.fit(self.X, self.Y)
 
     def test_bad_n_components(self):
-        """
-        This test checks that PCovR will not work with any prohibited values of
-        n_components.
-        """
-
+        """Check that PCovR will not work with any prohibited values of n_components."""
         with self.assertRaises(ValueError) as cm:
             pcovr = self.model(n_components="mle", svd_solver="full")
             pcovr.fit(self.X[:2], self.Y[:2])
@@ -370,7 +352,7 @@ class PCovRTestSVDSolvers(PCovRBaseTest):
 class PCovRInfrastructureTest(PCovRBaseTest):
     def test_nonfitted_failure(self):
         """
-        This test checks that PCovR will raise a `NonFittedError` if
+        Check that PCovR will raise a `NonFittedError` if
         `transform` is called before the pcovr is fitted
         """
         pcovr = self.model(n_components=2, tol=1e-12)
@@ -379,7 +361,7 @@ class PCovRInfrastructureTest(PCovRBaseTest):
 
     def test_no_arg_predict(self):
         """
-        This test checks that PCovR will raise a `ValueError` if
+        Check that PCovR will raise a `ValueError` if
         `predict` is called without arguments
         """
         pcovr = self.model(n_components=2, tol=1e-12)
@@ -389,23 +371,22 @@ class PCovRInfrastructureTest(PCovRBaseTest):
 
     def test_centering(self):
         """
-        This test checks that PCovR raises a warning if
+        Check that PCovR raises a warning if
         given uncentered data.
         """
         pcovr = self.model(n_components=2, tol=1e-12)
         X = self.X.copy() + np.random.uniform(-1, 1, self.X.shape[1])
         with warnings.catch_warnings(record=True) as w:
             pcovr.fit(X, self.Y)
-            self.assertEquals(
+            self.assertEqual(
                 str(w[0].message),
-                "This class does not automatically center data, and your data mean is"
-                " greater than the supplied tolerance.",
+                "This class does not automatically center data, and your data mean is "
+                "greater than the supplied tolerance.",
             )
 
     def test_T_shape(self):
-        """
-        This test checks that PCovR returns a latent space projection
-        consistent with the shape of the input matrix
+        """Check that PCovR returns a latent space projection consistent with the shape
+        of the input matrix.
         """
         n_components = 5
         pcovr = self.model(n_components=n_components, tol=1e-12)
@@ -490,8 +471,7 @@ class PCovRInfrastructureTest(PCovRBaseTest):
             pcovr.fit(self.X, self.Y)
         self.assertEqual(
             str(cm.exception),
-            "Regressor must be an instance of "
-            "`LinearRegression`, `Ridge`, `RidgeCV`, "
+            "Regressor must be an instance of `LinearRegression`, `Ridge`, `RidgeCV`, "
             "or `precomputed`",
         )
 
@@ -501,35 +481,42 @@ class PCovRInfrastructureTest(PCovRBaseTest):
         self.assertTrue(pcovr.regressor is None)
         self.assertTrue(pcovr.regressor_ is not None)
 
-    def test_incompatible_coef_shape(self):
-        # self.Y is 2D with one target
+    def test_incompatible_coef_dim(self):
+        # self.Y is 1D with one target
         # Don't need to test X shape, since this should
-        # be caught by sklearn's _validate_data
+        # be caught by sklearn's validate_data
+        Y_2D = np.column_stack((self.Y, self.Y))
         regressor = Ridge(alpha=1e-8, fit_intercept=False, tol=1e-12)
-        regressor.fit(self.X, self.Y)
+        regressor.fit(self.X, Y_2D)
         pcovr = self.model(mixing=0.5, regressor=regressor)
 
         # Dimension mismatch
         with self.assertRaises(ValueError) as cm:
-            pcovr.fit(self.X, self.Y.squeeze())
+            pcovr.fit(self.X, self.Y)
         self.assertEqual(
             str(cm.exception),
-            "The regressor coefficients have a dimension incompatible "
-            "with the supplied target space. "
-            "The coefficients have dimension %d and the targets "
-            "have dimension %d" % (regressor.coef_.ndim, self.Y.squeeze().ndim),
+            "The regressor coefficients have a dimension incompatible with the "
+            "supplied target space. The coefficients have dimension 2 and the targets "
+            "have dimension 1",
         )
 
+    def test_incompatible_coef_shape(self):
         # Shape mismatch (number of targets)
+        Y_double = np.column_stack((self.Y, self.Y))
+        Y_triple = np.column_stack((Y_double, self.Y))
+
+        regressor = Ridge(alpha=1e-8, fit_intercept=False, tol=1e-12)
+        regressor.fit(self.X, Y_double)
+
+        pcovr = self.model(mixing=0.5, regressor=regressor)
+
         with self.assertRaises(ValueError) as cm:
-            pcovr.fit(self.X, np.column_stack((self.Y, self.Y)))
+            pcovr.fit(self.X, Y_triple)
         self.assertEqual(
             str(cm.exception),
-            "The regressor coefficients have a shape incompatible "
-            "with the supplied target space. "
-            "The coefficients have shape %r and the targets "
-            "have shape %r"
-            % (regressor.coef_.shape, np.column_stack((self.Y, self.Y)).shape),
+            "The regressor coefficients have a shape incompatible with the supplied "
+            "target space. The coefficients have shape %r and the targets have shape %r"
+            % (regressor.coef_.shape, Y_triple.shape),
         )
 
 

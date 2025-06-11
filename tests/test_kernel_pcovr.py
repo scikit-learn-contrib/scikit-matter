@@ -51,7 +51,7 @@ class KernelPCovRBaseTest(unittest.TestCase):
 class KernelPCovRErrorTest(KernelPCovRBaseTest):
     def test_lr_with_x_errors(self):
         """
-        This test checks that KernelPCovR returns a non-null property prediction
+        Check that KernelPCovR returns a non-null property prediction
         and that the prediction error increases with `mixing`
         """
         prev_error = -1.0
@@ -73,11 +73,9 @@ class KernelPCovRErrorTest(KernelPCovRBaseTest):
             prev_error = error
 
     def test_reconstruction_errors(self):
+        """Check that KernelPCovR returns a non-null reconstructed X and that the
+        reconstruction error decreases with `mixing`.
         """
-        This test checks that KernelPCovR returns a non-null reconstructed X
-        and that the reconstruction error decreases with `mixing`
-        """
-
         prev_error = 10.0
         prev_x_error = 10.0
 
@@ -139,7 +137,7 @@ class KernelPCovRErrorTest(KernelPCovRBaseTest):
 class KernelPCovRInfrastructureTest(KernelPCovRBaseTest):
     def test_nonfitted_failure(self):
         """
-        This test checks that KernelPCovR will raise a `NonFittedError` if
+        Check that KernelPCovR will raise a `NonFittedError` if
         `transform` is called before the model is fitted
         """
         kpcovr = KernelPCovR(mixing=0.5, n_components=2, tol=1e-12)
@@ -148,7 +146,7 @@ class KernelPCovRInfrastructureTest(KernelPCovRBaseTest):
 
     def test_no_arg_predict(self):
         """
-        This test checks that KernelPCovR will raise a `ValueError` if
+        Check that KernelPCovR will raise a `ValueError` if
         `predict` is called without arguments
         """
         kpcovr = KernelPCovR(mixing=0.5, n_components=2, tol=1e-12)
@@ -158,7 +156,7 @@ class KernelPCovRInfrastructureTest(KernelPCovRBaseTest):
 
     def test_T_shape(self):
         """
-        This test checks that KernelPCovR returns a latent space projection
+        Check that KernelPCovR returns a latent space projection
         consistent with the shape of the input matrix
         """
         n_components = 5
@@ -169,9 +167,7 @@ class KernelPCovRInfrastructureTest(KernelPCovRBaseTest):
         self.assertTrue(T.shape[-1] == n_components)
 
     def test_no_centerer(self):
-        """
-        tests that when center=False, no centerer exists
-        """
+        """Tests that when center=False, no centerer exists."""
         kpcovr = self.model(center=False)
         kpcovr.fit(self.X, self.Y)
 
@@ -179,10 +175,7 @@ class KernelPCovRInfrastructureTest(KernelPCovRBaseTest):
             kpcovr.centerer_
 
     def test_centerer(self):
-        """
-        tests that all functionalities that rely on the centerer work properly
-        """
-
+        """Tests that all functionalities that rely on the centerer work properly."""
         kpcovr = self.model(center=True)
         kpcovr.fit(self.X, self.Y)
 
@@ -262,7 +255,7 @@ class KernelPCovRInfrastructureTest(KernelPCovRBaseTest):
 
         # Dimension mismatch
         with self.assertRaises(ValueError) as cm:
-            kpcovr.fit(self.X, self.Y[:, 0])
+            kpcovr.fit(self.X, np.zeros(self.Y.shape + (2,)))
         self.assertTrue(
             str(cm.exception),
             "The regressor coefficients have a dimension incompatible "
@@ -305,9 +298,8 @@ class KernelPCovRInfrastructureTest(KernelPCovRBaseTest):
 
 class KernelTests(KernelPCovRBaseTest):
     def test_kernel_types(self):
-        """
-        This test checks that KernelPCovR can handle all kernels passable to
-        sklearn kernel classes, including callable kernels
+        """Check that KernelPCovR can handle all kernels passable to sklearn
+        kernel classes, including callable kernels
         """
 
         def _linear_kernel(X, Y):
@@ -332,11 +324,9 @@ class KernelTests(KernelPCovRBaseTest):
                 kpcovr.fit(self.X, self.Y)
 
     def test_linear_matches_pcovr(self):
+        """Check that KernelPCovR returns the same results as PCovR when using a linear
+        kernel.
         """
-        This test checks that KernelPCovR returns the same results as PCovR when
-        using a linear kernel
-        """
-
         ridge = RidgeCV(fit_intercept=False, alphas=np.logspace(-8, 2))
         ridge.fit(self.X, self.Y)
 
@@ -394,7 +384,7 @@ class KernelTests(KernelPCovRBaseTest):
 class KernelPCovRTestSVDSolvers(KernelPCovRBaseTest):
     def test_svd_solvers(self):
         """
-        This test checks that PCovR works with all svd_solver modes and assigns
+        Check that PCovR works with all svd_solver modes and assigns
         the right n_components
         """
         for solver in ["arpack", "full", "randomized", "auto"]:
@@ -433,7 +423,7 @@ class KernelPCovRTestSVDSolvers(KernelPCovRBaseTest):
 
     def test_bad_solver(self):
         """
-        This test checks that PCovR will not work with a solver that isn't in
+        Check that PCovR will not work with a solver that isn't in
         ['arpack', 'full', 'randomized', 'auto']
         """
         with self.assertRaises(ValueError) as cm:
@@ -443,11 +433,7 @@ class KernelPCovRTestSVDSolvers(KernelPCovRBaseTest):
         self.assertTrue(str(cm.exception), "Unrecognized svd_solver='bad'" "")
 
     def test_good_n_components(self):
-        """
-        This test checks that PCovR will work with any allowed values of
-        n_components.
-        """
-
+        """Check that PCovR will work with any allowed values of n_components."""
         # this one should pass
         kpcovr = self.model(n_components=0.5, svd_solver="full")
         kpcovr.fit(self.X, self.Y)
@@ -462,11 +448,7 @@ class KernelPCovRTestSVDSolvers(KernelPCovRBaseTest):
             kpcovr.fit(self.X, self.Y)
 
     def test_bad_n_components(self):
-        """
-        This test checks that PCovR will not work with any prohibited values of
-        n_components.
-        """
-
+        """Check that PCovR will not work with any prohibited values of n_components."""
         with self.subTest(type="negative_ncomponents"):
             with self.assertRaises(ValueError) as cm:
                 kpcovr = self.model(n_components=-1, svd_solver="auto")

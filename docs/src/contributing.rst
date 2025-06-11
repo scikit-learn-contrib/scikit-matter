@@ -26,7 +26,12 @@ Then this package itself
   pip install -e .
 
 This install the package in development mode, making it importable globally and allowing
-you to edit the code and directly use the updated version.
+you to edit the code and directly use the updated version. To see a list of all
+supported tox environments please use
+
+.. code-block:: bash
+
+  tox -av
 
 Running the tests
 -----------------

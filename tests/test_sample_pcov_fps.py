@@ -11,11 +11,9 @@ class TestPCovFPS(unittest.TestCase):
         self.idx = [0, 256, 156, 324, 349, 77, 113, 441, 426, 51]
 
     def test_restart(self):
+        """Check that the model can be restarted with a new number of samples and
+        `warm_start`.
         """
-        This test checks that the model can be restarted with a new number of
-        samples and `warm_start`
-        """
-
         selector = PCovFPS(n_to_select=1, initialize=self.idx[0])
         selector.fit(self.X, y=self.y)
 
@@ -25,15 +23,13 @@ class TestPCovFPS(unittest.TestCase):
             self.assertEqual(selector.selected_idx_[i - 1], self.idx[i - 1])
 
     def test_no_mixing_1(self):
-        """
-        This test checks that the model throws an error when mixing = 1.0
-        """
-
+        """Check that the model throws an error when mixing = 1.0."""
+        selector = PCovFPS(n_to_select=1, mixing=1.0)
         with self.assertRaises(ValueError) as cm:
-            _ = PCovFPS(n_to_select=1, mixing=1.0)
-        self.assertEquals(
+            selector.fit(self.X, y=self.y)
+        self.assertEqual(
             str(cm.exception),
-            "Mixing = 1.0 corresponds to traditional FPS." "Please use the FPS class.",
+            "Mixing = 1.0 corresponds to traditional FPS. Please use the FPS class.",
         )
 
 

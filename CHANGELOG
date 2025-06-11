@@ -13,10 +13,26 @@ The rules for CHANGELOG file:
 
 0.3.0 (XXXX/XX/XX)
 ------------------
+- Add ``_BasePCov`` class (#248)
+- Add ``PCovC`` class that inherits shared functionality from ``_BasePCov`` (#248)
+- Add ``PCovC`` testing suite and examples (#248)
+- Modify ``PCovR`` to inherit shared functionality from ``_BasePCov_`` (#248)
+- Update to sklearn >= 1.6.0 and scipy >= 1.15.0 (#239)
+- Fixed moved function import from scipy and bump scipy dependency to 1.15.0 (#236)
+- Fix rendering issues for `SparseKDE` and `QuickShift` (#236)
+- Updating ``FPS`` to allow a numpy array of ints as an initialize parameter (#145)
+- Supported Python versions are now ranging from 3.9 - 3.12.
+- Updating ``skmatter.datasets`` submodule to support sklearn 1.5.0 (#229)
+- Add `SparseKDE` class (#222)
+- Add `QuickShift` class (#222)
+- Add an example on how to conduct PAMM algorithm with `SparseKDE` and `QuickShift`
+  (#222)
+- Add H2O-BLYP-Piglet dataset (#222)
+- Add two distance metrics that support the periodic boundry condition, 
+  `periodic_pairwise_euclidean_distances` and `pairwise_mahalanobis_distances` (#222)
 
 0.2.0 (2023/08/24)
 ------------------
-
 - Add this ``CHANGELOG`` file (#198)
 - Update example of WHO feature selection (#212)
 - Rename ``RidgeRegression2FoldCV`` -> ``Ridge2FoldCV`` (#211)
@@ -40,14 +56,12 @@ The rules for CHANGELOG file:
 
 0.1.4 (2023/03/14)
 ------------------
-
 - documentation formatting fixes for math and datasets (#161, #163)
 - changing the way the distance to the convex hull is computed in the
   ``DirectionalConvexHull`` due to numerical issues with the old method (#165)
 
 0.1.3 (2023/03/02)
 ------------------
-
 - Refactor ``scikit-cosmo`` to ``scikit-matter`` (#157, #151)
 - Deprecation warning was added to link to renamed package (#154)
 - dropped Python `<3.8` support, because we are now using ``scikit-learn`` version
@@ -62,7 +76,6 @@ The rules for CHANGELOG file:
 
 0.1.2 (2022/07/04)
 ------------------
-
 - fixed a bug in the orthonormalization step of ``PCov-CUR`` (#118)
 - users can now initialize ``FPS`` selecting using a list of selected points, allowing
   to restart the selection in the middle (#116)
@@ -71,7 +84,6 @@ The rules for CHANGELOG file:
 
 0.1.1 (2021/11/30)
 ------------------
-
 - fixed a bug in the ``orthonormalization`` step of ``PCov-CUR`` (#118)
 - users can now initialize ``FPS`` selecting using a list of selected points, allowing to
   restart the selection in the middle (#116)
@@ -79,7 +91,6 @@ The rules for CHANGELOG file:
 
 0.1.0 (2021/05/12)
 ------------------
-
 - first release out of the lab
 
 .. inclusion-marker-changelog-end

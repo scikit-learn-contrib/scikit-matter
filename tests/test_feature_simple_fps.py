@@ -14,7 +14,7 @@ class TestFPS(unittest.TestCase):
 
     def test_restart(self):
         """
-        This test checks that the model can be restarted with a new number of
+        Check that the model can be restarted with a new number of
         features and `warm_start`
         """
         selector = FPS(n_to_select=1, initialize=self.idx[0])
@@ -26,11 +26,9 @@ class TestFPS(unittest.TestCase):
             self.assertEqual(selector.selected_idx_[i - 1], self.idx[i - 1])
 
     def test_initialize(self):
+        """Check that the model can be initialized in all applicable manners and throws
+        an error otherwise.
         """
-        This test checks that the model can be initialized in all applicable manners
-        and throws an error otherwise
-        """
-
         for initialize in [self.idx[0], "random"]:
             with self.subTest(initialize=initialize):
                 selector = FPS(n_to_select=1, initialize=initialize)
@@ -43,15 +41,38 @@ class TestFPS(unittest.TestCase):
             for i in range(4):
                 self.assertEqual(selector.selected_idx_[i], self.idx[i])
 
+        initialize = np.array(self.idx[:4])
+        with self.subTest(initialize=initialize):
+            selector = FPS(n_to_select=len(self.idx) - 1, initialize=initialize)
+            selector.fit(self.X)
+            for i in range(4):
+                self.assertEqual(selector.selected_idx_[i], self.idx[i])
+
+        initialize = np.array([1, 5, 3, 0.25])
+        with self.subTest(initialize=initialize):
+            with self.assertRaises(ValueError) as cm:
+                selector = FPS(n_to_select=len(self.idx) - 1, initialize=initialize)
+                selector.fit(self.X)
+            self.assertEqual(
+                str(cm.exception), "Invalid value of the initialize parameter"
+            )
+
+        initialize = np.array([[1, 5, 3], [2, 4, 6]])
+        with self.subTest(initialize=initialize):
+            with self.assertRaises(ValueError) as cm:
+                selector = FPS(n_to_select=len(self.idx) - 1, initialize=initialize)
+                selector.fit(self.X)
+            self.assertEqual(
+                str(cm.exception), "Invalid value of the initialize parameter"
+            )
+
         with self.assertRaises(ValueError) as cm:
             selector = FPS(n_to_select=1, initialize="bad")
             selector.fit(self.X)
         self.assertEqual(str(cm.exception), "Invalid value of the initialize parameter")
 
     def test_get_distances(self):
-        """
-        This test checks that the hausdorff distances are returnable after fitting
-        """
+        """Check that the hausdorff distances are returnable after fitting."""
         selector = FPS(n_to_select=7)
         selector.fit(self.X)
         d = selector.get_select_distance()

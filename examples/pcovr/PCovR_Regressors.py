@@ -24,13 +24,12 @@ from skmatter.decomposition import PCovR
 mixing = 0.5
 
 X, y = load_diabetes(return_X_y=True)
-y = y.reshape(X.shape[0], -1)
 
 X_scaler = StandardScaler()
 X_scaled = X_scaler.fit_transform(X)
 
 y_scaler = StandardScaler()
-y_scaled = y_scaler.fit_transform(y)
+y_scaled = y_scaler.fit_transform(y.reshape(-1, 1))
 
 
 # %%
@@ -55,10 +54,11 @@ print(f"Regressor is {pcovr1.regressor_} and fit took {1e3 * (t1 - t0):0.2} ms."
 # Use a fitted regressor
 # ----------------------
 #
-# You can pass a fitted regressor to PCovR to rely on the predetermined
-# regression parameters. Currently, scikit-matter supports ``scikit-learn``
-# classes ``LinearModel``, ``Ridge``, and ``RidgeCV``, with plans to support anu
-# regressor with similar architecture in the future.
+# You can pass a fitted regressor to ``PCovR`` to rely on the predetermined regression
+# parameters. Currently, scikit-matter supports ``scikit-learn`` classes
+# class:`LinearModel <sklearn.linear_model.LinearModel>`, :class:`Ridge
+# <sklearn.linear_model.Ridge>`, and class:`RidgeCV <sklearn.linear_model.RidgeCV>`,
+# with plans to support any regressor with similar architecture in the future.
 
 regressor = Ridge(alpha=1e-6, fit_intercept=False, tol=1e-12)
 

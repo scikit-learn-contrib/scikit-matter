@@ -3,11 +3,10 @@ from joblib import Parallel, delayed
 from sklearn.base import BaseEstimator, MultiOutputMixin, RegressorMixin
 from sklearn.metrics import check_scoring
 from sklearn.model_selection import KFold, check_cv
-from sklearn.utils import check_array
-from sklearn.utils.validation import check_is_fitted
+from sklearn.utils.validation import check_is_fitted, validate_data
 
 
-class Ridge2FoldCV(BaseEstimator, MultiOutputMixin, RegressorMixin):
+class Ridge2FoldCV(RegressorMixin, MultiOutputMixin, BaseEstimator):
     r"""Ridge regression with an efficient 2-fold cross-validation method using the SVD
     solver.
 
@@ -20,7 +19,7 @@ class Ridge2FoldCV(BaseEstimator, MultiOutputMixin, RegressorMixin):
     while the alpha value is determined with a 2-fold cross-validation from a list of
     alpha values. It is more efficient version than doing 2-fold cross-validation
     naively The algorithmic trick is to reuse the matrices obtained by SVD for each
-    regularization paramater :param alpha: The 2-fold CV can be broken donw to
+    regularization paramater :param alpha: The 2-fold CV can be broken down to
 
     .. math::
 
@@ -59,7 +58,7 @@ class Ridge2FoldCV(BaseEstimator, MultiOutputMixin, RegressorMixin):
 
     Parameters
     ----------
-    alphas : ndarray of shape (n_alphas,), default=(0.1, 1.0, 10.0)
+    alphas : numpy.ndarray of shape (n_alphas,), default=(0.1, 1.0, 10.0)
         Array of alpha values to try.
         Regularization strength; must be a positive float. Regularization
         improves the conditioning of the problem and reduces the variance of
@@ -82,7 +81,7 @@ class Ridge2FoldCV(BaseEstimator, MultiOutputMixin, RegressorMixin):
     shuffle : bool, default=True
         Whether or not to shuffle the data before splitting.
         If :param cv: is not None, this parameter is ignored.
-    random_state : int or RandomState instance, default=None
+    random_state : int or :class:`numpy.random.`RandomState` instance, default=None
         Controls the shuffling applied to the data before applying the split.
         Pass an int for reproducible output across multiple function calls.
         See
@@ -103,11 +102,11 @@ class Ridge2FoldCV(BaseEstimator, MultiOutputMixin, RegressorMixin):
 
     Attributes
     ----------
-    cv_values_ : ndarray of shape (n_alphas)
+    cv_values_ : numpy.ndarray of shape (n_alphas)
         2-fold cross-validation values for each alpha. After :meth:`fit` has
         been called, this attribute will contain the values out of score
         function
-    coef_ : ndarray of shape (n_features) or (n_targets, n_features)
+    coef_ : numpy.ndarray of shape (n_features) or (n_targets, n_features)
         Weight vector(s).
     alpha_ : float
         Estimated regularization parameter.
@@ -136,6 +135,11 @@ class Ridge2FoldCV(BaseEstimator, MultiOutputMixin, RegressorMixin):
         self.shuffle = shuffle
         self.n_jobs = n_jobs
 
+    def __sklearn_tags__(self):
+        tags = super().__sklearn_tags__()
+        tags.target_tags.single_output = False
+        return tags
+
     def _more_tags(self):
         return {"multioutput_only": True}
 
@@ -143,11 +147,10 @@ class Ridge2FoldCV(BaseEstimator, MultiOutputMixin, RegressorMixin):
         """
         Parameters
         ----------
-        X : ndarray of shape (n_samples, n_features)
+        X : numpy.ndarray of shape (n_samples, n_features)
             Training data, where n_samples is the number of samples
             and n_features is the number of features.
-
-        y : ndarray of shape (n_samples, n_targets)
+        y : numpy.ndarray of shape (n_samples, n_targets)
             Training data, where n_samples is the number of samples
             and n_targets is the number of target properties.
         """
@@ -167,7 +170,7 @@ class Ridge2FoldCV(BaseEstimator, MultiOutputMixin, RegressorMixin):
                 "[0,1)"
             )
 
-        X, y = self._validate_data(X, y, y_numeric=True, multi_output=True)
+        X, y = validate_data(self, X, y, y_numeric=True, multi_output=True)
         self.n_samples_in_, self.n_features_in_ = X.shape
 
         # check_scoring uses estimators scoring function if the scorer is None, this is
@@ -192,12 +195,11 @@ class Ridge2FoldCV(BaseEstimator, MultiOutputMixin, RegressorMixin):
         """
         Parameters
         ----------
-        X : ndarray of shape (n_samples, n_features)
+        X : numpy.ndarray of shape (n_samples, n_features)
             Training data, where n_samples is the number of samples
             and n_features is the number of features.
         """
-
-        X = check_array(X)
+        X = validate_data(self, X, reset=False)
 
         check_is_fitted(self, ["coef_"])
 

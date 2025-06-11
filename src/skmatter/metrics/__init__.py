@@ -1,6 +1,5 @@
-"""
-This module contains a set of metrics that can be used for an enhanced
-understanding of your machine learning model.
+"""Set of metrics that can be used for an enhanced understanding of your machine
+learning model.
 
 First are the easily-interpretable error measures of the relative information
 capacity of feature space `F` with respect to feature space `F'`. The methods
@@ -37,6 +36,20 @@ These prediction rigidities are available:
   kernel model.
 * :ref:`CPR-api` (CPR) computes the component-wise prediction rigidity of a
   linear or kernel model.
+
+There are also two distance metrics compatible with the periodic boundary conditions
+available.
+
+  .. note::
+    Currently only rectangular cells are supported.
+    Cell format: [side_length_1, ..., side_length_n]
+
+* :ref:`pairwise-euclidian-api` computes the euclidean distance between two sets
+  of points. It is compatible with the periodic boundary conditions.
+  If the cell length is not provided, it will fall back to the ``scikit-learn`` version
+  of the euclidean distance :func:`sklearn.metrics.pairwise.euclidean_distances`.
+* :ref:`pairwise-mahalanobis-api` computes the Mahalanobis distance between two sets
+  of points. It is compatible with the periodic boundary conditions.
 """
 
 from ._reconstruction_measures import (
@@ -55,6 +68,11 @@ from ._prediction_rigidities import (
     componentwise_prediction_rigidity,
 )
 
+from ._pairwise import (
+    periodic_pairwise_euclidean_distances,
+    pairwise_mahalanobis_distances,
+)
+
 __all__ = [
     "pointwise_global_reconstruction_error",
     "global_reconstruction_error",
@@ -66,4 +84,10 @@ __all__ = [
     "check_local_reconstruction_measures_input",
     "local_prediction_rigidity",
     "componentwise_prediction_rigidity",
+    "periodic_pairwise_euclidean_distances",
+    "pairwise_mahalanobis_distances",
 ]
+
+DIST_METRICS = {
+    "periodic_euclidean": periodic_pairwise_euclidean_distances,
+}

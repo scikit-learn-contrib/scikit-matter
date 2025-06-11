@@ -33,7 +33,7 @@
 
 .. only:: html
 
-  :ref:`getting_started-pcovr`
+  :ref:`getting_started-hybrid`
 
   .. image:: /examples/pcovr/images/thumb/sphx_glr_PCovR_thumb.png
     :alt:
@@ -41,7 +41,7 @@
 .. raw:: html
 
                     </h5>
-                    <p class="card-text">Utilises a combination between a PCA-like and a LR-like loss
+                    <p class="card-text">PCovR and PCovC utilize a combination between a PCA-like and a LR-like loss
                     to determine the decomposition matrix to project feature into latent space</p>
                 </div>
                 </div>
@@ -74,6 +74,13 @@
    :start-after: marker-issues
    :end-before: marker-contributing
 
+.. include:: ../../README.rst
+   :start-after: marker-citing
+   :end-before: marker-contributors
+
+If you would like to contribute to scikit-matter, check out our :ref:`contributing`
+page!
+
 .. toctree::
   :hidden:
 
@@ -84,6 +91,3 @@
   contributing
   changelog
   bibliography
-
-If you would like to contribute to scikit-matter, check out our :ref:`contributing`
-page!
