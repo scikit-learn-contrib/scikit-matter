@@ -208,7 +208,7 @@ loocv_cv_train_error = (
         fit_intercept=False,
     )
     .fit(X_train, y_train)
-    .cv_values_
+    .cv_results_
 )
 
 results["sklearn LOO CV Tikhonov"]["MSE validation"] = np.mean(
