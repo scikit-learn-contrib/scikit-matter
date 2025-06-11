@@ -303,7 +303,7 @@ class Ridge2FoldCV(RegressorMixin, MultiOutputMixin, BaseEstimator):
             return ((Vt.T[:, :n_alpha] / s[:n_alpha]) @ (U.T[:n_alpha] @ y)).T
 
 
-class _IdentityRegressor:
+class _IdentityRegressor(BaseEstimator):
     """Fake regressor which will directly output the prediction."""
 
     def predict(self, y_predict):
