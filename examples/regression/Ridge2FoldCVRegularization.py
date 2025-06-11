@@ -203,7 +203,7 @@ loocv_cv_train_error = (
     RidgeCV(
         alphas=alphas,
         cv=None,
-        store_cv_values=True,
+        store_cv_results=True,
         scoring=None,  # uses by default mean squared error
         fit_intercept=False,
     )
