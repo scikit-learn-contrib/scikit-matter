@@ -6,7 +6,13 @@
         /* Overriding bootstrap font color so that text appears white
            in dark theme */
         html[data-theme="dark"] .card-text {
-            color: #ced6dd;
+            color: var(--pst-color-text-base);
+        }
+
+        /* Overriding bootstrap border color so that border appears white
+           in dark theme */
+        html[data-theme="dark"] .card {
+            --bs-card-border-color: var(--pst-color-border);
         }
     </style>
 
