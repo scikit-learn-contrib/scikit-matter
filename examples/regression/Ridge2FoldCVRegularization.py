@@ -203,12 +203,12 @@ loocv_cv_train_error = (
     RidgeCV(
         alphas=alphas,
         cv=None,
-        store_cv_values=True,
+        store_cv_results=True,
         scoring=None,  # uses by default mean squared error
         fit_intercept=False,
     )
     .fit(X_train, y_train)
-    .cv_values_
+    .cv_results_
 )
 
 results["sklearn LOO CV Tikhonov"]["MSE validation"] = np.mean(
