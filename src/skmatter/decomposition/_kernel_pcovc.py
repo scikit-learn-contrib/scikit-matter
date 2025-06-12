@@ -1,0 +1,446 @@
+import numpy as np
+from sklearn.calibration import LinearSVC, check_classification_targets
+
+
+from sklearn.svm import SVC
+from sklearn.utils import (
+    check_array,
+)
+from sklearn.utils.multiclass import check_classification_targets, type_of_target
+from sklearn.svm import LinearSVC
+
+from sklearn.utils import check_array
+from sklearn.utils.validation import check_is_fitted, validate_data
+from sklearn.linear_model._base import LinearClassifierMixin
+from sklearn.utils.multiclass import check_classification_targets, type_of_target
+
+from skmatter.utils._pcovc_utils import check_svc_fit
+from skmatter.decomposition import _BaseKPCov
+from sklearn.metrics.pairwise import pairwise_kernels
+from skmatter.preprocessing import KernelNormalizer
+
+import scipy.sparse as sp
+
+
+class KernelPCovC(LinearClassifierMixin, _BaseKPCov):
+    r"""Kernel Principal Covariates Classification is a modification on the Principal
+    Covariates Classification proposed in [Jorgensen2025]_. It determines a latent-space
+    projection :math:`\mathbf{T}` which minimizes a combined loss in supervised and unsupervised
+    tasks in the reproducing kernel Hilbert space (RKHS).
+
+    This projection is determined by the eigendecomposition of a modified covariance matrix
+    :math:`\mathbf{\tilde{K}}`
+
+    .. math::
+      \mathbf{\tilde{K}} = \alpha \mathbf{K} +
+            (1 - \alpha) \mathbf{Z}\mathbf{Z}^T
+
+    where :math:`\alpha` is a mixing parameter,
+    :math:`\mathbf{K}` is the input kernel of shape :math:`(n_{samples}, n_{samples})`
+    and :math:`\mathbf{Z}` is a matrix of class confidence scores of shape
+    :math:`(n_{samples}, n_{classes})`
+
+    Parameters
+    ----------
+    mixing : float, default=0.5
+        mixing parameter, as described in PCovC as :math:`{\alpha}`
+
+    n_components : int, float or str, default=None
+        Number of components to keep.
+        if n_components is not set all components are kept::
+
+            n_components == n_samples
+
+    svd_solver : {'auto', 'full', 'arpack', 'randomized'}, default='auto'
+        If auto :
+            The solver is selected by a default policy based on `X.shape` and
+            `n_components`: if the input data is larger than 500x500 and the
+            number of components to extract is lower than 80% of the smallest
+            dimension of the data, then the more efficient 'randomized'
+            method is enabled. Otherwise the exact full SVD is computed and
+            optionally truncated afterwards.
+        If full :
+            run exact full SVD calling the standard LAPACK solver via
+            `scipy.linalg.svd` and select the components by postprocessing
+        If arpack :
+            run SVD truncated to n_components calling ARPACK solver via
+            `scipy.sparse.linalg.svds`. It requires strictly
+            0 < n_components < min(X.shape)
+        If randomized :
+            run randomized SVD by the method of Halko et al.
+
+    classifier : {instance of `sklearn.svm.SVC`, None}, default=None
+        The classifier to use for computing
+        the evidence :math:`{\mathbf{Z}}`.
+        A pre-fitted classifier may be provided.
+        If the classifier is not `None`, its kernel parameters
+        (`kernel`, `gamma`, `degree`, and `coef0`)
+        must be identical to those passed directly to `KernelPCovC`.
+
+    kernel : {'linear', 'poly', 'rbf', 'sigmoid', 'precomputed'} or callable, default='rbf'
+        Kernel.
+
+    gamma : {'scale', 'auto'} or float, default='scale'
+        Kernel coefficient for rbf, poly and sigmoid kernels. Ignored by other
+        kernels.
+
+    degree : int, default=3
+        Degree for poly kernels. Ignored by other kernels.
+
+    coef0 : float, default=0.0
+        Independent term in poly and sigmoid kernels.
+        Ignored by other kernels.
+
+    kernel_params : mapping of str to any, default=None
+        Parameters (keyword arguments) and values for kernel passed as
+        callable object. Ignored by other kernels.
+
+    center : bool, default=False
+        Whether to center any computed kernels
+
+    fit_inverse_transform : bool, default=False
+        Learn the inverse transform for non-precomputed kernels.
+        (i.e. learn to find the pre-image of a point)
+
+    tol : float, default=1e-12
+        Tolerance for singular values computed by svd_solver == 'arpack'
+        and for matrix inversions.
+        Must be of range [0.0, infinity).
+
+    n_jobs : int, default=None
+        The number of parallel jobs to run.
+        :obj:`None` means 1 unless in a :obj:`joblib.parallel_backend` context.
+        ``-1`` means using all processors.
+
+    iterated_power : int or 'auto', default='auto'
+        Number of iterations for the power method computed by
+        svd_solver == 'randomized'.
+        Must be of range [0, infinity).
+
+    random_state : int, :class:`numpy.random.RandomState` instance or None, default=None
+        Used when the 'arpack' or 'randomized' solvers are used. Pass an int
+        for reproducible results across multiple function calls.
+
+    Attributes
+    ----------
+    classifier : estimator object
+        The linear classifier passed for fitting. If pre-fitted, it is assummed
+        to be fit on a precomputed kernel K and Y.
+
+    z_classifier_ : estimator object
+        The linear classifier fit between the computed kernel K and Y.
+
+    classifier_ : estimator object
+        The linear classifier fit between T and Y.
+
+    pt__: numpy.darray of size :math:`({n_{components}, n_{components}})`
+        pseudo-inverse of the latent-space projection, which
+        can be used to contruct projectors from latent-space
+
+    pkt_: numpy.ndarray of size :math:`({n_{samples}, n_{components}})`
+        the projector, or weights, from the input kernel :math:`\mathbf{K}`
+        to the latent-space projection :math:`\mathbf{T}`
+
+    pkz_: numpy.ndarray of size :math:`({n_{samples}, })` or :math:`({n_{samples}, n_{classes}})`
+        the projector, or weights, from the input kernel :math:`\mathbf{K}`
+        to the class confidence scores :math:`\mathbf{Z}`
+
+    ptz_: numpy.ndarray of size :math:`({n_{components}, })` or :math:`({n_{components}, n_{classes}})`
+        the projector, or weights, from the latent-space projection
+        :math:`\mathbf{T}` to the class confidence scores :math:`\mathbf{Z}`
+
+    ptx_: numpy.ndarray of size :math:`({n_{components}, n_{features}})`
+        the projector, or weights, from the latent-space projection
+        :math:`\mathbf{T}` to the feature matrix :math:`\mathbf{X}`
+
+    X_fit_: numpy.ndarray of shape (n_samples, n_features)
+        The data used to fit the model. This attribute is used to build kernels
+        from new data.
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> from skmatter.decomposition import KernelPCovC
+    >>> from sklearn.preprocessing import StandardScaler
+    >>> X = np.array([[-2, 3, -1, 0], [2, 0, -3, 1], [3, 0, -1, 3], [2, -2, 1, 0]])
+    >>> X = scaler.fit_transform(X)
+    >>> Y = np.array([[2], [0], [1], [2]])
+    >>> kpcovc = KernelPCovC(
+    ...     mixing=0.1,
+    ...     n_components=2,
+    ...     kernel="rbf",
+    ...     gamma=1,
+    ... )
+    >>> kpcovc.fit(X, Y)
+    KernelPCovC(classifier=SVC(gamma=1), gamma=1, mixing=0.25, n_components=2)
+    >>> kpcovc.transform(X)
+    array([[ 1.91713954, 2.52318389]
+           [ 2.95581573, 0.78491499]
+           [ 3.00977646, -1.1252421 ]
+           [ 2.45390525, -1.5365844 ]])
+    >>> kpcovc.predict(X)
+    array([2, 1, 3, 0])
+    >>> kpcovc.score(X, Y)
+    1.0
+    """  # NoQa: E501
+
+    def __init__(
+        self,
+        mixing=0.5,
+        n_components=None,
+        svd_solver="auto",
+        classifier=None,
+        kernel="rbf",
+        gamma="scale",
+        degree=3,
+        coef0=0.0,
+        kernel_params=None,
+        center=False,
+        fit_inverse_transform=False,
+        tol=1e-12,
+        n_jobs=None,
+        iterated_power="auto",
+        random_state=None,
+    ):
+        super().__init__(
+            mixing=mixing,
+            n_components=n_components,
+            svd_solver=svd_solver,
+            tol=tol,
+            iterated_power=iterated_power,
+            random_state=random_state,
+            center=center,
+            kernel=kernel,
+            gamma=gamma,
+            degree=degree,
+            coef0=coef0,
+            kernel_params=kernel_params,
+            n_jobs=n_jobs,
+            fit_inverse_transform=fit_inverse_transform,
+        )
+
+        self.classifier = classifier
+
+    def fit(self, X, Y):
+        r"""Fit the model with X and Y.
+
+        Parameters
+        ----------
+        X : numpy.ndarray, shape (n_samples, n_features)
+            Training data, where n_samples is the number of samples and
+            n_features is the number of features.
+
+            It is suggested that :math:`\mathbf{X}` be centered by its column-
+            means and scaled. If features are related, the matrix should be scaled
+            to have unit variance, otherwise :math:`\mathbf{X}` should be
+            scaled so that each feature has a variance of 1 / n_features.
+
+        Y : numpy.ndarray, shape (n_samples,)
+            Training data, where n_samples is the number of samples.
+
+        Returns
+        -------
+        self: object
+            Returns the instance itself.
+        """
+        X, Y = validate_data(self, X, Y, y_numeric=False)
+        check_classification_targets(Y)
+        self.classes_ = np.unique(Y)
+
+        # from BaseSVC - we only do this once since we don't want to recompute gamma for
+        #  each _get_kernel call (this would then fail check_methods_subset_invariance)
+        sparse = sp.issparse(X)
+        if self.gamma == "scale":
+            X_var = (X.multiply(X)).mean() - (X.mean()) ** 2 if sparse else X.var()
+            self.gamma_ = 1.0 / (X.shape[1] * X_var) if X_var != 0 else 1.0
+        elif self.gamma == "auto":
+            self.gamma_ = 1.0 / X.shape[1]
+        else:
+            self.gamma_ = self.gamma
+
+        super().fit(X)
+
+        K = super()._get_kernel(X)
+
+        if self.center:
+            self.centerer_ = KernelNormalizer()
+            K = self.centerer_.fit_transform(K)
+
+        if self.classifier and not isinstance(
+            self.classifier,
+            SVC,
+        ):
+            raise ValueError("Classifier must be an instance of `SVC`")
+
+        if self.classifier is None:
+            classifier = SVC(
+                kernel=self.kernel,
+                gamma=self.gamma,
+                degree=self.degree,
+                coef0=self.coef0,
+            )
+        else:
+            classifier = self.classifier
+            kernel_attrs = ["kernel", "gamma", "degree", "coef0"]
+            if not all(
+                [
+                    getattr(self, attr) == getattr(classifier, attr)
+                    for attr in kernel_attrs
+                ]
+            ):
+                raise ValueError(
+                    "Kernel parameter mismatch: the classifier has kernel "
+                    "parameters {%s} and KernelPCovC was initialized with kernel "
+                    "parameters {%s}"
+                    % (
+                        ", ".join(
+                            [
+                                "%s: %r" % (attr, getattr(classifier, attr))
+                                for attr in kernel_attrs
+                            ]
+                        ),
+                        ", ".join(
+                            [
+                                "%s: %r" % (attr, getattr(self, attr))
+                                for attr in kernel_attrs
+                            ]
+                        ),
+                    )
+                )
+            if classifier.decision_function_shape != "ovr":
+                raise ValueError(
+                    f"Classifier must have parameter `decision_function_shape` set to 'ovr' "
+                    f"but was initialized with '{classifier.decision_function_shape}'"
+                )
+
+        # Check if classifier is fitted; if not, fit with precomputed K
+        # to avoid needing to compute the kernel a second time
+        self.z_classifier_ = check_svc_fit(classifier, K, X, Y)
+
+        # if we have fit the classifier on a precomputed K, we obtain Z
+        # from K, otherwise obtain it from X
+        if self.z_classifier_.kernel == "precomputed":
+            Z = self.z_classifier_.decision_function(K)
+        else:
+            Z = self.z_classifier_.decision_function(X)
+
+        print(f"KPCovC Z: {Z[:5]}")
+        super()._fit_covariance(K, Z)  # gives us T, Pkt, self.pt__
+
+        if self.fit_inverse_transform:
+            self.ptx_ = self.pt__ @ X
+
+        self.classifier_ = LinearSVC().fit(K @ self.pkt_, Y)
+
+        self.ptz_ = self.classifier_.coef_.T
+        self.pkz_ = self.pkt_ @ self.ptz_
+
+        if len(Y.shape) == 1 and type_of_target(Y) == "binary":
+            self.pkz_ = self.pkz_.reshape(
+                K.shape[1],
+            )
+            self.ptz_ = self.ptz_.reshape(
+                self.n_components_,
+            )
+
+        self.components_ = self.pkt_.T  # for sklearn compatibility
+        return self
+
+    def predict(self, X=None, T=None):
+        """Predicts the property labels using classification on T."""
+        check_is_fitted(self, ["pkz_", "ptz_"])
+
+        if X is None and T is None:
+            raise ValueError("Either X or T must be supplied.")
+
+        if X is not None:
+            X = validate_data(self, X, reset=False)
+            K = self._get_kernel(X, self.X_fit_)
+            if self.center:
+                K = self.centerer_.transform(K)
+
+            return self.classifier_.predict(K @ self.pkt_)
+        else:
+            return self.classifier_.predict(T)
+
+    def transform(self, X):
+        """Apply dimensionality reduction to X.
+
+        ``X`` is projected on the first principal components as determined by the
+        modified Kernel PCovC distances.
+
+        Parameters
+        ----------
+        X : numpy.ndarray, shape (n_samples, n_features)
+            New data, where n_samples is the number of samples
+            and n_features is the number of features.
+        """
+        return super().transform(X)
+
+    def inverse_transform(self, T):
+        r"""Transform input data back to its original space.
+
+        .. math::
+            \mathbf{\hat{X}} = \mathbf{T} \mathbf{P}_{TX}
+                              = \mathbf{K} \mathbf{P}_{KT} \mathbf{P}_{TX}
+
+        Similar to KPCA, the original features are not always recoverable,
+        as the projection is computed from the kernel features, not the original
+        features, and the mapping between the original and kernel features
+        is not one-to-one.
+
+        Parameters
+        ----------
+        T : numpy.ndarray, shape (n_samples, n_components)
+            Projected data, where n_samples is the number of samples and n_components is
+            the number of components.
+
+        Returns
+        -------
+        X_original : numpy.ndarray, shape (n_samples, n_features)
+        """
+        return super().inverse_transform(T)
+
+    def decision_function(self, X=None, T=None):
+        r"""Predicts confidence scores from X or T.
+
+        .. math::
+            \mathbf{Z} = \mathbf{T} \mathbf{P}_{TZ}
+                       = \mathbf{K} \mathbf{P}_{KT} \mathbf{P}_{TZ}
+                       = \mathbf{K} \mathbf{P}_{KZ}
+
+        Parameters
+        ----------
+        X : ndarray, shape(n_samples, n_features)
+            Original data for which we want to get confidence scores,
+            where n_samples is the number of samples and n_features is the
+            number of features.
+
+        T : ndarray, shape (n_samples, n_components)
+            Projected data for which we want to get confidence scores,
+            where n_samples is the number of samples and n_components is the
+            number of components.
+
+        Returns
+        -------
+        Z : numpy.ndarray, shape (n_samples,) or (n_samples, n_classes)
+            Confidence scores. For binary classification, has shape `(n_samples,)`,
+            for multiclass classification, has shape `(n_samples, n_classes)`
+        """
+        check_is_fitted(self, attributes=["pkz_", "ptz_"])
+
+        if X is None and T is None:
+            raise ValueError("Either X or T must be supplied.")
+
+        if X is not None:
+            X = validate_data(self, X, reset=False)
+            K = self._get_kernel(X, self.X_fit_)
+            if self.center:
+                K = self.centerer_.transform(K)
+
+            # Or self.classifier_.decision_function(K @ self.pxt_)
+            return K @ self.pkz_ + self.classifier_.intercept_
+
+        else:
+            T = check_array(T)
+            return T @ self.ptz_ + self.classifier_.intercept_

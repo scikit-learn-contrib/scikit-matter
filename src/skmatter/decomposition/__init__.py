@@ -33,15 +33,21 @@ The module includes:
 """
 
 from ._pcov import _BasePCov
+from ._kpcov import _BaseKPCov
 
 from ._pcovr import PCovR
 from ._pcovc import PCovC
 
 from ._kernel_pcovr import KernelPCovR
+from ._kernel_pcovc import KernelPCovC
+
+from ._kernel_pcovr import KernelPCovR
 
 __all__ = [
     "_BasePCov",
+    "_BaseKPCov",
     "PCovR",
     "PCovC",
     "KernelPCovR",
+    "KernelPCovC",
 ]

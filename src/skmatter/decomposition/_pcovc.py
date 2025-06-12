@@ -14,7 +14,6 @@ from sklearn.svm import LinearSVC
 from sklearn.utils import check_array
 from sklearn.utils.multiclass import check_classification_targets, type_of_target
 from sklearn.utils.validation import check_is_fitted, validate_data
-
 from skmatter.decomposition import _BasePCov
 from skmatter.utils import check_cl_fit
 
@@ -293,6 +292,7 @@ class PCovC(LinearClassifierMixin, _BasePCov):
 
         Z = X @ W
 
+        print(f"PCovC Z {Z[:5, 0]}")
         if self.space_ == "feature":
             self._fit_feature_space(X, Y, Z)
         else:
@@ -305,6 +305,10 @@ class PCovC(LinearClassifierMixin, _BasePCov):
         self.ptz_ = self.classifier_.coef_.T
         self.pxz_ = self.pxt_ @ self.ptz_
 
+        print(f"PCovC ptz: {self.ptz_.shape}")
+        print(f"PCovC classifier_ coef n_classes: {len(self.classifier_.classes_)}")
+
+        print(f"PCovC pxz: {self.pxz_.shape}")
         if len(Y.shape) == 1 and type_of_target(Y) == "binary":
             self.pxz_ = self.pxz_.reshape(
                 X.shape[1],
@@ -312,6 +316,7 @@ class PCovC(LinearClassifierMixin, _BasePCov):
             self.ptz_ = self.ptz_.reshape(
                 self.n_components_,
             )
+        print(f"PCovC pxz: {self.pxz_.shape}")
 
         self.components_ = self.pxt_.T  # for sklearn compatibility
         return self
@@ -394,6 +399,7 @@ class PCovC(LinearClassifierMixin, _BasePCov):
             Original data for which we want to get confidence scores,
             where n_samples is the number of samples and n_features is the
             number of features.
+
         T : ndarray, shape (n_samples, n_components)
             Projected data for which we want to get confidence scores,
             where n_samples is the number of samples and n_components is the

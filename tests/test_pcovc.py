@@ -504,7 +504,6 @@ class PCovCInfrastructureTest(PCovCBaseTest):
         self.assertTrue(classifier.get_params() != pcovc.classifier_.get_params())
 
     def test_incompatible_classifier(self):
-        self.maxDiff = None
         classifier = GaussianNB()
         classifier.fit(self.X, self.Y)
         pcovc = self.model(mixing=0.5, classifier=classifier)
