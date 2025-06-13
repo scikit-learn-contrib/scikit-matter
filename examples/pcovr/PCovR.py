@@ -8,7 +8,6 @@ Construct a PCovR Map
 # %%
 #
 
-
 import numpy as np
 from matplotlib import cm
 from matplotlib import pyplot as plt

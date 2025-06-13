@@ -1059,7 +1059,6 @@ class _PCovFPS(GreedySelector):
         full=False,
         random_state=0,
     ):
-
         self.mixing = mixing
         self.initialize = initialize
 

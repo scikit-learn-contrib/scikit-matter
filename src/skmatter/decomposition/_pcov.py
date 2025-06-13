@@ -136,7 +136,7 @@ class _BasePCov(_BasePCA, LinearModel):
             U, S, Vt = self._decompose_truncated(Kt)
         else:
             raise ValueError(
-                "Unrecognized svd_solver='{0}'" "".format(self.fit_svd_solver_)
+                "Unrecognized svd_solver='{0}'".format(self.fit_svd_solver_)
             )
 
         self.singular_values_ = np.sqrt(S.copy())
@@ -231,7 +231,7 @@ class _BasePCov(_BasePCA, LinearModel):
         if self.n_components_ == "mle":
             if self.n_samples_in_ < self.n_features_in_:
                 raise ValueError(
-                    "n_components='mle' is only supported " "if n_samples >= n_features"
+                    "n_components='mle' is only supported if n_samples >= n_features"
                 )
         elif (
             not 0 <= self.n_components_ <= min(self.n_samples_in_, self.n_features_in_)

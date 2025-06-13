@@ -17,7 +17,6 @@ a probability model. `cluster_distribution_3D` is to plot the probability model
 of the H-bond motif.
 """
 
-
 # %%
 from typing import Callable, Union
 
@@ -150,7 +149,6 @@ def generate_probability_model(
         idxroot: np.ndarray,
         center_idx: np.ndarray,
     ):
-
         if cell is not None:
             cov = _get_lcov_clusterp(
                 len(X), nsamples, X, idxroot, center_idx[k], probs, cell
@@ -194,7 +192,6 @@ def generate_probability_model(
         probs: np.ndarray,
         cell: np.ndarray,
     ):
-
         ww = np.zeros(N)
         normww = logsumexp(probs[clroots == idcl])
         ww[clroots == idcl] = np.exp(probs[clroots == idcl] - normww)
@@ -211,7 +208,6 @@ def generate_probability_model(
         probs: np.ndarray,
         cell: np.ndarray,
     ):
-
         ww = np.zeros(N)
         totnormp = logsumexp(probs)
         cov = np.zeros((x.shape[1], x.shape[1]), dtype=float)

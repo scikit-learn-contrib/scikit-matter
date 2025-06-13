@@ -1,0 +1,79 @@
+cff-version: 1.2.0
+message: "If you use scikit-matter for your work, please read and cite it as below."
+title: >-
+  scikit-matter : a suite of generalisable machine learning methods born out of chemistry and materials science [version 2; peer review: 3 approved, 1 approved with reservations]
+type: journalArticle
+issue: 81
+volume: 3
+authors: 
+  - family-names: Goscinski
+    given-names: A
+  - family-names: Principe
+    given-names: VP
+  - family-names: Fraux
+    given-names: G
+  - family-names: Kliavinek
+    given-names: S
+  - family-names: Helfrecht
+    given-names: BA
+  - family-names: Loche
+    given-names: P
+  - family-names: Ceriotti
+    given-names: M
+  - family-names: Cersonsky
+    given-names: RK
+editors: 
+  - family-names: Goscinski
+    given-names: A
+  - family-names: Principe
+    given-names: VP
+  - family-names: Fraux
+    given-names: G
+  - family-names: Kliavinek
+    given-names: S
+  - family-names: Helfrecht
+    given-names: BA
+  - family-names: Loche
+    given-names: P
+  - family-names: Ceriotti
+    given-names: M
+  - family-names: Cersonsky
+    given-names: RK
+recipients: 
+  - family-names: Goscinski
+    given-names: A
+  - family-names: Principe
+    given-names: VP
+  - family-names: Fraux
+    given-names: G
+  - family-names: Kliavinek
+    given-names: S
+  - family-names: Helfrecht
+    given-names: BA
+  - family-names: Loche
+    given-names: P
+  - family-names: Ceriotti
+    given-names: M
+  - family-names: Cersonsky
+    given-names: RK
+translators: 
+  - family-names: Goscinski
+    given-names: A
+  - family-names: Principe
+    given-names: VP
+  - family-names: Fraux
+    given-names: G
+  - family-names: Kliavinek
+    given-names: S
+  - family-names: Helfrecht
+    given-names: BA
+  - family-names: Loche
+    given-names: P
+  - family-names: Ceriotti
+    given-names: M
+  - family-names: Cersonsky
+    given-names: RK
+date-published: 2023
+identifiers: 
+  - type: doi
+    value: 10.12688/openreseurope.15789.2

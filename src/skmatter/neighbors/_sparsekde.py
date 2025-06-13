@@ -296,7 +296,6 @@ class SparseKDE(BaseEstimator):
             raise ValueError("Cell dimension does not match the data dimension.")
 
     def _assign_descriptors_to_grids(self, X):
-
         assigner = _NearestGridAssigner(self.metric, self.metric_params, self.verbose)
         assigner.fit(X)
         labels = assigner.predict(self.descriptors, sample_weight=self.weights)
@@ -411,7 +410,6 @@ class SparseKDE(BaseEstimator):
         return h, cov
 
     def _computes_kernel_density_estimation(self, X: np.ndarray):
-
         prob = np.full(len(X), -np.inf)
         dummd1s_mat = pairwise_mahalanobis_distances(
             X, self._grids, self._bandwidth_inv, self.cell, squared=True
@@ -488,7 +486,6 @@ class _NearestGridAssigner:
         metric_params: Union[dict, None] = None,
         verbose: bool = False,
     ) -> None:
-
         self.labels_ = None
         self.metric = metric
         self.metric_params = metric_params

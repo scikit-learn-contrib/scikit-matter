@@ -1,6 +1,7 @@
 graft src
 
 include LICENSE
+include CITATION.cff
 include README.rst
 
 prune docs

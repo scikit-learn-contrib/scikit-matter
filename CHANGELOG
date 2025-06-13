@@ -11,6 +11,9 @@ The rules for CHANGELOG file:
 
 .. inclusion-marker-changelog-start
 
+Unreleased
+----------
+
 0.3.0 (2025/06/12)
 ------------------
 - Add ``_BasePCov`` class (#248)

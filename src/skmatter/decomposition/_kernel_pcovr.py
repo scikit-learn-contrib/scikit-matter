@@ -238,7 +238,7 @@ class KernelPCovR(_BasePCA, LinearModel):
             _, S, Vt = self._decompose_truncated(K_tilde)
         else:
             raise ValueError(
-                "Unrecognized svd_solver='{0}'" "".format(self._fit_svd_solver)
+                "Unrecognized svd_solver='{0}'".format(self._fit_svd_solver)
             )
 
         U = Vt.T

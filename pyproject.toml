@@ -1,6 +1,7 @@
 [build-system]
 requires = [
-    "setuptools",
+    "setuptools >= 77",
+    "setuptools_scm >= 8",
     "wheel",
 ]
 build-backend = "setuptools.build_meta"
@@ -57,11 +58,17 @@ repository = "https://github.com/scikit-learn-contrib/scikit-matter"
 issues = "https://github.com/scikit-learn-contrib/scikit-matterissues"
 changelog = "http://scikit-matter.readthedocs.io/en/latest/changelog.html"
 
+[tool.check-manifest]
+ignore = ["src/skmatter/_version.py"]
+
 [tool.setuptools.packages.find]
 where = ["src"]
 
 [tool.setuptools.dynamic]
 version = {attr = "skmatter.__version__"}
+
+[tool.setuptools_scm]
+version_file = "src/skmatter/_version.py"
 
 [tool.coverage.run]
 branch = true
@@ -75,15 +82,6 @@ include = [
 [tool.coverage.xml]
 output = 'tests/coverage.xml'
 
-[tool.isort]
-skip = "__init__.py"
-profile = "black"
-line_length = 88
-indent = 4
-include_trailing_comma = true
-lines_after_imports = 2
-known_first_party = "skmatter"
-
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = [
@@ -94,7 +92,7 @@ addopts = [
 ]
 
 [tool.ruff]
-exclude = ["docs/src/examples/"]
+exclude = ["docs/src/examples/", "src/torchpme/_version.py"]
 lint.ignore = [
     "F401",
     "E203",
