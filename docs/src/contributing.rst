@@ -218,7 +218,7 @@ How to Perform a Release
 
 1. **Prepare a Release Pull Request**
 
-   - Based on the main branch create branch ``release-0.4`` and a PR.
+   - Based on the main branch create branch ``release-x.y.z`` and a PR.
    - Ensure that all `CI tests
      <https://github.com/scikit-learn-contrib/scikit-matter/actions>`_ pass.
    - Optionally, run the tests locally to double-check.
