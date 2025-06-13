@@ -236,13 +236,13 @@ How to Perform a Release
    - Update the ``main`` branch and check that the latest commit is the release PR with
      ``git log``
    - Create a tag on directly the ``main`` branch.
-   - Push the tag to GitHub. For example for a release of version ``0.4``:
+   - Push the tag to GitHub. For example for a release of version ``x.y.z``:
 
      .. code-block:: bash
 
         git checkout main
         git pull
-        git tag -a v0.4 -m "Release v0.4"
+        git tag -a vx.y.z -m "Release vx.y.z"
         git push --tags
 
 4. **Finalize the GitHub Release**
