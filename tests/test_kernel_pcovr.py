@@ -430,7 +430,7 @@ class KernelPCovRTestSVDSolvers(KernelPCovRBaseTest):
             kpcovr = self.model(svd_solver="bad")
             kpcovr.fit(self.X, self.Y)
 
-        self.assertTrue(str(cm.exception), "Unrecognized svd_solver='bad'" "")
+        self.assertTrue(str(cm.exception), "Unrecognized svd_solver='bad'")
 
     def test_good_n_components(self):
         """Check that PCovR will work with any allowed values of n_components."""

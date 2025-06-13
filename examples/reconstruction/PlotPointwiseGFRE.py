@@ -16,7 +16,6 @@ of the reconstruction with the downside of being less general.
 # %%
 #
 
-
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np

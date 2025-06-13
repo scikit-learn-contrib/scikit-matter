@@ -7,4 +7,4 @@ materials science community, following the `scikit-learn <https://scikit.org/>`_
 coding guidelines to promote usability and interoperability with existing workflows.
 """
 
-__version__ = "0.3.0"
+from ._version import __version__  # noqa: F401

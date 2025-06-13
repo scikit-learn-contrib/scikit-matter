@@ -114,11 +114,15 @@ skmatter_ridge_2foldcv_tikhonov = Ridge2FoldCV(
 )
 
 sklearn_ridge_2foldcv_tikhonov = RidgeCV(
-    alphas=alphas, cv=cv, fit_intercept=False  # remove the incluence of learning bias
+    alphas=alphas,
+    cv=cv,
+    fit_intercept=False,  # remove the incluence of learning bias
 )
 
 sklearn_ridge_loocv_tikhonov = RidgeCV(
-    alphas=alphas, cv=None, fit_intercept=False  # remove the incluence of learning bias
+    alphas=alphas,
+    cv=None,
+    fit_intercept=False,  # remove the incluence of learning bias
 )
 
 # %%
@@ -331,7 +335,9 @@ skmatter_ridge_2foldcv_tikhonov = Ridge2FoldCV(
 )
 
 sklearn_ridge_loocv_tikhonov = RidgeCV(
-    alphas=alphas, cv=None, fit_intercept=False  # remove the incluence of learning bias
+    alphas=alphas,
+    cv=None,
+    fit_intercept=False,  # remove the incluence of learning bias
 )
 
 print("skmatter 2-fold CV cutoff")

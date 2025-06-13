@@ -20,7 +20,6 @@ estimate the parameters of these Gaussians from our sampled data.
 Here we first sample from these three Gaussians.
 """
 
-
 # %%
 import time
 
@@ -98,7 +97,6 @@ end2 = time.time()
 
 # %%
 class GaussianMixtureModel:
-
     def __init__(
         self,
         weights: np.ndarray,
@@ -116,7 +114,6 @@ class GaussianMixtureModel:
         self.norm = 1 / np.sqrt((2 * np.pi) ** self.dimension * self.cov_det)
 
     def __call__(self, x: np.ndarray, i: int = None):
-
         if len(x.shape) == 1:
             x = x[np.newaxis, :]
         if self.period is not None:

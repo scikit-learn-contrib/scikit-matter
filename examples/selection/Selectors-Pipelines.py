@@ -9,7 +9,6 @@ Using scikit-matter selectors with scikit-learn pipelines
 # %%
 #
 
-
 import numpy as np
 from matplotlib import pyplot as plt
 from sklearn.datasets import load_diabetes

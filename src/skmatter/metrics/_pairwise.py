@@ -150,7 +150,6 @@ def pairwise_mahalanobis_distances(
     def _mahalanobis(
         cell: np.ndarray, X: np.ndarray, Y: np.ndarray, cov_inv: np.ndarray
     ):
-
         XY = np.concatenate([x - Y for x in X])
         if cell is not None:
             XY -= np.round(XY / cell) * cell

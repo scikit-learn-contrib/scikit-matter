@@ -49,8 +49,7 @@ class PredictionRigidityTests(unittest.TestCase):
         )
         self.assertTrue(
             rank_diff == 0,
-            f"LPR Covariance matrix rank is not full, with a difference of:"
-            f"{rank_diff}",
+            f"LPR Covariance matrix rank is not full, with a difference of:{rank_diff}",
         )
 
     def test_componentwise_prediction_rigidity(self):
@@ -217,7 +216,6 @@ class ReconstructionMeasuresTests(unittest.TestCase):
 
 
 class DistanceTests(unittest.TestCase):
-
     @classmethod
     def setUpClass(cls):
         cls.X = np.array([[1, 2], [3, 4], [5, 6]])

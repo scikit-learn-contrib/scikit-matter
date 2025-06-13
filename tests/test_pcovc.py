@@ -265,7 +265,7 @@ class PCovCTestSVDSolvers(PCovCBaseTest):
                 pcovc = self.model(svd_solver="bad", space=space)
                 pcovc.fit(self.X, self.Y)
 
-            self.assertEqual(str(cm.exception), "Unrecognized svd_solver='bad'" "")
+            self.assertEqual(str(cm.exception), "Unrecognized svd_solver='bad'")
 
     def test_good_n_components(self):
         """Check that PCovC will work with any allowed values of n_components."""
@@ -291,7 +291,7 @@ class PCovCTestSVDSolvers(PCovCBaseTest):
             pcovc.fit(self.X[:20], self.Y[:20])
         self.assertEqual(
             str(cm.exception),
-            "n_components='mle' is only supported " "if n_samples >= n_features",
+            "n_components='mle' is only supported if n_samples >= n_features",
         )
 
         with self.subTest(type="negative_ncomponents"):
