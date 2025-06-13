@@ -7,72 +7,21 @@ issue: 81
 volume: 3
 authors: 
   - family-names: Goscinski
-    given-names: A
+    given-names: Alexander
   - family-names: Principe
-    given-names: VP
+    given-names: Victor P.
   - family-names: Fraux
-    given-names: G
+    given-names: Guillaume
   - family-names: Kliavinek
-    given-names: S
+    given-names: Sergei
   - family-names: Helfrecht
-    given-names: BA
+    given-names: Benjamin A.
   - family-names: Loche
-    given-names: P
+    given-names: Philip
   - family-names: Ceriotti
-    given-names: M
+    given-names: Michele
   - family-names: Cersonsky
-    given-names: RK
-editors: 
-  - family-names: Goscinski
-    given-names: A
-  - family-names: Principe
-    given-names: VP
-  - family-names: Fraux
-    given-names: G
-  - family-names: Kliavinek
-    given-names: S
-  - family-names: Helfrecht
-    given-names: BA
-  - family-names: Loche
-    given-names: P
-  - family-names: Ceriotti
-    given-names: M
-  - family-names: Cersonsky
-    given-names: RK
-recipients: 
-  - family-names: Goscinski
-    given-names: A
-  - family-names: Principe
-    given-names: VP
-  - family-names: Fraux
-    given-names: G
-  - family-names: Kliavinek
-    given-names: S
-  - family-names: Helfrecht
-    given-names: BA
-  - family-names: Loche
-    given-names: P
-  - family-names: Ceriotti
-    given-names: M
-  - family-names: Cersonsky
-    given-names: RK
-translators: 
-  - family-names: Goscinski
-    given-names: A
-  - family-names: Principe
-    given-names: VP
-  - family-names: Fraux
-    given-names: G
-  - family-names: Kliavinek
-    given-names: S
-  - family-names: Helfrecht
-    given-names: BA
-  - family-names: Loche
-    given-names: P
-  - family-names: Ceriotti
-    given-names: M
-  - family-names: Cersonsky
-    given-names: RK
+    given-names: Rose K.
 date-published: 2023
 identifiers: 
   - type: doi
