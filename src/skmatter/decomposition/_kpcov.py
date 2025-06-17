@@ -5,9 +5,12 @@ from abc import ABCMeta, abstractmethod
 from scipy import linalg
 from scipy.sparse.linalg import svds
 import scipy.sparse as sp
+from sklearn.calibration import LinearSVC
 from sklearn.exceptions import NotFittedError
 
 from sklearn.decomposition._base import _BasePCA
+from sklearn.kernel_ridge import KernelRidge
+from sklearn.linear_model import LogisticRegression
 from sklearn.linear_model._base import LinearModel
 from sklearn.decomposition._pca import _infer_dimension
 from sklearn.utils import check_random_state
@@ -24,7 +27,7 @@ from scipy import linalg
 from scipy.linalg import sqrtm as MatrixSqrt
 from scipy.sparse.linalg import svds
 
-from skmatter.utils import pcovr_kernel, pcovr_covariance
+from skmatter.utils import pcovr_kernel
 
 
 class _BaseKPCov(_BasePCA, LinearModel, metaclass=ABCMeta):
@@ -71,7 +74,7 @@ class _BaseKPCov(_BasePCA, LinearModel, metaclass=ABCMeta):
                 "degree": self.degree,
                 "coef0": self.coef0,
             }
-
+        # print(f"X: {X[:5, 0]}")
         return pairwise_kernels(
             X, Y, metric=self.kernel, filter_params=True, n_jobs=self.n_jobs, **params
         )
@@ -110,55 +113,15 @@ class _BaseKPCov(_BasePCA, LinearModel, metaclass=ABCMeta):
             else:
                 self.fit_svd_solver_ = "full"
 
-    def _fit_covariance(self, K, Z):
-        """
-        Fit the model with the computed kernel and approximated properties. Uses Covariance Matrix
-        """
-        print(f"KPCovC K: {K[:5, 0]}")
-        Ct, iCsqrt = pcovr_covariance(
-            mixing=self.mixing,
-            X=K,
-            Y=Z,
-            rcond=self.tol,
-            return_isqrt=True,
-        )
-        try:
-            Csqrt = np.linalg.lstsq(iCsqrt, np.eye(len(iCsqrt)), rcond=None)[0]
-
-        # if we can avoid recomputing Csqrt, we should, but sometimes we
-        # run into a singular matrix, which is what we do here
-        except LinAlgError:
-            Csqrt = np.real(MatrixSqrt(K.T @ K))
-
-        if self.fit_svd_solver_ == "full":
-            U, S, Vt = self._decompose_full(Ct)
-        elif self.fit_svd_solver_ in ["arpack", "randomized"]:
-            U, S, Vt = self._decompose_truncated(Ct)
-        else:
-            raise ValueError(f"Unrecognized svd_solver='{self.fit_svd_solver_}'")
-
-        S_sqrt = np.diagflat([np.sqrt(s) if s > self.tol else 0.0 for s in S])
-        S_sqrt_inv = np.diagflat([1.0 / np.sqrt(s) if s > self.tol else 0.0 for s in S])
-
-        self.pkt_ = np.linalg.multi_dot([iCsqrt, Vt.T, S_sqrt])
-        self.ptk_ = np.linalg.multi_dot([S_sqrt_inv, Vt, Csqrt])
-
-        if self.mixing == 1.0:
-            lambda_i = np.sqrt(S)
-            self.pkt_ = self.pkt_ / np.sqrt(lambda_i)[np.newaxis, :]
-
-        T = K @ self.pkt_
-        self.pt__ = np.linalg.lstsq(T, np.eye(T.shape[0]), rcond=self.tol)[0]
-
     def _fit_gram(self, K, Yhat, W):
         """
         Fit the model with the computed kernel and approximated properties.
         """
         K_tilde = pcovr_kernel(mixing=self.mixing, X=K, Y=Yhat, kernel="precomputed")
 
-        print("KPCovC K: " + str(K[:5, 0]))
-        print("KPCovC Yhat: " + str(Yhat[:5, 0]))
-        print("KPCovC K_tilde: " + str(K_tilde[:5, 0]))
+        # print("KPCovC K: " + str(K[:5, 0]))
+        # print("KPCovC Yhat: " + str(Yhat[:5, 0]))
+        # print("KPCovC K_tilde: " + str(K_tilde[:5, 0]))
 
         if self.fit_svd_solver_ == "full":
             _, S, Vt = self._decompose_full(K_tilde)
@@ -172,9 +135,9 @@ class _BaseKPCov(_BasePCA, LinearModel, metaclass=ABCMeta):
         U = Vt.T
 
         P = (self.mixing * np.eye(K.shape[0])) + (1.0 - self.mixing) * (W @ Yhat.T)
-        print("KPCovC P: " + str(P[:5, 0]))
 
         S_inv = np.array([1.0 / s if s > self.tol else 0.0 for s in S])
+        # print(f"KernelPCovC S_inv: {[s if s > self.tol else 0.0 for s in S]}")
 
         self.pkt_ = P @ U @ np.sqrt(np.diagflat(S_inv))
 

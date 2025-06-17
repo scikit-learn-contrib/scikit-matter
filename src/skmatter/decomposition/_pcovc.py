@@ -43,9 +43,9 @@ class PCovC(LinearClassifierMixin, _BasePCov):
             \mathbf{Z}\mathbf{Z}^T \mathbf{X} \left(\mathbf{X}^T
             \mathbf{X}\right)^{-\frac{1}{2}}\right)
 
-    For all PCovC methods, it is strongly suggested that :math:`\mathbf{X}` and
-    :math:`\mathbf{Y}` are centered and scaled to unit variance, otherwise the
-    results will change drastically near :math:`\alpha \to 0` and :math:`\alpha \to 1`.
+    For all PCovC methods, it is strongly suggested that :math:`\mathbf{X}` is centered
+    and scaled to unit variance, otherwise the results will change drastically near
+    :math:`\alpha \to 0` and :math:`\alpha \to 1`.
     This can be done with the companion preprocessing classes, where
 
     >>> from skmatter.preprocessing import StandardFlexibleScaler as SFS
@@ -244,7 +244,7 @@ class PCovC(LinearClassifierMixin, _BasePCov):
             Training data, where n_samples is the number of samples.
 
         W : numpy.ndarray, shape (n_features, n_properties)
-            Classification weights, optional when classifier= `precomputed`. If
+            Classification weights, optional when classifier = `precomputed`. If
             not passed, it is assumed that the weights will be taken from a
             linear classifier fit between :math:`\mathbf{X}` and :math:`\mathbf{Y}`
         """
@@ -292,7 +292,7 @@ class PCovC(LinearClassifierMixin, _BasePCov):
 
         Z = X @ W
 
-        print(f"PCovC Z {Z[:5, 0]}")
+        # print(f"PCovC Z {Z[:5, 0]}")
         if self.space_ == "feature":
             self._fit_feature_space(X, Y, Z)
         else:
@@ -305,10 +305,10 @@ class PCovC(LinearClassifierMixin, _BasePCov):
         self.ptz_ = self.classifier_.coef_.T
         self.pxz_ = self.pxt_ @ self.ptz_
 
-        print(f"PCovC ptz: {self.ptz_.shape}")
-        print(f"PCovC classifier_ coef n_classes: {len(self.classifier_.classes_)}")
+        # print(f"PCovC ptz: {self.ptz_.shape}")
+        # print(f"PCovC classifier_ coef n_classes: {len(self.classifier_.classes_)}")
 
-        print(f"PCovC pxz: {self.pxz_.shape}")
+        # print(f"PCovC pxz: {self.pxz_.shape}")
         if len(Y.shape) == 1 and type_of_target(Y) == "binary":
             self.pxz_ = self.pxz_.reshape(
                 X.shape[1],
@@ -316,7 +316,7 @@ class PCovC(LinearClassifierMixin, _BasePCov):
             self.ptz_ = self.ptz_.reshape(
                 self.n_components_,
             )
-        print(f"PCovC pxz: {self.pxz_.shape}")
+        # print(f"PCovC pxz: {self.pxz_.shape}")
 
         self.components_ = self.pxt_.T  # for sklearn compatibility
         return self
