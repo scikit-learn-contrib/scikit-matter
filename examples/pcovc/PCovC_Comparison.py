@@ -107,4 +107,6 @@ axs[1].scatter(T_lda, np.zeros(len(T_lda)), c=y)
 axs[1].set_title("LDA")
 axs[2].scatter(T_pcovc[:, 0], T_pcovc[:, 1], c=y)
 axs[2].set_title("PCovC")
+
+plt.tight_layout()
 plt.show()
