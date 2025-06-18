@@ -3,7 +3,6 @@ import numpy as np
 from sklearn import clone
 from sklearn.svm import LinearSVC
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
-from sklearn.multioutput import MultiOutputClassifier
 from sklearn.linear_model import (
     Perceptron,
     RidgeClassifier,
@@ -20,9 +19,6 @@ from sklearn.utils.multiclass import check_classification_targets, type_of_targe
 from skmatter.preprocessing import KernelNormalizer
 from skmatter.utils import check_cl_fit
 from skmatter.decomposition import _BaseKPCov
-from sklearn.preprocessing import StandardScaler
-
-import scipy.sparse as sp
 
 
 class KernelPCovC(LinearClassifierMixin, _BaseKPCov):

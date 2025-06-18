@@ -4,21 +4,13 @@ import numpy as np
 from sklearn import exceptions
 from sklearn.calibration import LinearSVC
 from sklearn.datasets import load_breast_cancer as get_dataset
-from sklearn.datasets import load_iris as get_dataset2
-
-from sklearn.kernel_ridge import KernelRidge
-from sklearn.linear_model import Ridge, RidgeCV
 from sklearn.naive_bayes import GaussianNB
 from sklearn.utils.validation import check_X_y
 from sklearn.preprocessing import StandardScaler
-from sklearn.linear_model import LogisticRegression
-from sklearn.svm import SVC
-from sklearn.linear_model import RidgeClassifier
+from sklearn.linear_model import LogisticRegression, RidgeClassifier
 from sklearn.metrics.pairwise import pairwise_kernels
-from sklearn.metrics import accuracy_score
-from skmatter.decomposition import PCovC
+
 from skmatter.decomposition import KernelPCovC
-from skmatter.preprocessing import KernelNormalizer
 
 
 class KernelPCovCBaseTest(unittest.TestCase):
@@ -80,8 +72,9 @@ class KernelPCovCErrorTest(KernelPCovCBaseTest):
             prev_error = error
 
     def test_cl_with_t_errors(self):
-        """Check that KernelPCovC returns a non-null property prediction from the latent space
-        projection and that the prediction error increases with `mixing`.
+        """Check that KernelPCovC returns a non-null property prediction from
+        the latent space projection and that the prediction error increases with
+        `mixing`.
         """
         prev_error = -1.0
 
@@ -126,55 +119,6 @@ class KernelPCovCErrorTest(KernelPCovCBaseTest):
 
             prev_error = error
 
-    # def test_reconstruction_errors(self):
-    #     """Check that KernelPCovC returns a non-null reconstructed X and that the
-    #     reconstruction error decreases with `mixing`.
-    #     """
-    #     prev_error = 10.0
-    #     prev_x_error = 10.0
-
-    #     x_errors = []
-    #     errors = []
-    #     k = []
-    #     for mixing in np.linspace(0, 1, 6):
-    #         print(mixing)
-    #         kpcovc = KernelPCovC(
-    #             mixing=mixing,
-    #             n_components=2,
-    #             fit_inverse_transform=True,
-    #             center=True,
-    #             kernel="linear",
-    #         )
-    #         kpcovc.fit(self.X, self.Y)
-
-    #         t = kpcovc.transform(self.X)
-    #         K = kpcovc._get_kernel(self.X)
-    #         x = kpcovc.inverse_transform(t)
-
-    #         x_error = np.linalg.norm(self.X - x) ** 2.0 / np.linalg.norm(self.X) ** 2.0
-    #         error = np.linalg.norm(K - t @ t.T) ** 2.0 / np.linalg.norm(K) ** 2.0
-
-    #         x_errors.append(x_error)
-    #         errors.append(error)
-    #         k.append((np.linalg.norm(K - t @ t.T), np.linalg.norm(t @ t.T)))
-
-    #         with self.subTest(error=error):
-    #             self.assertFalse(np.isnan(error))
-    #         with self.subTest(error=error, alpha=round(mixing, 4)):
-    #             self.assertLessEqual(error, prev_error + self.error_tol)
-
-    #         with self.subTest(error=x_error):
-    #             self.assertFalse(np.isnan(x_error))
-    #         with self.subTest(error=x_error, alpha=round(mixing, 4)):
-    #             self.assertLessEqual(x_error, prev_x_error + self.error_tol)
-
-    #         prev_error = error
-    #         prev_x_error = x_error
-
-    #     print(x_errors)
-    #     print(errors)
-    #     print(k)
-
 
 class KernelPCovCInfrastructureTest(KernelPCovCBaseTest):
     def test_nonfitted_failure(self):
@@ -209,8 +153,8 @@ class KernelPCovCInfrastructureTest(KernelPCovCBaseTest):
         self.assertTrue(T.shape[-1] == n_components)
 
     def test_Z_shape(self):
-        """Check that KPCovC returns an evidence matrix consistent with the number of samples
-        and the number of classes.
+        """Check that KPCovC returns an evidence matrix consistent with the number
+        of samples and the number of classes.
         """
         n_components = 5
         kpcovc = self.model(n_components=n_components, tol=1e-12)
@@ -469,7 +413,7 @@ class KernelPCovCTestSVDSolvers(KernelPCovCBaseTest):
             kpcovc.fit(self.X, self.Y)
 
     def test_bad_n_components(self):
-        """Check that KPCovC will not work with any prohibited values of n_components."""
+        """Check that KPCovC will not work with any prohibited values of n_components"""
         with self.subTest(type="negative_ncomponents"):
             with self.assertRaises(ValueError) as cm:
                 kpcovc = self.model(n_components=-1, svd_solver="auto")

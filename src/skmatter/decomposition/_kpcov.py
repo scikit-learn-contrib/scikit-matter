@@ -1,16 +1,13 @@
+from abc import ABCMeta, abstractmethod
+
 import numbers
 import numpy as np
 
-from abc import ABCMeta, abstractmethod
 from scipy import linalg
 from scipy.sparse.linalg import svds
-import scipy.sparse as sp
-from sklearn.calibration import LinearSVC
-from sklearn.exceptions import NotFittedError
 
+from sklearn.exceptions import NotFittedError
 from sklearn.decomposition._base import _BasePCA
-from sklearn.kernel_ridge import KernelRidge
-from sklearn.linear_model import LogisticRegression
 from sklearn.linear_model._base import LinearModel
 from sklearn.decomposition._pca import _infer_dimension
 from sklearn.utils import check_random_state
@@ -19,9 +16,6 @@ from sklearn.utils.extmath import randomized_svd, stable_cumsum, svd_flip
 from sklearn.utils.validation import check_is_fitted
 from sklearn.utils.validation import validate_data
 from sklearn.metrics.pairwise import pairwise_kernels
-
-from numpy.linalg import LinAlgError
-from scipy.linalg import sqrtm as MatrixSqrt
 
 from skmatter.utils import pcovr_kernel
 
@@ -76,8 +70,8 @@ class _BaseKPCov(_BasePCA, LinearModel, metaclass=ABCMeta):
 
     @abstractmethod
     def fit(self, X):
-        """This contains the common functionality for KPCovR and KPCovC fit methods,
-        but leaves the rest of the fit functionality to the subclass.
+        """Contains the common functionality for the KPCovR and KPCovC fit methods,
+        but leaves the rest of the functionality to the subclass.
         """
         self.X_fit_ = X.copy()
 
@@ -109,9 +103,7 @@ class _BaseKPCov(_BasePCA, LinearModel, metaclass=ABCMeta):
                 self.fit_svd_solver_ = "full"
 
     def _fit(self, K, Yhat, W):
-        """
-        Fit the model with the computed kernel and approximated properties.
-        """
+        """Fit the model with the computed kernel and approximated properties."""
         K_tilde = pcovr_kernel(mixing=self.mixing, X=K, Y=Yhat, kernel="precomputed")
 
         # print("KPCovC K: " + str(K[:5, 0]))
@@ -132,14 +124,11 @@ class _BaseKPCov(_BasePCA, LinearModel, metaclass=ABCMeta):
         P = (self.mixing * np.eye(K.shape[0])) + (1.0 - self.mixing) * (W @ Yhat.T)
 
         S_inv = np.array([1.0 / s if s > self.tol else 0.0 for s in S])
-        # print(f"KernelPCovC S_inv: {[s if s > self.tol else 0.0 for s in S]}")
 
         self.pkt_ = P @ U @ np.sqrt(np.diagflat(S_inv))
 
         T = K @ self.pkt_
         self.pt__ = np.linalg.lstsq(T, np.eye(T.shape[0]), rcond=self.tol)[0]
-        # np.linalg.lstsq(K @ self.pkt_, np.eye(K @ self.pkt_.shape[0]), rcond=self.tol)[0]
-        # self.ptx = self.pt__ @ X
 
     def transform(self, X=None):
         check_is_fitted(self, ["pkt_", "X_fit_"])

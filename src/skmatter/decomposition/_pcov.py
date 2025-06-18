@@ -4,9 +4,11 @@ import warnings
 
 import numpy as np
 from numpy.linalg import LinAlgError
+
 from scipy import linalg
 from scipy.linalg import sqrtm as MatrixSqrt
 from scipy.sparse.linalg import svds
+
 from sklearn.decomposition._base import _BasePCA
 from sklearn.decomposition._pca import _infer_dimension
 from sklearn.linear_model._base import LinearModel
