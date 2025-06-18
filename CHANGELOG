@@ -13,6 +13,10 @@ The rules for CHANGELOG file:
 
 Unreleased
 ----------
+- Add ``_BaseKPCov`` class (#254)
+- Add ``KernelPCovC`` class that inherits shared functionality from ``_BaseKPCov`` (#254)
+- Add ``KernelPCovC`` testing suite and examples (#254)
+- Modify ``KernelPCovR`` to inherit shared functionality from ``_BaseKPCov`` (#254)
 
 0.3.0 (2025/06/12)
 ------------------
@@ -20,7 +24,7 @@ Unreleased
 - Add ``PCovC`` class that inherits shared functionality from ``_BasePCov`` (#248)
 - Add ``PCovC`` testing suite and examples (#248)
 - Modify ``PCovR`` to inherit shared functionality from ``_BasePCov`` (#248)
-- Update to sklearn >= 1.6.0 and scipy >= 1.15.0 (#239)
+- Update to sklearn >= 1.7.0 and scipy >= 1.15.0 (#239, #257)
 - Fixed moved function import from scipy and bump scipy dependency to 1.15.0 (#236)
 - Fix rendering issues for `SparseKDE` and `QuickShift` (#236)
 - Updating ``FPS`` to allow a numpy array of ints as an initialize parameter (#145)
