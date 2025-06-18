@@ -7,7 +7,6 @@ from sklearn.utils.validation import _check_n_features, check_is_fitted, validat
 from skmatter.utils import check_krr_fit
 from skmatter.decomposition import _BaseKPCov
 
-import numpy as np
 from numpy.linalg import LinAlgError
 from scipy import linalg
 from scipy.linalg import sqrtm as MatrixSqrt
@@ -18,13 +17,11 @@ from sklearn.linear_model._base import LinearModel
 from sklearn.utils import check_random_state
 from sklearn.utils._arpack import _init_arpack_v0
 from sklearn.utils.extmath import randomized_svd, stable_cumsum, svd_flip
-from sklearn.utils.validation import check_is_fitted
 
 from skmatter.utils import pcovr_covariance, pcovr_kernel
 from sklearn.metrics.pairwise import pairwise_kernels
 
 from skmatter.preprocessing import KernelNormalizer
-from skmatter.utils import pcovr_kernel
 
 
 class KernelPCovR(_BaseKPCov):
@@ -249,7 +246,7 @@ class KernelPCovR(_BaseKPCov):
             scaled so that each feature has a variance of 1 / n_features.
 
         W : numpy.ndarray, shape (n_samples, n_properties)
-            Regression weights, optional when regressor=`precomputed`. If not
+            Regression weights, optional when regressor = `precomputed`. If not
             passed, it is assumed that `W = np.linalg.lstsq(K, Y, self.tol)[0]`
 
         Returns
@@ -336,7 +333,7 @@ class KernelPCovR(_BaseKPCov):
             if W is None:
                 W = np.linalg.lstsq(K, Yhat, self.tol)[0]
 
-        super()._fit_gram(K, Yhat, W)
+        super()._fit(K, Yhat, W)
 
         self.ptk_ = self.pt__ @ K
         self.pty_ = self.pt__ @ Y

@@ -20,18 +20,13 @@ from sklearn.utils.validation import check_is_fitted
 from sklearn.utils.validation import validate_data
 from sklearn.metrics.pairwise import pairwise_kernels
 
-import numpy as np
 from numpy.linalg import LinAlgError
-import scipy.sparse as sp
-from scipy import linalg
 from scipy.linalg import sqrtm as MatrixSqrt
-from scipy.sparse.linalg import svds
 
 from skmatter.utils import pcovr_kernel
 
 
 class _BaseKPCov(_BasePCA, LinearModel, metaclass=ABCMeta):
-
     @abstractmethod
     def __init__(
         self,
@@ -70,11 +65,11 @@ class _BaseKPCov(_BasePCA, LinearModel, metaclass=ABCMeta):
             params = self.kernel_params or {}
         else:
             params = {
-                "gamma": getattr(self, "gamma_", self.gamma),
+                "gamma": self.gamma,
                 "degree": self.degree,
                 "coef0": self.coef0,
             }
-        # print(f"X: {X[:5, 0]}")
+
         return pairwise_kernels(
             X, Y, metric=self.kernel, filter_params=True, n_jobs=self.n_jobs, **params
         )
@@ -113,7 +108,7 @@ class _BaseKPCov(_BasePCA, LinearModel, metaclass=ABCMeta):
             else:
                 self.fit_svd_solver_ = "full"
 
-    def _fit_gram(self, K, Yhat, W):
+    def _fit(self, K, Yhat, W):
         """
         Fit the model with the computed kernel and approximated properties.
         """
@@ -129,7 +124,7 @@ class _BaseKPCov(_BasePCA, LinearModel, metaclass=ABCMeta):
             _, S, Vt = self._decompose_truncated(K_tilde)
         else:
             raise ValueError(
-                "Unrecognized svd_solver='{0}'" "".format(self.fit_svd_solver_)
+                "Unrecognized svd_solver='{0}'".format(self.fit_svd_solver_)
             )
 
         U = Vt.T

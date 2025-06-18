@@ -243,7 +243,7 @@ class PCovC(LinearClassifierMixin, _BasePCov):
         Y : numpy.ndarray, shape (n_samples,)
             Training data, where n_samples is the number of samples.
 
-        W : numpy.ndarray, shape (n_features, n_properties)
+        W : numpy.ndarray, shape (n_features, n_classes)
             Classification weights, optional when classifier = `precomputed`. If
             not passed, it is assumed that the weights will be taken from a
             linear classifier fit between :math:`\mathbf{X}` and :math:`\mathbf{Y}`

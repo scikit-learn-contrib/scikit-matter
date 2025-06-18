@@ -19,7 +19,6 @@ from skmatter.utils import pcovr_covariance, pcovr_kernel
 
 
 class _BasePCov(_BasePCA, LinearModel, metaclass=ABCMeta):
-
     @abstractmethod
     def __init__(
         self,

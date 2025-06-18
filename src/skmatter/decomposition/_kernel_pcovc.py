@@ -24,11 +24,12 @@ from sklearn.preprocessing import StandardScaler
 
 import scipy.sparse as sp
 
+
 class KernelPCovC(LinearClassifierMixin, _BaseKPCov):
-    r"""Kernel Principal Covariates Classification, as described in [Jorgensen2025]_,
-    determines a latent-space projection :math:`\mathbf{T}` which minimizes a combined
-    loss in supervised and unsupervised tasks in the reproducing kernel Hilbert space
-    (RKHS).
+    r"""Kernel Principal Covariates Classification is a modification on the Principal
+    Covariates Classification proposed in [Jorgensen2025]_. It determines a latent-space
+    projection :math:`\mathbf{T}` which minimizes a combined loss in supervised and unsupervised
+    tasks in the reproducing kernel Hilbert space (RKHS).
 
     This projection is determined by the eigendecomposition of a modified gram matrix
     :math:`\mathbf{\tilde{K}}`
@@ -71,16 +72,17 @@ class KernelPCovC(LinearClassifierMixin, _BaseKPCov):
         If randomized :
             run randomized SVD by the method of Halko et al.
 
-    classifier: {`LogisticRegression`, `LogisticRegressionCV`, `LinearSVC`, `LinearDiscriminantAnalysis`,
-        `RidgeClassifier`, `RidgeClassifierCV`, `SGDClassifier`, `Perceptron`, `precomputed`}, default=None
-        The classifier to use for computing
-        the evidence :math:`{\mathbf{Z}}`.
-        A pre-fitted classifier may be provided.
-
+    classifier: `estimator object` or `precomputed`, default=None
+        classifier for computing :math:`{\mathbf{Z}}`. The classifier should be one of
+        `sklearn.linear_model.LogisticRegression`, `sklearn.linear_model.LogisticRegressionCV`,
+        `sklearn.svm.LinearSVC`, `sklearn.discriminant_analysis.LinearDiscriminantAnalysis`,
+        `sklearn.linear_model.RidgeClassifier`, `sklearn.linear_model.RidgeClassifierCV`,
+        `sklearn.linear_model.SGDClassifier`, or `Perceptron`.
+        If a pre-fitted classifier is provided, it is used to compute :math:`{\mathbf{Z}}`.
         If None, ``sklearn.linear_model.LogisticRegression()``
         is used as the classifier.
 
-    kernel : {"linear", "poly", "rbf", "sigmoid", "cosine", "precomputed"}, default="linear
+    kernel : {'linear', 'poly', 'rbf', 'sigmoid', 'precomputed'} or callable, default='linear'
         Kernel.
 
     gamma : {'scale', 'auto'} or float, default=None
@@ -128,13 +130,14 @@ class KernelPCovC(LinearClassifierMixin, _BaseKPCov):
     ----------
     classifier : estimator object
         The linear classifier passed for fitting. If pre-fitted, it is assummed
-        to be fit on a precomputed kernel K and Y.
+        to be fit on a precomputed kernel :math:`\mathbf{K}` and :math:`\mathbf{Y}`.
 
     z_classifier_ : estimator object
-        The linear classifier fit between the computed kernel K and Y.
+        The linear classifier fit between the computed kernel :math:`\mathbf{K}`
+        and :math:`\mathbf{Y}`.
 
     classifier_ : estimator object
-        The linear classifier fit between T and Y.
+        The linear classifier fit between :math:`\mathbf{T}` and :math:`\mathbf{Y}`.
 
     pt__: numpy.darray of size :math:`({n_{components}, n_{components}})`
         pseudo-inverse of the latent-space projection, which
@@ -166,7 +169,7 @@ class KernelPCovC(LinearClassifierMixin, _BaseKPCov):
     >>> from skmatter.decomposition import KernelPCovC
     >>> from sklearn.preprocessing import StandardScaler
     >>> X = np.array([[-2, 3, -1, 0], [2, 0, -3, 1], [3, 0, -1, 3], [2, -2, 1, 0]])
-    >>> X = scaler.fit_transform(X)
+    >>> X = StandardScaler().fit_transform(X)
     >>> Y = np.array([[2], [0], [1], [2]])
     >>> kpcovc = KernelPCovC(
     ...     mixing=0.1,
@@ -177,12 +180,12 @@ class KernelPCovC(LinearClassifierMixin, _BaseKPCov):
     >>> kpcovc.fit(X, Y)
     KernelPCovC(gamma=1, kernel='rbf', mixing=0.1, n_components=2)
     >>> kpcovc.transform(X)
-    array([[-4.45970689e-01  8.95327566e-06]
-           [ 4.52745933e-01  5.54810948e-01]
-           [ 4.52881359e-01 -5.54708315e-01]
-           [-4.45921092e-01 -7.32157649e-05]])
+    array([[-4.45970689e-01,  8.95327566e-06],
+           [ 4.52745933e-01,  5.54810948e-01],
+           [ 4.52881359e-01, -5.54708315e-01],
+           [-4.45921092e-01, -7.32157649e-05]])
     >>> kpcovc.predict(X)
-    array([2 0 1 2])
+    array([2, 0, 1, 2])
     >>> kpcovc.score(X, Y)
     1.0
     """  # NoQa: E501
@@ -224,7 +227,17 @@ class KernelPCovC(LinearClassifierMixin, _BaseKPCov):
         self.classifier = classifier
 
     def fit(self, X, Y, W=None):
-        r"""Fit the model with X and Y.
+        r"""Fit the model with X and Y. A computed kernel K is
+        derived from X, and W is taken from the
+        coefficients of a linear classifier fit between K and Y to compute
+        Z:
+
+        .. math::
+            \mathbf{Z} = \mathbf{K} \mathbf{W}
+
+        We then call either `_fit_feature_space` or `_fit_sample_space`,
+        using Z as our approximation of Y. Finally, we refit a classifier on
+        T and Y to obtain :math:`\mathbf{P}_{TZ}`.
 
         Parameters
         ----------
@@ -233,15 +246,15 @@ class KernelPCovC(LinearClassifierMixin, _BaseKPCov):
             n_features is the number of features.
 
             It is suggested that :math:`\mathbf{X}` be centered by its column-
-            means and scaled. If features are related, the matrix should be scaled
-            to have unit variance, otherwise :math:`\mathbf{X}` should be
-            scaled so that each feature has a variance of 1 / n_features.
+            means and scaled. If features are related, the matrix should be
+            scaled to have unit variance, otherwise :math:`\mathbf{X}` should
+            be scaled so that each feature has a variance of 1 / n_features.
 
         Y : numpy.ndarray, shape (n_samples,)
             Training data, where n_samples is the number of samples.
 
-        W : numpy.ndarray, shape (n_features, n_properties)
-            Classification weights, optional when classifier=`precomputed`. If
+        W : numpy.ndarray, shape (n_features, n_classes)
+            Classification weights, optional when classifier = `precomputed`. If
             not passed, it is assumed that the weights will be taken from a
             linear classifier fit between K and Y.
 
@@ -254,23 +267,14 @@ class KernelPCovC(LinearClassifierMixin, _BaseKPCov):
         check_classification_targets(Y)
         self.classes_ = np.unique(Y)
 
-        # from BaseSVC - we only do this once since we don't want to recompute gamma for
-        #  each _get_kernel call (this would then fail check_methods_subset_invariance)
-        sparse = sp.issparse(X)
-        if self.gamma == "scale":
-            X_var = (X.multiply(X)).mean() - (X.mean()) ** 2 if sparse else X.var()
-            self.gamma_ = 1.0 / (X.shape[1] * X_var) if X_var != 0 else 1.0
-        elif self.gamma == "auto":
-            self.gamma_ = 1.0 / X.shape[1]
-        else:
-            self.gamma_ = self.gamma
-
         super().fit(X)
 
         K = super()._get_kernel(X)
+
         if self.center:
             self.centerer_ = KernelNormalizer()
             K = self.centerer_.fit_transform(K)
+
         compatible_classifiers = (
             LogisticRegression,
             LogisticRegressionCV,
@@ -297,20 +301,25 @@ class KernelPCovC(LinearClassifierMixin, _BaseKPCov):
             else:
                 classifier = self.classifier
 
+            if hasattr(classifier, "max_iter") and (
+                classifier.max_iter is None or classifier.max_iter < 500
+            ):
+                classifier.max_iter = 500  # for convergence warnings
+
             # Check if classifier is fitted; if not, fit with precomputed K
             self.z_classifier_ = check_cl_fit(classifier, K, Y)
             W = self.z_classifier_.coef_.T.reshape(K.shape[1], -1)
 
         else:
             # If precomputed, use default classifier to predict Y from T
-            classifier = LogisticRegression()
+            classifier = LogisticRegression(max_iter=500)
             if W is None:
                 W = LogisticRegression().fit(K, Y).coef_.T
                 W = W.reshape(K.shape[1], -1)
 
         Z = K @ W
 
-        self._fit_gram(K, Z, W)
+        self._fit(K, Z, W)
 
         self.ptk_ = self.pt__ @ K
         # ("KPCovc"+str(self.ptk_[:10][1]))
@@ -389,7 +398,31 @@ class KernelPCovC(LinearClassifierMixin, _BaseKPCov):
         return super().inverse_transform(T)
 
     def decision_function(self, X=None, T=None):
-        """Predicts confidence scores from X or T."""
+        r"""Predicts confidence scores from X or T.
+
+        .. math::
+            \mathbf{Z} = \mathbf{T} \mathbf{P}_{TZ}
+                       = \mathbf{K} \mathbf{P}_{KT} \mathbf{P}_{TZ}
+                       = \mathbf{K} \mathbf{P}_{KZ}
+
+        Parameters
+        ----------
+        X : ndarray, shape(n_samples, n_features)
+            Original data for which we want to get confidence scores,
+            where n_samples is the number of samples and n_features is the
+            number of features.
+
+        T : ndarray, shape (n_samples, n_components)
+            Projected data for which we want to get confidence scores,
+            where n_samples is the number of samples and n_components is the
+            number of components.
+
+        Returns
+        -------
+        Z : numpy.ndarray, shape (n_samples,) or (n_samples, n_classes)
+            Confidence scores. For binary classification, has shape `(n_samples,)`,
+            for multiclass classification, has shape `(n_samples, n_classes)`
+        """
         check_is_fitted(self, attributes=["pkz_", "ptz_"])
 
         if X is None and T is None:

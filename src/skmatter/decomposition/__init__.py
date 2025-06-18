@@ -16,7 +16,8 @@ proposed in [Jorgensen2025]_, which can similarly be used for classification pro
 [Helfrecht2020]_ introduced the non-linear version of PCovR,
 Kernel Principal Covariates Regression (KPCovR), where the mixing parameter α
 now interpolates between kernel ridge regression (:math:`\alpha = 0`) and
-kernel principal components analysis (KPCA, :math:`\alpha = 1`).
+kernel principal components analysis (KPCA, :math:`\alpha = 1`). A non-linear version
+of PCovC, Kernel Principal Covariates Classification (KPCovC), is also provided.
 
 The module includes:
 
@@ -30,6 +31,8 @@ The module includes:
 * :ref:`KPCovR-api` the Kernel Principal Covariates Regression.
   A kernel-based variation on the
   original PCovR method, proposed in [Helfrecht2020]_.
+* :ref:`KPCovC-api` the Kernel Principal Covariates Classification.
+  A kernel-based modification on the original PCovC method.
 """
 
 from ._pcov import _BasePCov
@@ -40,8 +43,6 @@ from ._pcovc import PCovC
 
 from ._kernel_pcovr import KernelPCovR
 from ._kernel_pcovc import KernelPCovC
-
-from ._kernel_pcovr import KernelPCovR
 
 __all__ = [
     "_BasePCov",
