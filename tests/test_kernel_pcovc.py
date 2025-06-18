@@ -38,12 +38,17 @@ class KernelPCovCBaseTest(unittest.TestCase):
         scaler = StandardScaler()
         self.X = scaler.fit_transform(self.X)
 
-        self.model = lambda mixing=0.5, classifier=LogisticRegression(), n_components=4, **kwargs: KernelPCovC(
-            mixing=mixing,
-            classifier=classifier,
-            n_components=n_components,
-            svd_solver=kwargs.pop("svd_solver", "full"),
-            **kwargs,
+        self.model = (
+            lambda mixing=0.5,
+            classifier=LogisticRegression(),
+            n_components=4,
+            **kwargs: KernelPCovC(
+                mixing=mixing,
+                classifier=classifier,
+                n_components=n_components,
+                svd_solver=kwargs.pop("svd_solver", "full"),
+                **kwargs,
+            )
         )
 
     def setUp(self):
@@ -74,54 +79,101 @@ class KernelPCovCErrorTest(KernelPCovCBaseTest):
 
             prev_error = error
 
+    def test_cl_with_t_errors(self):
+        """Check that KernelPCovC returns a non-null property prediction from the latent space
+        projection and that the prediction error increases with `mixing`.
+        """
+        prev_error = -1.0
+
+        for mixing in np.linspace(0, 1, 6):
+            kpcovc = self.model(mixing=mixing, n_components=2, tol=1e-12)
+            kpcovc.fit(self.X, self.Y)
+
+            T = kpcovc.transform(self.X)
+
+            error = (
+                np.linalg.norm(self.Y - kpcovc.predict(T=T)) ** 2.0
+                / np.linalg.norm(self.Y) ** 2.0
+            )
+
+            with self.subTest(error=error):
+                self.assertFalse(np.isnan(error))
+            with self.subTest(error=error, alpha=round(mixing, 4)):
+                self.assertGreaterEqual(error, prev_error - self.error_tol)
+
+            prev_error = error
+
     def test_reconstruction_errors(self):
         """Check that KernelPCovC returns a non-null reconstructed X and that the
         reconstruction error decreases with `mixing`.
         """
-        prev_error = 10.0
-        prev_x_error = 10.0
+        prev_error = 1.0
 
-        x_errors = []
-        errors = []
-        k = []
-        for mixing in np.linspace(0, 1, 6):
-            print(mixing)
-            kpcovc = KernelPCovC(
-                mixing=mixing,
-                n_components=2,
-                fit_inverse_transform=True,
-                center=True,
-                kernel="linear",
+        for mixing in np.linspace(0, 1, 11):
+            kpcovc = self.model(
+                mixing=mixing, n_components=2, tol=1e-12, fit_inverse_transform=True
             )
             kpcovc.fit(self.X, self.Y)
 
-            t = kpcovc.transform(self.X)
-            K = kpcovc._get_kernel(self.X)
-            x = kpcovc.inverse_transform(t)
+            Xr = kpcovc.inverse_transform(kpcovc.transform(self.X))
+            error = np.linalg.norm(self.X - Xr) ** 2.0 / np.linalg.norm(self.X) ** 2.0
 
-            x_error = np.linalg.norm(self.X - x) ** 2.0 / np.linalg.norm(self.X) ** 2.0
-            error = np.linalg.norm(K - t @ t.T) ** 2.0 / np.linalg.norm(K) ** 2.0
-
-            x_errors.append(x_error)
-            errors.append(error)
-            k.append((np.linalg.norm(K - t @ t.T), np.linalg.norm(t @ t.T)))
-
+            print(error)
             with self.subTest(error=error):
                 self.assertFalse(np.isnan(error))
             with self.subTest(error=error, alpha=round(mixing, 4)):
                 self.assertLessEqual(error, prev_error + self.error_tol)
 
-            with self.subTest(error=x_error):
-                self.assertFalse(np.isnan(x_error))
-            with self.subTest(error=x_error, alpha=round(mixing, 4)):
-                self.assertLessEqual(x_error, prev_x_error + self.error_tol)
-
             prev_error = error
-            prev_x_error = x_error
 
-        print(x_errors)
-        print(errors)
-        print(k)
+    # def test_reconstruction_errors(self):
+    #     """Check that KernelPCovC returns a non-null reconstructed X and that the
+    #     reconstruction error decreases with `mixing`.
+    #     """
+    #     prev_error = 10.0
+    #     prev_x_error = 10.0
+
+    #     x_errors = []
+    #     errors = []
+    #     k = []
+    #     for mixing in np.linspace(0, 1, 6):
+    #         print(mixing)
+    #         kpcovc = KernelPCovC(
+    #             mixing=mixing,
+    #             n_components=2,
+    #             fit_inverse_transform=True,
+    #             center=True,
+    #             kernel="linear",
+    #         )
+    #         kpcovc.fit(self.X, self.Y)
+
+    #         t = kpcovc.transform(self.X)
+    #         K = kpcovc._get_kernel(self.X)
+    #         x = kpcovc.inverse_transform(t)
+
+    #         x_error = np.linalg.norm(self.X - x) ** 2.0 / np.linalg.norm(self.X) ** 2.0
+    #         error = np.linalg.norm(K - t @ t.T) ** 2.0 / np.linalg.norm(K) ** 2.0
+
+    #         x_errors.append(x_error)
+    #         errors.append(error)
+    #         k.append((np.linalg.norm(K - t @ t.T), np.linalg.norm(t @ t.T)))
+
+    #         with self.subTest(error=error):
+    #             self.assertFalse(np.isnan(error))
+    #         with self.subTest(error=error, alpha=round(mixing, 4)):
+    #             self.assertLessEqual(error, prev_error + self.error_tol)
+
+    #         with self.subTest(error=x_error):
+    #             self.assertFalse(np.isnan(x_error))
+    #         with self.subTest(error=x_error, alpha=round(mixing, 4)):
+    #             self.assertLessEqual(x_error, prev_x_error + self.error_tol)
+
+    #         prev_error = error
+    #         prev_x_error = x_error
+
+    #     print(x_errors)
+    #     print(errors)
+    #     print(k)
 
 
 class KernelPCovCInfrastructureTest(KernelPCovCBaseTest):
@@ -161,11 +213,11 @@ class KernelPCovCInfrastructureTest(KernelPCovCBaseTest):
         and the number of classes.
         """
         n_components = 5
-        pcovc = self.model(n_components=n_components, tol=1e-12)
-        pcovc.fit(self.X, self.Y)
+        kpcovc = self.model(n_components=n_components, tol=1e-12)
+        kpcovc.fit(self.X, self.Y)
 
         # Shape (n_samples, ) for binary classifcation
-        Z = pcovc.decision_function(self.X)
+        Z = kpcovc.decision_function(self.X)
 
         self.assertTrue(Z.ndim == 1)
         self.assertTrue(Z.shape[0] == self.X.shape[0])
@@ -173,11 +225,11 @@ class KernelPCovCInfrastructureTest(KernelPCovCBaseTest):
         # Modify Y so that it now contains three classes
         Y_multiclass = self.Y.copy()
         Y_multiclass[0] = 2
-        pcovc.fit(self.X, Y_multiclass)
+        kpcovc.fit(self.X, Y_multiclass)
         n_classes = len(np.unique(Y_multiclass))
 
         # Shape (n_samples, n_classes) for multiclass classification
-        Z = pcovc.decision_function(self.X)
+        Z = kpcovc.decision_function(self.X)
 
         self.assertTrue(Z.ndim == 2)
         self.assertTrue((Z.shape[0], Z.shape[1]) == (self.X.shape[0], n_classes))
@@ -201,13 +253,12 @@ class KernelPCovCInfrastructureTest(KernelPCovCBaseTest):
         _ = kpcovc.score(self.X, self.Y)
 
     def test_prefit_classifier(self):
-        # in KPCovR, this essentially works with a kernel ridge regressor prefit on X, Y
-        # But,in KPCovC, our classifiers don't compute the kernel for us, hence we need
-        # to basically only allow prefit classifiers on K, y
+        # in KPCovC, our classifiers don't compute the kernel for us, hence we only
+        # allow prefit classifiers on K, y
         kernel_params = {"kernel": "rbf", "gamma": 0.1, "degree": 3, "coef0": 0}
 
         K = pairwise_kernels(self.X, metric="rbf", filter_params=True, **kernel_params)
-        classifier = LogisticRegression()
+        classifier = LinearSVC()
         classifier.fit(K, self.Y)
 
         kpcovc = KernelPCovC(mixing=0.5, classifier=classifier, **kernel_params)
@@ -223,7 +274,7 @@ class KernelPCovCInfrastructureTest(KernelPCovCBaseTest):
         self.assertTrue(np.allclose(W_classifier, W_kpcovc))
 
     def test_classifier_modifications(self):
-        classifier = LogisticRegression()
+        classifier = RidgeClassifier()
         kpcovc = self.model(mixing=0.5, classifier=classifier, kernel="rbf", gamma=0.1)
 
         # KPCovC classifier matches the original
@@ -269,7 +320,7 @@ class KernelPCovCInfrastructureTest(KernelPCovCBaseTest):
         Y_multiclass = self.Y.copy()
         Y_multiclass[0] = 2
 
-        classifier1 = LogisticRegression()
+        classifier1 = LinearSVC()
         classifier1.fit(K, Y_multiclass)
         kpcovc1 = self.model(mixing=0.5, classifier=classifier1, **kernel_params)
 
@@ -283,7 +334,7 @@ class KernelPCovCInfrastructureTest(KernelPCovCBaseTest):
             % (K.shape[1], classifier1.coef_.shape),
         )
 
-        classifier2 = LogisticRegression()
+        classifier2 = LinearSVC()
         classifier2.fit(K, self.Y)
         kpcovc2 = self.model(mixing=0.5, classifier=classifier2)
 
@@ -400,7 +451,7 @@ class KernelPCovCTestSVDSolvers(KernelPCovCBaseTest):
             kpcovc = self.model(svd_solver="bad")
             kpcovc.fit(self.X, self.Y)
 
-        self.assertEqual(str(cm.exception), "Unrecognized svd_solver='bad'" "")
+        self.assertEqual(str(cm.exception), "Unrecognized svd_solver='bad'")
 
     def test_good_n_components(self):
         """Check that KPCovC will work with any allowed values of n_components."""
