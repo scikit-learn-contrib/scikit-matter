@@ -479,7 +479,6 @@ class PCovCInfrastructureTest(PCovCBaseTest):
         pcovc3.fit(self.X, self.Y)
         t3 = pcovc3.transform(self.X)
 
-        print(np.linalg.norm(t1), np.linalg.norm(t2), np.linalg.norm(t3))
         self.assertTrue(np.linalg.norm(t3 - t2) < self.error_tol)
         self.assertTrue(np.linalg.norm(t3 - t1) < self.error_tol)
 

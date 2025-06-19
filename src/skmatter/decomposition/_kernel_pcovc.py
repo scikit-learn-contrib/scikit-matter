@@ -297,10 +297,11 @@ class KernelPCovC(LinearClassifierMixin, _BaseKPCov):
             else:
                 classifier = self.classifier
 
+            # for convergence warnings
             if hasattr(classifier, "max_iter") and (
                 classifier.max_iter is None or classifier.max_iter < 500
             ):
-                classifier.max_iter = 500  # for convergence warnings
+                classifier.max_iter = 500
 
             # Check if classifier is fitted; if not, fit with precomputed K
             self.z_classifier_ = check_cl_fit(classifier, K, Y)
@@ -318,7 +319,7 @@ class KernelPCovC(LinearClassifierMixin, _BaseKPCov):
         self._fit(K, Z, W)
 
         self.ptk_ = self.pt__ @ K
-        # ("KPCovc"+str(self.ptk_[:10][1]))
+
         if self.fit_inverse_transform:
             self.ptx_ = self.pt__ @ X
 

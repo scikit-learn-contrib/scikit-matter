@@ -106,10 +106,6 @@ class _BaseKPCov(_BasePCA, LinearModel, metaclass=ABCMeta):
         """Fit the model with the computed kernel and approximated properties."""
         K_tilde = pcovr_kernel(mixing=self.mixing, X=K, Y=Yhat, kernel="precomputed")
 
-        # print("KPCovC K: " + str(K[:5, 0]))
-        # print("KPCovC Yhat: " + str(Yhat[:5, 0]))
-        # print("KPCovC K_tilde: " + str(K_tilde[:5, 0]))
-
         if self.fit_svd_solver_ == "full":
             _, S, Vt = self._decompose_full(K_tilde)
         elif self.fit_svd_solver_ in ["arpack", "randomized"]:

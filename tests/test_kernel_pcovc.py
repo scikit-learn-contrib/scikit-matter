@@ -111,7 +111,6 @@ class KernelPCovCErrorTest(KernelPCovCBaseTest):
             Xr = kpcovc.inverse_transform(kpcovc.transform(self.X))
             error = np.linalg.norm(self.X - Xr) ** 2.0 / np.linalg.norm(self.X) ** 2.0
 
-            print(error)
             with self.subTest(error=error):
                 self.assertFalse(np.isnan(error))
             with self.subTest(error=error, alpha=round(mixing, 4)):
@@ -198,10 +197,10 @@ class KernelPCovCInfrastructureTest(KernelPCovCBaseTest):
 
     def test_prefit_classifier(self):
         # in KPCovC, our classifiers don't compute the kernel for us, hence we only
-        # allow prefit classifiers on K, y
+        # allow prefit classifiers on K and y
         kernel_params = {"kernel": "rbf", "gamma": 0.1, "degree": 3, "coef0": 0}
-
         K = pairwise_kernels(self.X, metric="rbf", filter_params=True, **kernel_params)
+
         classifier = LinearSVC()
         classifier.fit(K, self.Y)
 
