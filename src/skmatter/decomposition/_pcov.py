@@ -1,11 +1,14 @@
+from abc import ABCMeta, abstractmethod
 import numbers
 import warnings
 
 import numpy as np
 from numpy.linalg import LinAlgError
+
 from scipy import linalg
 from scipy.linalg import sqrtm as MatrixSqrt
 from scipy.sparse.linalg import svds
+
 from sklearn.decomposition._base import _BasePCA
 from sklearn.decomposition._pca import _infer_dimension
 from sklearn.linear_model._base import LinearModel
@@ -17,7 +20,8 @@ from sklearn.utils.validation import check_is_fitted
 from skmatter.utils import pcovr_covariance, pcovr_kernel
 
 
-class _BasePCov(_BasePCA, LinearModel):
+class _BasePCov(_BasePCA, LinearModel, metaclass=ABCMeta):
+    @abstractmethod
     def __init__(
         self,
         mixing=0.5,
@@ -38,6 +42,7 @@ class _BasePCov(_BasePCA, LinearModel):
         self.random_state = random_state
         self.whiten = whiten
 
+    @abstractmethod
     def fit(self, X):
         """Contains the common functionality for the PCovR and PCovC fit methods,
         but leaves the rest of the functionality to the subclass.
@@ -146,6 +151,7 @@ class _BasePCov(_BasePCA, LinearModel):
         )
 
         P = (self.mixing * X.T) + (1.0 - self.mixing) * W @ Yhat.T
+
         S_sqrt_inv = np.diagflat([1.0 / np.sqrt(s) if s > self.tol else 0.0 for s in S])
         T = Vt.T @ S_sqrt_inv
 
