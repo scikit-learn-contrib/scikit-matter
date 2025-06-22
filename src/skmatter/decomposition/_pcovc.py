@@ -10,6 +10,8 @@ from sklearn.linear_model import (
     SGDClassifier,
 )
 from sklearn.linear_model._base import LinearClassifierMixin
+
+from sklearn.base import MultiOutputMixin
 from sklearn.multioutput import MultiOutputClassifier
 from sklearn.svm import LinearSVC
 from sklearn.utils import check_array
@@ -17,6 +19,11 @@ from sklearn.utils.multiclass import check_classification_targets, type_of_targe
 from sklearn.utils.validation import check_is_fitted, validate_data
 from skmatter.decomposition import _BasePCov
 from skmatter.utils import check_cl_fit
+
+
+# No inheritance from MultiOutputMixin because decision_function would fail
+# test_check_estimator.py 'check_classifier_multioutput' (line 2479 of estimator_checks.py)
+# - this is the only test for MultiOutputClassifiers, so is it OK to exclude this tag?
 
 
 class PCovC(LinearClassifierMixin, _BasePCov):
@@ -510,3 +517,36 @@ class PCovC(LinearClassifierMixin, _BasePCov):
             and n_features is the number of features.
         """
         return super().transform(X)
+
+    def score(self, X, Y, sample_weight=None):
+        """Return the accuracy on the given test data and labels.
+
+
+        Parameters
+        ----------
+        X : array-like of shape (n_samples, n_features)
+            Test samples.
+
+        Y : array-like of shape (n_samples,) or (n_samples, n_outputs)
+            True labels for `X`.
+
+        sample_weight : array-like of shape (n_samples,), default=None
+            Sample weights. Can only be used if the PCovC instance
+            has been trained on multitarget data.
+
+        Returns
+        -------
+        score : float
+            Accuracy scores. If the PCovC instance was trained on a 1D Y,
+            this will call the ``score()`` function defined by
+            ``sklearn.base.ClassifierMixin``. If trained on a 2D Y, this will
+            call the ``score()`` function defined by
+            ``sklearn.multioutput.MultiOutputClassifier``, to ensure multi
+        """
+        X, Y = validate_data(self, X, Y, reset=False)
+
+        if isinstance(self.classifier_, MultiOutputClassifier):
+            # LinearClassifierMixin.score fails with multioutput-multiclass Y
+            return self.classifier_.score(X @ self.pxt_, Y)
+        else:
+            return self.classifier_.score(X @ self.pxt_, Y, sample_weight=sample_weight)

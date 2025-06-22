@@ -414,7 +414,7 @@ class PCovR(RegressorMixin, MultiOutputMixin, _BasePCov):
             Negative sum of the loss in reconstructing X from the latent-space
             projection T and the loss in predicting Y from the latent-space projection T
         """
-        X, y = validate_data(self, X, y, reset=False)
+        X, y = validate_data(self, X, y, reset=False, multi_output=True)
 
         if T is None:
             T = self.transform(X)
