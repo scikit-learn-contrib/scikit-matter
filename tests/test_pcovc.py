@@ -3,10 +3,11 @@ import warnings
 
 import numpy as np
 from sklearn import exceptions
-from sklearn.calibration import LinearSVC
 from sklearn.datasets import load_iris as get_dataset
 from sklearn.decomposition import PCA
 from sklearn.linear_model import LogisticRegression, RidgeClassifier
+from sklearn.svm import LinearSVC
+from sklearn.multioutput import MultiOutputClassifier
 from sklearn.naive_bayes import GaussianNB
 from sklearn.preprocessing import StandardScaler
 from sklearn.utils.validation import check_X_y
@@ -95,8 +96,9 @@ class PCovCErrorTest(PCovCBaseTest):
 
                 pcovc.fit(self.X, self.Y)
                 Yp = pcovc.predict(self.X)
+
                 self.assertLessEqual(
-                    np.linalg.norm(Yp - Yhat) ** 2.0 / np.linalg.norm(Yhat) ** 2.0,
+                    np.linalg.norm(Yp - Yhat) ** 2.0 / np.linalg.norm(Yp) ** 2.0,
                     self.error_tol,
                 )
 
@@ -574,6 +576,31 @@ class PCovCInfrastructureTest(PCovCBaseTest):
             "to have shape (%d, %d) but got shape %r"
             % (len(pcovc_multi.classes_), self.X.shape[1], cl_binary.coef_.shape),
         )
+
+
+class PCovCMultiOutputTest(PCovCBaseTest):
+
+    def test_projector_shapes(self):
+        pass
+
+    def test_decision_function(self):
+        pcovc = PCovC(
+            classifier=MultiOutputClassifier(LogisticRegression()), n_components=2
+        )
+
+        Y_double = np.column_stack((self.Y, self.Y[::-1]))
+        pcovc.fit(self.X, Y_double)
+
+        Z = pcovc.decision_function(self.X)
+
+        # list of (n_samples, n_classes) arrays
+        self.assertEqual(len(Z), Y_double.shape[1])
+
+        for est, z_slice in zip(pcovc.z_classifier_.estimators_, Z):
+            with self.subTest(type="z_arrays"):
+                # each array is shape (n_samples, n_classes)
+                self.assertEqual(self.X.shape[0], z_slice.shape[0])
+                self.assertEqual(est.coef_.shape[0], z_slice.shape[1])
 
 
 if __name__ == "__main__":
