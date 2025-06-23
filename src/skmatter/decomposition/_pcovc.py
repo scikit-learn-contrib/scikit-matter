@@ -174,15 +174,18 @@ class PCovC(LinearClassifierMixin, _BasePCov):
         the projector, or weights, from the input space :math:`\mathbf{X}`
         to the latent-space projection :math:`\mathbf{T}`
 
-    pxz_ : ndarray of size :math:`({n_{features}, })`, :math:`({n_{features}, n_{classes}})`, \
-            or :math:`({n_{components}, n_{classes}*n_{outputs}})`
+    pxz_ : ndarray of size :math:`({n_{features}, })`, :math:`({n_{features}, n_{classes}})`
         the projector, or weights, from the input space :math:`\mathbf{X}`
-        to the class confidence scores :math:`\mathbf{Z}`
+        to the class confidence scores :math:`\mathbf{Z}`. In the multioutput case,
+        has shape , :math:`({n_{features}, n_{classes}*n_{outputs}})`, a flattened form
+        of a 3D tensor.
 
     ptz_ : ndarray of size :math:`({n_{components}, })`, :math:`({n_{components}, n_{classes}})` \
             or :math:`({n_{components}, n_{classes}*n_{outputs}})`
         the projector, or weights, from the latent-space projection
-        :math:`\mathbf{T}` to the class confidence scores :math:`\mathbf{Z}`
+        :math:`\mathbf{T}` to the class confidence scores :math:`\mathbf{Z}`. 
+        In the multioutput case, has shape , :math:`({n_{components}, n_{classes}*n_{outputs}})`, 
+        a flattened form of a 3D tensor.
 
     explained_variance_ : numpy.ndarray of shape (n_components,)
         The amount of variance explained by each of the selected components.
@@ -262,7 +265,7 @@ class PCovC(LinearClassifierMixin, _BasePCov):
 
         Y : numpy.ndarray, shape (n_samples,) or (n_samples, n_outputs)
             Training data, where n_samples is the number of samples and
-            n_outputs is the number of outputs. If classifier parameter is an instance
+            n_outputs is the number of outputs. If ``self.classifier`` is an instance
             of ``sklearn.multioutput.MultiOutputClassifier()``, Y can be of shape
             (n_samples, n_outputs).
 
@@ -276,6 +279,7 @@ class PCovC(LinearClassifierMixin, _BasePCov):
         X, Y = validate_data(self, X, Y, multi_output=True, y_numeric=False)
         check_classification_targets(Y)
         self.classes_ = np.unique(Y)
+        self.n_outputs = Y.shape[1]
 
         super()._set_fit_params(X)
 
@@ -300,35 +304,23 @@ class PCovC(LinearClassifierMixin, _BasePCov):
                 ", or `precomputed`"
             )
 
+        # if type_of_target(Y) == "binary"
+
         if self.classifier != "precomputed":
             if self.classifier is None:
-                if Y.ndim < 2:
-                    classifier = LogisticRegression()
-                else:
-                    classifier = MultiOutputClassifier(estimator=LogisticRegression())
+                classifier = LogisticRegression()
             else:
                 classifier = self.classifier
 
             self.z_classifier_ = check_cl_fit(classifier, X, Y)
-
-            if isinstance(self.z_classifier_, MultiOutputClassifier):
-                W = np.hstack([est_.coef_.T for est_ in self.z_classifier_.estimators_])
-            else:
-                W = self.z_classifier_.coef_.T.reshape(X.shape[1], -1)
+            W = self.z_classifier_.coef_.T.reshape(X.shape[1], -1)
 
         else:
-            if Y.ndim < 2:
-                # if self.classifier = "precomputed", use default classifier to predict Y from T
-                classifier = LogisticRegression()
-                if W is None:
-                    W = LogisticRegression().fit(X, Y).coef_.T
-                    W = W.reshape(X.shape[1], -1)
-
-            else:
-                classifier = MultiOutputClassifier(estimator=LogisticRegression())
-                if W is None:
-                    _ = MultiOutputClassifier(estimator=LogisticRegression).fit(X, Y)
-                    W = np.hstack([est_.coef_.T for est_ in _.estimators_])
+            # If precomputed, use default classifier to predict Y from T
+            classifier = LogisticRegression()
+            if W is None:
+                W = LogisticRegression().fit(X, Y).coef_.T
+                W = W.reshape(X.shape[1], -1)
 
         print(f"X: {X.shape}")
         print(f"W: {W.shape}")
@@ -460,7 +452,7 @@ class PCovC(LinearClassifierMixin, _BasePCov):
                 n_outputs such arrays if n_outputs > 1
             Confidence scores. For binary classification, has shape `(n_samples,)`,
             for multiclass classification, has shape `(n_samples, n_classes)`. If n_outputs > 1,
-            the list returned can contain such arrays with differing shapes depending on the
+            the list returned can contain arrays with differing shapes depending on the
             number of classes in each output of Y.
         """
         check_is_fitted(self, attributes=["pxz_", "ptz_"])
@@ -518,35 +510,35 @@ class PCovC(LinearClassifierMixin, _BasePCov):
         """
         return super().transform(X)
 
-    def score(self, X, Y, sample_weight=None):
-        """Return the accuracy on the given test data and labels.
+    # def score(self, X, Y, sample_weight=None):
+    #     """Return the accuracy on the given test data and labels. Contains support
+    #     for multiclass-multioutput data.
 
+    #     Parameters
+    #     ----------
+    #     X : array-like of shape (n_samples, n_features)
+    #         Test samples.
 
-        Parameters
-        ----------
-        X : array-like of shape (n_samples, n_features)
-            Test samples.
+    #     Y : array-like of shape (n_samples,) or (n_samples, n_outputs)
+    #         True labels for `X`.
 
-        Y : array-like of shape (n_samples,) or (n_samples, n_outputs)
-            True labels for `X`.
+    #     sample_weight : array-like of shape (n_samples,), default=None
+    #         Sample weights. Can only be used if the PCovC instance
+    #         has been trained on single-target data.
 
-        sample_weight : array-like of shape (n_samples,), default=None
-            Sample weights. Can only be used if the PCovC instance
-            has been trained on multitarget data.
+    #     Returns
+    #     -------
+    #     score : float
+    #         Accuracy scores. If the PCovC instance was trained on a 1D Y,
+    #         this will call the ``score()`` function defined by
+    #         ``sklearn.base.ClassifierMixin``. If trained on a 2D Y, this will
+    #         call the ``score()`` function defined by
+    #         ``sklearn.multioutput.MultiOutputClassifier``.
+    #     """
+    #     X, Y = validate_data(self, X, Y, reset=False)
 
-        Returns
-        -------
-        score : float
-            Accuracy scores. If the PCovC instance was trained on a 1D Y,
-            this will call the ``score()`` function defined by
-            ``sklearn.base.ClassifierMixin``. If trained on a 2D Y, this will
-            call the ``score()`` function defined by
-            ``sklearn.multioutput.MultiOutputClassifier``, to ensure multi
-        """
-        X, Y = validate_data(self, X, Y, reset=False)
-
-        if isinstance(self.classifier_, MultiOutputClassifier):
-            # LinearClassifierMixin.score fails with multioutput-multiclass Y
-            return self.classifier_.score(X @ self.pxt_, Y)
-        else:
-            return self.classifier_.score(X @ self.pxt_, Y, sample_weight=sample_weight)
+    #     if isinstance(self.classifier_, MultiOutputClassifier):
+    #         # LinearClassifierMixin.score fails with multioutput-multiclass Y
+    #         return self.classifier_.score(X @ self.pxt_, Y)
+    #     else:
+    #         return self.classifier_.score(X @ self.pxt_, Y, sample_weight=sample_weight)
