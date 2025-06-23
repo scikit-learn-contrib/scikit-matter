@@ -231,7 +231,9 @@ class PCovR(RegressorMixin, MultiOutputMixin, _BasePCov):
             passed, it is assumed that `W = np.linalg.lstsq(X, Y, self.tol)[0]`
         """
         X, Y = validate_data(self, X, Y, y_numeric=True, multi_output=True)
-        super().fit(X)
+        self.n_outputs = Y.shape[1]
+
+        super()._initialize_params(X)
 
         compatible_regressors = (LinearRegression, Ridge, RidgeCV)
 
