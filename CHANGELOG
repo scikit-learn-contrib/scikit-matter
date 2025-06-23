@@ -13,6 +13,8 @@ The rules for CHANGELOG file:
 
 Unreleased
 ----------
+- Fix typos and make minor edits to ``PCovC`` and ``KPCovR`` docs (#254)
+- Fix assertTrue typos in ``KPCovR`` testing suite (#254)
 - Add ``_BaseKPCov`` class (#254)
 - Add ``KernelPCovC`` class that inherits shared functionality from ``_BaseKPCov`` (#254)
 - Add ``KernelPCovC`` testing suite and examples (#254)
