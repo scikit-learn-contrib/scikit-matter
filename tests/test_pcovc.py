@@ -3,7 +3,7 @@ import warnings
 
 import numpy as np
 from sklearn import exceptions
-from sklearn.datasets import load_iris as get_dataset
+from sklearn.datasets import load_breast_cancer as get_dataset
 from sklearn.decomposition import PCA
 from sklearn.linear_model import LogisticRegression, RidgeClassifier
 from sklearn.svm import LinearSVC

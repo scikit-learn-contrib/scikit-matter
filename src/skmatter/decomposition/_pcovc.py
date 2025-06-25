@@ -25,6 +25,8 @@ from skmatter.utils import check_cl_fit
 # test_check_estimator.py 'check_classifier_multioutput' (line 2479 of estimator_checks.py)
 # - this is the only test for MultiOutputClassifiers, so is it OK to exclude this tag?
 
+# did a search of all classifiers that inherit from MultiOutputMixin - none of them implement
+# decision function, so I don't think we need to inherit
 
 class PCovC(LinearClassifierMixin, _BasePCov):
     r"""Principal Covariates Classification (PCovC).
@@ -277,9 +279,10 @@ class PCovC(LinearClassifierMixin, _BasePCov):
            `` W = np.hstack([est_.coef_.T for est_ in classifier.estimators_])``.
         """
         X, Y = validate_data(self, X, Y, multi_output=True, y_numeric=False)
+        
         check_classification_targets(Y)
         self.classes_ = np.unique(Y)
-        self.n_outputs = Y.shape[1]
+        self.n_outputs = 1 if Y.ndim == 1 else Y.shape[1]
 
         super()._set_fit_params(X)
 
@@ -302,9 +305,15 @@ class PCovC(LinearClassifierMixin, _BasePCov):
                 "Classifier must be an instance of `"
                 f"{'`, `'.join(c.__name__ for c in compatible_classifiers)}`"
                 ", or `precomputed`"
-            )
+          )
 
-        # if type_of_target(Y) == "binary"
+        # if self.n_outputs == 1:
+        #     classifier = LogisticRegression()
+        # else:
+        #     classifier = MultiOutputClassifier(estimator=LogisticRegression())
+
+        # if self.classifier == "precomputed":
+            
 
         if self.classifier != "precomputed":
             if self.classifier is None:
@@ -313,14 +322,13 @@ class PCovC(LinearClassifierMixin, _BasePCov):
                 classifier = self.classifier
 
             self.z_classifier_ = check_cl_fit(classifier, X, Y)
-            W = self.z_classifier_.coef_.T.reshape(X.shape[1], -1)
+            W = self.z_classifier_.coef_.T
 
         else:
             # If precomputed, use default classifier to predict Y from T
             classifier = LogisticRegression()
             if W is None:
                 W = LogisticRegression().fit(X, Y).coef_.T
-                W = W.reshape(X.shape[1], -1)
 
         print(f"X: {X.shape}")
         print(f"W: {W.shape}")
