@@ -3,7 +3,7 @@ import warnings
 
 import numpy as np
 from sklearn import exceptions
-from sklearn.datasets import load_iris as get_dataset
+from sklearn.datasets import load_breast_cancer as get_dataset
 from sklearn.decomposition import PCA
 from sklearn.linear_model import LogisticRegression, RidgeClassifier
 from sklearn.multioutput import MultiOutputClassifier
@@ -426,6 +426,7 @@ class PCovCInfrastructureTest(PCovCBaseTest):
 
         # Shape (n_samples, ) for binary classifcation
         Z = pcovc.decision_function(self.X)
+        print(Z.shape)
         self.assertEqual(Z.ndim, 1)
         self.assertEqual(Z.shape[0], self.X.shape[0])
 
@@ -470,13 +471,11 @@ class PCovCInfrastructureTest(PCovCBaseTest):
         pcovc = self.model(mixing=0.5, classifier=classifier)
         pcovc.fit(self.X, self.Y)
 
-        Z_classifier = classifier.decision_function(self.X).reshape(self.X.shape[0], -1)
-        W_classifier = classifier.coef_.T.reshape(self.X.shape[1], -1)
+        Z_classifier = classifier.decision_function(self.X)
+        W_classifier = classifier.coef_.T
 
-        Z_pcovc = pcovc.z_classifier_.decision_function(self.X).reshape(
-            self.X.shape[0], -1
-        )
-        W_pcovc = pcovc.z_classifier_.coef_.T.reshape(self.X.shape[1], -1)
+        Z_pcovc = pcovc.z_classifier_.decision_function(self.X)
+        W_pcovc = pcovc.z_classifier_.coef_.T
 
         self.assertTrue(np.allclose(Z_classifier, Z_pcovc))
         self.assertTrue(np.allclose(W_classifier, W_pcovc))
@@ -485,7 +484,7 @@ class PCovCInfrastructureTest(PCovCBaseTest):
         classifier = LogisticRegression()
         classifier.fit(self.X, self.Y)
 
-        W = classifier.coef_.T.reshape(self.X.shape[1], -1)
+        W = classifier.coef_.T
         pcovc1 = self.model(mixing=0.5, classifier="precomputed", n_components=1)
         pcovc1.fit(self.X, self.Y, W)
         t1 = pcovc1.transform(self.X)

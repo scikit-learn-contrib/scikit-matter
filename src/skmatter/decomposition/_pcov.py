@@ -49,7 +49,7 @@ class _BasePCov(_BasePCA, LinearModel, metaclass=ABCMeta):
         self.whiten = whiten
 
     def _initialize_params(self, X):
-        """Initializes common fit parameters for PCovR and PCovC."""
+        """Initializes common fit parameters for he PCovR and PCovC."""
 
         # saved for inverse transformations from the latent space,
         # should be zero in the case that the features have been properly centered
