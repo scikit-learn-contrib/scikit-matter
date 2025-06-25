@@ -81,6 +81,9 @@ X_test_scaled = scaler.transform(X_test)
 #
 # PCA and PCovC
 # -------------
+#
+# Both PCA and PCovC fail to produce linearly separable latent space
+# maps. We will need a kernel method to effectively separate the moon classes.
 
 mixing = 0.10
 alpha_d = 0.5
@@ -99,11 +102,7 @@ models = {
 fig, axs = plt.subplots(1, 2, figsize=(10, 4))
 
 for ax, model in zip(axs, models):
-    t_train = (
-        model.fit_transform(X_train_scaled)
-        if isinstance(model, PCA)
-        else model.fit_transform(X_train_scaled, y_train)
-    )
+    t_train = model.fit_transform(X_train_scaled, y_train)
     t_test = model.transform(X_test_scaled)
 
     ax.scatter(t_test[:, 0], t_test[:, 1], alpha=alpha_d, cmap=cm_bright, c=y_test)
@@ -116,6 +115,11 @@ for ax, model in zip(axs, models):
 #
 # Kernel PCA and Kernel PCovC
 # ---------------------------
+#
+# A comparison of the latent spaces produced by KPCA and KPCovC is shown.
+# A logistic regression classifier is trained on the KPCA latent space (this is also
+# the default classifier used in KPCovC), and we see the comparison of the respective
+# decision boundaries and test data accuracy scores.
 
 fig, axs = plt.subplots(1, 2, figsize=(13, 6))
 
