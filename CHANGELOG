@@ -15,10 +15,7 @@ Unreleased
 ----------
 - Fix typos and make minor edits to ``PCovC`` and ``KPCovR`` docs (#254)
 - Fix assertTrue typos in ``KPCovR`` testing suite (#254)
-- Add ``_BaseKPCov`` class (#254)
-- Add ``KernelPCovC`` class that inherits shared functionality from ``_BaseKPCov`` (#254)
-- Add ``KernelPCovC`` testing suite and examples (#254)
-- Modify ``KernelPCovR`` to inherit shared functionality from ``_BaseKPCov`` (#254)
+- Add ``KernelPCovC`` class and examples (#254)
 
 0.3.0 (2025/06/12)
 ------------------
