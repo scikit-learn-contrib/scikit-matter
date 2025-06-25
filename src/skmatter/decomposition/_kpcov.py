@@ -21,6 +21,12 @@ from skmatter.utils import pcovr_kernel
 
 
 class _BaseKPCov(_BasePCA, LinearModel, metaclass=ABCMeta):
+    """Base class for KernelPCovR and KernelPCovC methods.
+
+    Warning: This class should not be used directly.
+    Use derived classes instead.
+    """
+
     @abstractmethod
     def __init__(
         self,
@@ -68,7 +74,6 @@ class _BaseKPCov(_BasePCA, LinearModel, metaclass=ABCMeta):
             X, Y, metric=self.kernel, filter_params=True, n_jobs=self.n_jobs, **params
         )
 
-    @abstractmethod
     def fit(self, X):
         """Contains the common functionality for the KPCovR and KPCovC fit methods,
         but leaves the rest of the functionality to the subclass.

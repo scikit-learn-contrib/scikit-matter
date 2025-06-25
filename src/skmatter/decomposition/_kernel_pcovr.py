@@ -10,10 +10,11 @@ from skmatter.preprocessing import KernelNormalizer
 
 
 class KernelPCovR(_BaseKPCov):
-    r"""Kernel Principal Covariates Regression, as described in [Helfrecht2020]_,
-    determines a latent-space projection :math:`\mathbf{T}` which minimizes a combined
-    loss in supervised and unsupervised tasks in the reproducing kernel Hilbert space
-    (RKHS).
+    r"""Kernel Principal Covariates Regression (KPCovR).
+
+    As described in [Helfrecht2020]_, KPCovR determines a latent-space projection
+    :math:`\mathbf{T}` which minimizes a combined loss in supervised and unsupervised
+    tasks in the reproducing kernel Hilbert space (RKHS).
 
     This projection is determined by the eigendecomposition of a modified gram matrix
     :math:`\mathbf{\tilde{K}}`
@@ -243,7 +244,7 @@ class KernelPCovR(_BaseKPCov):
 
         super().fit(X)
 
-        K = super()._get_kernel(X)
+        K = self._get_kernel(X)
 
         if self.center:
             self.centerer_ = KernelNormalizer()
@@ -382,7 +383,9 @@ class KernelPCovR(_BaseKPCov):
 
     def score(self, X, y):
         r"""Computes the (negative) loss values for KernelPCovR on the given predictor
-        and response variables. The loss in :math:`\mathbf{K}`, as explained in
+        and response variables.
+
+        The loss in :math:`\mathbf{K}`, as explained in
         [Helfrecht2020]_ does not correspond to a traditional Gram loss
         :math:`\mathbf{K} - \mathbf{TT}^T`. Indicating the kernel between set A and B as
         :math:`\mathbf{K}_{AB}`, the projection of set A as :math:`\mathbf{T}_A`, and

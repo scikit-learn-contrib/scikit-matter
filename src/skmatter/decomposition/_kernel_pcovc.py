@@ -22,9 +22,11 @@ from skmatter.decomposition import _BaseKPCov
 
 
 class KernelPCovC(LinearClassifierMixin, _BaseKPCov):
-    r"""Kernel Principal Covariates Classification is a modification on the Principal
-    Covariates Classification proposed in [Jorgensen2025]_. It determines a latent-space
-    projection :math:`\mathbf{T}` which minimizes a combined loss in supervised and unsupervised
+    r"""Kernel Principal Covariates Classification (KPCovC).
+
+    KPCovC is a modification on the PrincipalCovariates Classification
+    proposed in [Jorgensen2025]_.  It determines  a latent-space projection
+    :math:`\mathbf{T}` which minimizes a combined loss in supervised and unsupervised
     tasks in the reproducing kernel Hilbert space (RKHS).
 
     This projection is determined by the eigendecomposition of a modified gram matrix
@@ -69,16 +71,22 @@ class KernelPCovC(LinearClassifierMixin, _BaseKPCov):
             run randomized SVD by the method of Halko et al.
 
     classifier: `estimator object` or `precomputed`, default=None
-        classifier for computing :math:`{\mathbf{Z}}`. The classifier should be one of
-        `sklearn.linear_model.LogisticRegression`, `sklearn.linear_model.LogisticRegressionCV`,
-        `sklearn.svm.LinearSVC`, `sklearn.discriminant_analysis.LinearDiscriminantAnalysis`,
-        `sklearn.linear_model.RidgeClassifier`, `sklearn.linear_model.RidgeClassifierCV`,
-        `sklearn.linear_model.SGDClassifier`, or `Perceptron`.
+        classifier for computing :math:`{\mathbf{Z}}`. The classifier should be
+        one of the following:
+
+        - ``sklearn.linear_model.LogisticRegression()``
+        - ``sklearn.linear_model.LogisticRegressionCV()``
+        - ``sklearn.svm.LinearSVC()``
+        - ``sklearn.discriminant_analysis.LinearDiscriminantAnalysis()``
+        - ``sklearn.linear_model.RidgeClassifier()``
+        - ``sklearn.linear_model.RidgeClassifierCV()``
+        - ``sklearn.linear_model.Perceptron()``
+
         If a pre-fitted classifier is provided, it is used to compute :math:`{\mathbf{Z}}`.
         If None, ``sklearn.linear_model.LogisticRegression()``
         is used as the classifier.
 
-    kernel : {'linear', 'poly', 'rbf', 'sigmoid', 'precomputed'} or callable, default='linear'
+    kernel : {"linear", "poly", "rbf", "sigmoid", "precomputed"} or callable, default="linear"
         Kernel.
 
     gamma : {'scale', 'auto'} or float, default=None
@@ -223,8 +231,9 @@ class KernelPCovC(LinearClassifierMixin, _BaseKPCov):
         self.classifier = classifier
 
     def fit(self, X, Y, W=None):
-        r"""Fit the model with X and Y. A computed kernel K is
-        derived from X, and W is taken from the
+        r"""Fit the model with X and Y.
+
+        A computed kernel K is derived from X, and W is taken from the
         coefficients of a linear classifier fit between K and Y to compute
         Z:
 
@@ -265,7 +274,7 @@ class KernelPCovC(LinearClassifierMixin, _BaseKPCov):
 
         super().fit(X)
 
-        K = super()._get_kernel(X)
+        K = self._get_kernel(X)
 
         if self.center:
             self.centerer_ = KernelNormalizer()

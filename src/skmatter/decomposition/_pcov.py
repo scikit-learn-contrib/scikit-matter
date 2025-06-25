@@ -21,6 +21,12 @@ from skmatter.utils import pcovr_covariance, pcovr_kernel
 
 
 class _BasePCov(_BasePCA, LinearModel, metaclass=ABCMeta):
+    """Base class for PCovR and PCovC methods.
+
+    Warning: This class should not be used directly.
+    Use derived classes instead.
+    """
+
     @abstractmethod
     def __init__(
         self,
@@ -42,7 +48,6 @@ class _BasePCov(_BasePCA, LinearModel, metaclass=ABCMeta):
         self.random_state = random_state
         self.whiten = whiten
 
-    @abstractmethod
     def fit(self, X):
         """Contains the common functionality for the PCovR and PCovC fit methods,
         but leaves the rest of the functionality to the subclass.
