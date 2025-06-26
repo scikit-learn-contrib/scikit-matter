@@ -402,6 +402,14 @@ class PCovCInfrastructureTest(PCovCBaseTest):
         self.assertTrue(check_X_y(self.X, T, multi_output=True))
         self.assertTrue(T.shape[-1] == n_components)
 
+    def test_Y_Shape(self):
+        pcovc = self.model()
+        Y = np.vstack(self.Y)
+        pcovc.fit(self.X, Y)
+
+        self.assertEqual(pcovc.pxz_.shape[0], self.X.shape[1])
+        self.assertEqual(pcovc.ptz_.shape[0], pcovc.n_components_)
+
     def test_Z_shape(self):
         """Check that PCovC returns an evidence matrix consistent with the
         number of samples and the number of classes.
@@ -428,19 +436,27 @@ class PCovCInfrastructureTest(PCovCBaseTest):
         self.assertTrue(Z.ndim == 2)
         self.assertTrue((Z.shape[0], Z.shape[1]) == (self.X.shape[0], n_classes))
 
+    def test_decision_function(self):
+        """Check that PCovC's decision_function works when only T is
+        provided and throws an error when appropriate.
+        """
+        pcovc = self.model()
+        pcovc.fit(self.X, self.Y)
+        with self.assertRaises(ValueError) as cm:
+            _ = pcovc.decision_function()
+        self.assertEqual(
+            str(cm.exception),
+            "Either X or T must be supplied.",
+        )
+
+        T = pcovc.transform(self.X)
+        _ = pcovc.decision_function(T=T)
+
     def test_default_ncomponents(self):
         pcovc = PCovC(mixing=0.5)
         pcovc.fit(self.X, self.Y)
 
         self.assertEqual(pcovc.n_components_, min(self.X.shape))
-
-    def test_Y_Shape(self):
-        pcovc = self.model()
-        Y = np.vstack(self.Y)
-        pcovc.fit(self.X, Y)
-
-        self.assertEqual(pcovc.pxz_.shape[0], self.X.shape[1])
-        self.assertEqual(pcovc.ptz_.shape[0], pcovc.n_components_)
 
     def test_prefit_classifier(self):
         classifier = LinearSVC()

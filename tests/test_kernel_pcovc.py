@@ -177,6 +177,24 @@ class KernelPCovCInfrastructureTest(KernelPCovCBaseTest):
         self.assertTrue(Z.ndim == 2)
         self.assertTrue((Z.shape[0], Z.shape[1]) == (self.X.shape[0], n_classes))
 
+    def test_decision_function(self):
+        """Check that KPCovC's decision_function works when only T is
+        provided and throws an error when appropriate.
+        """
+        kpcovc = self.model(center=True)
+        kpcovc.fit(self.X, self.Y)
+
+        with self.assertRaises(ValueError) as cm:
+            _ = kpcovc.decision_function()
+        self.assertEqual(
+            str(cm.exception),
+            "Either X or T must be supplied.",
+        )
+
+        _ = kpcovc.decision_function(self.X)
+        T = kpcovc.transform(self.X)
+        _ = kpcovc.decision_function(T=T)
+
     def test_no_centerer(self):
         """Tests that when center=False, no centerer exists."""
         kpcovc = self.model(center=False)

@@ -22,7 +22,7 @@ from sklearn.inspection import DecisionBoundaryDisplay
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import (
     LogisticRegressionCV,
-    RidgeClassifier,
+    RidgeClassifierCV,
     SGDClassifier,
 )
 
@@ -199,10 +199,10 @@ models = {
         "kernel_params": {"kernel": "rbf", "gamma": 12},
         "title": "Logistic Regression",
     },
-    RidgeClassifier(random_state=random_state): {
+    RidgeClassifierCV(): {
         "kernel_params": {"kernel": "rbf", "gamma": 1},
         "title": "Ridge Classifier",
-        "eps": 0.25,
+        "eps": 0.40,
     },
     LinearSVC(random_state=random_state): {
         "kernel_params": {"kernel": "rbf", "gamma": 15},
