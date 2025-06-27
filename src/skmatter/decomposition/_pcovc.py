@@ -160,7 +160,7 @@ class PCovC(LinearClassifierMixin, _BasePCov):
         The linear classifier fit between :math:`\mathbf{X}` and :math:`\mathbf{Y}`.
 
     classifier_ : estimator object
-        The linear classifier fit between :math:`\mathbf{T}` and  :math:`\mathbf{Y}`.
+        The linear classifier fit between :math:`\mathbf{T}` and :math:`\mathbf{Y}`.
 
     pxt_ : ndarray of size :math:`({n_{features}, n_{components}})`
         the projector, or weights, from the input space :math:`\mathbf{X}`

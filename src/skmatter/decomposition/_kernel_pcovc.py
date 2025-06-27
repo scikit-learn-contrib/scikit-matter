@@ -24,8 +24,8 @@ from skmatter.decomposition import _BaseKPCov
 class KernelPCovC(LinearClassifierMixin, _BaseKPCov):
     r"""Kernel Principal Covariates Classification (KPCovC).
 
-    KPCovC is a modification on the PrincipalCovariates Classification
-    proposed in [Jorgensen2025]_.  It determines  a latent-space projection
+    KPCovC is a modification on the Principal Covariates Classification
+    proposed in [Jorgensen2025]_. It determines a latent-space projection
     :math:`\mathbf{T}` which minimizes a combined loss in supervised and unsupervised
     tasks in the reproducing kernel Hilbert space (RKHS).
 
