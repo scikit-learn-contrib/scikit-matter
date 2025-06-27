@@ -3,7 +3,8 @@ import warnings
 
 import numpy as np
 from sklearn import exceptions
-from sklearn.datasets import load_breast_cancer as get_dataset
+from sklearn.calibration import LinearSVC
+from sklearn.datasets import load_iris as get_dataset
 from sklearn.decomposition import PCA
 from sklearn.linear_model import LogisticRegression, RidgeClassifier
 from sklearn.svm import LinearSVC
@@ -98,7 +99,7 @@ class PCovCErrorTest(PCovCBaseTest):
                 Yp = pcovc.predict(self.X)
 
                 self.assertLessEqual(
-                    np.linalg.norm(Yp - Yhat) ** 2.0 / np.linalg.norm(Yp) ** 2.0,
+                    np.linalg.norm(Yp - Yhat) ** 2.0 / np.linalg.norm(Yhat) ** 2.0,
                     self.error_tol,
                 )
 
@@ -580,15 +581,56 @@ class PCovCInfrastructureTest(PCovCBaseTest):
 
 class PCovCMultiOutputTest(PCovCBaseTest):
 
-    def test_projector_shapes(self):
-        pass
+    def test_prefit_multioutput(self):
+        """Check that PCovC works if a prefit classifier is passed when `n_ouputs > 1`."""
+        classifier = MultiOutputClassifier(estimator=LogisticRegression())
+        Y_double = np.column_stack((self.Y, self.Y))
 
-    def test_decision_function(self):
+        classifier.fit(self.X, Y_double)
+        pcovc = self.model(mixing=0.25, classifier=classifier)
+        pcovc.fit(self.X, Y_double)
+
+        W_classifier = np.hstack([est_.coef_.T for est_ in classifier.estimators_])
+        Z_classifier = self.X @ W_classifier
+
+        W_pcovc = np.hstack([est_.coef_.T for est_ in pcovc.z_classifier_.estimators_])
+        Z_pcovc = self.X @ W_pcovc
+
+        self.assertTrue(np.allclose(Z_classifier, Z_pcovc))
+        self.assertTrue(np.allclose(W_classifier, W_pcovc))
+
+    def test_precomputed_multioutput(self):
+        """Check that PCovC works if classifier=`precomputed` and `n_ouputs > 1`."""
+        classifier = MultiOutputClassifier(estimator=LogisticRegression())
+        Y_double = np.column_stack((self.Y, self.Y))
+
+        classifier.fit(self.X, Y_double)
+        W = np.hstack([est_.coef_.T for est_ in classifier.estimators_])
+        pcovc1 = self.model(mixing=0.5, classifier="precomputed", n_components=1)
+        pcovc1.fit(self.X, Y_double, W)
+        t1 = pcovc1.transform(self.X)
+
+        pcovc2 = self.model(mixing=0.5, classifier=classifier, n_components=1)
+        pcovc2.fit(self.X, Y_double)
+        t2 = pcovc2.transform(self.X)
+
+        self.assertTrue(np.linalg.norm(t1 - t2) < self.error_tol)
+
+        # Now check for match when W is not passed:
+        pcovc3 = self.model(mixing=0.5, classifier="precomputed", n_components=1)
+        pcovc3.fit(self.X, Y_double)
+        t3 = pcovc3.transform(self.X)
+
+        self.assertTrue(np.linalg.norm(t3 - t2) < self.error_tol)
+        self.assertTrue(np.linalg.norm(t3 - t1) < self.error_tol)
+
+    def test_Z_shape_multioutput(self):
+        """Check that PCovC returns the evidence Z in the desired form when `n_ouputs > 1`."""
         pcovc = PCovC(
             classifier=MultiOutputClassifier(LogisticRegression()), n_components=2
         )
 
-        Y_double = np.column_stack((self.Y, self.Y[::-1]))
+        Y_double = np.column_stack((self.Y, self.Y))
         pcovc.fit(self.X, Y_double)
 
         Z = pcovc.decision_function(self.X)
@@ -601,6 +643,20 @@ class PCovCMultiOutputTest(PCovCBaseTest):
                 # each array is shape (n_samples, n_classes)
                 self.assertEqual(self.X.shape[0], z_slice.shape[0])
                 self.assertEqual(est.coef_.shape[0], z_slice.shape[1])
+
+    def test_decision_function_multioutput(self):
+        """Check that PCovC's decision_function works in edge cases when `n_ouputs > 1`."""
+        pcovc = self.model(classifier=MultiOutputClassifier(estimator=LinearSVC()))
+        pcovc.fit(self.X, np.column_stack((self.Y, self.Y)))
+        with self.assertRaises(ValueError) as cm:
+            _ = pcovc.decision_function()
+        self.assertEqual(
+            str(cm.exception),
+            "Either X or T must be supplied.",
+        )
+
+        T = pcovc.transform(self.X)
+        _ = pcovc.decision_function(T=T)
 
 
 if __name__ == "__main__":
