@@ -401,7 +401,7 @@ class PCovRInfrastructureTest(PCovRBaseTest):
 
         self.assertEqual(pcovr.n_components_, min(self.X.shape))
 
-    def test_Y_Shape(self):
+    def test_Y_shape(self):
         pcovr = self.model()
         self.Y = np.vstack(self.Y)
         pcovr.fit(self.X, self.Y)
