@@ -71,9 +71,7 @@ mixing_params = [0, 0.25, 0.50, 0.75, 1]
 
 fig, axs = plt.subplots(1, n_mixing, figsize=(4 * n_mixing, 4), sharey="row")
 
-for id in range(0, n_mixing):
-    mixing = mixing_params[id]
-
+for ax, mixing in zip(axs, mixing_params):
     pcovc = PCovC(
         mixing=mixing,
         n_components=n_components,
@@ -84,21 +82,22 @@ for id in range(0, n_mixing):
     pcovc.fit(X_scaled, y)
     T = pcovc.transform(X_scaled)
 
-    axs[id].set_xticks([])
-    axs[id].set_yticks([])
+    ax.set_xticks([])
+    ax.set_yticks([])
 
-    axs[id].set_title(r"$\alpha=$" + str(mixing))
-    axs[id].set_xlabel("PCov$_1$")
-    axs[id].scatter(T[:, 0], T[:, 1], c=y)
+    ax.set_title(r"$\alpha=$" + str(mixing))
+    ax.set_xlabel("PCov$_1$")
+    ax.scatter(T[:, 0], T[:, 1], c=y)
 
 axs[0].set_ylabel("PCov$_2$")
 
 fig.subplots_adjust(wspace=0)
+plt.tight_layout()
 
 # %%
 #
-# Effect of PCovC Classifier on PCovC Map and Decision Boundaries
-# ---------------------------------------------------------------
+# Effect of PCovC Classifier on PCovC Maps and Decision Boundaries
+# ----------------------------------------------------------------
 #
 # Here, we see how a PCovC model (:math:`\alpha` = 0.5) fitted with
 # different classifiers produces varying PCovC maps. In addition,
@@ -115,9 +114,7 @@ models = {
     Perceptron(random_state=random_state): "Single-Layer Perceptron",
 }
 
-for id in range(0, len(models)):
-    model = list(models)[id]
-
+for ax, model in zip(axs, models):
     pcovc = PCovC(
         mixing=mixing,
         n_components=n_components,
@@ -128,22 +125,21 @@ for id in range(0, len(models)):
     pcovc.fit(X_scaled, y)
     T = pcovc.transform(X_scaled)
 
-    graph = axs[id]
-    graph.set_title(models[model])
+    ax.set_title(models[model])
 
     DecisionBoundaryDisplay.from_estimator(
         estimator=pcovc.classifier_,
         X=T,
-        ax=graph,
+        ax=ax,
         response_method="predict",
         grid_resolution=1000,
     )
 
-    scatter = graph.scatter(T[:, 0], T[:, 1], c=y)
+    scatter = ax.scatter(T[:, 0], T[:, 1], c=y)
 
-    graph.set_xlabel("PCov$_1$")
-    graph.set_xticks([])
-    graph.set_yticks([])
+    ax.set_xlabel("PCov$_1$")
+    ax.set_xticks([])
+    ax.set_yticks([])
 
 axs[0].set_ylabel("PCov$_2$")
 axs[0].legend(
@@ -155,4 +151,5 @@ axs[0].legend(
 )
 
 fig.subplots_adjust(wspace=0.04)
+plt.tight_layout()
 plt.show()

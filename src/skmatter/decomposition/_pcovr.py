@@ -9,9 +9,11 @@ from skmatter.utils import check_lr_fit
 
 
 class PCovR(RegressorMixin, MultiOutputMixin, _BasePCov):
-    r"""Principal Covariates Regression, as described in [deJong1992]_,
-    determines a latent-space projection :math:`\mathbf{T}` which
-    minimizes a combined loss in supervised and unsupervised tasks.
+    r"""Principal Covariates Regression (PCovR).
+
+    As described in [deJong1992]_, PCovR determines a latent-space projection
+    :math:`\mathbf{T}` which minimizes a combined loss in supervised and
+    unsupervised tasks.
 
     This projection is determined by the eigendecomposition of a modified gram
     matrix :math:`\mathbf{\tilde{K}}`
@@ -216,7 +218,7 @@ class PCovR(RegressorMixin, MultiOutputMixin, _BasePCov):
             Training data, where n_samples is the number of samples and n_properties is
             the number of properties
 
-            It is suggested that :math:`\mathbf{X}` be centered by its column- means and
+            It is suggested that :math:`\mathbf{Y}` be centered by its column- means and
             scaled. If features are related, the matrix should be scaled to have unit
             variance, otherwise :math:`\mathbf{Y}` should be scaled so that each feature
             has a variance of 1 / n_features.

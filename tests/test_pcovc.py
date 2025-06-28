@@ -3,6 +3,7 @@ import warnings
 
 import numpy as np
 from sklearn import exceptions
+from sklearn.calibration import LinearSVC
 from sklearn.datasets import load_breast_cancer as get_dataset
 from sklearn.decomposition import PCA
 from sklearn.linear_model import LogisticRegression
@@ -112,7 +113,7 @@ class PCovCErrorTest(PCovCBaseTest):
             prev_error = error
 
     def test_cl_with_t_errors(self):
-        """Check that PCovc returns a non-null property prediction from the latent space
+        """Check that PCovC returns a non-null property prediction from the latent space
         projection and that the prediction error increases with `mixing`.
         """
         prev_error = -1.0
@@ -286,7 +287,7 @@ class PCovCTestSVDSolvers(PCovCBaseTest):
         """Check that PCovC will not work with any prohibited values of n_components."""
         with self.assertRaises(ValueError) as cm:
             pcovc = self.model(
-                n_components="mle", classifier=LogisticRegression(), svd_solver="full"
+                n_components="mle", classifier=LinearSVC(), svd_solver="full"
             )
             pcovc.fit(self.X[:20], self.Y[:20])
         self.assertEqual(
@@ -401,6 +402,14 @@ class PCovCInfrastructureTest(PCovCBaseTest):
         self.assertTrue(check_X_y(self.X, T, multi_output=True))
         self.assertTrue(T.shape[-1] == n_components)
 
+    def test_Y_Shape(self):
+        pcovc = self.model()
+        Y = np.vstack(self.Y)
+        pcovc.fit(self.X, Y)
+
+        self.assertEqual(pcovc.pxz_.shape[0], self.X.shape[1])
+        self.assertEqual(pcovc.ptz_.shape[0], pcovc.n_components_)
+
     def test_Z_shape(self):
         """Check that PCovC returns an evidence matrix consistent with the
         number of samples and the number of classes.
@@ -427,22 +436,30 @@ class PCovCInfrastructureTest(PCovCBaseTest):
         self.assertTrue(Z.ndim == 2)
         self.assertTrue((Z.shape[0], Z.shape[1]) == (self.X.shape[0], n_classes))
 
+    def test_decision_function(self):
+        """Check that PCovC's decision_function works when only T is
+        provided and throws an error when appropriate.
+        """
+        pcovc = self.model()
+        pcovc.fit(self.X, self.Y)
+        with self.assertRaises(ValueError) as cm:
+            _ = pcovc.decision_function()
+        self.assertEqual(
+            str(cm.exception),
+            "Either X or T must be supplied.",
+        )
+
+        T = pcovc.transform(self.X)
+        _ = pcovc.decision_function(T=T)
+
     def test_default_ncomponents(self):
         pcovc = PCovC(mixing=0.5)
         pcovc.fit(self.X, self.Y)
 
         self.assertEqual(pcovc.n_components_, min(self.X.shape))
 
-    def test_Y_Shape(self):
-        pcovc = self.model()
-        Y = np.vstack(self.Y)
-        pcovc.fit(self.X, Y)
-
-        self.assertEqual(pcovc.pxz_.shape[0], self.X.shape[1])
-        self.assertEqual(pcovc.ptz_.shape[0], pcovc.n_components_)
-
     def test_prefit_classifier(self):
-        classifier = LogisticRegression()
+        classifier = LinearSVC()
         classifier.fit(self.X, self.Y)
         pcovc = self.model(mixing=0.5, classifier=classifier)
         pcovc.fit(self.X, self.Y)
@@ -482,7 +499,7 @@ class PCovCInfrastructureTest(PCovCBaseTest):
         self.assertTrue(np.linalg.norm(t3 - t1) < self.error_tol)
 
     def test_classifier_modifications(self):
-        classifier = LogisticRegression()
+        classifier = LinearSVC()
         pcovc = self.model(mixing=0.5, classifier=classifier)
 
         # PCovC classifier matches the original
@@ -504,7 +521,6 @@ class PCovCInfrastructureTest(PCovCBaseTest):
         self.assertTrue(classifier.get_params() != pcovc.classifier_.get_params())
 
     def test_incompatible_classifier(self):
-        self.maxDiff = None
         classifier = GaussianNB()
         classifier.fit(self.X, self.Y)
         pcovc = self.model(mixing=0.5, classifier=classifier)

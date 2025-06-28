@@ -13,13 +13,16 @@ The rules for CHANGELOG file:
 
 Unreleased
 ----------
+- Fix typos and make minor edits to ``PCovC`` and ``KPCovR`` docs (#254)
+- Fix assertTrue typos in ``KPCovR`` testing suite (#254)
+- Add ``KernelPCovC`` class and examples (#254)
 
 0.3.0 (2025/06/12)
 ------------------
 - Add ``_BasePCov`` class (#248)
 - Add ``PCovC`` class that inherits shared functionality from ``_BasePCov`` (#248)
 - Add ``PCovC`` testing suite and examples (#248)
-- Modify ``PCovR`` to inherit shared functionality from ``_BasePCov_`` (#248)
+- Modify ``PCovR`` to inherit shared functionality from ``_BasePCov`` (#248)
 - Update to sklearn >= 1.7.0 and scipy >= 1.15.0 (#239, #257)
 - Fixed moved function import from scipy and bump scipy dependency to 1.15.0 (#236)
 - Fix rendering issues for `SparseKDE` and `QuickShift` (#236)
