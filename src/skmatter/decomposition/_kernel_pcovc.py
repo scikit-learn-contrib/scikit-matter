@@ -272,7 +272,7 @@ class KernelPCovC(LinearClassifierMixin, _BaseKPCov):
         check_classification_targets(Y)
         self.classes_ = np.unique(Y)
 
-        super().fit(X)
+        super()._set_fit_params(X)
 
         K = self._get_kernel(X)
 
@@ -314,14 +314,13 @@ class KernelPCovC(LinearClassifierMixin, _BaseKPCov):
 
             # Check if classifier is fitted; if not, fit with precomputed K
             self.z_classifier_ = check_cl_fit(classifier, K, Y)
-            W = self.z_classifier_.coef_.T.reshape(K.shape[1], -1)
+            W = self.z_classifier_.coef_.T
 
         else:
             # If precomputed, use default classifier to predict Y from T
             classifier = LogisticRegression(max_iter=500)
             if W is None:
                 W = LogisticRegression().fit(K, Y).coef_.T
-                W = W.reshape(K.shape[1], -1)
 
         Z = K @ W
 
@@ -440,7 +439,7 @@ class KernelPCovC(LinearClassifierMixin, _BaseKPCov):
             if self.center:
                 K = self.centerer_.transform(K)
 
-            # Or self.classifier_.decision_function(K @ self.pxt_)
+            # Or self.classifier_.decision_function(K @ self.pkt_)
             return K @ self.pkz_ + self.classifier_.intercept_
 
         else:

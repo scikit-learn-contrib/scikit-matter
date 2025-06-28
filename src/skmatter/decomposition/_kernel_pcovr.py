@@ -242,7 +242,7 @@ class KernelPCovR(_BaseKPCov):
         """
         X, Y = validate_data(self, X, Y, y_numeric=True, multi_output=True)
 
-        super().fit(X)
+        super()._set_fit_params(X)
 
         K = self._get_kernel(X)
 

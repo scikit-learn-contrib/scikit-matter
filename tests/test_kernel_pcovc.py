@@ -30,12 +30,17 @@ class KernelPCovCBaseTest(unittest.TestCase):
         scaler = StandardScaler()
         self.X = scaler.fit_transform(self.X)
 
-        self.model = lambda mixing=0.5, classifier=LogisticRegression(), n_components=4, **kwargs: KernelPCovC(
-            mixing=mixing,
-            classifier=classifier,
-            n_components=n_components,
-            svd_solver=kwargs.pop("svd_solver", "full"),
-            **kwargs,
+        self.model = (
+            lambda mixing=0.5,
+            classifier=LogisticRegression(),
+            n_components=4,
+            **kwargs: KernelPCovC(
+                mixing=mixing,
+                classifier=classifier,
+                n_components=n_components,
+                svd_solver=kwargs.pop("svd_solver", "full"),
+                **kwargs,
+            )
         )
 
     def setUp(self):
