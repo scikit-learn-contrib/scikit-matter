@@ -4,9 +4,9 @@ import warnings
 import numpy as np
 from sklearn import exceptions
 from sklearn.calibration import LinearSVC
-from sklearn.datasets import load_breast_cancer as get_dataset
+from sklearn.datasets import load_iris as get_dataset
 from sklearn.decomposition import PCA
-from sklearn.linear_model import LogisticRegression
+from sklearn.linear_model import LogisticRegression, RidgeClassifier
 from sklearn.naive_bayes import GaussianNB
 from sklearn.preprocessing import StandardScaler
 from sklearn.utils.validation import check_X_y
@@ -75,11 +75,16 @@ class PCovCErrorTest(PCovCBaseTest):
     def test_simple_prediction(self):
         """
         Check that PCovC with a full eigendecomposition at mixing=0
-        can fully reconstruct the input properties.
+        can reproduce a linear classification result.
         """
         for space in ["feature", "sample", "auto"]:
             with self.subTest(space=space):
-                pcovc = self.model(mixing=0.0, n_components=2, space=space)
+                pcovc = self.model(
+                    mixing=0.0,
+                    classifier=RidgeClassifier(),
+                    n_components=2,
+                    space=space,
+                )
 
                 pcovc.classifier.fit(self.X, self.Y)
                 Yhat = pcovc.classifier.predict(self.X)
@@ -172,8 +177,10 @@ class PCovCSpaceTest(PCovCBaseTest):
         """
         pcovc = self.model(n_components=2, tol=1e-12)
 
-        n_samples = self.X.shape[1] - 1
-        pcovc.fit(self.X[:n_samples], self.Y[:n_samples])
+        n_samples = 2
+
+        # select range where there are at least 2 classes in Y
+        pcovc.fit(self.X[49 : 49 + n_samples], self.Y[49 : 49 + n_samples])
 
         self.assertTrue(pcovc.space_ == "sample")
 
@@ -289,7 +296,8 @@ class PCovCTestSVDSolvers(PCovCBaseTest):
             pcovc = self.model(
                 n_components="mle", classifier=LinearSVC(), svd_solver="full"
             )
-            pcovc.fit(self.X[:20], self.Y[:20])
+            # select range where there are at least 2 classes in Y
+            pcovc.fit(self.X[49:51], self.Y[49:51])
         self.assertEqual(
             str(cm.exception),
             "n_components='mle' is only supported if n_samples >= n_features",
@@ -395,7 +403,7 @@ class PCovCInfrastructureTest(PCovCBaseTest):
         """Check that PCovC returns a latent space projection consistent with
         the shape of the input matrix.
         """
-        n_components = 5
+        n_components = 4
         pcovc = self.model(n_components=n_components, tol=1e-12)
         pcovc.fit(self.X, self.Y)
         T = pcovc.transform(self.X)
@@ -414,27 +422,21 @@ class PCovCInfrastructureTest(PCovCBaseTest):
         """Check that PCovC returns an evidence matrix consistent with the
         number of samples and the number of classes.
         """
-        n_components = 5
+        n_components = 2
         pcovc = self.model(n_components=n_components, tol=1e-12)
-        pcovc.fit(self.X, self.Y)
+        pcovc.fit(self.X, np.random.randint(0, 2, size=self.X.shape[0]))
 
         # Shape (n_samples, ) for binary classifcation
-        Z = pcovc.decision_function(self.X)
-
-        self.assertTrue(Z.ndim == 1)
-        self.assertTrue(Z.shape[0] == self.X.shape[0])
-
-        # Modify Y so that it now contains three classes
-        Y_multiclass = self.Y.copy()
-        Y_multiclass[0] = 2
-        pcovc.fit(self.X, Y_multiclass)
-        n_classes = len(np.unique(Y_multiclass))
+        Z_binary = pcovc.decision_function(self.X)
+        self.assertEqual(Z_binary.ndim, 1)
+        self.assertEqual(Z_binary.shape[0], self.X.shape[0])
 
         # Shape (n_samples, n_classes) for multiclass classification
-        Z = pcovc.decision_function(self.X)
+        pcovc.fit(self.X, self.Y)
+        Z_multi = pcovc.decision_function(self.X)
 
-        self.assertTrue(Z.ndim == 2)
-        self.assertTrue((Z.shape[0], Z.shape[1]) == (self.X.shape[0], n_classes))
+        self.assertEqual(Z_multi.ndim, 2)
+        self.assertEqual(Z_multi.shape, (self.X.shape[0], len(pcovc.classes_)))
 
     def test_decision_function(self):
         """Check that PCovC's decision_function works when only T is
@@ -464,13 +466,11 @@ class PCovCInfrastructureTest(PCovCBaseTest):
         pcovc = self.model(mixing=0.5, classifier=classifier)
         pcovc.fit(self.X, self.Y)
 
-        Z_classifier = classifier.decision_function(self.X).reshape(self.X.shape[0], -1)
-        W_classifier = classifier.coef_.T.reshape(self.X.shape[1], -1)
+        Z_classifier = classifier.decision_function(self.X)
+        W_classifier = classifier.coef_.T
 
-        Z_pcovc = pcovc.z_classifier_.decision_function(self.X).reshape(
-            self.X.shape[0], -1
-        )
-        W_pcovc = pcovc.z_classifier_.coef_.T.reshape(self.X.shape[1], -1)
+        Z_pcovc = pcovc.z_classifier_.decision_function(self.X)
+        W_pcovc = pcovc.z_classifier_.coef_.T
 
         self.assertTrue(np.allclose(Z_classifier, Z_pcovc))
         self.assertTrue(np.allclose(W_classifier, W_pcovc))
@@ -479,7 +479,7 @@ class PCovCInfrastructureTest(PCovCBaseTest):
         classifier = LogisticRegression()
         classifier.fit(self.X, self.Y)
 
-        W = classifier.coef_.T.reshape(self.X.shape[1], -1)
+        W = classifier.coef_.T
         pcovc1 = self.model(mixing=0.5, classifier="precomputed", n_components=1)
         pcovc1.fit(self.X, self.Y, W)
         t1 = pcovc1.transform(self.X)
@@ -544,37 +544,32 @@ class PCovCInfrastructureTest(PCovCBaseTest):
         self.assertTrue(pcovc.classifier_ is not None)
 
     def test_incompatible_coef_shape(self):
-        classifier1 = LogisticRegression()
-
-        # Modify Y to be multiclass
-        Y_multiclass = self.Y.copy()
-        Y_multiclass[0] = 2
-
-        classifier1.fit(self.X, Y_multiclass)
-        pcovc1 = self.model(mixing=0.5, classifier=classifier1)
+        cl_multi = LogisticRegression()
+        cl_multi.fit(self.X, self.Y)
+        pcovc_binary = self.model(mixing=0.5, classifier=cl_multi)
 
         # Binary classification shape mismatch
         with self.assertRaises(ValueError) as cm:
-            pcovc1.fit(self.X, self.Y)
+            pcovc_binary.fit(self.X, np.random.randint(0, 2, size=self.X.shape[0]))
         self.assertEqual(
             str(cm.exception),
             "For binary classification, expected classifier coefficients "
             "to have shape (1, %d) but got shape %r"
-            % (self.X.shape[1], classifier1.coef_.shape),
+            % (self.X.shape[1], cl_multi.coef_.shape),
         )
 
-        classifier2 = LogisticRegression()
-        classifier2.fit(self.X, self.Y)
-        pcovc2 = self.model(mixing=0.5, classifier=classifier2)
+        cl_binary = LogisticRegression()
+        cl_binary.fit(self.X, np.random.randint(0, 2, size=self.X.shape[0]))
+        pcovc_multi = self.model(mixing=0.5, classifier=cl_binary)
 
         # Multiclass classification shape mismatch
         with self.assertRaises(ValueError) as cm:
-            pcovc2.fit(self.X, Y_multiclass)
+            pcovc_multi.fit(self.X, self.Y)
         self.assertEqual(
             str(cm.exception),
             "For multiclass classification, expected classifier coefficients "
             "to have shape (%d, %d) but got shape %r"
-            % (len(np.unique(Y_multiclass)), self.X.shape[1], classifier2.coef_.shape),
+            % (len(pcovc_multi.classes_), self.X.shape[1], cl_binary.coef_.shape),
         )
 
 
