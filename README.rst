@@ -9,7 +9,7 @@ the materials science and chemistry communities.
 For details, tutorials, and examples, please have a look at our documentation_. We also
 provide a `latest documentation`_ from the current unreleased development version.
 
-.. _`documentation`: https://scikit-matter.readthedocs.io/en/v0.3/
+.. _`documentation`: https://scikit-matter.readthedocs.io/en/v0.3.1/
 .. _`latest documentation`: https://scikit-matter.readthedocs.io/en/latest
 
 .. marker-installation
