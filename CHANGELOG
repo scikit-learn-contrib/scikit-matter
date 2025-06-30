@@ -11,10 +11,10 @@ The rules for CHANGELOG file:
 
 .. inclusion-marker-changelog-start
 
-Unreleased
-----------
+0.3.1 (2025/06/30)
+------------------
 - Fix typos and make minor edits to ``PCovC`` and ``KPCovR`` docs (#254)
-- Fix assertTrue typos in ``KPCovR`` testing suite (#254)
+- Fix ``assertTrue`` typos in ``KPCovR`` testing suite (#254)
 - Add ``KernelPCovC`` class and examples (#254)
 
 0.3.0 (2025/06/12)
