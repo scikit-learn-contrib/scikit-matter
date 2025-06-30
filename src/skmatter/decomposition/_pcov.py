@@ -51,7 +51,6 @@ class _BasePCov(_BasePCA, LinearModel, metaclass=ABCMeta):
     @abstractmethod
     def fit(self, X, Y):
         """Fit the model with X and Y. Subclasses should implement this method."""
-        pass
 
     def _set_fit_params(self, X):
         """Initializes common fit parameters for PCovR and PCovC."""
