@@ -160,22 +160,17 @@ class KernelPCovCInfrastructureTest(KernelPCovCBaseTest):
         kpcovc.fit(self.X, self.Y)
 
         # Shape (n_samples, ) for binary classifcation
-        Z = kpcovc.decision_function(self.X)
+        Z_binary = kpcovc.decision_function(self.X)
 
-        self.assertTrue(Z.ndim == 1)
-        self.assertTrue(Z.shape[0] == self.X.shape[0])
-
-        # Modify Y so that it now contains three classes
-        Y_multiclass = self.Y.copy()
-        Y_multiclass[0] = 2
-        kpcovc.fit(self.X, Y_multiclass)
-        n_classes = len(np.unique(Y_multiclass))
+        self.assertEqual(Z_binary.ndim, 1)
+        self.assertEqual(Z_binary.shape[0], self.X.shape[0])
 
         # Shape (n_samples, n_classes) for multiclass classification
-        Z = kpcovc.decision_function(self.X)
+        kpcovc.fit(self.X, np.random.randint(0, 3, size=self.X.shape[0]))
+        Z_multi = kpcovc.decision_function(self.X)
 
-        self.assertTrue(Z.ndim == 2)
-        self.assertTrue((Z.shape[0], Z.shape[1]) == (self.X.shape[0], n_classes))
+        self.assertEqual(Z_multi.ndim, 2)
+        self.assertEqual(Z_multi.shape, (self.X.shape[0], len(kpcovc.classes_)))
 
     def test_decision_function(self):
         """Check that KPCovC's decision_function works when only T is
@@ -225,11 +220,11 @@ class KernelPCovCInfrastructureTest(KernelPCovCBaseTest):
         kpcovc = KernelPCovC(mixing=0.5, classifier=classifier, **kernel_params)
         kpcovc.fit(self.X, self.Y)
 
-        Z_classifier = classifier.decision_function(K).reshape(K.shape[0], -1)
-        W_classifier = classifier.coef_.T.reshape(K.shape[1], -1)
+        Z_classifier = classifier.decision_function(K)
+        W_classifier = classifier.coef_.T
 
-        Z_kpcovc = kpcovc.z_classifier_.decision_function(K).reshape(K.shape[0], -1)
-        W_kpcovc = kpcovc.z_classifier_.coef_.T.reshape(K.shape[1], -1)
+        Z_kpcovc = kpcovc.z_classifier_.decision_function(K)
+        W_kpcovc = kpcovc.z_classifier_.coef_.T
 
         self.assertTrue(np.allclose(Z_classifier, Z_kpcovc))
         self.assertTrue(np.allclose(W_classifier, W_kpcovc))
@@ -273,40 +268,37 @@ class KernelPCovCInfrastructureTest(KernelPCovCBaseTest):
         self.assertTrue(kpcovc.classifier_ is not None)
 
     def test_incompatible_coef_shape(self):
-        kernel_params = {"kernel": "rbf", "gamma": 0.1, "degree": 3, "coef0": 0}
+        kernel_params = {"kernel": "sigmoid", "gamma": 0.1, "degree": 3, "coef0": 0}
+        K = pairwise_kernels(
+            self.X, metric="sigmoid", filter_params=True, **kernel_params
+        )
 
-        K = pairwise_kernels(self.X, metric="rbf", filter_params=True, **kernel_params)
-
-        # Modify Y to be multiclass
-        Y_multiclass = self.Y.copy()
-        Y_multiclass[0] = 2
-
-        classifier1 = LinearSVC()
-        classifier1.fit(K, Y_multiclass)
-        kpcovc1 = self.model(mixing=0.5, classifier=classifier1, **kernel_params)
+        cl_multi = LinearSVC()
+        cl_multi.fit(K, np.random.randint(0, 3, size=self.X.shape[0]))
+        kpcovc_binary = self.model(mixing=0.5, classifier=cl_multi)
 
         # Binary classification shape mismatch
         with self.assertRaises(ValueError) as cm:
-            kpcovc1.fit(self.X, self.Y)
+            kpcovc_binary.fit(self.X, self.Y)
         self.assertEqual(
             str(cm.exception),
             "For binary classification, expected classifier coefficients "
             "to have shape (1, %d) but got shape %r"
-            % (K.shape[1], classifier1.coef_.shape),
+            % (K.shape[1], cl_multi.coef_.shape),
         )
 
-        classifier2 = LinearSVC()
-        classifier2.fit(K, self.Y)
-        kpcovc2 = self.model(mixing=0.5, classifier=classifier2)
+        cl_binary = LinearSVC()
+        cl_binary.fit(K, self.Y)
+        kpcovc_multi = self.model(mixing=0.5, classifier=cl_binary)
 
         # Multiclass classification shape mismatch
         with self.assertRaises(ValueError) as cm:
-            kpcovc2.fit(self.X, Y_multiclass)
+            kpcovc_multi.fit(self.X, np.random.randint(0, 3, size=self.X.shape[0]))
         self.assertEqual(
             str(cm.exception),
             "For multiclass classification, expected classifier coefficients "
             "to have shape (%d, %d) but got shape %r"
-            % (len(np.unique(Y_multiclass)), K.shape[1], classifier2.coef_.shape),
+            % (len(kpcovc_multi.classes_), K.shape[1], cl_binary.coef_.shape),
         )
 
     def test_precomputed_classification(self):
@@ -316,7 +308,7 @@ class KernelPCovCInfrastructureTest(KernelPCovCBaseTest):
         classifier = LogisticRegression()
         classifier.fit(K, self.Y)
 
-        W = classifier.coef_.T.reshape(K.shape[1], -1)
+        W = classifier.coef_.T
         kpcovc1 = self.model(mixing=0.5, classifier="precomputed", **kernel_params)
         kpcovc1.fit(self.X, self.Y, W)
         t1 = kpcovc1.transform(self.X)
