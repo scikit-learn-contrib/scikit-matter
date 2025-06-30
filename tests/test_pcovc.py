@@ -25,8 +25,12 @@ class PCovCBaseTest(unittest.TestCase):
         )
 
         self.error_tol = 1e-5
-
         self.X, self.Y = get_dataset(return_X_y=True)
+
+        # n_samples > 500 to ensure our svd_solver tests catch all cases
+        X_stacked = np.tile(self.X, (4, 1))
+        Y_stacked = np.tile(self.Y, 4)
+        self.X, self.Y = X_stacked, Y_stacked
 
         scaler = StandardScaler()
         self.X = scaler.fit_transform(self.X)
@@ -175,8 +179,7 @@ class PCovCSpaceTest(PCovCBaseTest):
         Check that PCovC implements the sample space version
         when :math:`n_{features} > n_{samples}``.
         """
-        pcovc = self.model(n_components=2, tol=1e-12)
-
+        pcovc = self.model(n_components=1, tol=1e-12, svd_solver="arpack")
         n_samples = 2
 
         # select range where there are at least 2 classes in Y
