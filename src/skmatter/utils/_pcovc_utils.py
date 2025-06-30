@@ -45,9 +45,9 @@ def check_cl_fit(classifier, X, y):
         # number of classes in y
         if isinstance(fitted_classifier, MultiOutputClassifier):
             for est_ in fitted_classifier.estimators_:
-                check_cl_coef(X, est_.coef_, len(est_.classes_))
+                _check_cl_coef(X, est_.coef_, len(est_.classes_))
         else:
-            check_cl_coef(X, fitted_classifier.coef_, len(np.unique(y)))
+            _check_cl_coef(X, fitted_classifier.coef_, len(np.unique(y)))
 
     except NotFittedError:
         fitted_classifier = clone(classifier)
@@ -56,7 +56,7 @@ def check_cl_fit(classifier, X, y):
     return fitted_classifier
 
 
-def check_cl_coef(X, classifier_coef_, n_classes):
+def _check_cl_coef(X, classifier_coef_, n_classes):
     if n_classes == 2:
         if classifier_coef_.shape[0] != 1:
             raise ValueError(

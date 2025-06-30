@@ -22,11 +22,11 @@ from skmatter.utils import check_cl_fit
 
 
 # No inheritance from MultiOutputMixin because decision_function would fail
-# test_check_estimator.py 'check_classifier_multioutput' (line 2479 of estimator_checks.py)
-# - this is the only test for MultiOutputClassifiers, so is it OK to exclude this tag?
+# test_check_estimator.py 'check_classifier_multioutput' (line 2479 of estimator_checks.py).
+# This is the only test for multioutput classifiers, so is it OK to exclude this tag?
 
 # did a search of all classifiers that inherit from MultiOutputMixin - none of them implement
-# decision function, so I don't think we need to inherit
+# decision function
 
 
 class PCovC(LinearClassifierMixin, _BasePCov):
@@ -120,6 +120,7 @@ class PCovC(LinearClassifierMixin, _BasePCov):
         - ``sklearn.linear_model.LogisticRegressionCV()``
         - ``sklearn.svm.LinearSVC()``
         - ``sklearn.discriminant_analysis.LinearDiscriminantAnalysis()``
+        - ``sklearn.multioutput.MultiOutputClassifier()``
         - ``sklearn.linear_model.RidgeClassifier()``
         - ``sklearn.linear_model.RidgeClassifierCV()``
         - ``sklearn.linear_model.Perceptron()``
@@ -131,8 +132,8 @@ class PCovC(LinearClassifierMixin, _BasePCov):
         `sklearn.pipeline.Pipeline` with model caching.
         In such cases, the classifier will be re-fitted on the same
         training data as the composite estimator.
-        If None and ``Y.ndim < 2``, ``sklearn.linear_model.LogisticRegression()`` is used.
-        If None and ``Y.ndim == 2``, ``sklearn.multioutput.MultiOutputClassifier()`` is used.
+        If None and ``n_outputs < 2``, ``sklearn.linear_model.LogisticRegression()`` is used.
+        If None and ``n_outputs == 2``, ``sklearn.multioutput.MultiOutputClassifier()`` is used.
 
     iterated_power : int or 'auto', default='auto'
         Number of iterations for the power method computed by
@@ -163,6 +164,9 @@ class PCovC(LinearClassifierMixin, _BasePCov):
         The estimated number of components, which equals the parameter
         n_components, or the lesser value of n_features and n_samples
         if n_components is None.
+
+    n_outputs : int
+        The number of outputs when ``fit`` is performed.
 
     classifier : estimator object
         The linear classifier passed for fitting.
@@ -263,16 +267,14 @@ class PCovC(LinearClassifierMixin, _BasePCov):
 
         Y : numpy.ndarray, shape (n_samples,) or (n_samples, n_outputs)
             Training data, where n_samples is the number of samples and
-            n_outputs is the number of outputs. If ``self.classifier`` is an instance
-            of ``sklearn.multioutput.MultiOutputClassifier()``, Y can be of shape
-            (n_samples, n_outputs).
+            n_outputs is the number of outputs.
 
         W : numpy.ndarray, shape (n_features, n_classes)
             Classification weights, optional when classifier is ``precomputed``. If
             not passed, it is assumed that the weights will be taken from a
             linear classifier fit between :math:`\mathbf{X}` and :math:`\mathbf{Y}`.
-            In the case of a multioutput classifier ``classifier``,
-           `` W = np.hstack([est_.coef_.T for est_ in classifier.estimators_])``.
+            In the multioutput case,
+            `` W = np.hstack([est_.coef_.T for est_ in classifier.estimators_])``.
         """
         X, Y = validate_data(self, X, Y, multi_output=True, y_numeric=False)
 
@@ -303,49 +305,31 @@ class PCovC(LinearClassifierMixin, _BasePCov):
                 ", or `precomputed`"
             )
 
-        if self.n_outputs == 1 and isinstance(self.classifier, MultiOutputClassifier):
-            raise ValueError(
-                "Classifier cannot be an instance of `MultiOutputClassifier` when Y is 1D"
+        multioutput = self.n_outputs != 1
+        precomputed = self.classifier == "precomputed"
+
+        if self.classifier is None or precomputed:
+            # used as the default classifier for subsequent computations
+            classifier = (
+                MultiOutputClassifier(LogisticRegression())
+                if multioutput
+                else LogisticRegression()
             )
-
-        if (
-            self.n_outputs != 1
-            and self.classifier not in ["precomputed", None]
-            and not (
-                isinstance(self.classifier, MultiOutputClassifier)
-                or self.classifier == "precomputed"
-            )
-        ):
-            raise ValueError(
-                "Classifier must be an instance of `MultiOutputClassifier` when Y is 2D"
-            )
-
-        if self.n_outputs == 1:
-            if self.classifier != "precomputed":
-                classifier = self.classifier or LogisticRegression()
-                self.z_classifier_ = check_cl_fit(classifier, X, Y)
-                W = self.z_classifier_.coef_.T
-
-            else:
-                # to be used later on as the classifier fit between T and Y
-                classifier = LogisticRegression()
-                if W is None:
-                    W = clone(classifier).fit(X, Y).coef_.T
-
         else:
-            if self.classifier != "precomputed":
-                classifier = self.classifier or MultiOutputClassifier(
-                    estimator=LogisticRegression()
-                )
-                self.z_classifier_ = check_cl_fit(classifier, X, Y)
-                W = np.hstack([est_.coef_.T for est_ in self.z_classifier_.estimators_])
+            classifier = self.classifier
 
+        if precomputed and W is None:
+            _ = clone(classifier).fit(X, Y)
+            if multioutput:
+                W = np.hstack([_.coef_.T for _ in _.estimators_])
             else:
-                # to be used later on as the classifier fit between T and Y
-                classifier = MultiOutputClassifier(estimator=LogisticRegression())
-                if W is None:
-                    _ = clone(classifier).fit(X, Y)
-                    W = np.hstack([_.coef_.T for _ in _.estimators_])
+                W = _.coef_.T
+        else:
+            self.z_classifier_ = check_cl_fit(classifier, X, Y)
+            if multioutput:
+                W = np.hstack([est_.coef_.T for est_ in self.z_classifier_.estimators_])
+            else:
+                W = self.z_classifier_.coef_.T
 
         Z = X @ W
 
@@ -358,11 +342,7 @@ class PCovC(LinearClassifierMixin, _BasePCov):
         # classifier and steal weights to get pxz and ptz
         self.classifier_ = clone(classifier).fit(X @ self.pxt_, Y)
 
-        if self.n_outputs == 1:
-            self.ptz_ = self.classifier_.coef_.T
-            # print(self.ptz_.shape)
-            self.pxz_ = self.pxt_ @ self.ptz_
-        else:
+        if multioutput:
             self.ptz_ = np.hstack(
                 [est_.coef_.T for est_ in self.classifier_.estimators_]
             )
@@ -370,9 +350,13 @@ class PCovC(LinearClassifierMixin, _BasePCov):
             # print(f"ptz {self.ptz_.shape}")
             self.pxz_ = self.pxt_ @ self.ptz_
             # print(f"pxz {self.pxz_.shape}")
+        else:
+            self.ptz_ = self.classifier_.coef_.T
+            # print(self.ptz_.shape)
+            self.pxz_ = self.pxt_ @ self.ptz_
 
         # print(self.ptz_.shape)
-        if len(Y.shape) == 1 and type_of_target(Y) == "binary":
+        if not multioutput and type_of_target(Y) == "binary":
             self.pxz_ = self.pxz_.reshape(
                 X.shape[1],
             )
@@ -472,9 +456,9 @@ class PCovC(LinearClassifierMixin, _BasePCov):
         Z : numpy.ndarray, shape (n_samples,) or (n_samples, n_classes), or a list of \
                 n_outputs such arrays if n_outputs > 1
             Confidence scores. For binary classification, has shape `(n_samples,)`,
-            for multiclass classification, has shape `(n_samples, n_classes)`. If n_outputs > 1,
-            the list can contain arrays with differing shapes depending on the
-            number of classes in each output of Y.
+            for multiclass classification, has shape `(n_samples, n_classes)`. 
+            If n_outputs > 1, the list can contain arrays with differing shapes 
+            depending on the number of classes in each output of Y.
         """
         check_is_fitted(self, attributes=["pxz_", "ptz_"])
 
@@ -529,36 +513,3 @@ class PCovC(LinearClassifierMixin, _BasePCov):
             and n_features is the number of features.
         """
         return super().transform(X)
-
-    # def score(self, X, Y, sample_weight=None):
-    #     """Return the accuracy on the given test data and labels. Contains support
-    #     for multiclass-multioutput data.
-
-    #     Parameters
-    #     ----------
-    #     X : array-like of shape (n_samples, n_features)
-    #         Test samples.
-
-    #     Y : array-like of shape (n_samples,) or (n_samples, n_outputs)
-    #         True labels for `X`.
-
-    #     sample_weight : array-like of shape (n_samples,), default=None
-    #         Sample weights. Can only be used if the PCovC instance
-    #         has been trained on single-target data.
-
-    #     Returns
-    #     -------
-    #     score : float
-    #         Accuracy scores. If the PCovC instance was trained on a 1D Y,
-    #         this will call the ``score()`` function defined by
-    #         ``sklearn.base.ClassifierMixin``. If trained on a 2D Y, this will
-    #         call the ``score()`` function defined by
-    #         ``sklearn.multioutput.MultiOutputClassifier``.
-    #     """
-    #     X, Y = validate_data(self, X, Y, reset=False)
-
-    #     if isinstance(self.classifier_, MultiOutputClassifier):
-    #         # LinearClassifierMixin.score fails with multioutput-multiclass Y
-    #         return self.classifier_.score(X @ self.pxt_, Y)
-    #     else:
-    #         return self.classifier_.score(X @ self.pxt_, Y, sample_weight=sample_weight)

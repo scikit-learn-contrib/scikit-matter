@@ -582,7 +582,7 @@ class PCovCInfrastructureTest(PCovCBaseTest):
 class PCovCMultiOutputTest(PCovCBaseTest):
 
     def test_prefit_multioutput(self):
-        """Check that PCovC works if a prefit classifier is passed when `n_ouputs > 1`."""
+        """Check that PCovC works if a prefit classifier is passed when `n_outputs > 1`."""
         classifier = MultiOutputClassifier(estimator=LogisticRegression())
         Y_double = np.column_stack((self.Y, self.Y))
 
@@ -600,7 +600,7 @@ class PCovCMultiOutputTest(PCovCBaseTest):
         self.assertTrue(np.allclose(W_classifier, W_pcovc))
 
     def test_precomputed_multioutput(self):
-        """Check that PCovC works if classifier=`precomputed` and `n_ouputs > 1`."""
+        """Check that PCovC works if classifier=`precomputed` and `n_outputs > 1`."""
         classifier = MultiOutputClassifier(estimator=LogisticRegression())
         Y_double = np.column_stack((self.Y, self.Y))
 
@@ -625,27 +625,25 @@ class PCovCMultiOutputTest(PCovCBaseTest):
         self.assertTrue(np.linalg.norm(t3 - t1) < self.error_tol)
 
     def test_Z_shape_multioutput(self):
-        """Check that PCovC returns the evidence Z in the desired form when `n_ouputs > 1`."""
-        pcovc = PCovC(
-            classifier=MultiOutputClassifier(LogisticRegression()), n_components=2
-        )
+        """Check that PCovC returns the evidence Z in the desired form when `n_outputs > 1`."""
+        pcovc = PCovC()
 
         Y_double = np.column_stack((self.Y, self.Y))
         pcovc.fit(self.X, Y_double)
 
         Z = pcovc.decision_function(self.X)
 
-        # list of (n_samples, n_classes) arrays
+        # list of (n_samples, n_classes) arrays when each column of Y is multiclass
         self.assertEqual(len(Z), Y_double.shape[1])
 
         for est, z_slice in zip(pcovc.z_classifier_.estimators_, Z):
             with self.subTest(type="z_arrays"):
-                # each array is shape (n_samples, n_classes)
+                # each array is shape (n_samples, n_classes):
                 self.assertEqual(self.X.shape[0], z_slice.shape[0])
                 self.assertEqual(est.coef_.shape[0], z_slice.shape[1])
 
     def test_decision_function_multioutput(self):
-        """Check that PCovC's decision_function works in edge cases when `n_ouputs > 1`."""
+        """Check that PCovC's decision_function works in edge cases when `n_outputs > 1`."""
         pcovc = self.model(classifier=MultiOutputClassifier(estimator=LinearSVC()))
         pcovc.fit(self.X, np.column_stack((self.Y, self.Y)))
         with self.assertRaises(ValueError) as cm:

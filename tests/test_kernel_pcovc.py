@@ -4,10 +4,11 @@ import numpy as np
 from sklearn import exceptions
 from sklearn.calibration import LinearSVC
 from sklearn.datasets import load_breast_cancer as get_dataset
+from sklearn.multioutput import MultiOutputClassifier
 from sklearn.naive_bayes import GaussianNB
 from sklearn.utils.validation import check_X_y
 from sklearn.preprocessing import StandardScaler
-from sklearn.linear_model import LogisticRegression, RidgeClassifier
+from sklearn.linear_model import LogisticRegression, Perceptron, RidgeClassifier
 from sklearn.metrics.pairwise import pairwise_kernels
 
 from skmatter.decomposition import KernelPCovC
@@ -30,17 +31,12 @@ class KernelPCovCBaseTest(unittest.TestCase):
         scaler = StandardScaler()
         self.X = scaler.fit_transform(self.X)
 
-        self.model = (
-            lambda mixing=0.5,
-            classifier=LogisticRegression(),
-            n_components=4,
-            **kwargs: KernelPCovC(
-                mixing=mixing,
-                classifier=classifier,
-                n_components=n_components,
-                svd_solver=kwargs.pop("svd_solver", "full"),
-                **kwargs,
-            )
+        self.model = lambda mixing=0.5, classifier=LogisticRegression(), n_components=4, **kwargs: KernelPCovC(
+            mixing=mixing,
+            classifier=classifier,
+            n_components=n_components,
+            svd_solver=kwargs.pop("svd_solver", "full"),
+            **kwargs,
         )
 
     def setUp(self):
@@ -217,7 +213,10 @@ class KernelPCovCInfrastructureTest(KernelPCovCBaseTest):
         classifier = LinearSVC()
         classifier.fit(K, self.Y)
 
-        kpcovc = KernelPCovC(mixing=0.5, classifier=classifier, **kernel_params)
+        kpcovc = KernelPCovC(
+            mixing=0.5,
+            classifier=classifier,
+        )
         kpcovc.fit(self.X, self.Y)
 
         Z_classifier = classifier.decision_function(K)
@@ -256,7 +255,7 @@ class KernelPCovCInfrastructureTest(KernelPCovCBaseTest):
             str(cm.exception),
             "Classifier must be an instance of "
             "`LogisticRegression`, `LogisticRegressionCV`, `LinearSVC`, "
-            "`LinearDiscriminantAnalysis`, `RidgeClassifier`, "
+            "`LinearDiscriminantAnalysis`, `MultiOutputClassifier`, `RidgeClassifier`, "
             "`RidgeClassifierCV`, `SGDClassifier`, `Perceptron`, "
             "or `precomputed`",
         )
@@ -482,6 +481,104 @@ class KernelPCovCTestSVDSolvers(KernelPCovCBaseTest):
                     "when greater than or equal to 1, was of type=%r"
                     % (kpcovc.n_components, type(kpcovc.n_components)),
                 )
+
+
+class KernelPCovCMultiOutputTest(KernelPCovCBaseTest):
+
+    def test_prefit_multioutput(self):
+        """Check that KPCovC works if a prefit classifier is passed when `n_outputs > 1`."""
+        kernel_params = {"kernel": "sigmoid", "gamma": 1, "degree": 3, "coef0": 0}
+        K = pairwise_kernels(
+            self.X, metric="sigmoid", filter_params=True, **kernel_params
+        )
+
+        classifier = MultiOutputClassifier(estimator=LogisticRegression())
+        Y_double = np.column_stack((self.Y, self.Y))
+
+        classifier.fit(K, Y_double)
+        kpcovc = self.model(
+            mixing=0.10,
+            classifier=classifier,
+        )
+        kpcovc.fit(self.X, Y_double)
+
+        W_classifier = np.hstack([est_.coef_.T for est_ in classifier.estimators_])
+        Z_classifier = K @ W_classifier
+
+        W_kpcovc = np.hstack(
+            [est_.coef_.T for est_ in kpcovc.z_classifier_.estimators_]
+        )
+        Z_kpcovc = K @ W_kpcovc
+
+        self.assertTrue(np.allclose(Z_classifier, Z_kpcovc))
+        self.assertTrue(np.allclose(W_classifier, W_kpcovc))
+
+    def test_precomputed_multioutput(self):
+        """Check that KPCovC works if classifier=`precomputed` and `n_outputs > 1`."""
+        kernel_params = {"kernel": "linear", "gamma": 5, "degree": 3, "coef0": 2}
+        K = pairwise_kernels(
+            self.X, metric="linear", filter_params=True, **kernel_params
+        )
+
+        classifier = MultiOutputClassifier(estimator=LogisticRegression())
+        Y_double = np.column_stack((self.Y, self.Y))
+
+        classifier.fit(K, Y_double)
+        W = np.hstack([est_.coef_.T for est_ in classifier.estimators_])
+
+        kpcovc1 = self.model(mixing=0.5, classifier="precomputed", **kernel_params)
+        kpcovc1.fit(self.X, Y_double, W)
+        t1 = kpcovc1.transform(self.X)
+
+        kpcovc2 = self.model(mixing=0.5, classifier=classifier, **kernel_params)
+        kpcovc2.fit(self.X, Y_double)
+        t2 = kpcovc2.transform(self.X)
+
+        self.assertTrue(np.linalg.norm(t1 - t2) < self.error_tol)
+
+        # Now check for match when W is not passed:
+        kpcovc3 = self.model(mixing=0.5, classifier="precomputed", **kernel_params)
+        kpcovc3.fit(self.X, Y_double)
+        t3 = kpcovc3.transform(self.X)
+
+        self.assertTrue(np.linalg.norm(t3 - t2) < self.error_tol)
+        self.assertTrue(np.linalg.norm(t3 - t1) < self.error_tol)
+
+    def test_Z_shape_multioutput(self):
+        """Check that KPCovC returns the evidence Z in the desired form when `n_outputs > 1`."""
+        kpcovc = KernelPCovC(classifier=MultiOutputClassifier(estimator=Perceptron()))
+
+        Y_double = np.column_stack((self.Y, self.Y))
+        kpcovc.fit(self.X, Y_double)
+
+        Z = kpcovc.decision_function(self.X)
+
+        # list of (n_samples, ) arrays when each column of Y is binary
+        self.assertEqual(len(Z), Y_double.shape[1])
+
+        for est, z_slice in zip(kpcovc.z_classifier_.estimators_, Z):
+            with self.subTest(type="z_arrays"):
+                # each array is shape (n_samples, ):
+                self.assertEqual(self.X.shape[0], z_slice.shape[0])
+                self.assertEqual(z_slice.ndim, 1)
+
+    def test_decision_function_multioutput(self):
+        """Check that KPCovC's decision_function works in edge cases when `n_outputs > 1`."""
+        kpcovc = self.model(
+            classifier=MultiOutputClassifier(estimator=LinearSVC()), center=True
+        )
+        kpcovc.fit(self.X, np.column_stack((self.Y, self.Y)))
+
+        with self.assertRaises(ValueError) as cm:
+            _ = kpcovc.decision_function()
+        self.assertEqual(
+            str(cm.exception),
+            "Either X or T must be supplied.",
+        )
+
+        _ = kpcovc.decision_function(self.X)
+        T = kpcovc.transform(self.X)
+        _ = kpcovc.decision_function(T=T)
 
 
 if __name__ == "__main__":

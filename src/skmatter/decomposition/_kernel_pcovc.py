@@ -1,6 +1,7 @@
 import numpy as np
 
 from sklearn import clone
+from sklearn.multioutput import MultiOutputClassifier
 from sklearn.svm import LinearSVC
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
 from sklearn.linear_model import (
@@ -52,6 +53,9 @@ class KernelPCovC(LinearClassifierMixin, _BaseKPCov):
 
             n_components == n_samples
 
+    n_outputs : int
+        The number of outputs when ``fit`` is performed.
+
     svd_solver : {'auto', 'full', 'arpack', 'randomized'}, default='auto'
         If auto :
             The solver is selected by a default policy based on `X.shape` and
@@ -78,13 +82,14 @@ class KernelPCovC(LinearClassifierMixin, _BaseKPCov):
         - ``sklearn.linear_model.LogisticRegressionCV()``
         - ``sklearn.svm.LinearSVC()``
         - ``sklearn.discriminant_analysis.LinearDiscriminantAnalysis()``
+        - ``sklearn.multioutput.MultiOutputClassifier()``
         - ``sklearn.linear_model.RidgeClassifier()``
         - ``sklearn.linear_model.RidgeClassifierCV()``
         - ``sklearn.linear_model.Perceptron()``
 
         If a pre-fitted classifier is provided, it is used to compute :math:`{\mathbf{Z}}`.
-        If None, ``sklearn.linear_model.LogisticRegression()``
-        is used as the classifier.
+        If None and ``n_outputs < 2``, ``sklearn.linear_model.LogisticRegression()`` is used.
+        If None and ``n_outputs == 2``, ``sklearn.multioutput.MultiOutputClassifier()`` is used.
 
     kernel : {"linear", "poly", "rbf", "sigmoid", "precomputed"} or callable, default="linear"
         Kernel.
@@ -132,6 +137,9 @@ class KernelPCovC(LinearClassifierMixin, _BaseKPCov):
 
     Attributes
     ----------
+    n_outputs : int
+        The number of outputs when ``fit`` is performed.
+
     classifier : estimator object
         The linear classifier passed for fitting. If pre-fitted, it is assummed
         to be fit on a precomputed kernel :math:`\mathbf{K}` and :math:`\mathbf{Y}`.
@@ -268,9 +276,11 @@ class KernelPCovC(LinearClassifierMixin, _BaseKPCov):
         self: object
             Returns the instance itself.
         """
-        X, Y = validate_data(self, X, Y, y_numeric=False)
+        X, Y = validate_data(self, X, Y, multi_output=True, y_numeric=False)
+
         check_classification_targets(Y)
         self.classes_ = np.unique(Y)
+        self.n_outputs = 1 if Y.ndim == 1 else Y.shape[1]
 
         super()._set_fit_params(X)
 
@@ -285,6 +295,7 @@ class KernelPCovC(LinearClassifierMixin, _BaseKPCov):
             LogisticRegressionCV,
             LinearSVC,
             LinearDiscriminantAnalysis,
+            MultiOutputClassifier,
             RidgeClassifier,
             RidgeClassifierCV,
             SGDClassifier,
@@ -300,27 +311,37 @@ class KernelPCovC(LinearClassifierMixin, _BaseKPCov):
                 ", or `precomputed`"
             )
 
-        if self.classifier != "precomputed":
-            if self.classifier is None:
-                classifier = LogisticRegression()
+        multioutput = self.n_outputs != 1
+        precomputed = self.classifier == "precomputed"
+
+        if self.classifier is None or precomputed:
+            # used as the default classifier for subsequent computations
+            classifier = (
+                MultiOutputClassifier(LogisticRegression())
+                if multioutput
+                else LogisticRegression()
+            )
+        else:
+            classifier = self.classifier
+
+        if hasattr(classifier, "max_iter") and (
+            classifier.max_iter is None or classifier.max_iter < 500
+        ):
+            classifier.max_iter = 500
+
+        if precomputed and W is None:
+            _ = clone(classifier).fit(K, Y)
+            if multioutput:
+                W = np.hstack([_.coef_.T for _ in _.estimators_])
             else:
-                classifier = self.classifier
-
-            # for convergence warnings
-            if hasattr(classifier, "max_iter") and (
-                classifier.max_iter is None or classifier.max_iter < 500
-            ):
-                classifier.max_iter = 500
-
-            # Check if classifier is fitted; if not, fit with precomputed K
-            self.z_classifier_ = check_cl_fit(classifier, K, Y)
-            W = self.z_classifier_.coef_.T
+                W = _.coef_.T
 
         else:
-            # If precomputed, use default classifier to predict Y from T
-            classifier = LogisticRegression(max_iter=500)
-            if W is None:
-                W = LogisticRegression().fit(K, Y).coef_.T
+            self.z_classifier_ = check_cl_fit(classifier, K, Y)
+            if multioutput:
+                W = np.hstack([est_.coef_.T for est_ in self.z_classifier_.estimators_])
+            else:
+                W = self.z_classifier_.coef_.T
 
         Z = K @ W
 
@@ -333,10 +354,16 @@ class KernelPCovC(LinearClassifierMixin, _BaseKPCov):
 
         self.classifier_ = clone(classifier).fit(K @ self.pkt_, Y)
 
-        self.ptz_ = self.classifier_.coef_.T
-        self.pkz_ = self.pkt_ @ self.ptz_
+        if multioutput:
+            self.ptz_ = np.hstack(
+                [est_.coef_.T for est_ in self.classifier_.estimators_]
+            )
+            self.pkz_ = self.pkt_ @ self.ptz_
+        else:
+            self.ptz_ = self.classifier_.coef_.T
+            self.pkz_ = self.pkt_ @ self.ptz_
 
-        if len(Y.shape) == 1 and type_of_target(Y) == "binary":
+        if not multioutput and type_of_target(Y) == "binary":
             self.pkz_ = self.pkz_.reshape(
                 K.shape[1],
             )
@@ -345,6 +372,7 @@ class KernelPCovC(LinearClassifierMixin, _BaseKPCov):
             )
 
         self.components_ = self.pkt_.T  # for sklearn compatibility
+
         return self
 
     def predict(self, X=None, T=None):
@@ -424,9 +452,12 @@ class KernelPCovC(LinearClassifierMixin, _BaseKPCov):
 
         Returns
         -------
-        Z : numpy.ndarray, shape (n_samples,) or (n_samples, n_classes)
+        Z : numpy.ndarray, shape (n_samples,) or (n_samples, n_classes), or a list of \
+                n_outputs such arrays if n_outputs > 1
             Confidence scores. For binary classification, has shape `(n_samples,)`,
-            for multiclass classification, has shape `(n_samples, n_classes)`
+            for multiclass classification, has shape `(n_samples, n_classes)`. 
+            If n_outputs > 1, the list can contain arrays with differing shapes 
+            depending on the number of classes in each output of Y.
         """
         check_is_fitted(self, attributes=["pkz_", "ptz_"])
 
@@ -439,9 +470,21 @@ class KernelPCovC(LinearClassifierMixin, _BaseKPCov):
             if self.center:
                 K = self.centerer_.transform(K)
 
-            # Or self.classifier_.decision_function(K @ self.pkt_)
-            return K @ self.pkz_ + self.classifier_.intercept_
+            if self.n_outputs == 1:
+                # Or self.classifier_.decision_function(K @ self.pkt_)
+                return K @ self.pkz_ + self.classifier_.intercept_
+            else:
+                return [
+                    est_.decision_function(K @ self.pkt_)
+                    for est_ in self.classifier_.estimators_
+                ]
 
         else:
             T = check_array(T)
-            return T @ self.ptz_ + self.classifier_.intercept_
+
+            if self.n_outputs == 1:
+                T @ self.ptz_ + self.classifier_.intercept_
+            else:
+                return [
+                    est_.decision_function(T) for est_ in self.classifier_.estimators_
+                ]
