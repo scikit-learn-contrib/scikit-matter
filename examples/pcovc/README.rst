@@ -1,2 +1,2 @@
-PCovC
-=====
+PCovC and KernelPCovC
+=====================

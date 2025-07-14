@@ -1,11 +1,14 @@
+from abc import ABCMeta, abstractmethod
 import numbers
 import warnings
 
 import numpy as np
 from numpy.linalg import LinAlgError
+
 from scipy import linalg
 from scipy.linalg import sqrtm as MatrixSqrt
 from scipy.sparse.linalg import svds
+
 from sklearn.decomposition._base import _BasePCA
 from sklearn.decomposition._pca import _infer_dimension
 from sklearn.linear_model._base import LinearModel
@@ -17,7 +20,14 @@ from sklearn.utils.validation import check_is_fitted
 from skmatter.utils import pcovr_covariance, pcovr_kernel
 
 
-class _BasePCov(_BasePCA, LinearModel):
+class _BasePCov(_BasePCA, LinearModel, metaclass=ABCMeta):
+    """Base class for PCovR and PCovC methods.
+
+    Warning: This class should not be used directly.
+    Use derived classes instead.
+    """
+
+    @abstractmethod
     def __init__(
         self,
         mixing=0.5,
@@ -136,7 +146,7 @@ class _BasePCov(_BasePCA, LinearModel):
             U, S, Vt = self._decompose_truncated(Kt)
         else:
             raise ValueError(
-                "Unrecognized svd_solver='{0}'" "".format(self.fit_svd_solver_)
+                "Unrecognized svd_solver='{0}'".format(self.fit_svd_solver_)
             )
 
         self.singular_values_ = np.sqrt(S.copy())
@@ -146,6 +156,7 @@ class _BasePCov(_BasePCA, LinearModel):
         )
 
         P = (self.mixing * X.T) + (1.0 - self.mixing) * W @ Yhat.T
+
         S_sqrt_inv = np.diagflat([1.0 / np.sqrt(s) if s > self.tol else 0.0 for s in S])
         T = Vt.T @ S_sqrt_inv
 
@@ -231,7 +242,7 @@ class _BasePCov(_BasePCA, LinearModel):
         if self.n_components_ == "mle":
             if self.n_samples_in_ < self.n_features_in_:
                 raise ValueError(
-                    "n_components='mle' is only supported " "if n_samples >= n_features"
+                    "n_components='mle' is only supported if n_samples >= n_features"
                 )
         elif (
             not 0 <= self.n_components_ <= min(self.n_samples_in_, self.n_features_in_)

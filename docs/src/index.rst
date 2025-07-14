@@ -2,6 +2,22 @@
 
 .. raw:: html
 
+     <style>
+        /* Overriding bootstrap font color so that text appears white
+           in dark theme */
+        html[data-theme="dark"] .card-text {
+            color: var(--pst-color-text-base);
+        }
+
+        /* Overriding bootstrap border color so that border appears white
+           in dark theme */
+        html[data-theme="dark"] .card {
+            --bs-card-border-color: var(--pst-color-border);
+        }
+    </style>
+
+.. raw:: html
+
     <div class="container">
         <div class="row">
             <div class="col-sm d-flex">

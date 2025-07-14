@@ -14,15 +14,16 @@ from sklearn.svm import LinearSVC
 from sklearn.utils import check_array
 from sklearn.utils.multiclass import check_classification_targets, type_of_target
 from sklearn.utils.validation import check_is_fitted, validate_data
-
 from skmatter.decomposition import _BasePCov
 from skmatter.utils import check_cl_fit
 
 
 class PCovC(LinearClassifierMixin, _BasePCov):
-    r"""Principal Covariates Classification, as described in [Jorgensen2025]_,
-    determines a latent-space projection :math:`\mathbf{T}`
-    which minimizes a combined loss in supervised and unsupervised tasks.
+    r"""Principal Covariates Classification (PCovC).
+
+    As described in [Jorgensen2025]_, PCovC determines a latent-space projection
+    :math:`\mathbf{T}` which minimizes a combined loss in supervised and
+    unsupervised tasks.
 
     This projection is determined by the eigendecomposition of a modified gram
     matrix :math:`\mathbf{\tilde{K}}`
@@ -44,9 +45,9 @@ class PCovC(LinearClassifierMixin, _BasePCov):
             \mathbf{Z}\mathbf{Z}^T \mathbf{X} \left(\mathbf{X}^T
             \mathbf{X}\right)^{-\frac{1}{2}}\right)
 
-    For all PCovC methods, it is strongly suggested that :math:`\mathbf{X}` and
-    :math:`\mathbf{Y}` are centered and scaled to unit variance, otherwise the
-    results will change drastically near :math:`\alpha \to 0` and :math:`\alpha \to 1`.
+    For all PCovC methods, it is strongly suggested that :math:`\mathbf{X}` is centered
+    and scaled to unit variance, otherwise the results will change drastically near
+    :math:`\alpha \to 0` and :math:`\alpha \to 1`.
     This can be done with the companion preprocessing classes, where
 
     >>> from skmatter.preprocessing import StandardFlexibleScaler as SFS
@@ -100,12 +101,19 @@ class PCovC(LinearClassifierMixin, _BasePCov):
         default=`sample` when :math:`{n_{samples} < n_{features}}` and
         `feature` when :math:`{n_{features} < n_{samples}}`
 
-    classifier: `estimator object` or `precomputed`, default=None
-        classifier for computing :math:`{\mathbf{Z}}`. The classifier should be one of
-        `sklearn.linear_model.LogisticRegression`, `sklearn.linear_model.LogisticRegressionCV`,
-        `sklearn.svm.LinearSVC`, `sklearn.discriminant_analysis.LinearDiscriminantAnalysis`,
-        `sklearn.linear_model.RidgeClassifier`, `sklearn.linear_model.RidgeClassifierCV`,
-        `sklearn.linear_model.SGDClassifier`, or `Perceptron`. If a pre-fitted classifier
+     classifier: `estimator object` or `precomputed`, default=None
+        classifier for computing :math:`{\mathbf{Z}}`. The classifier should be
+        one of the following:
+
+        - ``sklearn.linear_model.LogisticRegression()``
+        - ``sklearn.linear_model.LogisticRegressionCV()``
+        - ``sklearn.svm.LinearSVC()``
+        - ``sklearn.discriminant_analysis.LinearDiscriminantAnalysis()``
+        - ``sklearn.linear_model.RidgeClassifier()``
+        - ``sklearn.linear_model.RidgeClassifierCV()``
+        - ``sklearn.linear_model.Perceptron()``
+
+        If a pre-fitted classifier
         is provided, it is used to compute :math:`{\mathbf{Z}}`.
         Note that any pre-fitting of the classifier will be lost if `PCovC` is
         within a composite estimator that enforces cloning, e.g.,
@@ -219,9 +227,10 @@ class PCovC(LinearClassifierMixin, _BasePCov):
         self.classifier = classifier
 
     def fit(self, X, Y, W=None):
-        r"""Fit the model with X and Y. Note that W is taken from the
-        coefficients of a linear classifier fit between X and Y to compute
-        Z:
+        r"""Fit the model with X and Y.
+
+        Note that W is taken from the coefficients of a linear classifier fit
+        between X and Y to compute Z:
 
         .. math::
             \mathbf{Z} = \mathbf{X} \mathbf{W}
@@ -244,8 +253,8 @@ class PCovC(LinearClassifierMixin, _BasePCov):
         Y : numpy.ndarray, shape (n_samples,)
             Training data, where n_samples is the number of samples.
 
-        W : numpy.ndarray, shape (n_features, n_properties)
-            Classification weights, optional when classifier= `precomputed`. If
+        W : numpy.ndarray, shape (n_features, n_classes)
+            Classification weights, optional when classifier = `precomputed`. If
             not passed, it is assumed that the weights will be taken from a
             linear classifier fit between :math:`\mathbf{X}` and :math:`\mathbf{Y}`
         """
@@ -394,6 +403,7 @@ class PCovC(LinearClassifierMixin, _BasePCov):
             Original data for which we want to get confidence scores,
             where n_samples is the number of samples and n_features is the
             number of features.
+
         T : ndarray, shape (n_samples, n_components)
             Projected data for which we want to get confidence scores,
             where n_samples is the number of samples and n_components is the

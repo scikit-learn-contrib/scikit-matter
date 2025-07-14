@@ -114,11 +114,15 @@ skmatter_ridge_2foldcv_tikhonov = Ridge2FoldCV(
 )
 
 sklearn_ridge_2foldcv_tikhonov = RidgeCV(
-    alphas=alphas, cv=cv, fit_intercept=False  # remove the incluence of learning bias
+    alphas=alphas,
+    cv=cv,
+    fit_intercept=False,  # remove the incluence of learning bias
 )
 
 sklearn_ridge_loocv_tikhonov = RidgeCV(
-    alphas=alphas, cv=None, fit_intercept=False  # remove the incluence of learning bias
+    alphas=alphas,
+    cv=None,
+    fit_intercept=False,  # remove the incluence of learning bias
 )
 
 # %%
@@ -203,12 +207,12 @@ loocv_cv_train_error = (
     RidgeCV(
         alphas=alphas,
         cv=None,
-        store_cv_values=True,
+        store_cv_results=True,
         scoring=None,  # uses by default mean squared error
         fit_intercept=False,
     )
     .fit(X_train, y_train)
-    .cv_values_
+    .cv_results_
 )
 
 results["sklearn LOO CV Tikhonov"]["MSE validation"] = np.mean(
@@ -331,7 +335,9 @@ skmatter_ridge_2foldcv_tikhonov = Ridge2FoldCV(
 )
 
 sklearn_ridge_loocv_tikhonov = RidgeCV(
-    alphas=alphas, cv=None, fit_intercept=False  # remove the incluence of learning bias
+    alphas=alphas,
+    cv=None,
+    fit_intercept=False,  # remove the incluence of learning bias
 )
 
 print("skmatter 2-fold CV cutoff")

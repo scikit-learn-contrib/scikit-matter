@@ -9,14 +9,14 @@ from ._orthogonalizers import (
     Y_sample_orthogonalizer,
 )
 
-from ._pcovc_utils import check_cl_fit
-
 from ._pcovr_utils import (
     check_krr_fit,
     check_lr_fit,
     pcovr_covariance,
     pcovr_kernel,
 )
+
+from ._pcovc_utils import check_cl_fit
 
 from ._progress_bar import (
     get_progress_bar,
@@ -35,6 +35,7 @@ __all__ = [
     "pcovr_kernel",
     "check_krr_fit",
     "check_lr_fit",
+    "check_cl_fit",
     "X_orthogonalizer",
     "Y_sample_orthogonalizer",
     "Y_feature_orthogonalizer",

@@ -475,8 +475,7 @@ class SparseKernelCenterer(TransformerMixin, BaseEstimator):
         """
         if Knm.shape[1] != Kmm.shape[0]:
             raise ValueError(
-                "The reference kernel is not commensurate shape with the "
-                "active kernel."
+                "The reference kernel is not commensurate shape with the active kernel."
             )
 
         if Kmm.shape[0] != Kmm.shape[1]:

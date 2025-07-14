@@ -1,13 +1,16 @@
 scikit-matter
 =============
-|tests| |codecov| |pypi| |conda| |docs| |doi|
+
+|tests| |codecov| |pypi| |conda| |docs-stable| |docs-latest| |doi|
 
 A collection of ``scikit-learn`` compatible utilities that implement methods born out of
 the materials science and chemistry communities.
 
-For details, tutorials, and examples, please have a look at our `documentation`_.
+For details, tutorials, and examples, please have a look at our documentation_. We also
+provide a `latest documentation`_ from the current unreleased development version.
 
-.. _`documentation`: https://scikit-matter.readthedocs.io
+.. _`documentation`: https://scikit-matter.readthedocs.io/en/v0.3.1/
+.. _`latest documentation`: https://scikit-matter.readthedocs.io/en/latest
 
 .. marker-installation
 
@@ -98,9 +101,13 @@ Thanks goes to all people that make scikit-matter possible:
    :alt: Code coverage
    :target: https://codecov.io/gh/scikit-learn-contrib/scikit-matter/
 
-.. |docs| image:: https://img.shields.io/badge/documentation-latest-sucess
-   :alt: Python
-   :target: documentation_
+.. |docs-stable| image:: https://img.shields.io/badge/📚_Documentation-stable-sucess
+   :alt: Documentation of stable released version
+   :target: `documentation`_
+
+.. |docs-latest| image:: https://img.shields.io/badge/📒_Documentation-latest-yellow.svg
+   :alt: Documentation of latest unreleased version
+   :target: `latest documentation`_
 
 .. |pypi| image:: https://img.shields.io/pypi/v/skmatter.svg
    :alt: Latest PYPI version

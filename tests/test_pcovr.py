@@ -261,7 +261,7 @@ class PCovRTestSVDSolvers(PCovRBaseTest):
                 pcovr = self.model(svd_solver="bad", space=space)
                 pcovr.fit(self.X, self.Y)
 
-            self.assertEqual(str(cm.exception), "Unrecognized svd_solver='bad'" "")
+            self.assertEqual(str(cm.exception), "Unrecognized svd_solver='bad'")
 
     def test_good_n_components(self):
         """Check that PCovR will work with any allowed values of n_components."""
@@ -285,7 +285,7 @@ class PCovRTestSVDSolvers(PCovRBaseTest):
             pcovr.fit(self.X[:2], self.Y[:2])
         self.assertEqual(
             str(cm.exception),
-            "n_components='mle' is only supported " "if n_samples >= n_features",
+            "n_components='mle' is only supported if n_samples >= n_features",
         )
 
         with self.subTest(type="negative_ncomponents"):
@@ -392,7 +392,7 @@ class PCovRInfrastructureTest(PCovRBaseTest):
         pcovr = self.model(n_components=n_components, tol=1e-12)
         pcovr.fit(self.X, self.Y)
         T = pcovr.transform(self.X)
-        self.assertTrue(check_X_y(self.X, T, multi_output=True))
+        self.assertTrue(check_X_y(self.X, T, multi_output=True) == (self.X, T))
         self.assertTrue(T.shape[-1] == n_components)
 
     def test_default_ncomponents(self):

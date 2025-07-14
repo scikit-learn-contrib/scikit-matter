@@ -212,3 +212,49 @@ properly. It should look something like this:
 
 You're good to go! Time to submit a `pull request.
 <https://github.com/lab-cosmo/scikit-matter/pulls>`_
+
+How to Perform a Release
+-------------------------
+
+1. **Prepare a Release Pull Request**
+
+   - Based on the main branch create branch ``release-x.y.z`` and a PR.
+   - Ensure that all `CI tests
+     <https://github.com/scikit-learn-contrib/scikit-matter/actions>`_ pass.
+   - Optionally, run the tests locally to double-check.
+
+2. **Update the Changelog**
+
+   - Edit the changelog located in ``CHANGELOG``:
+      - Add a new section for the new version, summarizing the changes based on the
+        PRs merged since the last release.
+      - Leave a placeholder section titled *Unreleased* for future updates.
+
+3. **Merge the PR and Create a Tag**
+
+   - Merge the release PR.
+   - Update the ``main`` branch and check that the latest commit is the release PR with
+     ``git log``
+   - Create a tag on directly the ``main`` branch.
+   - Push the tag to GitHub. For example for a release of version ``x.y.z``:
+
+     .. code-block:: bash
+
+        git checkout main
+        git pull
+        git tag -a vx.y.z -m "Release vx.y.z"
+        git push --tags
+
+4. **Finalize the GitHub Release**
+
+   - Once the PR is merged, the CI will automatically:
+      - Publish the package to PyPI.
+      - Create a draft release on GitHub.
+   - Update the GitHub release notes by pasting the changelog for the version.
+
+5. **Merge Conda Recipe Changes**
+
+   - May resolve and then merge an automatically created PR on the `conda recipe
+     <https://github.com/conda-forge/skmatter-feedstock>`_.
+   - Once thus PR is merged and the new version will be published automatically on the
+     `conda-forge <https://anaconda.org/conda-forge/skmatter>`_ channel.

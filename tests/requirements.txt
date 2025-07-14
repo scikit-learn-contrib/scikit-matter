@@ -1,0 +1,5 @@
+ase
+parameterized
+pytest
+pytest-cov
+tqdm
