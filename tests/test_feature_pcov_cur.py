@@ -33,7 +33,6 @@ class TestPCovCUR(unittest.TestCase):
         self.idx = [2, 8, 3, 6, 7, 9, 1, 0, 5]
         selector = PCovCUR(n_to_select=9, recompute_every=0)
         selector.fit(self.X, self.y)
-
         self.assertTrue(np.allclose(selector.selected_idx_, self.idx))
 
 

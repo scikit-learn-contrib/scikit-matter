@@ -61,9 +61,9 @@ class TestCUR(unittest.TestCase):
         n_samples = 10
         n_features = 15
         X = np.random.rand(n_samples, n_features)
-        X[4, :] = np.random.rand(15) * 1e-13
-        X[5, :] = np.random.rand(15) * 1e-13
-        X[6, :] = np.random.rand(15) * 1e-13
+        X[1] = X[0]
+        X[2] = X[0]
+        X[3] = X[0]
         selector_problem = CUR(n_to_select=len(X)).fit(X)
         assert len(selector_problem.selected_idx_) == len(
             set(selector_problem.selected_idx_)

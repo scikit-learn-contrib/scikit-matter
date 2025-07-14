@@ -427,10 +427,8 @@ class GreedySelector(SelectorMixin, MetaEstimatorMixin, BaseEstimator):
         scores = scorer(X, y)
 
         # Get the score argmax, but only for idxs not already selected
-        _tmp_scores = {
-            i: score for i, score in enumerate(scores) if i not in self.selected_idx_
-        }
-        max_score_idx = max(_tmp_scores, key=_tmp_scores.get)
+        scores[self.selected_idx_[: self.n_selected_]] = -np.inf
+        max_score_idx = np.argmax(scores)
         if self.score_threshold is not None:
             if self.first_score_ is None:
                 self.first_score_ = scores[max_score_idx]
