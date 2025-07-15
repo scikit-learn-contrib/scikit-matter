@@ -88,9 +88,9 @@ class PCovR(RegressorMixin, MultiOutputMixin, _BasePCov):
         range [0.0, infinity).
 
     space: {'feature', 'sample', 'auto'}, default='auto'
-        whether to compute the PCovR in `sample` or `feature` space. Default = `sample`
-        when :math:`{n_{samples} < n_{features}}` and `feature` when
-        :math:`{n_{features} < n_{samples}}`
+        whether to compute the PCovR in `sample` or `feature` space.
+        The default is = `sample` when :math:`{n_{samples} < n_{features}}`
+        and `feature` when :math:`{n_{features} < n_{samples}}`
 
     regressor: {`Ridge`, `RidgeCV`, `LinearRegression`, `precomputed`}, default=None
         regressor for computing approximated :math:`{\mathbf{\hat{Y}}}`. The regressor

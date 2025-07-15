@@ -145,8 +145,8 @@ class PCovC(LinearClassifierMixin, _BasePCov):
 
     space: {'feature', 'sample', 'auto'}, default='auto'
         whether to compute the PCovC in `sample` or `feature` space.
-        Default = `sample` when :math:`{n_{samples} < n_{features}}` and
-        `feature` when :math:`{n_{features} < n_{samples}}`
+        The default is = `sample` when :math:`{n_{samples} < n_{features}}`
+        and `feature` when :math:`{n_{features} < n_{samples}}`
 
     n_components_ : int
         The estimated number of components, which equals the parameter
