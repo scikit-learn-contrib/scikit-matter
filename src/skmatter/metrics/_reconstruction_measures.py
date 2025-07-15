@@ -19,7 +19,6 @@ def pointwise_global_reconstruction_error(
     by linear regression:
 
     .. math::
-
         GRE^{(i)}(X,Y) = \min_W ||y_i - x_iW||
 
     If used with X and Y of shape (n_samples, n_features) it computes the pointwise
@@ -36,39 +35,33 @@ def pointwise_global_reconstruction_error(
 
     Parameters
     ----------
-    X : ndarray of shape (n_samples, X_n_features)
-        Source data which reconstructs target Y.
-        For feature reconstruction of Y using X use input shape (samples, features).
-        For sample reconstruction of Y using X use input shape (features, samples).
-
-    Y : ndarray of shape (n_samples, Y_n_targets)
-        Target data which is reconstructed with X.
-        For feature reconstruction of Y using X use input shape (samples, features).
-        For sample reconstruction of Y using X use input shape (features, samples).
-
-    train_idx : ndarray, dtype=int, default=None
+    X : numpy.ndarray of shape (n_samples, X_n_features)
+        Source data which reconstructs target Y. For feature reconstruction of Y using X
+        use input shape (samples, features). For sample reconstruction of Y using X use
+        input shape (features, samples).
+    Y : numpy.ndarray of shape (n_samples, Y_n_targets)
+        Target data which is reconstructed with X. For feature reconstruction of Y using
+        X use input shape (samples, features). For sample reconstruction of Y using X
+        use input shape (features, samples).
+    train_idx : numpy.ndarray, dtype=int, default=None
         array of indices used for training, if None,
         If None, the complement of the ``test_idx`` is used. If ``train_size`` is
         also None, 2-fold split is taken.
-
-    test_idx : ndarray, dtype=int, default=None
+    test_idx : numpy.ndarray, dtype=int, default=None
         array of indices used for training, if None,
         If None, the complement of the ``train_idx`` is used. If ``test_size`` is
         also None, 2-fold split is taken.
-
     scaler : object implementing fit/transfom
         Scales the X and Y before computing the reconstruction measure.
         The default value scales the features such that the reconstruction
         measure on the training set is upper bounded to 1.
-
     estimator : object implementing fit/predict, default=None
         Sklearn estimator used to reconstruct features/samples.
 
     Returns
     -------
-    pointwise_global_reconstruction_error : ndarray
+    pointwise_global_reconstruction_error : numpy.ndarray
         The global reconstruction error for each sample/point
-
     """
     (
         train_idx,
@@ -110,7 +103,6 @@ def global_reconstruction_error(
     by linear regression:
 
     .. math::
-
         GRE(X,Y) = \min_W ||Y - XW||
 
     If used with X and Y of shape (n_samples, n_features) it computes the
@@ -127,31 +119,26 @@ def global_reconstruction_error(
 
     Parameters
     ----------
-    X : ndarray of shape (n_samples, X_n_features)
+    X : numpy.ndarray of shape (n_samples, X_n_features)
         Source data which reconstructs target Y.
         For feature reconstruction of Y using X use input shape (samples, features).
         For sample reconstruction of Y using X use input shape (features, samples).
-
-    Y : ndarray of shape (n_samples, Y_n_targets)
+    Y : numpy.ndarray of shape (n_samples, Y_n_targets)
         Target data which is reconstructed with X.
         For feature reconstruction of Y using X use input shape (samples, features).
         For sample reconstruction of Y using X use input shape (features, samples).
-
-    train_idx : ndarray, dtype=int, default=None
+    train_idx : numpy.ndarray, dtype=int, default=None
         array of indices used for training, if None,
         If None, the complement of the ``test_idx`` is used. If ``train_size`` is
         also None, 2-fold split is taken.
-
-    test_idx : ndarray, dtype=int, default=None
+    test_idx : numpy.ndarray, dtype=int, default=None
         array of indices used for training, if None,
         If None, the complement of the ``train_idx`` is used. If ``test_size`` is
         also None, 2-fold split is taken.
-
     scaler : object implementing fit/transfom
         Scales the X and Y before computing the reconstruction measure.
         The default value scales the features such that the reconstruction
         measure on the training set is upper bounded to 1.
-
     estimator : object implementing fit/predict, default=None
         Sklearn estimator used to reconstruct features/samples.
 
@@ -159,7 +146,6 @@ def global_reconstruction_error(
     -------
     global_reconstruction_error : ndarray
         The global reconstruction error
-
     """
     pointwise_global_reconstruction_error_values = (
         pointwise_global_reconstruction_error(
@@ -189,7 +175,6 @@ def pointwise_global_reconstruction_distortion(
     by orthogonal regression:
 
     .. math::
-
         GRD^{(i)}(X,Y) = \min_Q ||y_i - x_iQ\|| \quad\mathrm{subject\ to}\quad Q^TQ=I
 
     If used with X and Y of shape (n_samples, n_features) it computes the pointwise
@@ -207,31 +192,26 @@ def pointwise_global_reconstruction_distortion(
 
     Parameters
     ----------
-    X : ndarray of shape (n_samples, X_n_features)
+    X : numpy.ndarray of shape (n_samples, X_n_features)
         Source data which reconstructs target Y.
         For feature reconstruction of Y using X use input shape (samples, features).
         For sample reconstruction of Y using X use input shape (features, samples).
-
-    Y : ndarray of shape (n_samples, Y_n_targets)
+    Y : numpy.ndarray of shape (n_samples, Y_n_targets)
         Target data which is reconstructed with X.
         For feature reconstruction of Y using X use input shape (samples, features).
         For sample reconstruction of Y using X use input shape (features, samples).
-
-    train_idx : ndarray, dtype=int, default=None
+    train_idx : numpy.ndarray, dtype=int, default=None
         array of indices used for training, if None,
         If None, the complement of the ``test_idx`` is used. If ``train_size`` is
         also None, 2-fold split is taken.
-
-    test_idx : ndarray, dtype=int, default=None
+    test_idx : numpy.ndarray, dtype=int, default=None
         array of indices used for training, if None,
         If None, the complement of the ``train_idx`` is used. If ``test_size`` is
         also None, 2-fold split is taken.
-
     scaler : object implementing fit/transfom
         Scales the X and Y before computing the reconstruction measure.
         The default value scales the features such that the reconstruction
         measure on the training set is upper bounded to 1.
-
     estimator : object implementing fit/predict, default=None
         Sklearn estimator used to reconstruct features/samples.
 
@@ -239,7 +219,6 @@ def pointwise_global_reconstruction_distortion(
     -------
     pointwise_global_reconstruction_distortion : ndarray
         The global reconstruction distortion for each sample/point
-
     """
     (
         train_idx,
@@ -286,7 +265,6 @@ def global_reconstruction_distortion(
     by orthogonal regression:
 
     .. math::
-
         GRD(X,Y) = \min_Q ||y - XQ\|| \quad\mathrm{subject\ to}\quad Q^TQ=I
 
     If used with X and Y of shape (n_samples, n_features) it computes the
@@ -304,37 +282,32 @@ def global_reconstruction_distortion(
 
     Parameters
     ----------
-    X : ndarray of shape (n_samples, X_n_features)
+    X : numpy.ndarray of shape (n_samples, X_n_features)
         Source data which reconstructs target Y.
         For feature reconstruction of Y using X use input shape (samples, features).
         For sample reconstruction of Y using X use input shape (features, samples).
-
-    Y : ndarray of shape (n_samples, Y_n_targets)
+    Y : numpy.ndarray of shape (n_samples, Y_n_targets)
         Target data which is reconstructed with X.
         For feature reconstruction of Y using X use input shape (samples, features).
         For sample reconstruction of Y using X use input shape (features, samples).
-
-    train_idx : ndarray, dtype=int, default=None
+    train_idx : numpy.ndarray, dtype=int, default=None
         array of indices used for training, if None,
         If None, the complement of the ``test_idx`` is used. If ``train_size`` is
         also None, 2-fold split is taken.
-
-    test_idx : ndarray, dtype=int, default=None
+    test_idx : numpy.ndarray, dtype=int, default=None
         array of indices used for training, if None,
         If None, the complement of the ``train_idx`` is used. If ``test_size`` is
         also None, 2-fold split is taken.
-
     scaler : object implementing fit/transfom
         Scales the X and Y before computing the reconstruction measure.
         The default value scales the features such that the reconstruction
         measure on the training set is upper bounded to 1.
-
     estimator : object implementing fit/predict, default=None
         Sklearn estimator used to reconstruct features/samples.
 
     Returns
     -------
-    global_reconstruction_distortion : ndarray
+    global_reconstruction_distortion : numpy.ndarray
         The global reconstruction distortion
 
     """
@@ -363,17 +336,15 @@ def pointwise_local_reconstruction_error(
     estimator=None,
     n_jobs=None,
 ):
-    r"""Computes the pointwise local reconstruction error using the source X
-    to reconstruct the features or samples of target Y based on a minimization
-    by linear regression:
+    r"""Computes the pointwise local reconstruction error using the source X to
+    reconstruct the features or samples of target Y based on a minimization by linear
+    regression:
 
     .. math::
-
         \tilde{\mathbf{x}}'_i = \bar{\mathbf{x}} + (\mathbf{x}_i
                                 - \bar{\mathbf{x}})\mathbf{P}^{(i)}
 
     .. math::
-
         LRE^{(i)}(X,Y) = \|\mathbf{x}'_i - \tilde{\mathbf{x}}'_i\|^2
 
     If used with X and Y of shape (n_samples, n_features) it computes the pointwise
@@ -390,41 +361,35 @@ def pointwise_local_reconstruction_error(
 
     Parameters
     ----------
-    X : ndarray of shape (n_samples, X_n_features)
+    X : numpy.ndarray of shape (n_samples, X_n_features)
         Source data which reconstructs target Y.
         For feature reconstruction of Y using X use input shape (samples, features).
         For sample reconstruction of Y using X use input shape (features, samples).
-
-    Y : ndarray of shape (n_samples, Y_n_targets)
+    Y : numpy.ndarray of shape (n_samples, Y_n_targets)
         Target data which is reconstructed with X.
         For feature reconstruction of Y using X use input shape (samples, features).
         For sample reconstruction of Y using X use input shape (features, samples).
-
     n_local_points : int,
         Number of neighbour points used to compute the local reconstruction weight for
         each sample/point.
-
-    train_idx : ndarray, dtype=int, default=None
+    train_idx : numpy.ndarray, dtype=int, default=None
         array of indices used for training, if None,
         If None, the complement of the ``test_idx`` is used. If ``train_size`` is
         also None, 2-fold split is taken.
-
-    test_idx : ndarray, dtype=int, default=None
+    test_idx : numpy.ndarray, dtype=int, default=None
         array of indices used for training, if None,
         If None, the complement of the ``train_idx`` is used. If ``test_size`` is
         also None, 2-fold split is taken.
-
     scaler : object implementing fit/transfom
         Scales the X and Y before computing the reconstruction measure.
         The default value scales the features such that the reconstruction
         measure on the training set is upper bounded to 1.
-
     estimator : object implementing fit/predict, default=None
         Sklearn estimator used to reconstruct features/samples.
 
     Returns
     -------
-    pointwise_local_reconstruction_error : ndarray
+    pointwise_local_reconstruction_error : numpy.ndarray
         The local reconstruction error for each sample/point
 
     """
@@ -499,12 +464,10 @@ def local_reconstruction_error(
     estimator=None,
     n_jobs=None,
 ):
-    r"""Computes the local reconstruction error using the source X
-    to reconstruct the features or samples of target Y based on a minimization
-    by linear regression:
+    r"""Computes the local reconstruction error using the source X to reconstruct the
+    features or samples of target Y based on a minimization by linear regression:
 
     .. math::
-
         LRE(X,Y) = \sqrt{\sum_i LRE^{(i)}(X,Y)}/\sqrt{n_\text{test}}
 
     If used with X and Y of shape (n_samples, n_features) it computes the
@@ -521,43 +484,36 @@ def local_reconstruction_error(
 
     Parameters
     ----------
-    X : ndarray of shape (n_samples, X_n_features)
+    X : numpy.ndarray of shape (n_samples, X_n_features)
         Source data which reconstructs target Y.
         For feature reconstruction of Y using X use input shape (samples, features).
         For sample reconstruction of Y using X use input shape (features, samples).
-
-    Y : ndarray of shape (n_samples, Y_n_targets)
+    Y : numpy.ndarray of shape (n_samples, Y_n_targets)
         Target data which is reconstructed with X.
         For feature reconstruction of Y using X use input shape (samples, features).
         For sample reconstruction of Y using X use input shape (features, samples).
-
     n_local_points : int,
         Number of neighbour points used to compute the local reconstruction weight for
         each sample/point.
-
-    train_idx : ndarray, dtype=int, default=None
+    train_idx : numpy.ndarray, dtype=int, default=None
         array of indices used for training, if None,
         If None, the complement of the ``test_idx`` is used. If ``train_size`` is
         also None, 2-fold split is taken.
-
-    test_idx : ndarray, dtype=int, default=None
+    test_idx : numpy.ndarray, dtype=int, default=None
         array of indices used for training, if None,
         If None, the complement of the ``train_idx`` is used. If ``test_size`` is
         also None, 2-fold split is taken.
-
     scaler : object implementing fit/transfom
         Scales the X and Y before computing the reconstruction measure.
         The default value scales the features such that the reconstruction
         measure on the training set is upper bounded to 1.
-
     estimator : object implementing fit/predict, default=None
         Sklearn estimator used to reconstruct features/samples.
 
     Returns
     -------
-    local_reconstruction_error : ndarray
+    local_reconstruction_error : numpy.ndarray
         The local reconstruction error
-
     """
     pointwise_local_reconstruction_error_values = pointwise_local_reconstruction_error(
         X,

@@ -18,10 +18,7 @@ class TestCUR(unittest.TestCase):
             _ = selector.transform(self.X)
 
     def test_restart(self):
-        """
-        This test checks that the model can be restarted with a new instance
-        """
-
+        """Check that the model can be restarted with a new instance."""
         ref_selector = CUR(n_to_select=self.X.shape[-1] - 3).fit(X=self.X)
         ref_idx = ref_selector.selected_idx_
 
@@ -34,9 +31,7 @@ class TestCUR(unittest.TestCase):
             self.assertEqual(selector.selected_idx_[i], ref_idx[i])
 
     def test_non_it(self):
-        """
-        This test checks that the model can be run non-iteratively
-        """
+        """Check that the model can be run non-iteratively."""
         C = self.X.T @ self.X
         _, UC = np.linalg.eigh(C)
         ref_idx = np.argsort(-(UC[:, -1] ** 2.0))[:-1]
@@ -45,6 +40,22 @@ class TestCUR(unittest.TestCase):
         selector.fit(self.X)
 
         self.assertTrue(np.allclose(selector.selected_idx_, ref_idx))
+
+    def test_unique_selected_idx_zero_score(self):
+        """
+        Tests that the selected idxs are unique, which may not be the
+        case when the score is numerically zero
+        """
+        np.random.seed(0)
+        n_samples = 10
+        n_features = 15
+        X = np.random.rand(n_samples, n_features)
+        X[:, 1] = X[:, 0]
+        X[:, 2] = X[:, 0]
+        selector_problem = CUR(n_to_select=len(X.T)).fit(X)
+        assert len(selector_problem.selected_idx_) == len(
+            set(selector_problem.selected_idx_)
+        )
 
 
 if __name__ == "__main__":

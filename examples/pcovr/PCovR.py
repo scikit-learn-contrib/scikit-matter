@@ -8,7 +8,6 @@ Construct a PCovR Map
 # %%
 #
 
-
 import numpy as np
 from matplotlib import cm
 from matplotlib import pyplot as plt
@@ -50,7 +49,7 @@ pcovr = PCovR(
 )
 pcovr.fit(X_scaled, y_scaled)
 T = pcovr.transform(X_scaled)
-yp = y_scaler.inverse_transform(pcovr.predict(X_scaled))
+yp = y_scaler.inverse_transform(pcovr.predict(X_scaled).reshape(-1, 1))
 
 fig, ((axT, axy), (caxT, caxy)) = plt.subplots(
     2, 2, figsize=(8, 5), gridspec_kw=dict(height_ratios=(1, 0.1))
@@ -90,7 +89,7 @@ for i, mixing in enumerate(np.linspace(0, 1, n_alpha)):
     )
     pcovr.fit(X_scaled, y_scaled)
     T = pcovr.transform(X_scaled)
-    yp = y_scaler.inverse_transform(pcovr.predict(X_scaled))
+    yp = y_scaler.inverse_transform(pcovr.predict(X_scaled).reshape(-1, 1))
 
     axes[0, i].scatter(
         T[:, 0], T[:, 1], s=50, alpha=0.8, c=y, cmap=cmapX, edgecolor="k"
@@ -136,7 +135,7 @@ kpcovr = KernelPCovR(
 )
 kpcovr.fit(X_scaled, y_scaled)
 T = kpcovr.transform(X_scaled)
-yp = y_scaler.inverse_transform(kpcovr.predict(X_scaled))
+yp = y_scaler.inverse_transform(kpcovr.predict(X_scaled).reshape(-1, 1))
 
 fig, ((axT, axy), (caxT, caxy)) = plt.subplots(
     2, 2, figsize=(8, 5), gridspec_kw=dict(height_ratios=(1, 0.1))

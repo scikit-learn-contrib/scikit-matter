@@ -1,3 +1,4 @@
+*.coverage*
 *.pyc
 *.ipynb_checkpoints*
 __pycache__
@@ -5,8 +6,10 @@ __pycache__
 *.swp
 *.swo
 *DS_Store
+_version.py
 
 .tox/
 build/
 dist/
 docs/src/examples
+sg_execution_times.rst

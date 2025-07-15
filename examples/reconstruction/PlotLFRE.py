@@ -3,7 +3,6 @@
 """
 Pointwise Local Reconstruction Error
 ====================================
-
 Example for the usage of the
 :class:`skmatter.metrics.pointwise_local_reconstruction_error` as pointwise local
 reconstruction error (LFRE) on the degenerate CH4 manifold. We apply the local
@@ -14,13 +13,12 @@ which are different, but have the same 3-body features. For more details about t
 dataset please refer to `Pozdnyakov 2020
 <https://doi.org/10.1103/PhysRevLett.125.166001>`_.
 
-The skmatter dataset already contains the 3 and 4-body features computed with
-`librascal <https://github.com/lab-cosmo/librascal>`_ so we can load it and compare it
-with the LFRE.
+The skmatter dataset already contains the 3 and 4-body features computed with `librascal
+<https://github.com/lab-cosmo/librascal>`_ so we can load it and compare it with the
+LFRE.
 """
 # %%
 #
-
 
 import matplotlib as mpl
 import matplotlib.pyplot as plt

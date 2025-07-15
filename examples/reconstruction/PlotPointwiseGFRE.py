@@ -3,8 +3,7 @@
 
 """
 Pointwise GFRE applied on RKHS features
-================================================================
-
+=======================================
 Example for the usage of the
 :class:`skmatter.metrics.pointwise_global_reconstruction_error` as the pointwise global
 feature reconstruction error (pointwise GFRE). We apply the pointwise global feature
@@ -16,7 +15,6 @@ of the reconstruction with the downside of being less general.
 
 # %%
 #
-
 
 import matplotlib as mpl
 import matplotlib.pyplot as plt

@@ -1,16 +1,14 @@
 # %%
 
 r"""
- Ridge2FoldCV for data with low effective rank
- =======================================================
- In this notebook we explain in more detail how
- :class:`skmatter.linear_model.Ridge2FoldCV` speeds up the
- cross-validation optimizing the regularitzation parameter :param alpha: and
- compare it with existing solution for that in scikit-learn
- :class:`slearn.linear_model.RidgeCV`.
- :class:`skmatter.linear_model.Ridge2FoldCV` was designed to predict
- efficiently feature matrices, but it can be also useful for the prediction
- single targets.
+Ridge2FoldCV for data with low effective rank
+=============================================
+In this notebook we explain in more detail how
+:class:`skmatter.linear_model.Ridge2FoldCV` speeds up the cross-validation optimizing
+the regularitzation parameter :param alpha: and compare it with existing solution for
+that in scikit-learn :class:`slearn.linear_model.RidgeCV`.
+:class:`skmatter.linear_model.Ridge2FoldCV` was designed to predict efficiently feature
+matrices, but it can be also useful for the prediction single targets.
 """
 # %%
 #
@@ -116,11 +114,15 @@ skmatter_ridge_2foldcv_tikhonov = Ridge2FoldCV(
 )
 
 sklearn_ridge_2foldcv_tikhonov = RidgeCV(
-    alphas=alphas, cv=cv, fit_intercept=False  # remove the incluence of learning bias
+    alphas=alphas,
+    cv=cv,
+    fit_intercept=False,  # remove the incluence of learning bias
 )
 
 sklearn_ridge_loocv_tikhonov = RidgeCV(
-    alphas=alphas, cv=None, fit_intercept=False  # remove the incluence of learning bias
+    alphas=alphas,
+    cv=None,
+    fit_intercept=False,  # remove the incluence of learning bias
 )
 
 # %%
@@ -128,6 +130,7 @@ sklearn_ridge_loocv_tikhonov = RidgeCV(
 
 
 def micro_bench(ridge):
+    """A small benchmark function."""
     global N_REPEAT_MICRO_BENCH, X, y
     timings = []
     train_mse = []
@@ -177,6 +180,7 @@ X_train, X_test, y_train, y_test = train_test_split(
 
 
 def get_train_test_error(estimator):
+    """The train tets error based on the estimator."""
     global X_train, y_train, X_test, y_test
     estimator = estimator.fit(X_train, y_train)
     return (
@@ -203,12 +207,12 @@ loocv_cv_train_error = (
     RidgeCV(
         alphas=alphas,
         cv=None,
-        store_cv_values=True,
+        store_cv_results=True,
         scoring=None,  # uses by default mean squared error
         fit_intercept=False,
     )
     .fit(X_train, y_train)
-    .cv_values_
+    .cv_results_
 )
 
 results["sklearn LOO CV Tikhonov"]["MSE validation"] = np.mean(
@@ -331,7 +335,9 @@ skmatter_ridge_2foldcv_tikhonov = Ridge2FoldCV(
 )
 
 sklearn_ridge_loocv_tikhonov = RidgeCV(
-    alphas=alphas, cv=None, fit_intercept=False  # remove the incluence of learning bias
+    alphas=alphas,
+    cv=None,
+    fit_intercept=False,  # remove the incluence of learning bias
 )
 
 print("skmatter 2-fold CV cutoff")

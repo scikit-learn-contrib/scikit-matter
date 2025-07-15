@@ -14,7 +14,7 @@ class TestCUR(unittest.TestCase):
 
     def test_sample_transform(self):
         """
-        This test checks that an error is raised when the transform function is used,
+        Check that an error is raised when the transform function is used,
         because sklearn does not support well transformers that change the number
         of samples with other classes like Pipeline
         """
@@ -29,10 +29,7 @@ class TestCUR(unittest.TestCase):
         )
 
     def test_restart(self):
-        """
-        This test checks that the model can be restarted with a new instance
-        """
-
+        """Check that the model can be restarted with a new instance"""
         ref_selector = CUR(n_to_select=self.n_select)
         ref_idx = ref_selector.fit(self.X).selected_idx_
 
@@ -45,10 +42,7 @@ class TestCUR(unittest.TestCase):
             self.assertEqual(selector.selected_idx_[i], ref_idx[i])
 
     def test_non_it(self):
-        """
-        This test checks that the model can be run non-iteratively
-        """
-
+        """Check that the model can be run non-iteratively."""
         K = self.X @ self.X.T
         _, UK = np.linalg.eigh(K)
         ref_idx = np.argsort(-(UK[:, -1] ** 2.0))[: self.n_select]
@@ -57,6 +51,23 @@ class TestCUR(unittest.TestCase):
         selector.fit(self.X)
 
         self.assertTrue(np.allclose(selector.selected_idx_, ref_idx))
+
+    def test_unique_selected_idx_zero_score(self):
+        """
+        Tests that the selected idxs are unique, which may not be the
+        case when the score is numerically zero.
+        """
+        np.random.seed(0)
+        n_samples = 10
+        n_features = 15
+        X = np.random.rand(n_samples, n_features)
+        X[1] = X[0]
+        X[2] = X[0]
+        X[3] = X[0]
+        selector_problem = CUR(n_to_select=len(X)).fit(X)
+        assert len(selector_problem.selected_idx_) == len(
+            set(selector_problem.selected_idx_)
+        )
 
 
 if __name__ == "__main__":
