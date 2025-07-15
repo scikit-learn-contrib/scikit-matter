@@ -11,6 +11,13 @@ The rules for CHANGELOG file:
 
 .. inclusion-marker-changelog-start
 
+Unreleased
+----------
+
+0.3.2 (2025/07/15)
+------------------
+- Fix bug in GreedySelection that would pick same item multiple times (#265)
+
 0.3.1 (2025/06/30)
 ------------------
 - Fix typos and make minor edits to ``PCovC`` and ``KPCovR`` docs (#254)
