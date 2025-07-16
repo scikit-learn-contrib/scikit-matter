@@ -227,11 +227,12 @@ class PCovR(RegressorMixin, MultiOutputMixin, _BasePCov):
             regressed form of the properties, :math:`{\mathbf{\hat{Y}}}`.
 
         W : numpy.ndarray, shape (n_features, n_properties)
-            Regression weights, optional when regressor= `precomputed`. If not
+            Regression weights, optional when regressor = `precomputed`. If not
             passed, it is assumed that `W = np.linalg.lstsq(X, Y, self.tol)[0]`
         """
         X, Y = validate_data(self, X, Y, y_numeric=True, multi_output=True)
-        super().fit(X)
+
+        super()._initialize_params(X)
 
         compatible_regressors = (LinearRegression, Ridge, RidgeCV)
 
@@ -414,7 +415,7 @@ class PCovR(RegressorMixin, MultiOutputMixin, _BasePCov):
             Negative sum of the loss in reconstructing X from the latent-space
             projection T and the loss in predicting Y from the latent-space projection T
         """
-        X, y = validate_data(self, X, y, reset=False)
+        X, y = validate_data(self, X, y, reset=False, multi_output=True)
 
         if T is None:
             T = self.transform(X)

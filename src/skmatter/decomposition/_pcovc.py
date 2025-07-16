@@ -10,12 +10,23 @@ from sklearn.linear_model import (
     SGDClassifier,
 )
 from sklearn.linear_model._base import LinearClassifierMixin
+
+from sklearn.base import MultiOutputMixin
+from sklearn.multioutput import MultiOutputClassifier
 from sklearn.svm import LinearSVC
 from sklearn.utils import check_array
 from sklearn.utils.multiclass import check_classification_targets, type_of_target
 from sklearn.utils.validation import check_is_fitted, validate_data
 from skmatter.decomposition import _BasePCov
 from skmatter.utils import check_cl_fit
+
+
+# No inheritance from MultiOutputMixin because decision_function would fail
+# test_check_estimator.py 'check_classifier_multioutput' (line 2479 of estimator_checks.py).
+# This is the only test for multioutput classifiers, so is it OK to exclude this tag?
+
+# did a search of all classifiers that inherit from MultiOutputMixin - none of them implement
+# decision function
 
 
 class PCovC(LinearClassifierMixin, _BasePCov):
@@ -101,7 +112,7 @@ class PCovC(LinearClassifierMixin, _BasePCov):
         default=`sample` when :math:`{n_{samples} < n_{features}}` and
         `feature` when :math:`{n_{features} < n_{samples}}`
 
-     classifier: `estimator object` or `precomputed`, default=None
+    classifier: `estimator object` or `precomputed`, default=None
         classifier for computing :math:`{\mathbf{Z}}`. The classifier should be
         one of the following:
 
@@ -109,6 +120,7 @@ class PCovC(LinearClassifierMixin, _BasePCov):
         - ``sklearn.linear_model.LogisticRegressionCV()``
         - ``sklearn.svm.LinearSVC()``
         - ``sklearn.discriminant_analysis.LinearDiscriminantAnalysis()``
+        - ``sklearn.multioutput.MultiOutputClassifier()``
         - ``sklearn.linear_model.RidgeClassifier()``
         - ``sklearn.linear_model.RidgeClassifierCV()``
         - ``sklearn.linear_model.Perceptron()``
@@ -120,8 +132,8 @@ class PCovC(LinearClassifierMixin, _BasePCov):
         `sklearn.pipeline.Pipeline` with model caching.
         In such cases, the classifier will be re-fitted on the same
         training data as the composite estimator.
-        If None, ``sklearn.linear_model.LogisticRegression()``
-        is used as the classifier.
+        If None and ``n_outputs < 2``, ``sklearn.linear_model.LogisticRegression()`` is used.
+        If None and ``n_outputs == 2``, ``sklearn.multioutput.MultiOutputClassifier()`` is used.
 
     iterated_power : int or 'auto', default='auto'
         Number of iterations for the power method computed by
@@ -153,6 +165,9 @@ class PCovC(LinearClassifierMixin, _BasePCov):
         n_components, or the lesser value of n_features and n_samples
         if n_components is None.
 
+    n_outputs : int
+        The number of outputs when ``fit`` is performed.
+
     classifier : estimator object
         The linear classifier passed for fitting.
 
@@ -166,13 +181,13 @@ class PCovC(LinearClassifierMixin, _BasePCov):
         the projector, or weights, from the input space :math:`\mathbf{X}`
         to the latent-space projection :math:`\mathbf{T}`
 
-    pxz_ : ndarray of size :math:`({n_{features}, })` or :math:`({n_{features}, n_{classes}})`
+    pxz_ : ndarray of size :math:`({n_{features}, })`, :math:`({n_{features}, n_{classes}})`
         the projector, or weights, from the input space :math:`\mathbf{X}`
-        to the class confidence scores :math:`\mathbf{Z}`
+        to the class confidence scores :math:`\mathbf{Z}`.
 
-    ptz_ : ndarray of size :math:`({n_{components}, })` or :math:`({n_{components}, n_{classes}})`
-        the projector, or weights, from the latent-space projection
-        :math:`\mathbf{T}` to the class confidence scores :math:`\mathbf{Z}`
+    ptz_ : ndarray of size :math:`({n_{components}, })`, :math:`({n_{components}, n_{classes}})`
+        the projector, or weights, from from the latent-space projection
+        :math:`\mathbf{T}` to the class confidence scores :math:`\mathbf{Z}`.
 
     explained_variance_ : numpy.ndarray of shape (n_components,)
         The amount of variance explained by each of the selected components.
@@ -250,25 +265,31 @@ class PCovC(LinearClassifierMixin, _BasePCov):
             scaled to have unit variance, otherwise :math:`\mathbf{X}` should
             be scaled so that each feature has a variance of 1 / n_features.
 
-        Y : numpy.ndarray, shape (n_samples,)
-            Training data, where n_samples is the number of samples.
+        Y : numpy.ndarray, shape (n_samples,) or (n_samples, n_outputs)
+            Training data, where n_samples is the number of samples and
+            n_outputs is the number of outputs.
 
-        W : numpy.ndarray, shape (n_features, n_classes)
+        W : numpy.ndarray, shape (n_features, n_classes) or (n_features, n_classes*n_outputs)
             Classification weights, optional when classifier = `precomputed`. If
             not passed, it is assumed that the weights will be taken from a
-            linear classifier fit between :math:`\mathbf{X}` and :math:`\mathbf{Y}`
+            linear classifier fit between :math:`\mathbf{X}` and :math:`\mathbf{Y}`.
+            In the multioutput case,
+            `` W = np.hstack([est_.coef_.T for est_ in classifier.estimators_])``.
         """
-        X, Y = validate_data(self, X, Y, y_numeric=False)
+        X, Y = validate_data(self, X, Y, multi_output=True, y_numeric=False)
+
         check_classification_targets(Y)
         self.classes_ = np.unique(Y)
+        self.n_outputs = 1 if Y.ndim == 1 else Y.shape[1]
 
-        super().fit(X)
+        super()._initialize_params(X)
 
         compatible_classifiers = (
             LogisticRegression,
             LogisticRegressionCV,
             LinearSVC,
             LinearDiscriminantAnalysis,
+            MultiOutputClassifier,
             RidgeClassifier,
             RidgeClassifierCV,
             SGDClassifier,
@@ -284,21 +305,31 @@ class PCovC(LinearClassifierMixin, _BasePCov):
                 ", or `precomputed`"
             )
 
-        if self.classifier != "precomputed":
-            if self.classifier is None:
-                classifier = LogisticRegression()
-            else:
-                classifier = self.classifier
+        multioutput = self.n_outputs != 1
+        precomputed = self.classifier == "precomputed"
 
-            self.z_classifier_ = check_cl_fit(classifier, X, Y)
-            W = self.z_classifier_.coef_.T.reshape(X.shape[1], -1)
-
+        if self.classifier is None or precomputed:
+            # used as the default classifier for subsequent computations
+            classifier = (
+                MultiOutputClassifier(LogisticRegression())
+                if multioutput
+                else LogisticRegression()
+            )
         else:
-            # If precomputed, use default classifier to predict Y from T
-            classifier = LogisticRegression()
-            if W is None:
-                W = LogisticRegression().fit(X, Y).coef_.T
-                W = W.reshape(X.shape[1], -1)
+            classifier = self.classifier
+
+        if precomputed and W is None:
+            _ = clone(classifier).fit(X, Y)
+            if multioutput:
+                W = np.hstack([_.coef_.T for _ in _.estimators_])
+            else:
+                W = _.coef_.T
+        else:
+            self.z_classifier_ = check_cl_fit(classifier, X, Y)
+            if multioutput:
+                W = np.hstack([est_.coef_.T for est_ in self.z_classifier_.estimators_])
+            else:
+                W = self.z_classifier_.coef_.T
 
         Z = X @ W
 
@@ -311,10 +342,21 @@ class PCovC(LinearClassifierMixin, _BasePCov):
         # classifier and steal weights to get pxz and ptz
         self.classifier_ = clone(classifier).fit(X @ self.pxt_, Y)
 
-        self.ptz_ = self.classifier_.coef_.T
-        self.pxz_ = self.pxt_ @ self.ptz_
+        if multioutput:
+            self.ptz_ = np.hstack(
+                [est_.coef_.T for est_ in self.classifier_.estimators_]
+            )
+            # print(f"pxt {self.pxt_.shape}")
+            # print(f"ptz {self.ptz_.shape}")
+            self.pxz_ = self.pxt_ @ self.ptz_
+            # print(f"pxz {self.pxz_.shape}")
+        else:
+            self.ptz_ = self.classifier_.coef_.T
+            # print(self.ptz_.shape)
+            self.pxz_ = self.pxt_ @ self.ptz_
 
-        if len(Y.shape) == 1 and type_of_target(Y) == "binary":
+        # print(self.ptz_.shape)
+        if not multioutput and type_of_target(Y) == "binary":
             self.pxz_ = self.pxz_.reshape(
                 X.shape[1],
             )
@@ -411,9 +453,12 @@ class PCovC(LinearClassifierMixin, _BasePCov):
 
         Returns
         -------
-        Z : numpy.ndarray, shape (n_samples,) or (n_samples, n_classes)
+        Z : numpy.ndarray, shape (n_samples,) or (n_samples, n_classes), or a list of \
+                n_outputs such arrays if n_outputs > 1
             Confidence scores. For binary classification, has shape `(n_samples,)`,
-            for multiclass classification, has shape `(n_samples, n_classes)`
+            for multiclass classification, has shape `(n_samples, n_classes)`. 
+            If n_outputs > 1, the list can contain arrays with differing shapes 
+            depending on the number of classes in each output of Y.
         """
         check_is_fitted(self, attributes=["pxz_", "ptz_"])
 
@@ -422,11 +467,24 @@ class PCovC(LinearClassifierMixin, _BasePCov):
 
         if X is not None:
             X = validate_data(self, X, reset=False)
-            # Or self.classifier_.decision_function(X @ self.pxt_)
-            return X @ self.pxz_ + self.classifier_.intercept_
+
+            if self.n_outputs == 1:
+                # Or self.classifier_.decision_function(X @ self.pxt_)
+                return X @ self.pxz_ + self.classifier_.intercept_
+            else:
+                return [
+                    est_.decision_function(X @ self.pxt_)
+                    for est_ in self.classifier_.estimators_
+                ]
         else:
             T = check_array(T)
-            return T @ self.ptz_ + self.classifier_.intercept_
+
+            if self.n_outputs == 1:
+                return T @ self.ptz_ + self.classifier_.intercept_
+            else:
+                return [
+                    est_.decision_function(T) for est_ in self.classifier_.estimators_
+                ]
 
     def predict(self, X=None, T=None):
         """Predicts the property labels using classification on T."""
