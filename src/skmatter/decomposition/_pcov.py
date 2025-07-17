@@ -48,10 +48,12 @@ class _BasePCov(_BasePCA, LinearModel, metaclass=ABCMeta):
         self.random_state = random_state
         self.whiten = whiten
 
-    def fit(self, X):
-        """Contains the common functionality for the PCovR and PCovC fit methods,
-        but leaves the rest of the functionality to the subclass.
-        """
+    @abstractmethod
+    def fit(self, X, Y):
+        """Fit the model with X and Y. Subclasses should implement this method."""
+
+    def _set_fit_params(self, X):
+        """Initializes common fit parameters for PCovR and PCovC."""
         # saved for inverse transformations from the latent space,
         # should be zero in the case that the features have been properly centered
         self.mean_ = np.mean(X, axis=0)

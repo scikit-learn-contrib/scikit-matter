@@ -105,7 +105,7 @@ for ax, model in zip(axs, models):
     t_train = model.fit_transform(X_train_scaled, y_train)
     t_test = model.transform(X_test_scaled)
 
-    ax.scatter(t_test[:, 0], t_test[:, 1], alpha=alpha_d, cmap=cm_bright, c=y_test)
+    ax.scatter(t_test[:, 0], t_test[:, 1], alpha=alpha_p, cmap=cm_bright, c=y_test)
     ax.scatter(t_train[:, 0], t_train[:, 1], cmap=cm_bright, c=y_train)
 
     ax.set_title(models[model])
@@ -197,20 +197,16 @@ names = ["Logistic Regression", "Ridge Classifier", "Linear SVC", "SGD Classifie
 models = {
     LogisticRegressionCV(random_state=random_state): {
         "kernel_params": {"kernel": "rbf", "gamma": 12},
-        "title": "Logistic Regression",
     },
     RidgeClassifierCV(): {
         "kernel_params": {"kernel": "rbf", "gamma": 1},
-        "title": "Ridge Classifier",
         "eps": 0.40,
     },
     LinearSVC(random_state=random_state): {
         "kernel_params": {"kernel": "rbf", "gamma": 15},
-        "title": "Support Vector Classification",
     },
     SGDClassifier(random_state=random_state): {
         "kernel_params": {"kernel": "rbf", "gamma": 15},
-        "title": "SGD Classifier",
         "eps": 10,
     },
 }

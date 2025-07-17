@@ -97,11 +97,11 @@ class PCovC(LinearClassifierMixin, _BasePCov):
         Must be of range [0.0, infinity).
 
     space: {'feature', 'sample', 'auto'}, default='auto'
-        whether to compute the PCovC in `sample` or `feature` space
-        default=`sample` when :math:`{n_{samples} < n_{features}}` and
-        `feature` when :math:`{n_{features} < n_{samples}}`
+        whether to compute the PCovC in ``sample`` or ``feature`` space.
+        The default is equal to ``sample`` when :math:`{n_{samples} < n_{features}}`
+        and ``feature`` when :math:`{n_{features} < n_{samples}}`
 
-     classifier: `estimator object` or `precomputed`, default=None
+    classifier: ``estimator object`` or ``precomputed``, default=None
         classifier for computing :math:`{\mathbf{Z}}`. The classifier should be
         one of the following:
 
@@ -144,9 +144,9 @@ class PCovC(LinearClassifierMixin, _BasePCov):
         Must be of range [0.0, infinity).
 
     space: {'feature', 'sample', 'auto'}, default='auto'
-        whether to compute the PCovC in `sample` or `feature` space
-        default=`sample` when :math:`{n_{samples} < n_{features}}` and
-        `feature` when :math:`{n_{features} < n_{samples}}`
+        whether to compute the PCovC in ``sample`` or ``feature`` space.
+        The default is equal to ``sample`` when :math:`{n_{samples} < n_{features}}`
+        and ``feature`` when :math:`{n_{features} < n_{samples}}`
 
     n_components_ : int
         The estimated number of components, which equals the parameter
@@ -160,7 +160,7 @@ class PCovC(LinearClassifierMixin, _BasePCov):
         The linear classifier fit between :math:`\mathbf{X}` and :math:`\mathbf{Y}`.
 
     classifier_ : estimator object
-        The linear classifier fit between :math:`\mathbf{T}` and  :math:`\mathbf{Y}`.
+        The linear classifier fit between :math:`\mathbf{T}` and :math:`\mathbf{Y}`.
 
     pxt_ : ndarray of size :math:`({n_{features}, n_{components}})`
         the projector, or weights, from the input space :math:`\mathbf{X}`
@@ -254,7 +254,7 @@ class PCovC(LinearClassifierMixin, _BasePCov):
             Training data, where n_samples is the number of samples.
 
         W : numpy.ndarray, shape (n_features, n_classes)
-            Classification weights, optional when classifier = `precomputed`. If
+            Classification weights, optional when classifier is ``precomputed``. If
             not passed, it is assumed that the weights will be taken from a
             linear classifier fit between :math:`\mathbf{X}` and :math:`\mathbf{Y}`
         """
@@ -262,7 +262,7 @@ class PCovC(LinearClassifierMixin, _BasePCov):
         check_classification_targets(Y)
         self.classes_ = np.unique(Y)
 
-        super().fit(X)
+        super()._set_fit_params(X)
 
         compatible_classifiers = (
             LogisticRegression,
@@ -291,14 +291,13 @@ class PCovC(LinearClassifierMixin, _BasePCov):
                 classifier = self.classifier
 
             self.z_classifier_ = check_cl_fit(classifier, X, Y)
-            W = self.z_classifier_.coef_.T.reshape(X.shape[1], -1)
+            W = self.z_classifier_.coef_.T
 
         else:
             # If precomputed, use default classifier to predict Y from T
             classifier = LogisticRegression()
             if W is None:
                 W = LogisticRegression().fit(X, Y).coef_.T
-                W = W.reshape(X.shape[1], -1)
 
         Z = X @ W
 

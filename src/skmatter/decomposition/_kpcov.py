@@ -74,10 +74,12 @@ class _BaseKPCov(_BasePCA, LinearModel, metaclass=ABCMeta):
             X, Y, metric=self.kernel, filter_params=True, n_jobs=self.n_jobs, **params
         )
 
-    def fit(self, X):
-        """Contains the common functionality for the KPCovR and KPCovC fit methods,
-        but leaves the rest of the functionality to the subclass.
-        """
+    @abstractmethod
+    def fit(self, X, Y):
+        """Fit the model with X and Y. Subclasses should implement this method."""
+
+    def _set_fit_params(self, X):
+        """Initializes common fit parameters for PCovR and PCovC."""
         self.X_fit_ = X.copy()
 
         if self.n_components is None:
