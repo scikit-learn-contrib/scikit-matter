@@ -97,11 +97,11 @@ class PCovC(LinearClassifierMixin, _BasePCov):
         Must be of range [0.0, infinity).
 
     space: {'feature', 'sample', 'auto'}, default='auto'
-        whether to compute the PCovC in `sample` or `feature` space.
-        Default = `sample` when :math:`{n_{samples} < n_{features}}` and
-        `feature` when :math:`{n_{features} < n_{samples}}`
+        whether to compute the PCovC in ``sample`` or ``feature`` space.
+        The default is equal to ``sample`` when :math:`{n_{samples} < n_{features}}`
+        and ``feature`` when :math:`{n_{features} < n_{samples}}`
 
-    classifier: `estimator object` or `precomputed`, default=None
+    classifier: ``estimator object`` or ``precomputed``, default=None
         classifier for computing :math:`{\mathbf{Z}}`. The classifier should be
         one of the following:
 
@@ -144,9 +144,9 @@ class PCovC(LinearClassifierMixin, _BasePCov):
         Must be of range [0.0, infinity).
 
     space: {'feature', 'sample', 'auto'}, default='auto'
-        whether to compute the PCovC in `sample` or `feature` space.
-        The default is = `sample` when :math:`{n_{samples} < n_{features}}`
-        and `feature` when :math:`{n_{features} < n_{samples}}`
+        whether to compute the PCovC in ``sample`` or ``feature`` space.
+        The default is equal to ``sample`` when :math:`{n_{samples} < n_{features}}`
+        and ``feature`` when :math:`{n_{features} < n_{samples}}`
 
     n_components_ : int
         The estimated number of components, which equals the parameter
@@ -254,7 +254,7 @@ class PCovC(LinearClassifierMixin, _BasePCov):
             Training data, where n_samples is the number of samples.
 
         W : numpy.ndarray, shape (n_features, n_classes)
-            Classification weights, optional when classifier = `precomputed`. If
+            Classification weights, optional when classifier is ``precomputed``. If
             not passed, it is assumed that the weights will be taken from a
             linear classifier fit between :math:`\mathbf{X}` and :math:`\mathbf{Y}`
         """
