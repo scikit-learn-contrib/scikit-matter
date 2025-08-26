@@ -556,7 +556,7 @@ class KernelPCovCMultiOutputTest(KernelPCovCBaseTest):
         # list of (n_samples, ) arrays when each column of Y is binary
         self.assertEqual(len(Z), Y_double.shape[1])
 
-        for est, z_slice in zip(kpcovc.z_classifier_.estimators_, Z):
+        for z_slice in Z:
             with self.subTest(type="z_arrays"):
                 # each array is shape (n_samples, ):
                 self.assertEqual(self.X.shape[0], z_slice.shape[0])

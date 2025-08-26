@@ -165,7 +165,7 @@ class PCovC(LinearClassifierMixin, _BasePCov):
         n_components, or the lesser value of n_features and n_samples
         if n_components is None.
 
-    n_outputs : int
+    n_outputs_ : int
         The number of outputs when ``fit`` is performed.
 
     classifier : estimator object
@@ -280,7 +280,7 @@ class PCovC(LinearClassifierMixin, _BasePCov):
 
         check_classification_targets(Y)
         self.classes_ = np.unique(Y)
-        self.n_outputs = 1 if Y.ndim == 1 else Y.shape[1]
+        self.n_outputs_ = 1 if Y.ndim == 1 else Y.shape[1]
 
         super()._set_fit_params(X)
 
@@ -305,7 +305,7 @@ class PCovC(LinearClassifierMixin, _BasePCov):
                 ", or `precomputed`"
             )
 
-        multioutput = self.n_outputs != 1
+        multioutput = self.n_outputs_ != 1
         precomputed = self.classifier == "precomputed"
 
         if self.classifier is None or precomputed:
@@ -468,7 +468,7 @@ class PCovC(LinearClassifierMixin, _BasePCov):
         if X is not None:
             X = validate_data(self, X, reset=False)
 
-            if self.n_outputs == 1:
+            if self.n_outputs_ == 1:
                 # Or self.classifier_.decision_function(X @ self.pxt_)
                 return X @ self.pxz_ + self.classifier_.intercept_
             else:
@@ -479,7 +479,7 @@ class PCovC(LinearClassifierMixin, _BasePCov):
         else:
             T = check_array(T)
 
-            if self.n_outputs == 1:
+            if self.n_outputs_ == 1:
                 return T @ self.ptz_ + self.classifier_.intercept_
             else:
                 return [
