@@ -488,3 +488,5 @@ class KernelPCovC(LinearClassifierMixin, _BaseKPCov):
                 return [
                     est_.decision_function(T) for est_ in self.classifier_.estimators_
                 ]
+
+#TODO: add MultiOutputClassifier's score function for KPCovC to allow for multiclass-multioutput case

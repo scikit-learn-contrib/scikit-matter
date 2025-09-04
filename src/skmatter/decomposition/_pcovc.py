@@ -513,3 +513,5 @@ class PCovC(LinearClassifierMixin, _BasePCov):
             and n_features is the number of features.
         """
         return super().transform(X)
+
+#TODO: add MultiOutputClassifier's score function for PCovC to allow for multiclass-multioutput case

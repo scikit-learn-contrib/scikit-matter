@@ -580,6 +580,8 @@ class KernelPCovCMultiOutputTest(KernelPCovCBaseTest):
         T = kpcovc.transform(self.X)
         _ = kpcovc.decision_function(T=T)
 
+    #TODO: Add tests for addition of score function to pcovc.py
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)
