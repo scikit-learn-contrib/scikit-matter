@@ -87,9 +87,17 @@ class KernelPCovC(LinearClassifierMixin, _BaseKPCov):
         - ``sklearn.linear_model.RidgeClassifierCV()``
         - ``sklearn.linear_model.Perceptron()``
 
-        If a pre-fitted classifier is provided, it is used to compute :math:`{\mathbf{Z}}`.
-        If None and ``n_outputs_ < 2``, ``sklearn.linear_model.LogisticRegression()`` is used.
-        If None and ``n_outputs_ == 2``, ``sklearn.multioutput.MultiOutputClassifier()`` is used.
+        If a pre-fitted classifier
+        is provided, it is used to compute :math:`{\mathbf{Z}}`.
+        Note that any pre-fitting of the classifier will be lost if `KernelPCovC` is
+        within a composite estimator that enforces cloning, e.g.,
+        `sklearn.pipeline.Pipeline` with model caching.
+        In such cases, the classifier will be re-fitted on the same
+        training data as the composite estimator.
+        If None and ``n_outputs < 2``, ``sklearn.linear_model.LogisticRegression()`` is used.
+        If None and ``n_outputs >= 2``, a ``sklearn.multioutput.MultiOutputClassifier()`` is
+        constructed, with ``sklearn.linear_model.LogisticRegression()`` models used for each
+        label.
 
     kernel : {"linear", "poly", "rbf", "sigmoid", "precomputed"} or callable, default="linear"
         Kernel.
@@ -455,8 +463,8 @@ class KernelPCovC(LinearClassifierMixin, _BaseKPCov):
         Z : numpy.ndarray, shape (n_samples,) or (n_samples, n_classes), or a list of \
                 n_outputs_ such arrays if n_outputs_ > 1
             Confidence scores. For binary classification, has shape `(n_samples,)`,
-            for multiclass classification, has shape `(n_samples, n_classes)`. 
-            If n_outputs_ > 1, the list can contain arrays with differing shapes 
+            for multiclass classification, has shape `(n_samples, n_classes)`.
+            If n_outputs_ > 1, the list can contain arrays with differing shapes
             depending on the number of classes in each output of Y.
         """
         check_is_fitted(self, attributes=["pkz_", "ptz_"])
@@ -489,15 +497,14 @@ class KernelPCovC(LinearClassifierMixin, _BaseKPCov):
                     est_.decision_function(T) for est_ in self.classifier_.estimators_
                 ]
 
-    def score(self, X, y):
-
+    def score(self, X, y, sample_weight=None):
         # accuracy_score will handle everything but multiclass-multilabel
         if self.n_outputs_ > 1 and len(self.classes_) > 2:
             y_pred = self.predict(X)
             return np.mean(np.all(y == y_pred, axis=1))
 
         else:
-            return super().score(X, y)
+            return super().score(X, y, sample_weight)
 
     # Inherit the docstring from scikit-learn
     score.__doc__ = LinearClassifierMixin.score.__doc__

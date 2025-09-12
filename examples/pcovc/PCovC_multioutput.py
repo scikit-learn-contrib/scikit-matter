@@ -69,7 +69,6 @@ cmap3 = "tab10"
 labels_list = [["Even", "Odd"], [">= 5", "< 5"]]
 
 for i, c, cmap in zip(range(3), [is_even, is_less_than_five, y], [cmap1, cmap2, cmap3]):
-
     scat_pca = axs[0, i].scatter(T_pca[:, 0], T_pca[:, 1], c=c, cmap=cmap)
     axs[1, i].scatter(T_pcovc[:, 0], T_pcovc[:, 1], c=c, cmap=cmap)
 
@@ -114,7 +113,6 @@ cmap3 = "tab10"
 labels_list = [["Even", "Odd"], ["0", "1", "2"]]
 
 for i, c, cmap in zip(range(3), [is_even, num_holes, y], [cmap1, cmap2, cmap3]):
-
     scat_pca = axs[0, i].scatter(T_pca[:, 0], T_pca[:, 1], c=c, cmap=cmap)
     axs[1, i].scatter(T_pcovc[:, 0], T_pcovc[:, 1], c=c, cmap=cmap)
 

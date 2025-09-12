@@ -2,7 +2,7 @@ import unittest
 
 import numpy as np
 from sklearn import exceptions
-from sklearn.calibration import LinearSVC
+from sklearn.svm import LinearSVC
 from sklearn.datasets import load_breast_cancer as get_dataset
 from sklearn.multioutput import MultiOutputClassifier
 from sklearn.naive_bayes import GaussianNB
@@ -31,12 +31,17 @@ class KernelPCovCBaseTest(unittest.TestCase):
         scaler = StandardScaler()
         self.X = scaler.fit_transform(self.X)
 
-        self.model = lambda mixing=0.5, classifier=LogisticRegression(), n_components=4, **kwargs: KernelPCovC(
-            mixing=mixing,
-            classifier=classifier,
-            n_components=n_components,
-            svd_solver=kwargs.pop("svd_solver", "full"),
-            **kwargs,
+        self.model = (
+            lambda mixing=0.5,
+            classifier=LogisticRegression(),
+            n_components=4,
+            **kwargs: KernelPCovC(
+                mixing=mixing,
+                classifier=classifier,
+                n_components=n_components,
+                svd_solver=kwargs.pop("svd_solver", "full"),
+                **kwargs,
+            )
         )
 
     def setUp(self):
@@ -484,9 +489,10 @@ class KernelPCovCTestSVDSolvers(KernelPCovCBaseTest):
 
 
 class KernelPCovCMultiOutputTest(KernelPCovCBaseTest):
-
     def test_prefit_multioutput(self):
-        """Check that KPCovC works if a prefit classifier is passed when `n_outputs > 1`."""
+        """Check that KPCovC works if a prefit classifier
+        is passed when `n_outputs > 1`.
+        """
         kernel_params = {"kernel": "sigmoid", "gamma": 1, "degree": 3, "coef0": 0}
         K = pairwise_kernels(
             self.X, metric="sigmoid", filter_params=True, **kernel_params
@@ -545,7 +551,9 @@ class KernelPCovCMultiOutputTest(KernelPCovCBaseTest):
         self.assertTrue(np.linalg.norm(t3 - t1) < self.error_tol)
 
     def test_Z_shape_multioutput(self):
-        """Check that KPCovC returns the evidence Z in the desired form when `n_outputs > 1`."""
+        """Check that KPCovC returns the evidence Z in
+        the desired form when `n_outputs > 1`.
+        """
         kpcovc = KernelPCovC(classifier=MultiOutputClassifier(estimator=Perceptron()))
 
         Y_double = np.column_stack((self.Y, self.Y))
@@ -563,7 +571,9 @@ class KernelPCovCMultiOutputTest(KernelPCovCBaseTest):
                 self.assertEqual(z_slice.ndim, 1)
 
     def test_decision_function_multioutput(self):
-        """Check that KPCovC's decision_function works in edge cases when `n_outputs > 1`."""
+        """Check that KPCovC's decision_function works
+        in edge cases when `n_outputs > 1`.
+        """
         kpcovc = self.model(
             classifier=MultiOutputClassifier(estimator=LinearSVC()), center=True
         )
@@ -580,7 +590,7 @@ class KernelPCovCMultiOutputTest(KernelPCovCBaseTest):
         T = kpcovc.transform(self.X)
         _ = kpcovc.decision_function(T=T)
 
-    #TODO: Add tests for addition of score function to pcovc.py
+    # TODO: Add tests for addition of score function to pcovc.py
 
 
 if __name__ == "__main__":

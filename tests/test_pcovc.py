@@ -3,7 +3,6 @@ import warnings
 
 import numpy as np
 from sklearn import exceptions
-from sklearn.calibration import LinearSVC
 from sklearn.datasets import load_iris as get_dataset
 from sklearn.decomposition import PCA
 from sklearn.linear_model import LogisticRegression, RidgeClassifier
@@ -580,9 +579,10 @@ class PCovCInfrastructureTest(PCovCBaseTest):
 
 
 class PCovCMultiOutputTest(PCovCBaseTest):
-
     def test_prefit_multioutput(self):
-        """Check that PCovC works if a prefit classifier is passed when `n_outputs > 1`."""
+        """Check that PCovC works if a prefit classifier
+        is passed when `n_outputs > 1`.
+        """
         classifier = MultiOutputClassifier(estimator=LogisticRegression())
         Y_double = np.column_stack((self.Y, self.Y))
 
@@ -625,7 +625,9 @@ class PCovCMultiOutputTest(PCovCBaseTest):
         self.assertTrue(np.linalg.norm(t3 - t1) < self.error_tol)
 
     def test_Z_shape_multioutput(self):
-        """Check that PCovC returns the evidence Z in the desired form when `n_outputs > 1`."""
+        """Check that PCovC returns the evidence Z in the
+        desired form when `n_outputs > 1`.
+        """
         pcovc = PCovC()
 
         Y_double = np.column_stack((self.Y, self.Y))
@@ -643,7 +645,9 @@ class PCovCMultiOutputTest(PCovCBaseTest):
                 self.assertEqual(est.coef_.shape[0], z_slice.shape[1])
 
     def test_decision_function_multioutput(self):
-        """Check that PCovC's decision_function works in edge cases when `n_outputs > 1`."""
+        """Check that PCovC's decision_function works in edge
+        cases when `n_outputs_ > 1`.
+        """
         pcovc = self.model(classifier=MultiOutputClassifier(estimator=LinearSVC()))
         pcovc.fit(self.X, np.column_stack((self.Y, self.Y)))
         with self.assertRaises(ValueError) as cm:
@@ -656,6 +660,8 @@ class PCovCMultiOutputTest(PCovCBaseTest):
         T = pcovc.transform(self.X)
         _ = pcovc.decision_function(T=T)
 
-    #TODO: Add tests for addition of score function to pcovc.py
+    # TODO: Add tests for addition of score function to pcovc.py
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

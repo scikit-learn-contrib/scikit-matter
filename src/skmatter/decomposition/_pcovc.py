@@ -21,14 +21,6 @@ from skmatter.decomposition import _BasePCov
 from skmatter.utils import check_cl_fit
 
 
-# No inheritance from MultiOutputMixin because decision_function would fail
-# test_check_estimator.py 'check_classifier_multioutput' (line 2479 of estimator_checks.py).
-# This is the only test for multioutput classifiers, so is it OK to exclude this tag?
-
-# did a search of all classifiers that inherit from MultiOutputMixin - none of them implement
-# decision function
-
-
 class PCovC(LinearClassifierMixin, _BasePCov):
     r"""Principal Covariates Classification (PCovC).
 
@@ -133,7 +125,9 @@ class PCovC(LinearClassifierMixin, _BasePCov):
         In such cases, the classifier will be re-fitted on the same
         training data as the composite estimator.
         If None and ``n_outputs < 2``, ``sklearn.linear_model.LogisticRegression()`` is used.
-        If None and ``n_outputs == 2``, ``sklearn.multioutput.MultiOutputClassifier()`` is used.
+        If None and ``n_outputs >= 2``, a ``sklearn.multioutput.MultiOutputClassifier()`` is
+        constructed, with ``sklearn.linear_model.LogisticRegression()`` models used for each
+        label.
 
     iterated_power : int or 'auto', default='auto'
         Number of iterations for the power method computed by
@@ -453,12 +447,13 @@ class PCovC(LinearClassifierMixin, _BasePCov):
 
         Returns
         -------
-        Z : numpy.ndarray, shape (n_samples,) or (n_samples, n_classes), or a list of \
-                n_outputs such arrays if n_outputs > 1
-            Confidence scores. For binary classification, has shape `(n_samples,)`,
-            for multiclass classification, has shape `(n_samples, n_classes)`. 
-            If n_outputs > 1, the list can contain arrays with differing shapes 
-            depending on the number of classes in each output of Y.
+        Z : numpy.ndarray, shape (n_samples,) or (n_samples, n_classes), or
+            a list of n_outputs such arrays if n_outputs > 1.
+            Confidence scores. For binary classification, has shape
+            `(n_samples,)`, for multiclass classification, has shape
+            `(n_samples, n_classes)`. If n_outputs > 1, the list can
+            contain arrays with differing shapes depending on the number
+            of classes in each output of Y.
         """
         check_is_fitted(self, attributes=["pxz_", "ptz_"])
 
@@ -514,15 +509,14 @@ class PCovC(LinearClassifierMixin, _BasePCov):
         """
         return super().transform(X)
 
-    def score(self, X, y):
-
+    def score(self, X, y, sample_weight=None):
         # accuracy_score will handle everything but multiclass-multilabel
         if self.n_outputs_ > 1 and len(self.classes_) > 2:
             y_pred = self.predict(X)
             return np.mean(np.all(y == y_pred, axis=1))
 
         else:
-            return super().score(X, y)
+            return super().score(X, y, sample_weight)
 
     # Inherit the docstring from scikit-learn
     score.__doc__ = LinearClassifierMixin.score.__doc__
