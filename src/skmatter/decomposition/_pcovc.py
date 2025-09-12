@@ -514,4 +514,15 @@ class PCovC(LinearClassifierMixin, _BasePCov):
         """
         return super().transform(X)
 
-#TODO: add MultiOutputClassifier's score function for PCovC to allow for multiclass-multioutput case
+    def score(self, X, y):
+
+        # accuracy_score will handle everything but multiclass-multilabel
+        if self.n_outputs_ > 1 and len(self.classes_) > 2:
+            y_pred = self.predict(X)
+            return np.mean(np.all(y == y_pred, axis=1))
+
+        else:
+            return super().score(X, y)
+
+    # Inherit the docstring from scikit-learn
+    score.__doc__ = LinearClassifierMixin.score.__doc__
