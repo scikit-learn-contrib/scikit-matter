@@ -77,7 +77,7 @@ for i, c, cmap in zip(range(3), [is_even, is_less_than_five, y], [cmap1, cmap2, 
         handles, _ = scat_pca.legend_elements()
         labels = labels_list[i]
         axs[0, i].legend(handles, labels)
-        
+
 axs[0, 0].set_title("Even/Odd")
 axs[0, 1].set_title("Greater/Less than 5")
 axs[0, 2].set_title("Digit")
