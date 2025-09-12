@@ -43,6 +43,7 @@ fig, axs = plt.subplots(1, 2, figsize=(10, 6))
 scat_pca = axs[0].scatter(T_pca[:, 0], T_pca[:, 1], c=y)
 scat_pcovc = axs[1].scatter(T_pcovc[:, 0], T_pcovc[:, 1], c=y)
 fig.colorbar(scat_pca, ax=axs, orientation="horizontal")
+fig.suptitle("Multiclass PCovC with One Label")
 
 # %%
 # Next, let's try a two-label classification problem, with both labels
@@ -76,11 +77,7 @@ for i, c, cmap in zip(range(3), [is_even, is_less_than_five, y], [cmap1, cmap2, 
         handles, _ = scat_pca.legend_elements()
         labels = labels_list[i]
         axs[0, i].legend(handles, labels)
-        print(labels)
-        print(i)
-        print(handles)
-
-
+        
 axs[0, 0].set_title("Even/Odd")
 axs[0, 1].set_title("Greater/Less than 5")
 axs[0, 2].set_title("Digit")
@@ -88,6 +85,7 @@ axs[0, 2].set_title("Digit")
 axs[0, 0].set_ylabel("PCA")
 axs[1, 0].set_ylabel("PCovC")
 fig.colorbar(scat_pca, ax=axs, orientation="horizontal")
+fig.suptitle("Multilabel PCovC with Binary Labels")
 # %%
 # Let's try a more complicated example:
 
@@ -120,10 +118,6 @@ for i, c, cmap in zip(range(3), [is_even, num_holes, y], [cmap1, cmap2, cmap3]):
         handles, _ = scat_pca.legend_elements()
         labels = labels_list[i]
         axs[0, i].legend(handles, labels)
-        print(labels)
-        print(i)
-        print(handles)
-
 
 axs[0, 0].set_title("Even/Odd")
 axs[0, 1].set_title("Number of Holes")
@@ -132,3 +126,4 @@ axs[0, 2].set_title("Digit")
 axs[0, 0].set_ylabel("PCA")
 axs[1, 0].set_ylabel("PCovC")
 fig.colorbar(scat_pca, ax=axs, orientation="horizontal")
+fig.suptitle("Multiclass-Multilabel PCovC")
