@@ -100,7 +100,7 @@ y3 = np.hstack([is_even, num_holes])
 # %%
 # Now, we have a two-label classification
 # problem, with one binary label and one label with three
-# possible classes
+# possible classes.
 clf = MultiOutputClassifier(estimator=LogisticRegressionCV())
 pcovc = PCovC(n_components=2, mixing=0.5, classifier=clf)
 
