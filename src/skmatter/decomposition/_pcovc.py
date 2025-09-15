@@ -278,26 +278,37 @@ class PCovC(LinearClassifierMixin, _BasePCov):
 
         super()._set_fit_params(X)
 
-        compatible_classifiers = (
+        compatible_clfs = (
             LogisticRegression,
             LogisticRegressionCV,
             LinearSVC,
             LinearDiscriminantAnalysis,
-            MultiOutputClassifier,
             RidgeClassifier,
             RidgeClassifierCV,
             SGDClassifier,
             Perceptron,
+            MultiOutputClassifier,
         )
 
-        if self.classifier not in ["precomputed", None] and not isinstance(
-            self.classifier, compatible_classifiers
-        ):
-            raise ValueError(
-                "Classifier must be an instance of `"
-                f"{'`, `'.join(c.__name__ for c in compatible_classifiers)}`"
-                ", or `precomputed`"
-            )
+        if self.classifier not in ["precomputed", None]:
+            if not isinstance(self.classifier, compatible_clfs):
+                raise ValueError(
+                    "Classifier must be an instance of `"
+                    f"{'`, `'.join(c.__name__ for c in compatible_clfs)}`"
+                    ", or `precomputed`."
+                )
+
+            if isinstance(self.classifier, MultiOutputClassifier):
+                if not isinstance(self.classifier.estimator, compatible_clfs):
+                    name = type(self.classifier.estimator).__name__
+                    raise ValueError(
+                        "The instance of MultiOutputClassifier passed as the "
+                        f"PCovC classifier contains `{name}`, "
+                        "which is not supported. The MultiOutputClassifier "
+                        "must contain an instance of `"
+                        f"{'`, `'.join(c.__name__ for c in compatible_clfs[:-1])}"
+                        "`, or `precomputed`."
+                    )
 
         multioutput = self.n_outputs_ != 1
         precomputed = self.classifier == "precomputed"

@@ -536,9 +536,9 @@ class PCovCInfrastructureTest(PCovCBaseTest):
             str(cm.exception),
             "Classifier must be an instance of "
             "`LogisticRegression`, `LogisticRegressionCV`, `LinearSVC`, "
-            "`LinearDiscriminantAnalysis`, `MultiOutputClassifier`, `RidgeClassifier`, "
-            "`RidgeClassifierCV`, `SGDClassifier`, `Perceptron`, "
-            "or `precomputed`",
+            "`LinearDiscriminantAnalysis`, `RidgeClassifier`, `RidgeClassifierCV`, "
+            "`SGDClassifier`, `Perceptron`, `MultiOutputClassifier`, "
+            "or `precomputed`.",
         )
 
     def test_none_classifier(self):
@@ -648,7 +648,9 @@ class PCovCMultiOutputTest(PCovCBaseTest):
         """Check that PCovC's decision_function works in edge
         cases when `n_outputs_ > 1`.
         """
-        pcovc = self.model(classifier=MultiOutputClassifier(estimator=LinearSVC()))
+        pcovc = self.model(
+            classifier=MultiOutputClassifier(estimator=LogisticRegression())
+        )
         pcovc.fit(self.X, np.column_stack((self.Y, self.Y)))
         with self.assertRaises(ValueError) as cm:
             _ = pcovc.decision_function()
@@ -660,7 +662,33 @@ class PCovCMultiOutputTest(PCovCBaseTest):
         T = pcovc.transform(self.X)
         _ = pcovc.decision_function(T=T)
 
-    # TODO: Add tests for addition of score function to pcovc.py
+    def test_score(self):
+        """Check that PCovC's score behaves properly with multiple labels."""
+        pcovc_multi = self.model(
+            classifier=MultiOutputClassifier(estimator=LogisticRegression())
+        )
+        pcovc_multi.fit(self.X, np.column_stack((self.Y, self.Y)))
+        score_multi = pcovc_multi.score(self.X, np.column_stack((self.Y, self.Y)))
+
+        pcovc_single = self.model().fit(self.X, self.Y)
+        score_single = pcovc_single.score(self.X, self.Y)
+        self.assertEqual(score_single, score_multi)
+
+    def test_bad_multioutput_estimator(self):
+        """Check that PCovC returns an error when a MultiOutputClassifier
+        is improperly constructed.
+        """
+        with self.assertRaises(ValueError) as cm:
+            pcovc = self.model(classifier=MultiOutputClassifier(estimator=GaussianNB()))
+            pcovc.fit(self.X, np.column_stack((self.Y, self.Y)))
+        self.assertEqual(
+            str(cm.exception),
+            "The instance of MultiOutputClassifier passed as the PCovC classifier "
+            "contains `GaussianNB`, which is not supported. The MultiOutputClassifier "
+            "must contain an instance of `LogisticRegression`, `LogisticRegressionCV`, "
+            "`LinearSVC`, `LinearDiscriminantAnalysis`, `RidgeClassifier`, "
+            "`RidgeClassifierCV`, `SGDClassifier`, `Perceptron`, or `precomputed`.",
+        )
 
 
 if __name__ == "__main__":

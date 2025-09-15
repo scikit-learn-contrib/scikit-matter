@@ -260,9 +260,9 @@ class KernelPCovCInfrastructureTest(KernelPCovCBaseTest):
             str(cm.exception),
             "Classifier must be an instance of "
             "`LogisticRegression`, `LogisticRegressionCV`, `LinearSVC`, "
-            "`LinearDiscriminantAnalysis`, `MultiOutputClassifier`, `RidgeClassifier`, "
-            "`RidgeClassifierCV`, `SGDClassifier`, `Perceptron`, "
-            "or `precomputed`",
+            "`LinearDiscriminantAnalysis`, `RidgeClassifier`, `RidgeClassifierCV`, "
+            "`SGDClassifier`, `Perceptron`, `MultiOutputClassifier`, "
+            "or `precomputed`.",
         )
 
     def test_none_classifier(self):
@@ -590,7 +590,33 @@ class KernelPCovCMultiOutputTest(KernelPCovCBaseTest):
         T = kpcovc.transform(self.X)
         _ = kpcovc.decision_function(T=T)
 
-    # TODO: Add tests for addition of score function to pcovc.py
+    def test_score(self):
+        """Check that KernelPCovC's score behaves properly with multiple labels."""
+        kpcovc_multi = self.model(
+            classifier=MultiOutputClassifier(estimator=LogisticRegression())
+        )
+        kpcovc_multi.fit(self.X, np.column_stack((self.Y, self.Y)))
+        score_multi = kpcovc_multi.score(self.X, np.column_stack((self.Y, self.Y)))
+
+        kpcovc_single = self.model().fit(self.X, self.Y)
+        score_single = kpcovc_single.score(self.X, self.Y)
+        self.assertEqual(score_single, score_multi)
+
+    def test_bad_multioutput_estimator(self):
+        """Check that KernelPCovC returns an error when a MultiOutputClassifier
+        is improperly constructed.
+        """
+        with self.assertRaises(ValueError) as cm:
+            pcovc = self.model(classifier=MultiOutputClassifier(estimator=GaussianNB()))
+            pcovc.fit(self.X, np.column_stack((self.Y, self.Y)))
+        self.assertEqual(
+            str(cm.exception),
+            "The instance of MultiOutputClassifier passed as the KernelPCovC classifier"
+            " contains `GaussianNB`, which is not supported. The MultiOutputClassifier "
+            "must contain an instance of `LogisticRegression`, `LogisticRegressionCV`, "
+            "`LinearSVC`, `LinearDiscriminantAnalysis`, `RidgeClassifier`, "
+            "`RidgeClassifierCV`, `SGDClassifier`, `Perceptron`, or `precomputed`.",
+        )
 
 
 if __name__ == "__main__":
