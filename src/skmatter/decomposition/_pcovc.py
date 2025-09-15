@@ -11,7 +11,6 @@ from sklearn.linear_model import (
 )
 from sklearn.linear_model._base import LinearClassifierMixin
 
-from sklearn.base import MultiOutputMixin
 from sklearn.multioutput import MultiOutputClassifier
 from sklearn.svm import LinearSVC
 from sklearn.utils import check_array
@@ -36,8 +35,8 @@ class PCovC(LinearClassifierMixin, _BasePCov):
             (1 - \alpha) \mathbf{Z}\mathbf{Z}^T
 
     where :math:`\alpha` is a mixing parameter, :math:`\mathbf{X}` is an input matrix of shape
-    :math:`(n_{samples}, n_{features})`, and :math:`\mathbf{Z}` is a matrix of class confidence scores
-    of shape :math:`(n_{samples}, n_{classes})`. For :math:`(n_{samples} < n_{features})`,
+    :math:`(n_{samples}, n_{features})`, and :math:`\mathbf{Z}` is a tensor of class confidence scores
+    of shape :math:`(n_{samples}, n_{classes}, n_{labels})`. For :math:`(n_{samples} < n_{features})`,
     this can be more efficiently computed using the eigendecomposition of a modified covariance matrix
     :math:`\mathbf{\tilde{C}}`
 
@@ -112,10 +111,10 @@ class PCovC(LinearClassifierMixin, _BasePCov):
         - ``sklearn.linear_model.LogisticRegressionCV()``
         - ``sklearn.svm.LinearSVC()``
         - ``sklearn.discriminant_analysis.LinearDiscriminantAnalysis()``
-        - ``sklearn.multioutput.MultiOutputClassifier()``
+        - ``sklearn.linear_model.Perceptron()``
         - ``sklearn.linear_model.RidgeClassifier()``
         - ``sklearn.linear_model.RidgeClassifierCV()``
-        - ``sklearn.linear_model.Perceptron()``
+        - ``sklearn.multioutput.MultiOutputClassifier()``
 
         If a pre-fitted classifier
         is provided, it is used to compute :math:`{\mathbf{Z}}`.
@@ -175,11 +174,15 @@ class PCovC(LinearClassifierMixin, _BasePCov):
         the projector, or weights, from the input space :math:`\mathbf{X}`
         to the latent-space projection :math:`\mathbf{T}`
 
-    pxz_ : ndarray of size :math:`({n_{features}, })`, :math:`({n_{features}, n_{classes}})`
+    pxz_ : ndarray of size :math:`({n_{features}, {n_{classes}}})`, or list of
+        ndarrays of size :math:`({n_{features}, {n_{classes_i}}})` for a dataset
+        with :math: `i` labels.
         the projector, or weights, from the input space :math:`\mathbf{X}`
         to the class confidence scores :math:`\mathbf{Z}`.
 
-    ptz_ : ndarray of size :math:`({n_{components}, })`, :math:`({n_{components}, n_{classes}})`
+    ptz_ : ndarray of size :math:`({n_{components}, {n_{classes}}})`, or list of
+        ndarrays of size :math:`({n_{components}, {n_{classes_i}}})` for a dataset
+        with :math: `i` labels.
         the projector, or weights, from from the latent-space projection
         :math:`\mathbf{T}` to the class confidence scores :math:`\mathbf{Z}`.
 
@@ -267,7 +270,7 @@ class PCovC(LinearClassifierMixin, _BasePCov):
             Classification weights, optional when classifier is ``precomputed``. If
             not passed, it is assumed that the weights will be taken from a
             linear classifier fit between :math:`\mathbf{X}` and :math:`\mathbf{Y}`.
-            In the multioutput case,
+            In the multioutput case, use
             `` W = np.hstack([est_.coef_.T for est_ in classifier.estimators_])``.
         """
         X, Y = validate_data(self, X, Y, multi_output=True, y_numeric=False)
@@ -329,7 +332,7 @@ class PCovC(LinearClassifierMixin, _BasePCov):
                 W = np.hstack([_.coef_.T for _ in _.estimators_])
             else:
                 W = _.coef_.T
-        else:
+        elif W is None:
             self.z_classifier_ = check_cl_fit(classifier, X, Y)
             if multioutput:
                 W = np.hstack([est_.coef_.T for est_ in self.z_classifier_.estimators_])
@@ -337,7 +340,7 @@ class PCovC(LinearClassifierMixin, _BasePCov):
                 W = self.z_classifier_.coef_.T
 
         Z = X @ W
-
+        
         if self.space_ == "feature":
             self._fit_feature_space(X, Y, Z)
         else:
@@ -348,19 +351,12 @@ class PCovC(LinearClassifierMixin, _BasePCov):
         self.classifier_ = clone(classifier).fit(X @ self.pxt_, Y)
 
         if multioutput:
-            self.ptz_ = np.hstack(
-                [est_.coef_.T for est_ in self.classifier_.estimators_]
-            )
-            # print(f"pxt {self.pxt_.shape}")
-            # print(f"ptz {self.ptz_.shape}")
-            self.pxz_ = self.pxt_ @ self.ptz_
-            # print(f"pxz {self.pxz_.shape}")
+            self.ptz_ = [est_.coef_.T for est_ in self.classifier_.estimators_]
+            self.pxz_ = [self.pxt_ @ ptz for ptz in self.ptz_]
         else:
             self.ptz_ = self.classifier_.coef_.T
-            # print(self.ptz_.shape)
             self.pxz_ = self.pxt_ @ self.ptz_
 
-        # print(self.ptz_.shape)
         if not multioutput and type_of_target(Y) == "binary":
             self.pxz_ = self.pxz_.reshape(
                 X.shape[1],
@@ -531,3 +527,4 @@ class PCovC(LinearClassifierMixin, _BasePCov):
 
     # Inherit the docstring from scikit-learn
     score.__doc__ = LinearClassifierMixin.score.__doc__
+    

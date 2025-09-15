@@ -22,8 +22,8 @@ from skmatter.decomposition import PCovC
 plt.rcParams["image.cmap"] = "tab10"
 plt.rcParams["scatter.edgecolors"] = "k"
 # %%
-#
-#
+# For this, we will use the `sklearn.datasets.load_digits` dataset.
+# This dataset contains 8x8 images of handwritten digits (0-9).
 X, y = load_digits(return_X_y=True)
 x_scaler = StandardScaler()
 X_scaled = StandardScaler().fit_transform(X)
@@ -127,3 +127,5 @@ axs[0, 0].set_ylabel("PCA")
 axs[1, 0].set_ylabel("PCovC")
 fig.colorbar(scat_pca, ax=axs, orientation="horizontal")
 fig.suptitle("Multiclass-Multilabel PCovC")
+
+# %%

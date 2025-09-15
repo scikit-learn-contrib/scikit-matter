@@ -39,8 +39,8 @@ class KernelPCovC(LinearClassifierMixin, _BaseKPCov):
 
     where :math:`\alpha` is a mixing parameter,
     :math:`\mathbf{K}` is the input kernel of shape :math:`(n_{samples}, n_{samples})`
-    and :math:`\mathbf{Z}` is a matrix of class confidence scores of shape
-    :math:`(n_{samples}, n_{classes})`
+    and :math:`\mathbf{Z}` is a tensor of class confidence scores of shape
+    :math:`(n_{samples}, n_{classes}, n_{labels})`
 
     Parameters
     ----------
@@ -82,10 +82,10 @@ class KernelPCovC(LinearClassifierMixin, _BaseKPCov):
         - ``sklearn.linear_model.LogisticRegressionCV()``
         - ``sklearn.svm.LinearSVC()``
         - ``sklearn.discriminant_analysis.LinearDiscriminantAnalysis()``
-        - ``sklearn.multioutput.MultiOutputClassifier()``
+        - ``sklearn.linear_model.Perceptron()``
         - ``sklearn.linear_model.RidgeClassifier()``
         - ``sklearn.linear_model.RidgeClassifierCV()``
-        - ``sklearn.linear_model.Perceptron()``
+        - ``sklearn.multioutput.MultiOutputClassifier()``
 
         If a pre-fitted classifier
         is provided, it is used to compute :math:`{\mathbf{Z}}`.
@@ -167,13 +167,15 @@ class KernelPCovC(LinearClassifierMixin, _BaseKPCov):
         the projector, or weights, from the input kernel :math:`\mathbf{K}`
         to the latent-space projection :math:`\mathbf{T}`
 
-    pkz_: numpy.ndarray of size :math:`({n_{samples}, })` or :math:`({n_{samples}, n_{classes}})`
-        the projector, or weights, from the input kernel :math:`\mathbf{K}`
-        to the class confidence scores :math:`\mathbf{Z}`
+    pkz_ : ndarray of size :math:`({n_{features}, {n_{classes}}})`, or list of
+        ndarrays of size :math:`({n_{features}, {n_{classes_i}}})` for a dataset
+        with :math: `i` labels.
+        the projector, or weights, from the input space :math:`\mathbf{X}`
+        to the class confidence scores :math:`\mathbf{Z}`.
 
-    ptz_: numpy.ndarray of size :math:`({n_{components}, })` or :math:`({n_{components}, n_{classes}})`
-        the projector, or weights, from the latent-space projection
-        :math:`\mathbf{T}` to the class confidence scores :math:`\mathbf{Z}`
+    ptz_ : ndarray of size :math:`({n_{components}, {n_{classes}}})`, or list of
+        ndarrays of size :math:`({n_{components}, {n_{classes_i}}})` for a dataset
+        with :math: `i` labels.
 
     ptx_: numpy.ndarray of size :math:`({n_{components}, n_{features}})`
         the projector, or weights, from the latent-space projection
@@ -271,13 +273,16 @@ class KernelPCovC(LinearClassifierMixin, _BaseKPCov):
             scaled to have unit variance, otherwise :math:`\mathbf{X}` should
             be scaled so that each feature has a variance of 1 / n_features.
 
-        Y : numpy.ndarray, shape (n_samples,)
-            Training data, where n_samples is the number of samples.
+        Y : numpy.ndarray, shape (n_samples,) or (n_samples, n_outputs)
+            Training data, where n_samples is the number of samples and
+            n_outputs is the number of outputs.
 
-        W : numpy.ndarray, shape (n_features, n_classes)
+        W : numpy.ndarray, shape (n_features, n_classes) or (n_features, )
             Classification weights, optional when classifier = `precomputed`. If
             not passed, it is assumed that the weights will be taken from a
-            linear classifier fit between K and Y.
+            linear classifier fit between :math:`\mathbf{X}` and :math:`\mathbf{Y}`.
+            In the multioutput case, use
+            `` W = np.hstack([est_.coef_.T for est_ in classifier.estimators_])``.
 
         Returns
         -------
@@ -355,7 +360,7 @@ class KernelPCovC(LinearClassifierMixin, _BaseKPCov):
             else:
                 W = _.coef_.T
 
-        else:
+        elif W is None:
             self.z_classifier_ = check_cl_fit(classifier, K, Y)
             if multioutput:
                 W = np.hstack([est_.coef_.T for est_ in self.z_classifier_.estimators_])
@@ -374,10 +379,8 @@ class KernelPCovC(LinearClassifierMixin, _BaseKPCov):
         self.classifier_ = clone(classifier).fit(K @ self.pkt_, Y)
 
         if multioutput:
-            self.ptz_ = np.hstack(
-                [est_.coef_.T for est_ in self.classifier_.estimators_]
-            )
-            self.pkz_ = self.pkt_ @ self.ptz_
+            self.ptz_ = [est_.coef_.T for est_ in self.classifier_.estimators_]
+            self.pkz_ = [self.pkt_ @ ptz for ptz in self.ptz_]
         else:
             self.ptz_ = self.classifier_.coef_.T
             self.pkz_ = self.pkt_ @ self.ptz_

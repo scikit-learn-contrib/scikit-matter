@@ -606,6 +606,7 @@ class PCovCMultiOutputTest(PCovCBaseTest):
 
         classifier.fit(self.X, Y_double)
         W = np.hstack([est_.coef_.T for est_ in classifier.estimators_])
+        print(W.shape)
         pcovc1 = self.model(mixing=0.5, classifier="precomputed", n_components=1)
         pcovc1.fit(self.X, Y_double, W)
         t1 = pcovc1.transform(self.X)
