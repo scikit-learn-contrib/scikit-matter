@@ -340,7 +340,7 @@ class PCovC(LinearClassifierMixin, _BasePCov):
                 W = self.z_classifier_.coef_.T
 
         Z = X @ W
-        
+
         if self.space_ == "feature":
             self._fit_feature_space(X, Y, Z)
         else:
@@ -527,4 +527,3 @@ class PCovC(LinearClassifierMixin, _BasePCov):
 
     # Inherit the docstring from scikit-learn
     score.__doc__ = LinearClassifierMixin.score.__doc__
-    
