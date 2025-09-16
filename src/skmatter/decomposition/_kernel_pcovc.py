@@ -15,6 +15,7 @@ from sklearn.utils import check_array
 from sklearn.utils.validation import check_is_fitted, validate_data
 from sklearn.linear_model._base import LinearClassifierMixin
 from sklearn.utils.multiclass import check_classification_targets, type_of_target
+from sklearn.preprocessing import StandardScaler
 
 from skmatter.preprocessing import KernelNormalizer
 from skmatter.utils import check_cl_fit
@@ -85,6 +86,10 @@ class KernelPCovC(LinearClassifierMixin, _BaseKPCov):
         If a pre-fitted classifier is provided, it is used to compute :math:`{\mathbf{Z}}`.
         If None, ``sklearn.linear_model.LogisticRegression()``
         is used as the classifier.
+    
+    scale_z: boolean, default=True
+        whether to scale Z to zero mean and unit variance prior to
+        eigendecomposition.
 
     kernel : {"linear", "poly", "rbf", "sigmoid", "precomputed"} or callable, default="linear"
         Kernel.
@@ -200,6 +205,7 @@ class KernelPCovC(LinearClassifierMixin, _BaseKPCov):
         n_components=None,
         svd_solver="auto",
         classifier=None,
+        scale_z=True,
         kernel="linear",
         gamma=None,
         degree=3,
@@ -229,6 +235,7 @@ class KernelPCovC(LinearClassifierMixin, _BaseKPCov):
             fit_inverse_transform=fit_inverse_transform,
         )
         self.classifier = classifier
+        self.scale_z = scale_z
 
     def fit(self, X, Y, W=None):
         r"""Fit the model with X and Y.
@@ -323,6 +330,8 @@ class KernelPCovC(LinearClassifierMixin, _BaseKPCov):
                 W = LogisticRegression().fit(K, Y).coef_.T
 
         Z = K @ W
+        if self.scale_z:
+            Z = StandardScaler().fit_transform(Z)
 
         self._fit(K, Z, W)
 

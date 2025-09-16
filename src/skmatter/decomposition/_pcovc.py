@@ -16,6 +16,7 @@ from sklearn.utils.multiclass import check_classification_targets, type_of_targe
 from sklearn.utils.validation import check_is_fitted, validate_data
 from skmatter.decomposition import _BasePCov
 from skmatter.utils import check_cl_fit
+from sklearn.preprocessing import StandardScaler
 
 
 class PCovC(LinearClassifierMixin, _BasePCov):
@@ -122,6 +123,10 @@ class PCovC(LinearClassifierMixin, _BasePCov):
         training data as the composite estimator.
         If None, ``sklearn.linear_model.LogisticRegression()``
         is used as the classifier.
+    
+    scale_z: boolean, default=True
+        whether to scale Z to zero mean and unit variance prior to
+        eigendecomposition.
 
     iterated_power : int or 'auto', default='auto'
         Number of iterations for the power method computed by
@@ -210,9 +215,11 @@ class PCovC(LinearClassifierMixin, _BasePCov):
         tol=1e-12,
         space="auto",
         classifier=None,
+        scale_z=True,
         iterated_power="auto",
         random_state=None,
         whiten=False,
+        
     ):
         super().__init__(
             mixing=mixing,
@@ -225,6 +232,7 @@ class PCovC(LinearClassifierMixin, _BasePCov):
             whiten=whiten,
         )
         self.classifier = classifier
+        self.scale_z = scale_z
 
     def fit(self, X, Y, W=None):
         r"""Fit the model with X and Y.
@@ -300,6 +308,8 @@ class PCovC(LinearClassifierMixin, _BasePCov):
                 W = LogisticRegression().fit(X, Y).coef_.T
 
         Z = X @ W
+        if self.scale_z:
+            Z = StandardScaler().fit_transform(Z)
 
         if self.space_ == "feature":
             self._fit_feature_space(X, Y, Z)
