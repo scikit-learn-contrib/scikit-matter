@@ -15,9 +15,8 @@ from sklearn.utils import check_array
 from sklearn.utils.validation import check_is_fitted, validate_data
 from sklearn.linear_model._base import LinearClassifierMixin
 from sklearn.utils.multiclass import check_classification_targets, type_of_target
-from sklearn.preprocessing import StandardScaler
 
-from skmatter.preprocessing import KernelNormalizer
+from skmatter.preprocessing import KernelNormalizer, StandardFlexibleScaler
 from skmatter.utils import check_cl_fit
 from skmatter.decomposition import _BaseKPCov
 
@@ -331,7 +330,7 @@ class KernelPCovC(LinearClassifierMixin, _BaseKPCov):
 
         Z = K @ W
         if self.scale_z:
-            Z = StandardScaler().fit_transform(Z)
+            Z = StandardFlexibleScaler().fit_transform(Z)
 
         self._fit(K, Z, W)
 

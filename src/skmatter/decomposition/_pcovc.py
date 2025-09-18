@@ -16,7 +16,7 @@ from sklearn.utils.multiclass import check_classification_targets, type_of_targe
 from sklearn.utils.validation import check_is_fitted, validate_data
 from skmatter.decomposition import _BasePCov
 from skmatter.utils import check_cl_fit
-from sklearn.preprocessing import StandardScaler
+from skmatter.preprocessing import StandardFlexibleScaler
 
 
 class PCovC(LinearClassifierMixin, _BasePCov):
@@ -310,9 +310,9 @@ class PCovC(LinearClassifierMixin, _BasePCov):
         Z = X @ W
 
         if self.scale_z:
-            z_scaler = StandardScaler().fit(Z)
+            z_scaler = StandardFlexibleScaler().fit(Z)
             Z = z_scaler.transform(Z)
-            W /= np.sqrt(z_scaler.var_).reshape(1, -1)
+            W /= z_scaler.scale_.reshape(1, -1)
 
         if self.space_ == "feature":
             self._fit_feature_space(X, Y, Z)
