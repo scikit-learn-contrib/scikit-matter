@@ -123,10 +123,9 @@ class PCovC(LinearClassifierMixin, _BasePCov):
         training data as the composite estimator.
         If None, ``sklearn.linear_model.LogisticRegression()``
         is used as the classifier.
-    
+
     scale_z: bool, default=True
-        whether to scale Z to zero mean and unit variance prior to
-        eigendecomposition.
+        whether to scale Z to zero prior to eigendecomposition.
 
     iterated_power : int or 'auto', default='auto'
         Number of iterations for the power method computed by
@@ -219,7 +218,6 @@ class PCovC(LinearClassifierMixin, _BasePCov):
         iterated_power="auto",
         random_state=None,
         whiten=False,
-        
     ):
         super().__init__(
             mixing=mixing,
