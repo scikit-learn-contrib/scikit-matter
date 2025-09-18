@@ -87,7 +87,7 @@ class KernelPCovC(LinearClassifierMixin, _BaseKPCov):
         is used as the classifier.
 
     scale_z: bool, default=True
-        whether to scale Z prior to eigendecomposition.
+        Whether to scale Z prior to eigendecomposition.
 
     kernel : {"linear", "poly", "rbf", "sigmoid", "precomputed"} or callable, default="linear"
         Kernel.
