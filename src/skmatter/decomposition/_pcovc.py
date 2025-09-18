@@ -124,7 +124,7 @@ class PCovC(LinearClassifierMixin, _BasePCov):
         If None, ``sklearn.linear_model.LogisticRegression()``
         is used as the classifier.
     
-    scale_z: boolean, default=True
+    scale_z: bool, default=True
         whether to scale Z to zero mean and unit variance prior to
         eigendecomposition.
 
