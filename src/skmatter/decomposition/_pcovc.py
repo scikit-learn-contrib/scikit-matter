@@ -125,7 +125,7 @@ class PCovC(LinearClassifierMixin, _BasePCov):
         is used as the classifier.
 
     scale_z: bool, default=True
-        whether to scale Z to zero prior to eigendecomposition.
+        whether to scale Z prior to eigendecomposition.
 
     iterated_power : int or 'auto', default='auto'
         Number of iterations for the power method computed by
