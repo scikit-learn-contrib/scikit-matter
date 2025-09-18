@@ -578,6 +578,17 @@ class PCovCInfrastructureTest(PCovCBaseTest):
             % (len(pcovc_multi.classes_), self.X.shape[1], cl_binary.coef_.shape),
         )
 
+    def test_scale_z_parameter(self):
+        """Check that changing scale_z changes the eigendecomposition."""
+        pcovc_scaled = self.model(scale_z=True)
+        pcovc_scaled.fit(self.X, self.Y)
+
+        pcovc_unscaled = self.model(scale_z=False)
+        pcovc_unscaled.fit(self.X, self.Y)
+        assert not np.allclose(
+            pcovc_scaled.singular_values_, pcovc_unscaled.singular_values_
+        )
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)
