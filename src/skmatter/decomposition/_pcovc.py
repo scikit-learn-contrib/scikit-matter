@@ -299,7 +299,7 @@ class PCovC(LinearClassifierMixin, _BasePCov):
                 classifier = self.classifier
 
             self.z_classifier_ = check_cl_fit(classifier, X, Y)
-            W = self.z_classifier_.coef_.T
+            W = self.z_classifier_.coef_.T.copy()
 
         else:
             # If precomputed, use default classifier to predict Y from T
@@ -308,8 +308,11 @@ class PCovC(LinearClassifierMixin, _BasePCov):
                 W = LogisticRegression().fit(X, Y).coef_.T
 
         Z = X @ W
+
         if self.scale_z:
-            Z = StandardScaler().fit_transform(Z)
+            z_scaler = StandardScaler().fit(Z)
+            Z = z_scaler.transform(Z)
+            W /= np.sqrt(z_scaler.var_).reshape(1, -1)
 
         if self.space_ == "feature":
             self._fit_feature_space(X, Y, Z)

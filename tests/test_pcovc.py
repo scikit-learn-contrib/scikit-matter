@@ -464,6 +464,8 @@ class PCovCInfrastructureTest(PCovCBaseTest):
         self.assertEqual(pcovc.n_components_, min(self.X.shape))
 
     def test_prefit_classifier(self):
+        """Check that a passed prefit classifier is not modified in
+        PCovC's `fit` call."""
         classifier = LinearSVC()
         classifier.fit(self.X, self.Y)
         pcovc = self.model(mixing=0.5, classifier=classifier)
