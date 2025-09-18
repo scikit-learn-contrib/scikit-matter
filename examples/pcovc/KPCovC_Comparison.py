@@ -85,7 +85,7 @@ X_test_scaled = scaler.transform(X_test)
 # Both PCA and PCovC fail to produce linearly separable latent space
 # maps. We will need a kernel method to effectively separate the moon classes.
 
-mixing = 0.10
+mixing = 0.5
 alpha_d = 0.5
 alpha_p = 0.4
 
