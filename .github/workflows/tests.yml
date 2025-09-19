@@ -13,7 +13,7 @@ jobs:
       matrix:
         os: 
           - ubuntu-latest
-          #- macos-latest  # see issue #271
+          - macos-latest
           - windows-latest
         python-version: 
           - "3.10"
