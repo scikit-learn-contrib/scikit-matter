@@ -5,6 +5,8 @@ from sklearn import clone
 from sklearn.exceptions import NotFittedError
 from sklearn.utils.validation import check_is_fitted, validate_data
 
+from sklearn.multioutput import MultiOutputClassifier
+
 
 def check_cl_fit(classifier, X, y):
     """
@@ -39,29 +41,35 @@ def check_cl_fit(classifier, X, y):
         # Check compatibility with X
         validate_data(fitted_classifier, X, y, reset=False, multi_output=True)
 
-        # Check compatibility with the number of features in X and the number of
-        # classes in y
-        n_classes = len(np.unique(y))
-
-        if n_classes == 2:
-            if fitted_classifier.coef_.shape[0] != 1:
-                raise ValueError(
-                    "For binary classification, expected classifier coefficients "
-                    "to have shape (1, "
-                    f"{X.shape[1]}) but got shape "
-                    f"{fitted_classifier.coef_.shape}"
-                )
+        # Check coefficent compatibility with the number of features in X and the
+        # number of classes in y
+        if isinstance(fitted_classifier, MultiOutputClassifier):
+            for est_ in fitted_classifier.estimators_:
+                _check_cl_coef(X, est_.coef_, len(est_.classes_))
         else:
-            if fitted_classifier.coef_.shape[0] != n_classes:
-                raise ValueError(
-                    "For multiclass classification, expected classifier coefficients "
-                    "to have shape "
-                    f"({n_classes}, {X.shape[1]}) but got shape "
-                    f"{fitted_classifier.coef_.shape}"
-                )
+            _check_cl_coef(X, fitted_classifier.coef_, len(np.unique(y)))
 
     except NotFittedError:
         fitted_classifier = clone(classifier)
         fitted_classifier.fit(X, y)
 
     return fitted_classifier
+
+
+def _check_cl_coef(X, classifier_coef_, n_classes):
+    if n_classes == 2:
+        if classifier_coef_.shape[0] != 1:
+            raise ValueError(
+                "For binary classification, expected classifier coefficients "
+                "to have shape (1, "
+                f"{X.shape[1]}) but got shape "
+                f"{classifier_coef_.shape}"
+            )
+    else:
+        if classifier_coef_.shape[0] != n_classes:
+            raise ValueError(
+                "For multiclass classification, expected classifier coefficients "
+                "to have shape "
+                f"({n_classes}, {X.shape[1]}) but got shape "
+                f"{classifier_coef_.shape}"
+            )
