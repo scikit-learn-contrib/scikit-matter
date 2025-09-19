@@ -65,7 +65,7 @@ kernel_params = {
 fig, axs = plt.subplots(2, len(kernels), figsize=(len(kernels) * 4, 8))
 
 center = True
-mixing = 0.10
+mixing = 0.5
 
 for i, kernel in enumerate(kernels):
     kpca = KernelPCA(

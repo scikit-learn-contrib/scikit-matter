@@ -16,6 +16,7 @@ from sklearn.utils.multiclass import check_classification_targets, type_of_targe
 from sklearn.utils.validation import check_is_fitted, validate_data
 from skmatter.decomposition import _BasePCov
 from skmatter.utils import check_cl_fit
+from skmatter.preprocessing import StandardFlexibleScaler
 
 
 class PCovC(LinearClassifierMixin, _BasePCov):
@@ -123,6 +124,9 @@ class PCovC(LinearClassifierMixin, _BasePCov):
         If None, ``sklearn.linear_model.LogisticRegression()``
         is used as the classifier.
 
+    scale_z: bool, default=True
+        Whether to scale Z prior to eigendecomposition.
+
     iterated_power : int or 'auto', default='auto'
         Number of iterations for the power method computed by
         svd_solver == 'randomized'.
@@ -194,10 +198,10 @@ class PCovC(LinearClassifierMixin, _BasePCov):
     >>> pcovc.fit(X, Y)
     PCovC(mixing=0.1, n_components=2)
     >>> pcovc.transform(X)
-    array([[-0.4794854 , -0.46228114],
-           [ 1.9416966 ,  0.2532831 ],
-           [-1.08744947,  0.89117784],
-           [-0.37476173, -0.6821798 ]])
+    array([[-0.38989065, -0.21368409],
+           [ 1.55313271,  0.20273297],
+           [-0.87105559,  0.68233882],
+           [-0.29218647, -0.6713877 ]])
     >>> pcovc.predict(X)
     array([0, 1, 2, 0])
     """  # NoQa: E501
@@ -210,6 +214,7 @@ class PCovC(LinearClassifierMixin, _BasePCov):
         tol=1e-12,
         space="auto",
         classifier=None,
+        scale_z=True,
         iterated_power="auto",
         random_state=None,
         whiten=False,
@@ -225,6 +230,7 @@ class PCovC(LinearClassifierMixin, _BasePCov):
             whiten=whiten,
         )
         self.classifier = classifier
+        self.scale_z = scale_z
 
     def fit(self, X, Y, W=None):
         r"""Fit the model with X and Y.
@@ -291,7 +297,7 @@ class PCovC(LinearClassifierMixin, _BasePCov):
                 classifier = self.classifier
 
             self.z_classifier_ = check_cl_fit(classifier, X, Y)
-            W = self.z_classifier_.coef_.T
+            W = self.z_classifier_.coef_.T.copy()
 
         else:
             # If precomputed, use default classifier to predict Y from T
@@ -300,6 +306,11 @@ class PCovC(LinearClassifierMixin, _BasePCov):
                 W = LogisticRegression().fit(X, Y).coef_.T
 
         Z = X @ W
+
+        if self.scale_z:
+            z_scaler = StandardFlexibleScaler().fit(Z)
+            Z = z_scaler.transform(Z)
+            W /= z_scaler.scale_.reshape(1, -1)
 
         if self.space_ == "feature":
             self._fit_feature_space(X, Y, Z)

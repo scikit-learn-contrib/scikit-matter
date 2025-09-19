@@ -16,7 +16,7 @@ from sklearn.utils.validation import check_is_fitted, validate_data
 from sklearn.linear_model._base import LinearClassifierMixin
 from sklearn.utils.multiclass import check_classification_targets, type_of_target
 
-from skmatter.preprocessing import KernelNormalizer
+from skmatter.preprocessing import KernelNormalizer, StandardFlexibleScaler
 from skmatter.utils import check_cl_fit
 from skmatter.decomposition import _BaseKPCov
 
@@ -85,6 +85,9 @@ class KernelPCovC(LinearClassifierMixin, _BaseKPCov):
         If a pre-fitted classifier is provided, it is used to compute :math:`{\mathbf{Z}}`.
         If None, ``sklearn.linear_model.LogisticRegression()``
         is used as the classifier.
+
+    scale_z: bool, default=True
+        Whether to scale Z prior to eigendecomposition.
 
     kernel : {"linear", "poly", "rbf", "sigmoid", "precomputed"} or callable, default="linear"
         Kernel.
@@ -174,7 +177,7 @@ class KernelPCovC(LinearClassifierMixin, _BaseKPCov):
     >>> from sklearn.preprocessing import StandardScaler
     >>> X = np.array([[-2, 3, -1, 0], [2, 0, -3, 1], [3, 0, -1, 3], [2, -2, 1, 0]])
     >>> X = StandardScaler().fit_transform(X)
-    >>> Y = np.array([[2], [0], [1], [2]])
+    >>> Y = np.array([2, 0, 1, 2])
     >>> kpcovc = KernelPCovC(
     ...     mixing=0.1,
     ...     n_components=2,
@@ -184,10 +187,10 @@ class KernelPCovC(LinearClassifierMixin, _BaseKPCov):
     >>> kpcovc.fit(X, Y)
     KernelPCovC(gamma=1, kernel='rbf', mixing=0.1, n_components=2)
     >>> kpcovc.transform(X)
-    array([[-4.45970689e-01,  8.95327566e-06],
-           [ 4.52745933e-01,  5.54810948e-01],
-           [ 4.52881359e-01, -5.54708315e-01],
-           [-4.45921092e-01, -7.32157649e-05]])
+    array([[-4.41692911e-01,  6.87831803e-06],
+           [ 4.47719340e-01,  5.47456981e-01],
+           [ 4.47850288e-01, -5.47360522e-01],
+           [-4.41645711e-01, -7.05197801e-05]])
     >>> kpcovc.predict(X)
     array([2, 0, 1, 2])
     >>> kpcovc.score(X, Y)
@@ -200,6 +203,7 @@ class KernelPCovC(LinearClassifierMixin, _BaseKPCov):
         n_components=None,
         svd_solver="auto",
         classifier=None,
+        scale_z=True,
         kernel="linear",
         gamma=None,
         degree=3,
@@ -229,6 +233,7 @@ class KernelPCovC(LinearClassifierMixin, _BaseKPCov):
             fit_inverse_transform=fit_inverse_transform,
         )
         self.classifier = classifier
+        self.scale_z = scale_z
 
     def fit(self, X, Y, W=None):
         r"""Fit the model with X and Y.
@@ -323,6 +328,8 @@ class KernelPCovC(LinearClassifierMixin, _BaseKPCov):
                 W = LogisticRegression().fit(K, Y).coef_.T
 
         Z = K @ W
+        if self.scale_z:
+            Z = StandardFlexibleScaler().fit_transform(Z)
 
         self._fit(K, Z, W)
 

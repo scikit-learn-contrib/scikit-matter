@@ -327,6 +327,15 @@ class KernelPCovCInfrastructureTest(KernelPCovCBaseTest):
         self.assertTrue(np.linalg.norm(t3 - t2) < self.error_tol)
         self.assertTrue(np.linalg.norm(t3 - t1) < self.error_tol)
 
+    def test_scale_z_parameter(self):
+        """Check that changing scale_z changes the eigendecomposition."""
+        kpcovc_scaled = self.model(scale_z=True)
+        kpcovc_scaled.fit(self.X, self.Y)
+
+        kpcovc_unscaled = self.model(scale_z=False)
+        kpcovc_unscaled.fit(self.X, self.Y)
+        assert not np.allclose(kpcovc_scaled.pkt_, kpcovc_unscaled.pkt_)
+
 
 class KernelTests(KernelPCovCBaseTest):
     def test_kernel_types(self):
