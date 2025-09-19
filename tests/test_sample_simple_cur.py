@@ -1,7 +1,7 @@
 import unittest
 
 import numpy as np
-from sklearn.datasets import fetch_california_housing as load
+from sklearn.datasets import load_diabetes as load
 
 from skmatter.sample_selection import CUR, FPS
 
