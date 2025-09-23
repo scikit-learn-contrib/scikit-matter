@@ -17,6 +17,7 @@ from sklearn.utils.validation import check_is_fitted, validate_data
 from skmatter.decomposition import _BasePCov
 from skmatter.utils import check_cl_fit
 from skmatter.preprocessing import StandardFlexibleScaler
+import warnings
 
 
 class PCovC(LinearClassifierMixin, _BasePCov):
@@ -124,7 +125,7 @@ class PCovC(LinearClassifierMixin, _BasePCov):
         If None, ``sklearn.linear_model.LogisticRegression()``
         is used as the classifier.
 
-    scale_z: bool, default=True
+    scale_z: bool, default=False
         Whether to scale Z prior to eigendecomposition.
 
     iterated_power : int or 'auto', default='auto'
@@ -145,6 +146,14 @@ class PCovC(LinearClassifierMixin, _BasePCov):
 
     tol: float, default=1e-12
         Tolerance for singular values computed by svd_solver == 'arpack'.
+        Must be of range [0.0, infinity).
+
+    z_mean_tol: float, default=1e-12
+        Tolerance for the column means of Z.
+        Must be of range [0.0, infinity).
+
+    z_var_tol: float, default=1.5
+        Tolerance for the column variances of Z.
         Must be of range [0.0, infinity).
 
     space: {'feature', 'sample', 'auto'}, default='auto'
@@ -212,9 +221,11 @@ class PCovC(LinearClassifierMixin, _BasePCov):
         n_components=None,
         svd_solver="auto",
         tol=1e-12,
+        z_mean_tol=1e-12,
+        z_var_tol=1.5,
         space="auto",
         classifier=None,
-        scale_z=True,
+        scale_z=False,
         iterated_power="auto",
         random_state=None,
         whiten=False,
@@ -231,6 +242,8 @@ class PCovC(LinearClassifierMixin, _BasePCov):
         )
         self.classifier = classifier
         self.scale_z = scale_z
+        self.z_mean_tol = z_mean_tol
+        self.z_var_tol = z_var_tol
 
     def fit(self, X, Y, W=None):
         r"""Fit the model with X and Y.
@@ -311,6 +324,23 @@ class PCovC(LinearClassifierMixin, _BasePCov):
             z_scaler = StandardFlexibleScaler().fit(Z)
             Z = z_scaler.transform(Z)
             W /= z_scaler.scale_.reshape(1, -1)
+
+        self.z_means_ = np.mean(Z, axis=0)
+        self.z_vars_ = np.var(Z, axis=0)
+
+        if np.max(np.abs(self.z_means_)) > self.z_mean_tol:
+            warnings.warn(
+                "This class does not automatically center Z, and the column means "
+                "of Z are greater than the supplied tolerance. We recommend scaling "
+                "Z (and the weights) by setting `scale_z=True`."
+            )
+
+        if np.max(self.z_vars_) > self.z_var_tol:
+            warnings.warn(
+                "This class does not automatically scale Z, and the column variances "
+                "of Z are greater than the supplied tolerance. We recommend scaling "
+                "Z (and the weights) by setting `scale_z=True`."
+            )
 
         if self.space_ == "feature":
             self._fit_feature_space(X, Y, Z)
