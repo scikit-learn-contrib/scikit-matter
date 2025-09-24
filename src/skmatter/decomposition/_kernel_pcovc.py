@@ -87,7 +87,7 @@ class KernelPCovC(LinearClassifierMixin, _BaseKPCov):
         If None, ``sklearn.linear_model.LogisticRegression()``
         is used as the classifier.
 
-    scale_z: bool, default=True
+    scale_z: bool, default=False
         Whether to scale Z prior to eigendecomposition.
 
     kernel : {"linear", "poly", "rbf", "sigmoid", "precomputed"} or callable, default="linear"
