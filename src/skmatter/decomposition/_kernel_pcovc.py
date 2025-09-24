@@ -199,10 +199,10 @@ class KernelPCovC(LinearClassifierMixin, _BaseKPCov):
     >>> kpcovc.fit(X, Y)
     KernelPCovC(gamma=1, kernel='rbf', mixing=0.1, n_components=2)
     >>> kpcovc.transform(X)
-    array([[-4.41692911e-01,  6.87831803e-06],
-           [ 4.47719340e-01,  5.47456981e-01],
-           [ 4.47850288e-01, -5.47360522e-01],
-           [-4.41645711e-01, -7.05197801e-05]])
+    array([[-4.45970689e-01,  8.95327566e-06],
+           [ 4.52745933e-01,  5.54810948e-01],
+           [ 4.52881359e-01, -5.54708315e-01],
+           [-4.45921092e-01, -7.32157649e-05]])
     >>> kpcovc.predict(X)
     array([2, 0, 1, 2])
     >>> kpcovc.score(X, Y)

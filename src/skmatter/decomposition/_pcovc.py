@@ -195,6 +195,9 @@ class PCovC(LinearClassifierMixin, _BasePCov):
         the projector, or weights, from the latent-space projection
         :math:`\mathbf{T}` to the class confidence scores :math:`\mathbf{Z}`
 
+    scale_z: bool
+        Whether Z is being scaled prior to eigendecomposition
+
     explained_variance_ : numpy.ndarray of shape (n_components,)
         The amount of variance explained by each of the selected components.
         Equal to n_components largest eigenvalues
@@ -215,10 +218,10 @@ class PCovC(LinearClassifierMixin, _BasePCov):
     >>> pcovc.fit(X, Y)
     PCovC(mixing=0.1, n_components=2)
     >>> pcovc.transform(X)
-    array([[-0.38989065, -0.21368409],
-           [ 1.55313271,  0.20273297],
-           [-0.87105559,  0.68233882],
-           [-0.29218647, -0.6713877 ]])
+    array([[-0.4794854 , -0.46228114],
+           [ 1.9416966 ,  0.2532831 ],
+           [-1.08744947,  0.89117784],
+           [-0.37476173, -0.6821798 ]])
     >>> pcovc.predict(X)
     array([0, 1, 2, 0])
     """  # NoQa: E501
