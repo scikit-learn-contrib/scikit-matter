@@ -1,4 +1,5 @@
 import unittest
+import warnings
 
 import numpy as np
 from sklearn import exceptions
@@ -34,10 +35,12 @@ class KernelPCovCBaseTest(unittest.TestCase):
             lambda mixing=0.5,
             classifier=LogisticRegression(),
             n_components=4,
+            scale_z=True,
             **kwargs: KernelPCovC(
                 mixing=mixing,
                 classifier=classifier,
                 n_components=n_components,
+                scale_z=scale_z,
                 svd_solver=kwargs.pop("svd_solver", "full"),
                 **kwargs,
             )
@@ -335,6 +338,35 @@ class KernelPCovCInfrastructureTest(KernelPCovCBaseTest):
         kpcovc_unscaled = self.model(scale_z=False)
         kpcovc_unscaled.fit(self.X, self.Y)
         assert not np.allclose(kpcovc_scaled.pkt_, kpcovc_unscaled.pkt_)
+
+    def test_z_scaling(self):
+        """
+        Check that KPCovC raises a warning if Z is not of scale, and does not
+        if it is.
+        """
+        kpcovc = self.model(n_components=2, scale_z=True)
+
+        with warnings.catch_warnings():
+            kpcovc.fit(self.X, self.Y)
+            warnings.simplefilter("error")
+            self.assertEqual(1 + 1, 2)
+
+        kpcovc = self.model(n_components=2, scale_z=False, z_mean_tol=0, z_var_tol=0)
+
+        with warnings.catch_warnings(record=True) as w:
+            kpcovc.fit(self.X, self.Y)
+            self.assertEqual(
+                str(w[0].message),
+                "This class does not automatically center Z, and the column means "
+                "of Z are greater than the supplied tolerance. We recommend scaling "
+                "Z (and the weights) by setting `scale_z=True`.",
+            )
+            self.assertEqual(
+                str(w[1].message),
+                "This class does not automatically scale Z, and the column variances "
+                "of Z are greater than the supplied tolerance. We recommend scaling "
+                "Z (and the weights) by setting `scale_z=True`.",
+            )
 
 
 class KernelTests(KernelPCovCBaseTest):

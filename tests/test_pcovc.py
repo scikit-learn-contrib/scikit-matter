@@ -18,8 +18,13 @@ class PCovCBaseTest(unittest.TestCase):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.model = lambda mixing=0.5, classifier=LogisticRegression(), scale_z=True, **kwargs: PCovC(
-            mixing=mixing, classifier=classifier, scale_z=scale_z, **kwargs
+        self.model = (
+            lambda mixing=0.5,
+            classifier=LogisticRegression(),
+            scale_z=True,
+            **kwargs: PCovC(
+                mixing=mixing, classifier=classifier, scale_z=scale_z, **kwargs
+            )
         )
 
         self.error_tol = 1e-5

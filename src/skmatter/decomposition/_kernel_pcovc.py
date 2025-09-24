@@ -361,7 +361,7 @@ class KernelPCovC(LinearClassifierMixin, _BaseKPCov):
             warnings.warn(
                 "This class does not automatically scale Z, and the column variances "
                 "of Z are greater than the supplied tolerance. We recommend scaling "
-                "Z (and the weights) by setting `scale_z=True`. "
+                "Z (and the weights) by setting `scale_z=True`."
             )
 
         self._fit(K, Z, W)
