@@ -65,7 +65,8 @@ kernel_params = {
 fig, axs = plt.subplots(2, len(kernels), figsize=(len(kernels) * 4, 8))
 
 center = True
-mixing = 0.10
+mixing = 0.5
+scale_z = True
 
 for i, kernel in enumerate(kernels):
     kpca = KernelPCA(
@@ -83,6 +84,7 @@ for i, kernel in enumerate(kernels):
         random_state=random_state,
         **kernel_params.get(kernel, {}),
         center=center,
+        scale_z=scale_z,
     )
     t_kpcovc = kpcovc.fit_transform(X_scaled, y)
 
@@ -118,7 +120,7 @@ for ax, gamma in zip(axs, gamma_vals):
     kpcovc = KernelPCovC(
         n_components=n_components,
         random_state=random_state,
-        mixing=mixing,
+        mixing=0.1,
         center=center,
         kernel="rbf",
         gamma=gamma,

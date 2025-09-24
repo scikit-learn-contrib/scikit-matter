@@ -19,8 +19,11 @@ class PCovCBaseTest(unittest.TestCase):
         super().__init__(*args, **kwargs)
 
         self.model = (
-            lambda mixing=0.5, classifier=LogisticRegression(), **kwargs: PCovC(
-                mixing=mixing, classifier=classifier, **kwargs
+            lambda mixing=0.5,
+            classifier=LogisticRegression(),
+            scale_z=True,
+            **kwargs: PCovC(
+                mixing=mixing, classifier=classifier, scale_z=scale_z, **kwargs
             )
         )
 
@@ -402,6 +405,35 @@ class PCovCInfrastructureTest(PCovCBaseTest):
                 "mean is greater than the supplied tolerance.",
             )
 
+    def test_z_scaling(self):
+        """
+        Check that PCovC raises a warning if Z is not of scale, and does not
+        if it is.
+        """
+        pcovc = self.model(n_components=2, scale_z=True)
+
+        with warnings.catch_warnings():
+            pcovc.fit(self.X, self.Y)
+            warnings.simplefilter("error")
+            self.assertEqual(1 + 1, 2)
+
+        pcovc = self.model(n_components=2, scale_z=False, z_mean_tol=0, z_var_tol=0)
+
+        with warnings.catch_warnings(record=True) as w:
+            pcovc.fit(self.X, self.Y)
+            self.assertEqual(
+                str(w[0].message),
+                "This class does not automatically center Z, and the column means "
+                "of Z are greater than the supplied tolerance. We recommend scaling "
+                "Z (and the weights) by setting `scale_z=True`.",
+            )
+            self.assertEqual(
+                str(w[1].message),
+                "This class does not automatically scale Z, and the column variances "
+                "of Z are greater than the supplied tolerance. We recommend scaling "
+                "Z (and the weights) by setting `scale_z=True`.",
+            )
+
     def test_T_shape(self):
         """Check that PCovC returns a latent space projection consistent with
         the shape of the input matrix.
@@ -464,6 +496,9 @@ class PCovCInfrastructureTest(PCovCBaseTest):
         self.assertEqual(pcovc.n_components_, min(self.X.shape))
 
     def test_prefit_classifier(self):
+        """Check that a passed prefit classifier is not modified in
+        PCovC's `fit` call.
+        """
         classifier = LinearSVC()
         classifier.fit(self.X, self.Y)
         pcovc = self.model(mixing=0.5, classifier=classifier)
@@ -573,6 +608,17 @@ class PCovCInfrastructureTest(PCovCBaseTest):
             "For multiclass classification, expected classifier coefficients "
             "to have shape (%d, %d) but got shape %r"
             % (len(pcovc_multi.classes_), self.X.shape[1], cl_binary.coef_.shape),
+        )
+
+    def test_scale_z_parameter(self):
+        """Check that changing scale_z changes the eigendecomposition."""
+        pcovc_scaled = self.model(scale_z=True)
+        pcovc_scaled.fit(self.X, self.Y)
+
+        pcovc_unscaled = self.model(scale_z=False)
+        pcovc_unscaled.fit(self.X, self.Y)
+        assert not np.allclose(
+            pcovc_scaled.singular_values_, pcovc_unscaled.singular_values_
         )
 
 
