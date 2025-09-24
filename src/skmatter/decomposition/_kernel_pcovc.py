@@ -121,8 +121,8 @@ class KernelPCovC(LinearClassifierMixin, _BaseKPCov):
         Must be of range [0.0, infinity).
 
     z_mean_tol: float, default=1e-12
-    Tolerance for the column means of Z.
-    Must be of range [0.0, infinity).
+        Tolerance for the column means of Z.
+        Must be of range [0.0, infinity).
 
     z_var_tol: float, default=1.5
         Tolerance for the column variances of Z.
@@ -178,6 +178,9 @@ class KernelPCovC(LinearClassifierMixin, _BaseKPCov):
     X_fit_: numpy.ndarray of shape (n_samples, n_features)
         The data used to fit the model. This attribute is used to build kernels
         from new data.
+
+    scale_z: bool
+        Whether Z is being scaled prior to eigendecomposition.
 
     Examples
     --------
@@ -344,17 +347,17 @@ class KernelPCovC(LinearClassifierMixin, _BaseKPCov):
         if self.scale_z:
             Z = StandardFlexibleScaler().fit_transform(Z)
 
-        self.z_means_ = np.mean(Z, axis=0)
-        self.z_vars_ = np.var(Z, axis=0)
+        z_means_ = np.mean(Z, axis=0)
+        z_vars_ = np.var(Z, axis=0)
 
-        if np.max(np.abs(self.z_means_)) > self.z_mean_tol:
+        if np.max(np.abs(z_means_)) > self.z_mean_tol:
             warnings.warn(
                 "This class does not automatically center Z, and the column means "
                 "of Z are greater than the supplied tolerance. We recommend scaling "
                 "Z (and the weights) by setting `scale_z=True`."
             )
 
-        if np.max(self.z_vars_) > self.z_var_tol:
+        if np.max(z_vars_) > self.z_var_tol:
             warnings.warn(
                 "This class does not automatically scale Z, and the column variances "
                 "of Z are greater than the supplied tolerance. We recommend scaling "

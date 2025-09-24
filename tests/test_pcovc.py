@@ -18,10 +18,8 @@ class PCovCBaseTest(unittest.TestCase):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.model = (
-            lambda mixing=0.5, classifier=LogisticRegression(), **kwargs: PCovC(
-                mixing=mixing, classifier=classifier, **kwargs
-            )
+        self.model = lambda mixing=0.5, classifier=LogisticRegression(), scale_z=True, **kwargs: PCovC(
+            mixing=mixing, classifier=classifier, scale_z=scale_z, **kwargs
         )
 
         self.error_tol = 1e-5
@@ -400,6 +398,35 @@ class PCovCInfrastructureTest(PCovCBaseTest):
                 str(w[0].message),
                 "This class does not automatically center data, and your data "
                 "mean is greater than the supplied tolerance.",
+            )
+
+    def test_z_scaling(self):
+        """
+        Check that PCovC raises a warning if Z is not of scale, and does not
+        if it is.
+        """
+        pcovc = self.model(n_components=2, scale_z=True)
+
+        with warnings.catch_warnings():
+            pcovc.fit(self.X, self.Y)
+            warnings.simplefilter("error")
+            self.assertEqual(1 + 1, 2)
+
+        pcovc = self.model(n_components=2, scale_z=False, z_mean_tol=0, z_var_tol=0)
+
+        with warnings.catch_warnings(record=True) as w:
+            pcovc.fit(self.X, self.Y)
+            self.assertEqual(
+                str(w[0].message),
+                "This class does not automatically center Z, and the column means "
+                "of Z are greater than the supplied tolerance. We recommend scaling "
+                "Z (and the weights) by setting `scale_z=True`.",
+            )
+            self.assertEqual(
+                str(w[1].message),
+                "This class does not automatically scale Z, and the column variances "
+                "of Z are greater than the supplied tolerance. We recommend scaling "
+                "Z (and the weights) by setting `scale_z=True`.",
             )
 
     def test_T_shape(self):
