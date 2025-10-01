@@ -38,6 +38,5 @@ jobs:
     - name: upload to codecov.io
       uses: codecov/codecov-action@v5
       with:
-        fail_ci_if_error: true
         files: ./tests/coverage.xml
         token: ${{ secrets.CODECOV_TOKEN }}
