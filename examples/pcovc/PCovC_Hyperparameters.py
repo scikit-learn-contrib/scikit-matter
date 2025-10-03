@@ -77,6 +77,7 @@ for ax, mixing in zip(axs, mixing_params):
         n_components=n_components,
         random_state=random_state,
         classifier=LogisticRegressionCV(),
+        scale_z=True,
     )
 
     pcovc.fit(X_scaled, y)
@@ -120,6 +121,7 @@ for ax, model in zip(axs, models):
         n_components=n_components,
         random_state=random_state,
         classifier=model,
+        scale_z=True,
     )
 
     pcovc.fit(X_scaled, y)

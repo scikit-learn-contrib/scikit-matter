@@ -33,6 +33,7 @@ cm_bright = ListedColormap(["#d7191c", "#fdae61", "#a6d96a", "#3a7cdf"])
 
 random_state = 0
 n_components = 2
+scale_z = True
 
 # %%
 #
@@ -85,7 +86,7 @@ X_test_scaled = scaler.transform(X_test)
 # Both PCA and PCovC fail to produce linearly separable latent space
 # maps. We will need a kernel method to effectively separate the moon classes.
 
-mixing = 0.10
+mixing = 0.5
 alpha_d = 0.5
 alpha_p = 0.4
 
@@ -95,6 +96,7 @@ models = {
         n_components=n_components,
         random_state=random_state,
         mixing=mixing,
+        scale_z=scale_z,
         classifier=LinearSVC(),
     ): "PCovC",
 }
@@ -138,6 +140,7 @@ models = {
         random_state=random_state,
         mixing=mixing,
         center=center,
+        scale_z=scale_z,
         **kernel_params,
     ): {"title": "Kernel PCovC", "eps": 2},
 }
@@ -220,6 +223,7 @@ for ax, name, model in zip(axs.flat, names, models):
         mixing=mixing,
         classifier=model,
         center=center,
+        scale_z=scale_z,
         **models[model]["kernel_params"],
     )
     t_kpcovc_train = kpcovc.fit_transform(X_train_scaled, y_train)

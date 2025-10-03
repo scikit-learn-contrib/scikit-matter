@@ -1,3 +1,4 @@
+import warnings
 import numpy as np
 
 from sklearn import clone
@@ -17,7 +18,7 @@ from sklearn.utils.validation import check_is_fitted, validate_data
 from sklearn.linear_model._base import LinearClassifierMixin
 from sklearn.utils.multiclass import check_classification_targets, type_of_target
 
-from skmatter.preprocessing import KernelNormalizer
+from skmatter.preprocessing import KernelNormalizer, StandardFlexibleScaler
 from skmatter.utils import check_cl_fit
 from skmatter.decomposition import _BaseKPCov
 
@@ -99,6 +100,9 @@ class KernelPCovC(LinearClassifierMixin, _BaseKPCov):
         constructed, with ``sklearn.linear_model.LogisticRegression()`` models used for each
         label.
 
+    scale_z: bool, default=False
+        Whether to scale Z prior to eigendecomposition.
+
     kernel : {"linear", "poly", "rbf", "sigmoid", "precomputed"} or callable, default="linear"
         Kernel.
 
@@ -127,6 +131,14 @@ class KernelPCovC(LinearClassifierMixin, _BaseKPCov):
     tol : float, default=1e-12
         Tolerance for singular values computed by svd_solver == 'arpack'
         and for matrix inversions.
+        Must be of range [0.0, infinity).
+
+    z_mean_tol: float, default=1e-12
+        Tolerance for the column means of Z.
+        Must be of range [0.0, infinity).
+
+    z_var_tol: float, default=1.5
+        Tolerance for the column variances of Z.
         Must be of range [0.0, infinity).
 
     n_jobs : int, default=None
@@ -185,6 +197,9 @@ class KernelPCovC(LinearClassifierMixin, _BaseKPCov):
         The data used to fit the model. This attribute is used to build kernels
         from new data.
 
+    scale_z: bool
+        Whether Z is being scaled prior to eigendecomposition.
+
     Examples
     --------
     >>> import numpy as np
@@ -192,7 +207,7 @@ class KernelPCovC(LinearClassifierMixin, _BaseKPCov):
     >>> from sklearn.preprocessing import StandardScaler
     >>> X = np.array([[-2, 3, -1, 0], [2, 0, -3, 1], [3, 0, -1, 3], [2, -2, 1, 0]])
     >>> X = StandardScaler().fit_transform(X)
-    >>> Y = np.array([[2], [0], [1], [2]])
+    >>> Y = np.array([2, 0, 1, 2])
     >>> kpcovc = KernelPCovC(
     ...     mixing=0.1,
     ...     n_components=2,
@@ -218,6 +233,7 @@ class KernelPCovC(LinearClassifierMixin, _BaseKPCov):
         n_components=None,
         svd_solver="auto",
         classifier=None,
+        scale_z=False,
         kernel="linear",
         gamma=None,
         degree=3,
@@ -226,6 +242,8 @@ class KernelPCovC(LinearClassifierMixin, _BaseKPCov):
         center=False,
         fit_inverse_transform=False,
         tol=1e-12,
+        z_mean_tol=1e-12,
+        z_var_tol=1.5,
         n_jobs=None,
         iterated_power="auto",
         random_state=None,
@@ -247,6 +265,9 @@ class KernelPCovC(LinearClassifierMixin, _BaseKPCov):
             fit_inverse_transform=fit_inverse_transform,
         )
         self.classifier = classifier
+        self.scale_z = scale_z
+        self.z_mean_tol = z_mean_tol
+        self.z_var_tol = z_var_tol
 
     def fit(self, X, Y, W=None):
         r"""Fit the model with X and Y.
@@ -368,6 +389,25 @@ class KernelPCovC(LinearClassifierMixin, _BaseKPCov):
                 W = self.z_classifier_.coef_.T
 
         Z = K @ W
+        if self.scale_z:
+            Z = StandardFlexibleScaler().fit_transform(Z)
+
+        z_means_ = np.mean(Z, axis=0)
+        z_vars_ = np.var(Z, axis=0)
+
+        if np.max(np.abs(z_means_)) > self.z_mean_tol:
+            warnings.warn(
+                "This class does not automatically center Z, and the column means "
+                "of Z are greater than the supplied tolerance. We recommend scaling "
+                "Z (and the weights) by setting `scale_z=True`."
+            )
+
+        if np.max(z_vars_) > self.z_var_tol:
+            warnings.warn(
+                "This class does not automatically scale Z, and the column variances "
+                "of Z are greater than the supplied tolerance. We recommend scaling "
+                "Z (and the weights) by setting `scale_z=True`."
+            )
 
         self._fit(K, Z, W)
 
