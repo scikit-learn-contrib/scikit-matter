@@ -141,9 +141,6 @@ class PCovC(LinearClassifierMixin, _BasePCov):
     scale_z: bool, default=False
         Whether to scale Z prior to eigendecomposition.
 
-    scale_z: bool, default=False
-        Whether to scale Z prior to eigendecomposition.
-
     iterated_power : int or 'auto', default='auto'
         Number of iterations for the power method computed by
         svd_solver == 'randomized'.
