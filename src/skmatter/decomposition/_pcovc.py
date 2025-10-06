@@ -141,6 +141,9 @@ class PCovC(LinearClassifierMixin, _BasePCov):
     scale_z: bool, default=False
         Whether to scale Z prior to eigendecomposition.
 
+    scale_z: bool, default=False
+        Whether to scale Z prior to eigendecomposition.
+
     iterated_power : int or 'auto', default='auto'
         Number of iterations for the power method computed by
         svd_solver == 'randomized'.
@@ -206,6 +209,9 @@ class PCovC(LinearClassifierMixin, _BasePCov):
         with :math: `i` labels.
         the projector, or weights, from from the latent-space projection
         :math:`\mathbf{T}` to the class confidence scores :math:`\mathbf{Z}`.
+
+    scale_z: bool
+        Whether Z is being scaled prior to eigendecomposition
 
     scale_z: bool
         Whether Z is being scaled prior to eigendecomposition
