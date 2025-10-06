@@ -210,9 +210,6 @@ class PCovC(LinearClassifierMixin, _BasePCov):
     scale_z: bool
         Whether Z is being scaled prior to eigendecomposition
 
-    scale_z: bool
-        Whether Z is being scaled prior to eigendecomposition
-
     explained_variance_ : numpy.ndarray of shape (n_components,)
         The amount of variance explained by each of the selected components.
         Equal to n_components largest eigenvalues
