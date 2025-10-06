@@ -303,7 +303,7 @@ class KernelPCovC(LinearClassifierMixin, _BaseKPCov):
             not passed, it is assumed that the weights will be taken from a
             linear classifier fit between :math:`\mathbf{X}` and :math:`\mathbf{Y}`.
             In the multioutput case, use
-            `` W = np.hstack([est_.coef_.T for est_ in classifier.estimators_])``.
+            ``W = np.hstack([est_.coef_.T for est_ in classifier.estimators_])``.
 
         Returns
         -------
@@ -514,11 +514,11 @@ class KernelPCovC(LinearClassifierMixin, _BaseKPCov):
 
         Returns
         -------
-        Z : numpy.ndarray, shape (n_samples,) or (n_samples, n_classes), or a list of \
-                n_outputs_ such arrays if n_outputs_ > 1
+        Z : numpy.ndarray, shape (n_samples,) or (n_samples, n_classes), or
+            a list of n_outputs such arrays if n_outputs > 1.
             Confidence scores. For binary classification, has shape `(n_samples,)`,
             for multiclass classification, has shape `(n_samples, n_classes)`.
-            If n_outputs_ > 1, the list can contain arrays with differing shapes
+            If n_outputs > 1, the list can contain arrays with differing shapes
             depending on the number of classes in each output of Y.
         """
         check_is_fitted(self, attributes=["pkz_", "ptz_"])

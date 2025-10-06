@@ -133,8 +133,8 @@ class PCovC(LinearClassifierMixin, _BasePCov):
         `sklearn.pipeline.Pipeline` with model caching.
         In such cases, the classifier will be re-fitted on the same
         training data as the composite estimator.
-        If None and ``n_outputs < 2``, ``sklearn.linear_model.LogisticRegression()`` is used.
-        If None and ``n_outputs >= 2``, a ``sklearn.multioutput.MultiOutputClassifier()`` is
+        If None and ``n_outputs_ < 2``, ``sklearn.linear_model.LogisticRegression()`` is used.
+        If None and ``n_outputs_ >= 2``, a ``sklearn.multioutput.MultiOutputClassifier()`` is
         constructed, with ``sklearn.linear_model.LogisticRegression()`` models used for each
         label.
 
@@ -301,7 +301,7 @@ class PCovC(LinearClassifierMixin, _BasePCov):
             not passed, it is assumed that the weights will be taken from a
             linear classifier fit between :math:`\mathbf{X}` and :math:`\mathbf{Y}`.
             In the multioutput case, use
-            `` W = np.hstack([est_.coef_.T for est_ in classifier.estimators_])``.
+            ``W = np.hstack([est_.coef_.T for est_ in classifier.estimators_])``.
         """
         X, Y = validate_data(self, X, Y, multi_output=True, y_numeric=False)
 
