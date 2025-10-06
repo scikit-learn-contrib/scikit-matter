@@ -5,6 +5,7 @@ import numpy as np
 from sklearn import exceptions
 from sklearn.svm import LinearSVC
 from sklearn.datasets import load_breast_cancer as get_dataset
+from sklearn.datasets import load_iris as get_multiclass_dataset
 from sklearn.multioutput import MultiOutputClassifier
 from sklearn.naive_bayes import GaussianNB
 from sklearn.utils.validation import check_X_y
@@ -633,14 +634,16 @@ class KernelPCovCMultiOutputTest(KernelPCovCBaseTest):
 
     def test_score(self):
         """Check that KernelPCovC's score behaves properly with multiple labels."""
+        X, y = get_multiclass_dataset(return_X_y=True)
+        X = StandardScaler().fit_transform(X)
         kpcovc_multi = self.model(
             classifier=MultiOutputClassifier(estimator=LogisticRegression())
         )
-        kpcovc_multi.fit(self.X, np.column_stack((self.Y, self.Y)))
-        score_multi = kpcovc_multi.score(self.X, np.column_stack((self.Y, self.Y)))
+        kpcovc_multi.fit(X, np.column_stack((y, y)))
+        score_multi = kpcovc_multi.score(X, np.column_stack((y, y)))
 
-        kpcovc_single = self.model().fit(self.X, self.Y)
-        score_single = kpcovc_single.score(self.X, self.Y)
+        kpcovc_single = self.model().fit(X, y)
+        score_single = kpcovc_single.score(X, y)
         self.assertEqual(score_single, score_multi)
 
     def test_bad_multioutput_estimator(self):
