@@ -107,10 +107,11 @@ fig, axs = plt.subplots(1, 2, figsize=(10, 4))
 for ax, model in zip(axs, models):
     t_train = model.fit_transform(X_train_scaled, y_train)
     t_test = model.transform(X_test_scaled)
-    
-    ax.scatter(t_train[:, 0], t_train[:, 1], alpha=alpha_train, cmap=cm_bright, c=y_train)
+
+    ax.scatter(
+        t_train[:, 0], t_train[:, 1], alpha=alpha_train, cmap=cm_bright, c=y_train
+    )
     ax.scatter(t_test[:, 0], t_test[:, 1], alpha=alpha_test, cmap=cm_bright, c=y_test)
-    
 
     ax.set_title(models[model])
     plt.tight_layout()
@@ -168,7 +169,9 @@ for ax, model in zip(axs, models):
         eps=models[model]["eps"],
         grid_resolution=resolution,
     )
-    ax.scatter(t_train[:, 0], t_train[:, 1], alpha=alpha_train, cmap=cm_bright, c=y_train)
+    ax.scatter(
+        t_train[:, 0], t_train[:, 1], alpha=alpha_train, cmap=cm_bright, c=y_train
+    )
     ax.scatter(t_test[:, 0], t_test[:, 1], alpha=alpha_test, cmap=cm_bright, c=y_test)
     ax.set_title(models[model]["title"])
 
@@ -242,9 +245,15 @@ for ax, name, model in zip(axs.flat, names, models):
         eps=models[model].get("eps", 1),
         grid_resolution=resolution,
     )
-    
-    ax.scatter(t_kpcovc_train[:, 0], t_kpcovc_train[:, 1], alpha=alpha_train, cmap=cm_bright, c=y_train)
-    
+
+    ax.scatter(
+        t_kpcovc_train[:, 0],
+        t_kpcovc_train[:, 1],
+        alpha=alpha_train,
+        cmap=cm_bright,
+        c=y_train,
+    )
+
     ax.scatter(
         t_kpcovc_test[:, 0],
         t_kpcovc_test[:, 1],
@@ -252,7 +261,7 @@ for ax, name, model in zip(axs.flat, names, models):
         alpha=alpha_test,
         c=y_test,
     )
-    
+
     ax.text(
         0.70,
         0.03,
