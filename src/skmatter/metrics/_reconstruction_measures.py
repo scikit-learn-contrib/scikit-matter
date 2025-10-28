@@ -44,46 +44,28 @@ def pointwise_global_reconstruction_error(
         X use input shape (samples, features). For sample reconstruction of Y using X
         use input shape (features, samples).
     train_idx : numpy.ndarray, dtype=int, default=None
-        array of indices used for training, if None,
-        If None, the complement of the ``test_idx`` is used. If ``train_size`` is
-        also None, 2-fold split is taken.
+        Array of indices used for training. If None, the complement of the ``test_idx``
+        is used. If ``train_size`` is also None, 2-fold split is taken.
     test_idx : numpy.ndarray, dtype=int, default=None
-        array of indices used for training, if None,
-        If None, the complement of the ``train_idx`` is used. If ``test_size`` is
-        also None, 2-fold split is taken.
-    scaler : object implementing fit/transfom
-        Scales the X and Y before computing the reconstruction measure.
-        The default value scales the features such that the reconstruction
-        measure on the training set is upper bounded to 1.
-    estimator : object implementing fit/predict, default=None
-        Sklearn estimator used to reconstruct features/samples.
+        Array of indices used for testing. If None, the complement of the ``train_idx``
+        is used. If ``test_size`` is also None, 2-fold split is taken.
+    scaler : object implementing fit/transform, default=``StandardFlexibleScaler``
+        Scales X and Y before computing the reconstruction measure. The default value
+        scales the features such that the reconstruction measure on the training set is
+        upper bounded to 1.
+    estimator : object implementing fit/predict, default=``Ridge2FoldCV``
+        Sklearn estimator used to reconstruct test features/samples.
 
     Returns
     -------
     pointwise_global_reconstruction_error : numpy.ndarray
-        The global reconstruction error for each sample/point
+        The global reconstruction error for each test sample/point.
     """
-    (
-        train_idx,
-        test_idx,
-        scaler,
-        estimator,
-    ) = check_global_reconstruction_measures_input(
+    train_idx, test_idx, scaler, estimator = check_global_reconstruction_measures_input(
         X, Y, train_idx, test_idx, scaler, estimator
     )
-    X_train, X_test, Y_train, Y_test = (
-        X[train_idx],
-        X[test_idx],
-        Y[train_idx],
-        Y[test_idx],
-    )
 
-    scaler.fit(X_train)
-    X_train = scaler.transform(X_train)
-    X_test = scaler.transform(X_test)
-    scaler.fit(Y_train)
-    Y_train = scaler.transform(Y_train)
-    Y_test = scaler.transform(Y_test)
+    X_train, X_test, Y_train, Y_test = _prepare_data(X, Y, train_idx, test_idx, scaler)
 
     estimator.fit(X_train, Y_train)
 
@@ -120,27 +102,25 @@ def global_reconstruction_error(
     Parameters
     ----------
     X : numpy.ndarray of shape (n_samples, X_n_features)
-        Source data which reconstructs target Y.
-        For feature reconstruction of Y using X use input shape (samples, features).
-        For sample reconstruction of Y using X use input shape (features, samples).
+        Source data which reconstructs target Y. For feature reconstruction of Y using X
+        use input shape (samples, features). For sample reconstruction of Y using X use
+        input shape (features, samples).
     Y : numpy.ndarray of shape (n_samples, Y_n_targets)
-        Target data which is reconstructed with X.
-        For feature reconstruction of Y using X use input shape (samples, features).
-        For sample reconstruction of Y using X use input shape (features, samples).
+        Target data which is reconstructed with X. For feature reconstruction of Y using
+        X use input shape (samples, features). For sample reconstruction of Y using X
+        use input shape (features, samples).
     train_idx : numpy.ndarray, dtype=int, default=None
-        array of indices used for training, if None,
-        If None, the complement of the ``test_idx`` is used. If ``train_size`` is
-        also None, 2-fold split is taken.
+        Array of indices used for training. If None, the complement of the ``test_idx``
+        is used. If ``train_size`` is also None, 2-fold split is taken.
     test_idx : numpy.ndarray, dtype=int, default=None
-        array of indices used for training, if None,
-        If None, the complement of the ``train_idx`` is used. If ``test_size`` is
-        also None, 2-fold split is taken.
-    scaler : object implementing fit/transfom
-        Scales the X and Y before computing the reconstruction measure.
-        The default value scales the features such that the reconstruction
-        measure on the training set is upper bounded to 1.
-    estimator : object implementing fit/predict, default=None
-        Sklearn estimator used to reconstruct features/samples.
+        Array of indices used for testing. If None, the complement of the ``train_idx``
+        is used. If ``test_size`` is also None, 2-fold split is taken.
+    scaler : object implementing fit/transform, default=``StandardFlexibleScaler``
+        Scales X and Y before computing the reconstruction measure. The default value
+        scales the features such that the reconstruction measure on the training set is
+        upper bounded to 1.
+    estimator : object implementing fit/predict, default=``Ridge2FoldCV``
+        Sklearn estimator used to reconstruct test features/samples.
 
     Returns
     -------
@@ -201,46 +181,28 @@ def pointwise_global_reconstruction_distortion(
         For feature reconstruction of Y using X use input shape (samples, features).
         For sample reconstruction of Y using X use input shape (features, samples).
     train_idx : numpy.ndarray, dtype=int, default=None
-        array of indices used for training, if None,
-        If None, the complement of the ``test_idx`` is used. If ``train_size`` is
-        also None, 2-fold split is taken.
+        Array of indices used for training. If None, the complement of the ``test_idx``
+        is used. If ``train_size`` is also None, 2-fold split is taken.
     test_idx : numpy.ndarray, dtype=int, default=None
-        array of indices used for training, if None,
-        If None, the complement of the ``train_idx`` is used. If ``test_size`` is
-        also None, 2-fold split is taken.
-    scaler : object implementing fit/transfom
-        Scales the X and Y before computing the reconstruction measure.
-        The default value scales the features such that the reconstruction
-        measure on the training set is upper bounded to 1.
-    estimator : object implementing fit/predict, default=None
-        Sklearn estimator used to reconstruct features/samples.
+        Array of indices used for testing. If None, the complement of the ``train_idx``
+        is used. If ``test_size`` is also None, 2-fold split is taken.
+    scaler : object implementing fit/transform, default=``StandardFlexibleScaler``
+        Scales X and Y before computing the reconstruction measure. The default value
+        scales the features such that the reconstruction measure on the training set is
+        upper bounded to 1.
+    estimator : object implementing fit/predict, default=``Ridge2FoldCV``
+        Sklearn estimator used to reconstruct test features/samples.
 
     Returns
     -------
     pointwise_global_reconstruction_distortion : ndarray
         The global reconstruction distortion for each sample/point
     """
-    (
-        train_idx,
-        test_idx,
-        scaler,
-        estimator,
-    ) = check_global_reconstruction_measures_input(
+    train_idx, test_idx, scaler, estimator = check_global_reconstruction_measures_input(
         X, Y, train_idx, test_idx, scaler, estimator
     )
-    X_train, X_test, Y_train, Y_test = (
-        X[train_idx],
-        X[test_idx],
-        Y[train_idx],
-        Y[test_idx],
-    )
 
-    scaler.fit(X_train)
-    X_train = scaler.transform(X_train)
-    X_test = scaler.transform(X_test)
-    scaler.fit(Y_train)
-    Y_train = scaler.transform(Y_train)
-    Y_test = scaler.transform(Y_test)
+    X_train, X_test, Y_train, _Y_test = _prepare_data(X, Y, train_idx, test_idx, scaler)
 
     predictions_Y_test = estimator.fit(X_train, Y_train).predict(X_test)
     orthogonal_predictions_Y_test = (
@@ -291,19 +253,17 @@ def global_reconstruction_distortion(
         For feature reconstruction of Y using X use input shape (samples, features).
         For sample reconstruction of Y using X use input shape (features, samples).
     train_idx : numpy.ndarray, dtype=int, default=None
-        array of indices used for training, if None,
-        If None, the complement of the ``test_idx`` is used. If ``train_size`` is
-        also None, 2-fold split is taken.
+        Array of indices used for training. If None, the complement of the ``test_idx``
+        is used. If ``train_size`` is also None, 2-fold split is taken.
     test_idx : numpy.ndarray, dtype=int, default=None
-        array of indices used for training, if None,
-        If None, the complement of the ``train_idx`` is used. If ``test_size`` is
-        also None, 2-fold split is taken.
-    scaler : object implementing fit/transfom
-        Scales the X and Y before computing the reconstruction measure.
-        The default value scales the features such that the reconstruction
-        measure on the training set is upper bounded to 1.
-    estimator : object implementing fit/predict, default=None
-        Sklearn estimator used to reconstruct features/samples.
+        Array of indices used for testing. If None, the complement of the ``train_idx``
+        is used. If ``test_size`` is also None, 2-fold split is taken.
+    scaler : object implementing fit/transform, default=``StandardFlexibleScaler``
+        Scales X and Y before computing the reconstruction measure. The default value
+        scales the features such that the reconstruction measure on the training set is
+        upper bounded to 1.
+    estimator : object implementing fit/predict, default=``Ridge2FoldCV``
+        Sklearn estimator used to reconstruct test features/samples.
 
     Returns
     -------
@@ -373,19 +333,23 @@ def pointwise_local_reconstruction_error(
         Number of neighbour points used to compute the local reconstruction weight for
         each sample/point.
     train_idx : numpy.ndarray, dtype=int, default=None
-        array of indices used for training, if None,
-        If None, the complement of the ``test_idx`` is used. If ``train_size`` is
-        also None, 2-fold split is taken.
+        Array of indices used for training. If None, the complement of the ``test_idx``
+        is used. If ``train_size`` is also None, 2-fold split is taken.
     test_idx : numpy.ndarray, dtype=int, default=None
-        array of indices used for training, if None,
-        If None, the complement of the ``train_idx`` is used. If ``test_size`` is
-        also None, 2-fold split is taken.
-    scaler : object implementing fit/transfom
-        Scales the X and Y before computing the reconstruction measure.
-        The default value scales the features such that the reconstruction
-        measure on the training set is upper bounded to 1.
-    estimator : object implementing fit/predict, default=None
-        Sklearn estimator used to reconstruct features/samples.
+        Array of indices used for testing. If None, the complement of the ``train_idx``
+        is used. If ``test_size`` is also None, 2-fold split is taken.
+    scaler : object implementing fit/transform, default=``StandardFlexibleScaler``
+        Scales X and Y before computing the reconstruction measure. The default value
+        scales the features such that the reconstruction measure on the training set is
+        upper bounded to 1.
+    estimator : object implementing fit/predict, default=``Ridge2FoldCV``
+        Sklearn estimator used to reconstruct test features/samples.
+    n_jobs : int, default=None
+        The number of CPUs to use to do the computation.
+        :obj:`None` means 1 unless in a :obj:`joblib.parallel_backend` context.
+        ``-1`` means using all processors. See
+        `n_jobs glossary from sklearn (external link) <https://scikit-learn.org/stable/glossary.html#term-n-jobs>`_
+        for more details.
 
     Returns
     -------
@@ -393,27 +357,11 @@ def pointwise_local_reconstruction_error(
         The local reconstruction error for each sample/point
 
     """
-    (
-        train_idx,
-        test_idx,
-        scaler,
-        estimator,
-    ) = check_local_reconstruction_measures_input(
+    train_idx, test_idx, scaler, estimator = check_local_reconstruction_measures_input(
         X, Y, n_local_points, train_idx, test_idx, scaler, estimator
     )
-    X_train, X_test, Y_train, Y_test = (
-        X[train_idx],
-        X[test_idx],
-        Y[train_idx],
-        Y[test_idx],
-    )
 
-    scaler.fit(X_train)
-    X_train = scaler.transform(X_train)
-    X_test = scaler.transform(X_test).astype(X_train.dtype)
-    scaler.fit(Y_train)
-    Y_train = scaler.transform(Y_train)
-    Y_test = scaler.transform(Y_test)
+    X_train, X_test, Y_train, Y_test = _prepare_data(X, Y, train_idx, test_idx, scaler)
 
     squared_dist = (
         np.sum(X_train**2, axis=1)
@@ -496,19 +444,23 @@ def local_reconstruction_error(
         Number of neighbour points used to compute the local reconstruction weight for
         each sample/point.
     train_idx : numpy.ndarray, dtype=int, default=None
-        array of indices used for training, if None,
-        If None, the complement of the ``test_idx`` is used. If ``train_size`` is
-        also None, 2-fold split is taken.
+        Array of indices used for training. If None, the complement of the ``test_idx``
+        is used. If ``train_size`` is also None, 2-fold split is taken.
     test_idx : numpy.ndarray, dtype=int, default=None
-        array of indices used for training, if None,
-        If None, the complement of the ``train_idx`` is used. If ``test_size`` is
-        also None, 2-fold split is taken.
-    scaler : object implementing fit/transfom
-        Scales the X and Y before computing the reconstruction measure.
-        The default value scales the features such that the reconstruction
-        measure on the training set is upper bounded to 1.
-    estimator : object implementing fit/predict, default=None
-        Sklearn estimator used to reconstruct features/samples.
+        Array of indices used for testing. If None, the complement of the ``train_idx``
+        is used. If ``test_size`` is also None, 2-fold split is taken.
+    scaler : object implementing fit/transform, default=``StandardFlexibleScaler``
+        Scales X and Y before computing the reconstruction measure. The default value
+        scales the features such that the reconstruction measure on the training set is
+        upper bounded to 1.
+    estimator : object implementing fit/predict, default=``Ridge2FoldCV``
+        Sklearn estimator used to reconstruct test features/samples.
+    n_jobs : int, default=None
+        The number of CPUs to use to do the computation.
+        :obj:`None` means 1 unless in a :obj:`joblib.parallel_backend` context.
+        ``-1`` means using all processors. See
+        `n_jobs glossary from sklearn (external link) <https://scikit-learn.org/stable/glossary.html#term-n-jobs>`_
+        for more details.
 
     Returns
     -------
@@ -534,7 +486,11 @@ def check_global_reconstruction_measures_input(
     X, Y, train_idx, test_idx, scaler, estimator
 ):
     """Returns default reconstruction measure inputs for all None parameters"""
-    assert len(X) == len(Y)
+    if X.shape[0] != Y.shape[0]:
+        raise ValueError(
+            f"First dimension of X ({X.shape[0]}) and Y ({Y.shape[0]}) must match"
+        )
+
     if (train_idx is None) and (test_idx is None):
         train_idx, test_idx = train_test_split(
             np.arange(len(X)),
@@ -562,6 +518,7 @@ def check_global_reconstruction_measures_input(
             scoring="neg_root_mean_squared_error",
             n_jobs=1,
         )
+
     return train_idx, test_idx, scaler, estimator
 
 
@@ -570,7 +527,39 @@ def check_local_reconstruction_measures_input(
 ):
     """Returns default reconstruction measure inputs for all None parameters"""
     # only needs to check one extra parameter
-    assert len(X) >= n_local_points
+    if len(X) < n_local_points:
+        raise ValueError(
+            f"X has {len(X)} samples but n_local_points={n_local_points}. "
+            "Must have at least n_local_points samples"
+        )
+
     return check_global_reconstruction_measures_input(
         X, Y, train_idx, test_idx, scaler, estimator
     )
+
+
+def _prepare_data(X, Y, train_idx, test_idx, scaler):
+    """
+    Split and scale data for reconstruction measures
+
+    Parameters
+    ----------
+    X, Y : array-like
+        Input data
+    train_idx, test_idx : array-like
+        Indices for train/test split
+    scaler : object
+        Fitted scaler
+    """
+    X_train, X_test = X[train_idx], X[test_idx]
+    Y_train, Y_test = Y[train_idx], Y[test_idx]
+
+    scaler.fit(X_train)
+    X_train_scaled = scaler.transform(X_train)
+    X_test_scaled = scaler.transform(X_test)
+
+    scaler.fit(Y_train)
+    Y_train_scaled = scaler.transform(Y_train)
+    Y_test_scaled = scaler.transform(Y_test)
+
+    return X_train_scaled, X_test_scaled, Y_train_scaled, Y_test_scaled
