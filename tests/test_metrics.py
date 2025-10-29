@@ -6,6 +6,7 @@ from sklearn.utils import check_random_state, extmath
 
 from skmatter.datasets import load_degenerate_CH4_manifold
 from skmatter.metrics import (
+    check_global_reconstruction_measures_input,
     componentwise_prediction_rigidity,
     global_reconstruction_distortion,
     global_reconstruction_error,
@@ -213,6 +214,17 @@ class ReconstructionMeasuresTests(unittest.TestCase):
             f"size of pointwise LFRE  {len(lfre_val)} differs from expected test set "
             f"size {test_size}",
         )
+
+    def test_source_target_len(self):
+        # tests that the source and target features have the same lenght
+        X = np.array([[1, 2, 3], [4, 5, 6]])
+        Y = np.array([[1, 2, 3]])
+
+        with self.assertRaises(ValueError) as context:
+            check_global_reconstruction_measures_input(X, Y)
+
+        expected_message = "First dimension of X (2) and Y (1) must match"
+        self.assertEqual(str(context.exception), expected_message)
 
 
 class DistanceTests(unittest.TestCase):
