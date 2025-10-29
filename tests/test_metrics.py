@@ -220,8 +220,15 @@ class ReconstructionMeasuresTests(unittest.TestCase):
         X = np.array([[1, 2, 3], [4, 5, 6]])
         Y = np.array([[1, 2, 3]])
 
+        train_idx = [0]
+        test_idx = [1]
+        scaler = None
+        estimator = None
+
         with self.assertRaises(ValueError) as context:
-            check_global_reconstruction_measures_input(X, Y)
+            check_global_reconstruction_measures_input(
+                X, Y, train_idx, test_idx, scaler, estimator
+            )
 
         expected_message = "First dimension of X (2) and Y (1) must match"
         self.assertEqual(str(context.exception), expected_message)
