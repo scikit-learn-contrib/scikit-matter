@@ -539,18 +539,7 @@ def check_local_reconstruction_measures_input(
 
 
 def _prepare_data(X, Y, train_idx, test_idx, scaler):
-    """
-    Split and scale data for reconstruction measures
-
-    Parameters
-    ----------
-    X, Y : array-like
-        Input data
-    train_idx, test_idx : array-like
-        Indices for train/test split
-    scaler : object
-        Fitted scaler
-    """
+    """Split and scale data for reconstruction measures"""
     X_train, X_test = X[train_idx], X[test_idx]
     Y_train, Y_test = Y[train_idx], Y[test_idx]
 
