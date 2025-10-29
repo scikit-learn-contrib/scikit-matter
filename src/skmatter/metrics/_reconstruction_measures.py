@@ -44,11 +44,11 @@ def pointwise_global_reconstruction_error(
         X use input shape (samples, features). For sample reconstruction of Y using X
         use input shape (features, samples).
     train_idx : numpy.ndarray, dtype=int, default=None
-        Array of indices used for training. If None, the complement of the ``test_idx``
+        Array of indices used for training. If ``None``, the complement of the ``test_idx``
         is used. If ``train_size`` is also None, 2-fold split is taken.
     test_idx : numpy.ndarray, dtype=int, default=None
-        Array of indices used for testing. If None, the complement of the ``train_idx``
-        is used. If ``test_size`` is also None, 2-fold split is taken.
+        Array of indices used for testing. If ``None``, the complement of the ``train_idx``
+        is used. If ``test_size`` is also ``None``, 2-fold split is taken.
     scaler : object implementing fit/transform, default=``StandardFlexibleScaler``
         Scales X and Y before computing the reconstruction measure. The default value
         scales the features such that the reconstruction measure on the training set is
@@ -111,7 +111,7 @@ def global_reconstruction_error(
         use input shape (features, samples).
     train_idx : numpy.ndarray, dtype=int, default=None
         Array of indices used for training. If None, the complement of the ``test_idx``
-        is used. If ``train_size`` is also None, 2-fold split is taken.
+        is used. If ``train_size`` is also ``None``, 2-fold split is taken.
     test_idx : numpy.ndarray, dtype=int, default=None
         Array of indices used for testing. If None, the complement of the ``train_idx``
         is used. If ``test_size`` is also None, 2-fold split is taken.
@@ -253,10 +253,10 @@ def global_reconstruction_distortion(
         For feature reconstruction of Y using X use input shape (samples, features).
         For sample reconstruction of Y using X use input shape (features, samples).
     train_idx : numpy.ndarray, dtype=int, default=None
-        Array of indices used for training. If None, the complement of the ``test_idx``
+        Array of indices used for training. If ``None``, the complement of the ``test_idx``
         is used. If ``train_size`` is also None, 2-fold split is taken.
     test_idx : numpy.ndarray, dtype=int, default=None
-        Array of indices used for testing. If None, the complement of the ``train_idx``
+        Array of indices used for testing. If ``None``, the complement of the ``train_idx``
         is used. If ``test_size`` is also None, 2-fold split is taken.
     scaler : object implementing fit/transform, default=``StandardFlexibleScaler``
         Scales X and Y before computing the reconstruction measure. The default value
@@ -334,9 +334,9 @@ def pointwise_local_reconstruction_error(
         each sample/point.
     train_idx : numpy.ndarray, dtype=int, default=None
         Array of indices used for training. If None, the complement of the ``test_idx``
-        is used. If ``train_size`` is also None, 2-fold split is taken.
+        is used. If ``train_size`` is also ``None``, 2-fold split is taken.
     test_idx : numpy.ndarray, dtype=int, default=None
-        Array of indices used for testing. If None, the complement of the ``train_idx``
+        Array of indices used for testing. If ``None``, the complement of the ``train_idx``
         is used. If ``test_size`` is also None, 2-fold split is taken.
     scaler : object implementing fit/transform, default=``StandardFlexibleScaler``
         Scales X and Y before computing the reconstruction measure. The default value
@@ -445,7 +445,7 @@ def local_reconstruction_error(
         each sample/point.
     train_idx : numpy.ndarray, dtype=int, default=None
         Array of indices used for training. If None, the complement of the ``test_idx``
-        is used. If ``train_size`` is also None, 2-fold split is taken.
+        is used. If ``train_size`` is also ``None``, 2-fold split is taken.
     test_idx : numpy.ndarray, dtype=int, default=None
         Array of indices used for testing. If None, the complement of the ``train_idx``
         is used. If ``test_size`` is also None, 2-fold split is taken.
