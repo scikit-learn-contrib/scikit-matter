@@ -7,6 +7,7 @@ from sklearn.utils import check_random_state, extmath
 from skmatter.datasets import load_degenerate_CH4_manifold
 from skmatter.metrics import (
     check_global_reconstruction_measures_input,
+    check_local_reconstruction_measures_input,
     componentwise_prediction_rigidity,
     global_reconstruction_distortion,
     global_reconstruction_error,
@@ -231,6 +232,28 @@ class ReconstructionMeasuresTests(unittest.TestCase):
             )
 
         expected_message = "First dimension of X (2) and Y (1) must match"
+        self.assertEqual(str(context.exception), expected_message)
+
+    def test_len_n_local_points(self):
+        # tests that source len is greater or equal than n_local_points in LFRE
+        X = np.array([[1, 2, 3], [4, 5, 6]])
+        Y = np.array([[1, 1, 1], [2, 2, 2]])
+
+        n_local_points = 10
+        train_idx = [0]
+        test_idx = [1]
+        scaler = None
+        estimator = None
+
+        with self.assertRaises(ValueError) as context:
+            check_local_reconstruction_measures_input(
+                X, Y, n_local_points, train_idx, test_idx, scaler, estimator
+            )
+
+        expected_message = (
+            f"X has {len(X)} samples but n_local_points={n_local_points}. "
+            "Must have at least n_local_points samples"
+        )
         self.assertEqual(str(context.exception), expected_message)
 
 
