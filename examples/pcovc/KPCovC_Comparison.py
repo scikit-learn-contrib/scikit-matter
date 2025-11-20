@@ -88,7 +88,8 @@ X_test_scaled = scaler.transform(X_test)
 
 mixing = 0.5
 alpha_d = 0.5
-alpha_p = 0.4
+alpha_train = 0.2
+alpha_test = 0.8
 
 models = {
     PCA(n_components=n_components): "PCA",
@@ -107,8 +108,10 @@ for ax, model in zip(axs, models):
     t_train = model.fit_transform(X_train_scaled, y_train)
     t_test = model.transform(X_test_scaled)
 
-    ax.scatter(t_test[:, 0], t_test[:, 1], alpha=alpha_p, cmap=cm_bright, c=y_test)
-    ax.scatter(t_train[:, 0], t_train[:, 1], cmap=cm_bright, c=y_train)
+    ax.scatter(
+        t_train[:, 0], t_train[:, 1], alpha=alpha_train, cmap=cm_bright, c=y_train
+    )
+    ax.scatter(t_test[:, 0], t_test[:, 1], alpha=alpha_test, cmap=cm_bright, c=y_test)
 
     ax.set_title(models[model])
     plt.tight_layout()
@@ -166,8 +169,10 @@ for ax, model in zip(axs, models):
         eps=models[model]["eps"],
         grid_resolution=resolution,
     )
-    ax.scatter(t_test[:, 0], t_test[:, 1], alpha=alpha_p, cmap=cm_bright, c=y_test)
-    ax.scatter(t_train[:, 0], t_train[:, 1], cmap=cm_bright, c=y_train)
+    ax.scatter(
+        t_train[:, 0], t_train[:, 1], alpha=alpha_train, cmap=cm_bright, c=y_train
+    )
+    ax.scatter(t_test[:, 0], t_test[:, 1], alpha=alpha_test, cmap=cm_bright, c=y_test)
     ax.set_title(models[model]["title"])
 
     ax.text(
@@ -242,13 +247,21 @@ for ax, name, model in zip(axs.flat, names, models):
     )
 
     ax.scatter(
+        t_kpcovc_train[:, 0],
+        t_kpcovc_train[:, 1],
+        alpha=alpha_train,
+        cmap=cm_bright,
+        c=y_train,
+    )
+
+    ax.scatter(
         t_kpcovc_test[:, 0],
         t_kpcovc_test[:, 1],
         cmap=cm_bright,
-        alpha=alpha_p,
+        alpha=alpha_test,
         c=y_test,
     )
-    ax.scatter(t_kpcovc_train[:, 0], t_kpcovc_train[:, 1], cmap=cm_bright, c=y_train)
+
     ax.text(
         0.70,
         0.03,
