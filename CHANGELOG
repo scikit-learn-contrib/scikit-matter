@@ -13,6 +13,11 @@ The rules for CHANGELOG file:
 
 Unreleased
 ----------
+- Fix PCovC scaling (#270)
+- Refactor of reconstruction measures(#275)
+- Code cleanup of Base classes (#264)
+- Update ``sklearn`` dependency to `>=1.8.0` (#278)
+- Bump minimal Python version to 3.11 (#278)
 
 0.3.2 (2025/07/15)
 ------------------

@@ -2,4 +2,3 @@ sphinx
 sphinx-gallery
 sphinx-toggleprompt
 pydata-sphinx-theme
-tomli
