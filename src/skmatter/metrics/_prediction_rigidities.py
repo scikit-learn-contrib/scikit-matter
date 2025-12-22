@@ -74,7 +74,7 @@ def local_prediction_rigidity(X_train, X_test, alpha):
 
     for ai in range(atom_count):
         Xi = X_test[ai].reshape(1, -1) / sfactor
-        LPR_np[ai] = 1 / (Xi @ Xinv @ Xi.T)
+        LPR_np[ai] = 1 / (Xi @ Xinv @ Xi.T).item()
 
     # separately store LPR by test struc
     LPR = []
@@ -180,11 +180,11 @@ def componentwise_prediction_rigidity(X_train, X_test, alpha, comp_dims):
 
         for ai in range(atom_count):
             Xic = np.multiply(X_test[ai].reshape(1, -1) / sfactor, mask)
-            LCPR_np[ai, ci] = 1 / (Xic @ Xinv @ Xic.T)
+            LCPR_np[ai, ci] = 1 / (Xic @ Xinv @ Xic.T).item()
 
         for si in range(len(X_struc_test)):
             XAc = np.multiply(X_struc_test[si].reshape(1, -1), mask)
-            CPR[si, ci] = 1 / (XAc @ Xinv @ XAc.T)
+            CPR[si, ci] = 1 / (XAc @ Xinv @ XAc.T).item()
 
     # separately store LCPR by test struc
     LCPR = []

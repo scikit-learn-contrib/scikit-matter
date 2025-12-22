@@ -10,11 +10,10 @@
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 
+import tomllib
 import os
 import sys
 from datetime import datetime
-
-import tomli  # Replace by tomllib from std library once docs are build with Python 3.11
 
 import skmatter
 
@@ -28,7 +27,7 @@ sys.path.insert(0, ROOT)
 master_doc = "index"
 
 with open(os.path.join(ROOT, "pyproject.toml"), "rb") as fp:
-    project_dict = tomli.load(fp)["project"]
+    project_dict = tomllib.load(fp)["project"]
 
 project = project_dict["name"]
 author = ", ".join(a["name"] for a in project_dict["authors"])
