@@ -83,13 +83,16 @@ include = [
 output = 'tests/coverage.xml'
 
 [tool.pytest.ini_options]
-testpaths = ["tests"]
 addopts = [
     "--cov",
     "--cov-append",
     "--cov-report=",
     "--import-mode=append",
 ]
+# filterwarnings = [
+#     "error",
+# ]
+testpaths = ["tests"]
 
 [tool.ruff]
 exclude = ["docs/src/examples/", "src/torchpme/_version.py"]

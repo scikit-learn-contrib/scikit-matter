@@ -13,6 +13,7 @@ The rules for CHANGELOG file:
 
 Unreleased
 ----------
+- Fix a couple of ``DeprecationWarnings`` and ``UserWarnings`` (#280)
 - Fix PCovC scaling (#270)
 - Refactor of reconstruction measures(#275)
 - Code cleanup of Base classes (#264)

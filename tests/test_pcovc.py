@@ -10,6 +10,7 @@ from sklearn.linear_model import LogisticRegression, RidgeClassifier
 from sklearn.naive_bayes import GaussianNB
 from sklearn.preprocessing import StandardScaler
 from sklearn.utils.validation import check_X_y
+import pytest
 
 from skmatter.decomposition import PCovC
 
@@ -186,9 +187,10 @@ class PCovCSpaceTest(PCovCBaseTest):
         n_samples = 2
 
         # select range where there are at least 2 classes in Y
-        pcovc.fit(self.X[49 : 49 + n_samples], self.Y[49 : 49 + n_samples])
+        with pytest.warns(match="class does not automatically center data"):
+            pcovc.fit(self.X[49 : 49 + n_samples], self.Y[49 : 49 + n_samples])
 
-        self.assertTrue(pcovc.space_ == "sample")
+        assert pcovc.space_ == "sample"
 
     def test_bad_space(self):
         """
@@ -397,13 +399,12 @@ class PCovCInfrastructureTest(PCovCBaseTest):
         """
         pcovc = self.model(n_components=2, tol=1e-12)
         X = self.X.copy() + np.random.uniform(-1, 1, self.X.shape[1])
-        with warnings.catch_warnings(record=True) as w:
+        m = (
+            "This class does not automatically center data, and your data mean is "
+            "greater than the supplied tolerance."
+        )
+        with pytest.warns(match=m):
             pcovc.fit(X, self.Y)
-            self.assertEqual(
-                str(w[0].message),
-                "This class does not automatically center data, and your data "
-                "mean is greater than the supplied tolerance.",
-            )
 
     def test_z_scaling(self):
         """
@@ -411,11 +412,7 @@ class PCovCInfrastructureTest(PCovCBaseTest):
         if it is.
         """
         pcovc = self.model(n_components=2, scale_z=True)
-
-        with warnings.catch_warnings():
-            pcovc.fit(self.X, self.Y)
-            warnings.simplefilter("error")
-            self.assertEqual(1 + 1, 2)
+        pcovc.fit(self.X, self.Y)
 
         pcovc = self.model(n_components=2, scale_z=False, z_mean_tol=0, z_var_tol=0)
 
@@ -577,9 +574,11 @@ class PCovCInfrastructureTest(PCovCBaseTest):
     def test_none_classifier(self):
         pcovc = PCovC(mixing=0.5, classifier=None)
 
-        pcovc.fit(self.X, self.Y)
-        self.assertTrue(pcovc.classifier is None)
-        self.assertTrue(pcovc.classifier_ is not None)
+        with pytest.warns(match="class does not automatically scale Z"):
+            pcovc.fit(self.X, self.Y)
+
+        assert pcovc.classifier is None
+        assert pcovc.classifier_ is not None
 
     def test_incompatible_coef_shape(self):
         cl_multi = LogisticRegression()
@@ -617,6 +616,7 @@ class PCovCInfrastructureTest(PCovCBaseTest):
 
         pcovc_unscaled = self.model(scale_z=False)
         pcovc_unscaled.fit(self.X, self.Y)
+
         assert not np.allclose(
             pcovc_scaled.singular_values_, pcovc_unscaled.singular_values_
         )

@@ -312,7 +312,7 @@ class VoronoiFPS(GreedySelector):
 
             updated_points = np.where(self.new_dist_ < self.hausdorff_)[0]
             np.minimum(
-                self.hausdorff_, self.new_dist_, self.hausdorff_, casting="unsafe"
+                self.hausdorff_, self.new_dist_, out=self.hausdorff_, casting="unsafe"
             )
         else:
             updated_points = np.array([])
