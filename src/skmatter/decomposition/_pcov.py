@@ -14,7 +14,7 @@ from sklearn.decomposition._pca import _infer_dimension
 from sklearn.linear_model._base import LinearModel
 from sklearn.utils import check_random_state
 from sklearn.utils._arpack import _init_arpack_v0
-from sklearn.utils.extmath import randomized_svd, stable_cumsum, svd_flip
+from sklearn.utils.extmath import randomized_svd, svd_flip
 from sklearn.utils.validation import check_is_fitted
 
 from skmatter.utils import pcovr_covariance, pcovr_kernel
@@ -288,7 +288,7 @@ class _BasePCov(_BasePCA, LinearModel, metaclass=ABCMeta):
             # side='right' ensures that number of features selected
             # their variance is always greater than self.n_components_ float
             # passed. More discussion in issue: #15669
-            ratio_cumsum = stable_cumsum(explained_variance_ratio_)
+            ratio_cumsum = np.cumulative_sum(explained_variance_ratio_)
             self.n_components_ = (
                 np.searchsorted(ratio_cumsum, self.n_components_, side="right") + 1
             )

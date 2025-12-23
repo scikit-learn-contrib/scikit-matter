@@ -1,5 +1,4 @@
 import unittest
-import warnings
 
 import numpy as np
 from sklearn import exceptions
@@ -9,6 +8,7 @@ from sklearn.kernel_ridge import KernelRidge
 from sklearn.linear_model import Ridge
 from sklearn.preprocessing import StandardScaler
 from sklearn.utils.validation import check_X_y
+import pytest
 
 from skmatter.decomposition import PCovR
 
@@ -167,9 +167,11 @@ class PCovRSpaceTest(PCovRBaseTest):
         pcovr = self.model(n_components=2, tol=1e-12)
 
         n_samples = self.X.shape[1] - 1
-        pcovr.fit(self.X[:n_samples], self.Y[:n_samples])
 
-        self.assertTrue(pcovr.space_ == "sample")
+        with pytest.warns(match="class does not automatically center data"):
+            pcovr.fit(self.X[:n_samples], self.Y[:n_samples])
+
+        assert pcovr.space_ == "sample"
 
     def test_bad_space(self):
         """
@@ -280,13 +282,11 @@ class PCovRTestSVDSolvers(PCovRBaseTest):
 
     def test_bad_n_components(self):
         """Check that PCovR will not work with any prohibited values of n_components."""
-        with self.assertRaises(ValueError) as cm:
-            pcovr = self.model(n_components="mle", svd_solver="full")
-            pcovr.fit(self.X[:2], self.Y[:2])
-        self.assertEqual(
-            str(cm.exception),
-            "n_components='mle' is only supported if n_samples >= n_features",
-        )
+        pcovr = self.model(n_components="mle", svd_solver="full")
+        m = "n_components='mle' is only supported if n_samples >= n_features"
+        with pytest.raises(ValueError, match=m):
+            with pytest.warns(match="class does not automatically center data"):
+                pcovr.fit(self.X[:2], self.Y[:2])
 
         with self.subTest(type="negative_ncomponents"):
             with self.assertRaises(ValueError) as cm:
@@ -376,13 +376,12 @@ class PCovRInfrastructureTest(PCovRBaseTest):
         """
         pcovr = self.model(n_components=2, tol=1e-12)
         X = self.X.copy() + np.random.uniform(-1, 1, self.X.shape[1])
-        with warnings.catch_warnings(record=True) as w:
+        m = (
+            "This class does not automatically center data, and your data mean is "
+            "greater than the supplied tolerance."
+        )
+        with pytest.warns(match=m):
             pcovr.fit(X, self.Y)
-            self.assertEqual(
-                str(w[0].message),
-                "This class does not automatically center data, and your data mean is "
-                "greater than the supplied tolerance.",
-            )
 
     def test_T_shape(self):
         """Check that PCovR returns a latent space projection consistent with the shape

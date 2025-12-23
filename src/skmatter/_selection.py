@@ -1019,7 +1019,7 @@ class _FPS(GreedySelector):
             )
 
         # update in-place the Hausdorff distance list
-        np.minimum(self.hausdorff_, new_dist, self.hausdorff_)
+        np.minimum(self.hausdorff_, new_dist, out=self.hausdorff_)
 
     def _update_post_selection(self, X, y, last_selected):
         """
@@ -1163,7 +1163,7 @@ class _PCovFPS(GreedySelector):
         )
 
         # update in-place the Hausdorff distance list
-        np.minimum(self.hausdorff_, new_dist, self.hausdorff_)
+        np.minimum(self.hausdorff_, new_dist, out=self.hausdorff_)
 
     def _update_post_selection(self, X, y, last_selected):
         """Saves the most recent selections, increments the counter, and, recomputes

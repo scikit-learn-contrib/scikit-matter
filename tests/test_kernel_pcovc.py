@@ -10,6 +10,7 @@ from sklearn.utils.validation import check_X_y
 from sklearn.preprocessing import StandardScaler
 from sklearn.linear_model import LogisticRegression, RidgeClassifier
 from sklearn.metrics.pairwise import pairwise_kernels
+import pytest
 
 from skmatter.decomposition import KernelPCovC
 
@@ -337,6 +338,7 @@ class KernelPCovCInfrastructureTest(KernelPCovCBaseTest):
 
         kpcovc_unscaled = self.model(scale_z=False)
         kpcovc_unscaled.fit(self.X, self.Y)
+
         assert not np.allclose(kpcovc_scaled.pkt_, kpcovc_unscaled.pkt_)
 
     def test_z_scaling(self):
@@ -345,11 +347,7 @@ class KernelPCovCInfrastructureTest(KernelPCovCBaseTest):
         if it is.
         """
         kpcovc = self.model(n_components=2, scale_z=True)
-
-        with warnings.catch_warnings():
-            kpcovc.fit(self.X, self.Y)
-            warnings.simplefilter("error")
-            self.assertEqual(1 + 1, 2)
+        kpcovc.fit(self.X, self.Y)
 
         kpcovc = self.model(n_components=2, scale_z=False, z_mean_tol=0, z_var_tol=0)
 
