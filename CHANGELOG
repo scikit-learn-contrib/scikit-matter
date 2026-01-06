@@ -13,16 +13,19 @@ The rules for CHANGELOG file:
 
 Unreleased
 ----------
+
+0.3.3 (2026/01/06)
+------------------
 - Fix a couple of ``DeprecationWarnings`` and ``UserWarnings`` (#280)
 - Fix PCovC scaling (#270)
-- Refactor of reconstruction measures(#275)
+- Refactor of reconstruction measures (#275)
 - Code cleanup of Base classes (#264)
 - Update ``sklearn`` dependency to `>=1.8.0` (#278)
 - Bump minimal Python version to 3.11 (#278)
 
 0.3.2 (2025/07/15)
 ------------------
-- Fix bug in GreedySelection that would pick same item multiple times (#265)
+- Fix bug in ``GreedySelection`` that would pick same item multiple times (#265)
 
 0.3.1 (2025/06/30)
 ------------------
