@@ -97,9 +97,8 @@ def test_load_csd_1000r_access_descr(csd):
 def test_load_dataset_without_pandas():
     """Check if the correct exception occurs when pandas isn't present."""
     with mock.patch.dict("sys.modules", {"pandas": None}):
-        with pytest.raises(ImportError) as cm:
-            _ = load_who_dataset()
-        assert str(cm.value) == "load_who_dataset requires pandas."
+        with pytest.raises(ImportError, match="load_who_dataset requires pandas."):
+            load_who_dataset()
 
 
 def test_dataset_size_and_shape(who_data):
@@ -115,7 +114,7 @@ def test_dataset_size_and_shape(who_data):
 def test_datapoint_value(who_data):
     """Check if the value of a datapoint at a certain location is correct."""
     if who_data["has_pandas"]:
-        assert np.allclose(
+        np.testing.assert_allclose(
             who_data["who"]["data"]["SE.XPD.TOTL.GD.ZS"][1924],
             who_data["value"],
             rtol=1e-6,

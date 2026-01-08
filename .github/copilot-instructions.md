@@ -24,6 +24,8 @@ Example: `FPS` (Farthest Point Sampling) exists as both `feature_selection.FPS` 
 
 ## Development Workflows
 
+Use 88 character line length limit for code and docstrings.
+
 ### Testing
 ```bash
 # Run all tests with coverage
@@ -39,10 +41,26 @@ tox -e tests-dev
 Tests use pytest-style assertions and fixtures. Common patterns:
 - Use `@pytest.fixture` for test data setup
 - Use `assert` statements instead of `self.assertEqual()`
-- Use `pytest.raises()` for exception testing
+- Use `pytest.raises()` for exception testing always `match=` parameter. If match is too long that the `with` statement exceeds line length, define `match` variable before.
 - Use `pytest.warns()` for warning testing
 - Use `pytest.mark.parametrize` for parameterized tests
 - Tests often load datasets via `skmatter.datasets.load_*()`
+
+**Exception Testing Style:**
+- Keep `with pytest.raises(...)` statement on one line (88 char limit)
+- For long match strings, define a `match` variable before the with statement:
+  ```python
+  match = "Long error message that would exceed line length limit"
+  with pytest.raises(ValueError, match=match):
+      some_function()
+  ```
+- Use `re.escape()` when matching messages with special regex characters:
+  ```python
+  import re
+  match = f"Found array with shape={X.shape} ..."
+  with pytest.raises(ValueError, match=re.escape(match)):
+      selector.fit(X)
+  ```
 
 ### Linting & Formatting
 ```bash

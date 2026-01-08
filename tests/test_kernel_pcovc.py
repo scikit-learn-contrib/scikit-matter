@@ -109,15 +109,16 @@ def test_reconstruction_errors(kpcovc_model, X, Y, error_tol):
 
 def test_nonfitted_failure(X):
     kpcovc = KernelPCovC(mixing=0.5, n_components=4, tol=1e-12)
-    with pytest.raises(exceptions.NotFittedError):
-        _ = kpcovc.transform(X)
+    match = "instance is not fitted"
+    with pytest.raises(exceptions.NotFittedError, match=match):
+        kpcovc.transform(X)
 
 
 def test_no_arg_predict(X, Y):
     kpcovc = KernelPCovC(mixing=0.5, n_components=4, tol=1e-12)
     kpcovc.fit(X, Y)
-    with pytest.raises(ValueError):
-        _ = kpcovc.predict()
+    with pytest.raises(ValueError, match="Either X or T must be supplied"):
+        kpcovc.predict()
 
 
 def test_T_shape(X, Y):
@@ -145,28 +146,30 @@ def test_Z_shape(kpcovc_model, X, Y):
 def test_decision_function(kpcovc_model, X, Y):
     kpcovc = kpcovc_model(center=True)
     kpcovc.fit(X, Y)
-    with pytest.raises(ValueError) as cm:
-        _ = kpcovc.decision_function()
-    assert str(cm.value) == "Either X or T must be supplied."
-    _ = kpcovc.decision_function(X)
+
+    with pytest.raises(ValueError, match="Either X or T must be supplied."):
+        kpcovc.decision_function()
+
+    kpcovc.decision_function(X)
     T = kpcovc.transform(X)
-    _ = kpcovc.decision_function(T=T)
+    kpcovc.decision_function(T=T)
 
 
 def test_no_centerer(kpcovc_model, X, Y):
     kpcovc = kpcovc_model(center=False)
     kpcovc.fit(X, Y)
-    with pytest.raises(AttributeError):
-        _ = kpcovc.centerer_
+    with pytest.raises(AttributeError, match="has no attribute.*centerer"):
+        kpcovc.centerer_
 
 
 def test_centerer(kpcovc_model, X, Y):
     kpcovc = kpcovc_model(center=True)
     kpcovc.fit(X, Y)
     assert hasattr(kpcovc, "centerer_")
-    _ = kpcovc.predict(X)
-    _ = kpcovc.transform(X)
-    _ = kpcovc.score(X, Y)
+
+    kpcovc.predict(X)
+    kpcovc.transform(X)
+    kpcovc.score(X, Y)
 
 
 def test_prefit_classifier(X, Y):
@@ -198,14 +201,14 @@ def test_incompatible_classifier(kpcovc_model, X, Y):
     classifier = GaussianNB()
     classifier.fit(X, Y)
     kpcovc = kpcovc_model(mixing=0.5, classifier=classifier)
-    with pytest.raises(ValueError) as cm:
-        kpcovc.fit(X, Y)
-    assert str(cm.value) == (
+    expected_msg = (
         "Classifier must be an instance of "
         "`LogisticRegression`, `LogisticRegressionCV`, `LinearSVC`, "
         "`LinearDiscriminantAnalysis`, `RidgeClassifier`, `RidgeClassifierCV`, "
         "`SGDClassifier`, `Perceptron`, or `precomputed`"
     )
+    with pytest.raises(ValueError, match=expected_msg):
+        kpcovc.fit(X, Y)
 
 
 def test_none_classifier(X, Y):
@@ -221,15 +224,13 @@ def test_incompatible_coef_shape(kpcovc_model, X, Y):
     cl_multi = LinearSVC()
     cl_multi.fit(K, np.random.randint(0, 3, size=X.shape[0]))
     kpcovc_binary = kpcovc_model(mixing=0.5, classifier=cl_multi)
-    with pytest.raises(ValueError) as cm:
+    with pytest.raises(ValueError, match="For binary classification"):
         kpcovc_binary.fit(X, Y)
-    assert "For binary classification" in str(cm.value)
     cl_binary = LinearSVC()
     cl_binary.fit(K, Y)
     kpcovc_multi = kpcovc_model(mixing=0.5, classifier=cl_binary)
-    with pytest.raises(ValueError) as cm:
+    with pytest.raises(ValueError, match="For multiclass classification"):
         kpcovc_multi.fit(X, np.random.randint(0, 3, size=X.shape[0]))
-    assert "For multiclass classification" in str(cm.value)
 
 
 def test_precomputed_classification(X, Y, error_tol):
@@ -327,10 +328,9 @@ def test_svd_solvers(kpcovc_model, X, Y):
 
 
 def test_bad_solver(kpcovc_model, X, Y):
-    with pytest.raises(ValueError) as cm:
+    with pytest.raises(ValueError, match="Unrecognized svd_solver='bad'"):
         kpcovc = kpcovc_model(svd_solver="bad")
         kpcovc.fit(X, Y)
-    assert str(cm.value) == "Unrecognized svd_solver='bad'"
 
 
 def test_good_n_components(kpcovc_model, X, Y):
@@ -344,20 +344,16 @@ def test_good_n_components(kpcovc_model, X, Y):
 
 
 def test_bad_n_components(kpcovc_model, X, Y):
-    with pytest.raises(ValueError) as cm:
+    with pytest.raises(ValueError, match="n_components=.*must be between"):
         kpcovc = kpcovc_model(n_components=-1, svd_solver="auto")
         kpcovc.fit(X, Y)
-    assert str(cm.value).startswith("n_components=")
-    with pytest.raises(ValueError) as cm:
+    with pytest.raises(ValueError, match="n_components=.*must be between"):
         kpcovc = kpcovc_model(n_components=0, svd_solver="randomized")
         kpcovc.fit(X, Y)
-    assert str(cm.value).startswith("n_components=")
-    with pytest.raises(ValueError) as cm:
+    with pytest.raises(ValueError, match="n_components=.*strictly less than"):
         kpcovc = kpcovc_model(n_components=X.shape[0], svd_solver="arpack")
         kpcovc.fit(X, Y)
-    assert str(cm.value).startswith("n_components=")
     for svd_solver in ["auto", "full"]:
-        with pytest.raises(ValueError) as cm:
+        with pytest.raises(ValueError, match="must be of type int"):
             kpcovc = kpcovc_model(n_components=np.pi, svd_solver=svd_solver)
             kpcovc.fit(X, Y)
-        assert "must be of type int" in str(cm.value)

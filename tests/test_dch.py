@@ -39,21 +39,25 @@ def test_selected_idx_and_scores(test_data):
 
     selector = DirectionalConvexHull()
     selector.fit(T, y)
-    assert np.allclose(selector.selected_idx_, idx)
+    np.testing.assert_allclose(selector.selected_idx_, idx)
 
     # takes abs to avoid numerical noise changing the sign of PCA projections
     feature_residuals = np.abs(selector.score_feature_matrix(T))
     val = np.max(
         np.abs((feature_residuals_100 - feature_residuals[100]) / feature_residuals_100)
     )
-    assert np.allclose(feature_residuals_100, feature_residuals[100], rtol=1e-6), (
-        f"Maximum relative error 1e-6 < {val}"
+    (
+        np.testing.assert_allclose(
+            feature_residuals_100, feature_residuals[100], rtol=1e-6
+        ),
+        (f"Maximum relative error 1e-6 < {val}"),
     )
 
     y_distances = selector.score_samples(T, y)
     val = np.max(np.abs((y_distance_100 - y_distances[100]) / y_distance_100))
-    assert np.allclose(y_distance_100, y_distances[100], rtol=1e-6), (
-        f"Maximum relative error 1e-6 < {val}"
+    (
+        np.testing.assert_allclose(y_distance_100, y_distances[100], rtol=1e-6),
+        (f"Maximum relative error 1e-6 < {val}"),
     )
 
 
@@ -94,7 +98,7 @@ def test_residual_features_without_fit(test_data):
     """
     T = test_data["T"]
     selector = DirectionalConvexHull()
-    with pytest.raises(NotFittedError):
+    with pytest.raises(NotFittedError, match="instance is not fitted"):
         selector.score_feature_matrix(T)
 
 
@@ -109,11 +113,11 @@ def test_residual_features_ndim(test_data):
 
     selector = DirectionalConvexHull()
     selector.fit(T, y)
-    with pytest.raises(ValueError) as cm:
-        selector.score_feature_matrix(X)
-    assert str(cm.value) == (
+    match = (
         "X has 10 features, but DirectionalConvexHull is expecting 4 features as input."
     )
+    with pytest.raises(ValueError, match=match):
+        selector.score_feature_matrix(X)
 
 
 def test_negative_score(test_data):

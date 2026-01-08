@@ -130,7 +130,8 @@ def test_select_sample_space(pcovc_model, X, Y):
 
 
 def test_bad_space(pcovc_model, X, Y):
-    with pytest.raises(ValueError):
+    match = "Only feature and sample space are supported"
+    with pytest.raises(ValueError, match=match):
         pcovc = pcovc_model(n_components=2, tol=1e-12, space="bad")
         pcovc.fit(X, Y)
 
@@ -172,10 +173,9 @@ def test_svd_solvers(pcovc_model, X, Y):
 
 def test_bad_solver(pcovc_model, X, Y):
     for space in ["feature", "sample"]:
-        with pytest.raises(ValueError) as cm:
+        with pytest.raises(ValueError, match="Unrecognized svd_solver='bad'"):
             pcovc = pcovc_model(svd_solver="bad", space=space)
             pcovc.fit(X, Y)
-        assert str(cm.value) == "Unrecognized svd_solver='bad'"
 
 
 def test_good_n_components(pcovc_model, X, Y):
@@ -189,36 +189,29 @@ def test_good_n_components(pcovc_model, X, Y):
 
 
 def test_bad_n_components(pcovc_model, X, Y):
-    with pytest.raises(ValueError) as cm:
+    match = "n_components='mle' is only supported if n_samples >= n_features"
+    with pytest.raises(ValueError, match=match):
         pcovc = pcovc_model(
             n_components="mle", classifier=LinearSVC(), svd_solver="full"
         )
         pcovc.fit(X[49:51], Y[49:51])
-    assert (
-        str(cm.value)
-        == "n_components='mle' is only supported if n_samples >= n_features"
-    )
 
-    with pytest.raises(ValueError) as cm:
+    with pytest.raises(ValueError, match="n_components=.*must be between"):
         pcovc = pcovc_model(n_components=-1, svd_solver="auto")
         pcovc.fit(X, Y)
-    assert str(cm.value).startswith("n_components=")
 
-    with pytest.raises(ValueError) as cm:
+    with pytest.raises(ValueError, match="n_components=.*must be between"):
         pcovc = pcovc_model(n_components=0, svd_solver="randomized")
         pcovc.fit(X, Y)
-    assert str(cm.value).startswith("n_components=")
 
-    with pytest.raises(ValueError) as cm:
+    with pytest.raises(ValueError, match="n_components=.*strictly less than"):
         pcovc = pcovc_model(n_components=min(X.shape), svd_solver="arpack")
         pcovc.fit(X, Y)
-    assert str(cm.value).startswith("n_components=")
 
     for svd_solver in ["auto", "full"]:
-        with pytest.raises(ValueError) as cm:
+        with pytest.raises(ValueError, match="must be of type int"):
             pcovc = pcovc_model(n_components=np.pi, svd_solver=svd_solver)
             pcovc.fit(X, Y)
-        assert "must be of type int" in str(cm.value)
 
 
 # PCovCInfrastructureTest
@@ -226,15 +219,15 @@ def test_bad_n_components(pcovc_model, X, Y):
 
 def test_nonfitted_failure(pcovc_model, X):
     pcovc = pcovc_model(n_components=2, tol=1e-12)
-    with pytest.raises(exceptions.NotFittedError):
-        _ = pcovc.transform(X)
+    with pytest.raises(exceptions.NotFittedError, match="instance is not fitted"):
+        pcovc.transform(X)
 
 
 def test_no_arg_predict(pcovc_model, X, Y):
     pcovc = pcovc_model(n_components=2, tol=1e-12)
     pcovc.fit(X, Y)
-    with pytest.raises(ValueError):
-        _ = pcovc.predict()
+    with pytest.raises(ValueError, match="Either X or T must be supplied"):
+        pcovc.predict()
 
 
 def test_centering(pcovc_model, X, Y):
@@ -293,11 +286,10 @@ def test_Z_shape(pcovc_model, X, Y):
 def test_decision_function(pcovc_model, X, Y):
     pcovc = pcovc_model()
     pcovc.fit(X, Y)
-    with pytest.raises(ValueError) as cm:
-        _ = pcovc.decision_function()
-    assert str(cm.value) == "Either X or T must be supplied."
+    with pytest.raises(ValueError, match="Either X or T must be supplied."):
+        pcovc.decision_function()
     T = pcovc.transform(X)
-    _ = pcovc.decision_function(T=T)
+    pcovc.decision_function(T=T)
 
 
 def test_default_ncomponents(X, Y):
@@ -355,14 +347,14 @@ def test_incompatible_classifier(pcovc_model, X, Y):
     classifier = GaussianNB()
     classifier.fit(X, Y)
     pcovc = pcovc_model(mixing=0.5, classifier=classifier)
-    with pytest.raises(ValueError) as cm:
-        pcovc.fit(X, Y)
-    assert str(cm.value) == (
+    expected_msg = (
         "Classifier must be an instance of "
         "`LogisticRegression`, `LogisticRegressionCV`, `LinearSVC`, "
         "`LinearDiscriminantAnalysis`, `RidgeClassifier`, `RidgeClassifierCV`, "
         "`SGDClassifier`, `Perceptron`, or `precomputed`"
     )
+    with pytest.raises(ValueError, match=expected_msg):
+        pcovc.fit(X, Y)
 
 
 def test_none_classifier(X, Y):
@@ -377,17 +369,13 @@ def test_incompatible_coef_shape(pcovc_model, X, Y):
     cl_multi = LogisticRegression()
     cl_multi.fit(X, Y)
     pcovc_binary = pcovc_model(mixing=0.5, classifier=cl_multi)
-    with pytest.raises(ValueError) as cm:
+    with pytest.raises(ValueError, match="For binary classification"):
         pcovc_binary.fit(X, np.random.randint(0, 2, size=X.shape[0]))
-    assert "For binary classification" in str(cm.value) and str(X.shape[1]) in str(
-        cm.value
-    )
     cl_binary = LogisticRegression()
     cl_binary.fit(X, np.random.randint(0, 2, size=X.shape[0]))
     pcovc_multi = pcovc_model(mixing=0.5, classifier=cl_binary)
-    with pytest.raises(ValueError) as cm:
+    with pytest.raises(ValueError, match="For multiclass classification"):
         pcovc_multi.fit(X, Y)
-    assert "For multiclass classification" in str(cm.value)
 
 
 def test_scale_z_parameter(pcovc_model, X, Y):

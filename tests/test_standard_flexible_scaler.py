@@ -23,9 +23,9 @@ def test_sample_weights(random_state):
     weighted_model = StandardFlexibleScaler()
     X_unweighted = model.fit_transform(X)
     X_equal_weighted = weighted_model.fit_transform(X, sample_weight=equal_wts)
-    assert (np.isclose(X_unweighted, X_equal_weighted, atol=1e-12)).all()
+    np.testing.assert_allclose(X_unweighted, X_equal_weighted, atol=1e-12)
     X_nonequal_weighted = weighted_model.fit_transform(X, sample_weight=nonequal_wts)
-    assert not (np.isclose(X_unweighted, X_nonequal_weighted, atol=1e-12)).all()
+    assert not np.allclose(X_unweighted, X_nonequal_weighted, atol=1e-12)
 
 
 def test_invalid_sample_weights(random_state):
@@ -36,9 +36,9 @@ def test_invalid_sample_weights(random_state):
     wts_len = np.ones(len(X) + 1)
     wts_dim = np.ones((len(X), 2))
     model = StandardFlexibleScaler()
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="sample_weight.shape"):
         model.fit_transform(X, sample_weight=wts_len)
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="Sample weights must be"):
         model.fit_transform(X, sample_weight=wts_dim)
 
 
@@ -50,7 +50,7 @@ def test_fit_transform_pf(random_state):
     model = StandardFlexibleScaler(column_wise=True)
     transformed_skmatter = model.fit_transform(X)
     transformed_sklearn = StandardScaler().fit_transform(X)
-    assert (np.isclose(transformed_sklearn, transformed_skmatter, atol=1e-12)).all()
+    np.testing.assert_allclose(transformed_sklearn, transformed_skmatter, atol=1e-12)
 
 
 def test_fit_transform_npf(random_state):
@@ -65,7 +65,7 @@ def test_fit_transform_npf(random_state):
     var = ((X - mean) ** 2).mean(axis=0)
     scale = np.sqrt(var.sum())
     X_ex = (X - mean) / scale
-    assert (np.isclose(X_ex, X_tr, atol=1e-12)).all()
+    np.testing.assert_allclose(X_ex, X_tr, atol=1e-12)
 
 
 def test_transform(random_state):
@@ -81,7 +81,7 @@ def test_transform(random_state):
     var = ((X - mean) ** 2).mean(axis=0)
     scale = np.sqrt(var)
     Y_ex = (Y - mean) / scale
-    assert (np.isclose(Y_tr, Y_ex, atol=1e-12)).all()
+    np.testing.assert_allclose(Y_tr, Y_ex, atol=1e-12)
 
 
 def test_inverse_transform(random_state):
@@ -95,7 +95,7 @@ def test_inverse_transform(random_state):
     Y_tr = model.transform(Y)
     Y = np.around(Y, decimals=4)
     Y_inv = np.around((model.inverse_transform(Y_tr)), decimals=4)
-    assert (np.isclose(Y, Y_inv, atol=1e-12)).all()
+    np.testing.assert_allclose(Y, Y_inv, atol=1e-12)
     X = random_state.uniform(0, 100, size=(3, 3))
     model = StandardFlexibleScaler(column_wise=False)
     model.fit(X)
@@ -103,7 +103,7 @@ def test_inverse_transform(random_state):
     Y_tr = model.transform(Y)
     Y = np.around(Y, decimals=4)
     Y_inv = np.around((model.inverse_transform(Y_tr)), decimals=4)
-    assert (np.isclose(Y, Y_inv, atol=1e-12)).all()
+    np.testing.assert_allclose(Y, Y_inv, atol=1e-12)
 
 
 def test_NotFittedError_transform(random_state):
@@ -112,7 +112,8 @@ def test_NotFittedError_transform(random_state):
     """
     X = random_state.uniform(0, 100, size=(3, 3))
     model = StandardFlexibleScaler(column_wise=True)
-    with pytest.raises(sklearn.exceptions.NotFittedError):
+    match = "instance is not fitted"
+    with pytest.raises(sklearn.exceptions.NotFittedError, match=match):
         model.transform(X)
 
 
@@ -208,4 +209,4 @@ def test_not_w_mean(random_state):
     X = np.array([2, 2, 3]).reshape(-1, 1)
     model = StandardFlexibleScaler(with_mean=False)
     model.fit(X)
-    assert np.allclose(model.mean_, 0)
+    np.testing.assert_allclose(model.mean_, 0)

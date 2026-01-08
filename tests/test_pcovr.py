@@ -190,7 +190,8 @@ def test_bad_space(pcovr_model, X, Y):
     Check that PCovR raises a ValueError when a non-valid
     space is designated.
     """
-    with pytest.raises(ValueError):
+    match = "Only feature and sample space are supported"
+    with pytest.raises(ValueError, match=match):
         pcovr = pcovr_model(n_components=2, tol=1e-12, space="bad")
         pcovr.fit(X, Y)
 
@@ -351,8 +352,9 @@ def test_nonfitted_failure(pcovr_model, X):
     `transform` is called before the pcovr is fitted
     """
     pcovr = pcovr_model(n_components=2, tol=1e-12)
-    with pytest.raises(exceptions.NotFittedError):
-        _ = pcovr.transform(X)
+    match = "instance is not fitted"
+    with pytest.raises(exceptions.NotFittedError, match=match):
+        pcovr.transform(X)
 
 
 def test_no_arg_predict(pcovr_model, X, Y):
@@ -362,8 +364,8 @@ def test_no_arg_predict(pcovr_model, X, Y):
     """
     pcovr = pcovr_model(n_components=2, tol=1e-12)
     pcovr.fit(X, Y)
-    with pytest.raises(ValueError):
-        _ = pcovr.predict()
+    with pytest.raises(ValueError, match="Either X or T must be supplied"):
+        pcovr.predict()
 
 
 def test_centering(pcovr_model, X, Y):

@@ -136,7 +136,8 @@ def ridge_test_data():
 def test_ridge_regression_2fold_regularization_method_raise_error(ridge_test_data):
     # tests if wrong regularization_method in Ridge2FoldCV raises error
     features_small = ridge_test_data["features_small"]
-    with pytest.raises(ValueError):
+    match = "regularization method .* is not known"
+    with pytest.raises(ValueError, match=match):
         Ridge2FoldCV(
             regularization_method="dummy",
         ).fit(features_small, features_small)
@@ -145,7 +146,8 @@ def test_ridge_regression_2fold_regularization_method_raise_error(ridge_test_dat
 def test_ridge_regression_2fold_alpha_type_raise_error(ridge_test_data):
     # tests if wrong alpha type in Ridge2FoldCV raises error
     features_small = ridge_test_data["features_small"]
-    with pytest.raises(ValueError):
+    match = "alpha type.*is not known"
+    with pytest.raises(ValueError, match=match):
         Ridge2FoldCV(
             alpha_type="dummy",
         ).fit(features_small, features_small)
@@ -154,12 +156,13 @@ def test_ridge_regression_2fold_alpha_type_raise_error(ridge_test_data):
 def test_ridge_regression_2fold_relative_alpha_type_raise_error(ridge_test_data):
     # tests if an error is raised if alpha not in [0,1)
     features_small = ridge_test_data["features_small"]
-    with pytest.raises(ValueError):
+    match = "alphas are not within the range"
+    with pytest.raises(ValueError, match=match):
         Ridge2FoldCV(alphas=[1], alpha_type="relative").fit(
             features_small, features_small
         )
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="alphas are not within the range"):
         Ridge2FoldCV(alphas=[-0.1], alpha_type="relative").fit(
             features_small, features_small
         )

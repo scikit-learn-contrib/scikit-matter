@@ -29,9 +29,6 @@ def test_no_mixing_1(X_y_idx):
     """Check that the model throws an error when mixing = 1.0."""
     X, y, _ = X_y_idx
     selector = PCovFPS(n_to_select=1, mixing=1.0)
-    with pytest.raises(ValueError) as cm:
+    match = "Mixing = 1.0 corresponds to traditional FPS. Please use the FPS class."
+    with pytest.raises(ValueError, match=match):
         selector.fit(X, y=y)
-    assert (
-        str(cm.value)
-        == "Mixing = 1.0 corresponds to traditional FPS. Please use the FPS class."
-    )

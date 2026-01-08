@@ -46,10 +46,9 @@ def test_initialize_with_random(X):
 
 def test_initialize_invalid(X):
     """Test that invalid initialization raises an error"""
-    with pytest.raises(ValueError) as cm:
+    with pytest.raises(ValueError, match="Invalid value of the initialize parameter"):
         selector = VoronoiFPS(n_to_select=1, initialize="bad")
         selector.fit(X)
-    assert str(cm.value) == "Invalid value of the initialize parameter"
 
 
 def test_switching_point_auto(X):
@@ -70,54 +69,54 @@ def test_switching_point_manual(X):
 
 def test_switching_point_bad_ntrial(X):
     """Test bad n_trial_calculation"""
-    with pytest.raises(ValueError) as cm:
+    match = "Number of trial calculation should be more or equal to 1"
+    with pytest.raises(ValueError, match=match):
         selector = VoronoiFPS(n_to_select=1, n_trial_calculation=0)
         selector.fit(X)
-    assert str(cm.value) == "Number of trial calculation should be more or equal to 1"
 
 
 def test_switching_point_float_ntrial(X):
     """Test float n_trial_calculation"""
-    with pytest.raises(TypeError) as cm:
+    match = "Number of trial calculation should be integer"
+    with pytest.raises(TypeError, match=match):
         selector = VoronoiFPS(n_to_select=1, n_trial_calculation=0.3)
         selector.fit(X)
-    assert str(cm.value) == "Number of trial calculation should be integer"
 
 
 def test_switching_point_large_ff(X):
     """Test large full_fraction"""
     selector = VoronoiFPS(n_to_select=1, full_fraction=1.1)
-    with pytest.raises(ValueError) as cm:
-        selector.fit(X)
-    assert str(cm.value) == (
+    match = (
         "Switching point should be real and more than 0 and less than 1. "
         f"Received {selector.full_fraction}"
     )
+    with pytest.raises(ValueError, match=match):
+        selector.fit(X)
 
 
 def test_switching_point_string_ff(X):
     """Test string full_fraction"""
     selector = VoronoiFPS(n_to_select=1, full_fraction="STRING")
-    with pytest.raises(ValueError) as cm:
-        selector.fit(X)
-    assert str(cm.value) == (
+    match = (
         "Switching point should be real and more than 0 and less than 1. "
         f"Received {selector.full_fraction}"
     )
+    with pytest.raises(ValueError, match=match):
+        selector.fit(X)
 
 
 def test_get_distances(X):
     """Checks that the hausdorff distances are returnable after fitting"""
     selector = VoronoiFPS(n_to_select=1)
     selector.fit(X)
-    _ = selector.get_select_distance()
+    selector.get_select_distance()
 
 
 def test_get_distances_not_fitted(X):
     """Test get_select_distance without fitting"""
-    with pytest.raises(NotFittedError):
+    with pytest.raises(NotFittedError, match="instance is not fitted"):
         selector = VoronoiFPS(n_to_select=1)
-        _ = selector.get_select_distance()
+        selector.get_select_distance()
 
 
 def test_comparison(X):
@@ -130,7 +129,7 @@ def test_comparison(X):
     selector = FPS(n_to_select=X.shape[0] - 1)
     selector.fit(X)
 
-    assert np.allclose(vselector.selected_idx_, selector.selected_idx_)
+    np.testing.assert_allclose(vselector.selected_idx_, selector.selected_idx_)
 
 
 def test_nothing_updated_points():
@@ -161,13 +160,13 @@ def test_calculate_dSL(X):
 
     ap = selector._get_active(X, selector.selected_idx_[-1])
 
-    assert np.allclose(active_points, ap)
+    np.testing.assert_allclose(active_points, ap)
 
     selector = VoronoiFPS(n_to_select=1)
 
     ap = selector._get_active(X, 0)
 
-    assert np.allclose(np.arange(X.shape[0]), ap)
+    np.testing.assert_allclose(np.arange(X.shape[0]), ap)
 
 
 def test_score(X, idx):
@@ -175,7 +174,7 @@ def test_score(X, idx):
     selector = VoronoiFPS(n_to_select=3, initialize=0)
     selector.fit(X)
 
-    assert np.allclose(
+    np.testing.assert_allclose(
         selector.hausdorff_,
         selector.score(X, selector.selected_idx_[-1]),
     )

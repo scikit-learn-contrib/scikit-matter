@@ -9,9 +9,9 @@ def test_no_tqdm():
 
     sys.modules["tqdm"] = None
 
-    with pytest.raises(ImportError) as cm:
-        _ = get_progress_bar()
-    assert str(cm.value) == (
+    match = (
         "tqdm must be installed to use a progress bar. Either install tqdm or "
         "re-run with progress_bar = False"
     )
+    with pytest.raises(ImportError, match=match):
+        get_progress_bar()

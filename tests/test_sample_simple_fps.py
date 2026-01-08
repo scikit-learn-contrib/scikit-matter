@@ -50,21 +50,18 @@ def test_initialize(X_and_idx):
         assert selector.selected_idx_[i] == idx[i]
 
     initialize = np.array([1, 5, 3, 0.25])
-    with pytest.raises(ValueError) as cm:
+    with pytest.raises(ValueError, match="Invalid value of the initialize parameter"):
         selector = FPS(n_to_select=len(idx) - 1, initialize=initialize)
         selector.fit(X)
-    assert str(cm.value) == "Invalid value of the initialize parameter"
 
     initialize = np.array([[1, 5, 3], [2, 4, 6]])
-    with pytest.raises(ValueError) as cm:
+    with pytest.raises(ValueError, match="Invalid value of the initialize parameter"):
         selector = FPS(n_to_select=len(idx) - 1, initialize=initialize)
         selector.fit(X)
-    assert str(cm.value) == "Invalid value of the initialize parameter"
 
-    with pytest.raises(ValueError) as cm:
+    with pytest.raises(ValueError, match="Invalid value of the initialize parameter"):
         selector = FPS(n_to_select=1, initialize="bad")
         selector.fit(X)
-    assert str(cm.value) == "Invalid value of the initialize parameter"
 
 
 def test_get_distances(X_and_idx):
@@ -72,11 +69,11 @@ def test_get_distances(X_and_idx):
     X, _ = X_and_idx
     selector = FPS(n_to_select=1)
     selector.fit(X)
-    _ = selector.get_select_distance()
+    selector.get_select_distance()
 
-    with pytest.raises(NotFittedError):
+    with pytest.raises(NotFittedError, match="instance is not fitted"):
         selector = FPS(n_to_select=1)
-        _ = selector.get_select_distance()
+        selector.get_select_distance()
 
 
 def test_threshold(X_and_idx):

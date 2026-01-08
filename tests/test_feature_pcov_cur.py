@@ -18,7 +18,7 @@ def test_known(X_y_idx):
     selector = PCovCUR(n_to_select=9)
     selector.fit(X, y)
 
-    assert np.allclose(selector.selected_idx_, idx)
+    np.testing.assert_allclose(selector.selected_idx_, idx)
 
 
 def test_restart(X_y_idx):
@@ -39,4 +39,4 @@ def test_non_it(X_y_idx):
     idx = [2, 8, 3, 6, 7, 9, 1, 0, 5]
     selector = PCovCUR(n_to_select=9, recompute_every=0)
     selector.fit(X, y)
-    assert np.allclose(selector.selected_idx_, idx)
+    np.testing.assert_allclose(selector.selected_idx_, idx)

@@ -14,8 +14,8 @@ def X():
 
 def test_bad_transform(X):
     selector = CUR(n_to_select=2)
-    with pytest.raises(exceptions.NotFittedError):
-        _ = selector.transform(X)
+    with pytest.raises(exceptions.NotFittedError, match="instance is not fitted"):
+        selector.transform(X)
 
 
 def test_restart(X):
@@ -41,7 +41,7 @@ def test_non_it(X):
     selector = CUR(n_to_select=X.shape[-1] - 1, recompute_every=0)
     selector.fit(X)
 
-    assert np.allclose(selector.selected_idx_, ref_idx)
+    np.testing.assert_allclose(selector.selected_idx_, ref_idx)
 
 
 def test_unique_selected_idx_zero_score():

@@ -21,9 +21,11 @@ def test_sample_weights(random_state):
     weighted_model = KernelNormalizer()
     K_unweighted = model.fit_transform(K)
     K_equal_weighted = weighted_model.fit_transform(K, sample_weight=equal_wts)
-    assert (np.isclose(K_unweighted, K_equal_weighted, atol=1e-12)).all()
+
+    np.testing.assert_allclose(K_unweighted, K_equal_weighted, atol=1e-12)
+
     K_nonequal_weighted = weighted_model.fit_transform(K, sample_weight=nonequal_wts)
-    assert not (np.isclose(K_unweighted, K_nonequal_weighted, atol=1e-12)).all()
+    assert not np.allclose(K_unweighted, K_nonequal_weighted, atol=1e-12)
 
 
 def test_invalid_sample_weights(random_state):
@@ -34,9 +36,9 @@ def test_invalid_sample_weights(random_state):
     wts_len = np.ones(len(K) + 1)
     wts_dim = np.ones((len(K), 2))
     model = KernelNormalizer()
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="sample_weight.shape"):
         model.fit_transform(K, sample_weight=wts_len)
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="Sample weights must be"):
         model.fit_transform(K, sample_weight=wts_dim)
 
 
@@ -44,7 +46,7 @@ def test_ValueError(random_state):
     """Checks that a non-square matrix cannot be normalized."""
     K = random_state.uniform(0, 100, size=(3, 4))
     model = KernelNormalizer()
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="Kernel matrix must be"):
         model.fit(K)
 
 
@@ -56,7 +58,7 @@ def test_reference_ValueError(random_state):
     K_2 = random_state.uniform(0, 100, size=(2, 2))
     model = KernelNormalizer()
     model = model.fit(K)
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="X has.*features.*but.*is expecting"):
         model.transform(K_2)
 
 
@@ -66,7 +68,8 @@ def test_NotFittedError_transform(random_state):
     """
     K = random_state.uniform(0, 100, size=(3, 3))
     model = KernelNormalizer()
-    with pytest.raises(sklearn.exceptions.NotFittedError):
+    match = "instance is not fitted"
+    with pytest.raises(sklearn.exceptions.NotFittedError, match=match):
         model.transform(K)
 
 
@@ -81,7 +84,7 @@ def test_fit_transform(random_state):
     Kc = K - K.mean(axis=0) - K.mean(axis=1)[:, np.newaxis] + K.mean()
     Kc /= np.trace(Kc) / Kc.shape[0]
 
-    assert (np.isclose(Ktr, Kc, atol=1e-12)).all()
+    np.testing.assert_allclose(Ktr, Kc, atol=1e-12)
 
 
 def test_center_only(random_state):
@@ -95,7 +98,7 @@ def test_center_only(random_state):
     Ktr = model.fit_transform(K)
     Kc = K - K.mean(axis=0) - K.mean(axis=1)[:, np.newaxis] + K.mean()
 
-    assert (np.isclose(Ktr, Kc, atol=1e-12)).all()
+    np.testing.assert_allclose(Ktr, Kc, atol=1e-12)
 
 
 def test_trace_only(random_state):
@@ -110,7 +113,7 @@ def test_trace_only(random_state):
     Kc = K.copy()
     Kc /= np.trace(Kc) / Kc.shape[0]
 
-    assert (np.isclose(Ktr, Kc, atol=1e-12)).all()
+    np.testing.assert_allclose(Ktr, Kc, atol=1e-12)
 
 
 def test_no_preprocessing(random_state):
@@ -121,4 +124,4 @@ def test_no_preprocessing(random_state):
     model = KernelNormalizer(with_center=False, with_trace=False)
     Ktr = model.fit_transform(K)
     Kc = K.copy()
-    assert (np.isclose(Ktr, Kc, atol=1e-12)).all()
+    np.testing.assert_allclose(Ktr, Kc, atol=1e-12)

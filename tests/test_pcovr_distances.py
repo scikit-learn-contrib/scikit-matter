@@ -26,12 +26,12 @@ def test_covariance_alphas(dataset, alpha):
     C_Y = C_Y @ C_Y.T
 
     C = pcovr_covariance(alpha, X=X, Y=Y, rcond=1e-6)
-    assert np.allclose(C, alpha * C_X + (1 - alpha) * C_Y)
+    np.testing.assert_allclose(C, alpha * C_X + (1 - alpha) * C_Y)
 
 
 def test_no_return_isqrt(dataset):
     X, Y = dataset
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="too many values to unpack"):
         _, _ = pcovr_covariance(0.5, X, Y, return_isqrt=False)
 
 
@@ -64,7 +64,7 @@ def test_inverse_covariance(C_isqrt_type):
             0.5, Xx, Y, return_isqrt=True, rank=min(Xx.shape) - 1, rcond=rcond
         )
 
-    assert np.allclose(C_isqrt, C_isqrt_computed)
+    np.testing.assert_allclose(C_isqrt, C_isqrt_computed)
 
 
 @pytest.mark.parametrize("alpha", [0.0, 0.5, 1.0])
@@ -74,4 +74,4 @@ def test_kernel_alphas(dataset, alpha):
     K_Y = Y @ Y.T
 
     K = pcovr_kernel(alpha, X, Y)
-    assert np.allclose(K, alpha * K_X + (1 - alpha) * K_Y)
+    np.testing.assert_allclose(K, alpha * K_X + (1 - alpha) * K_Y)

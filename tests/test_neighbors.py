@@ -79,7 +79,7 @@ def test_dimension_check(sparse_kde_data):
         metric_params={"cell_length": sparse_kde_data["cell"]},
         fpoints=0.5,
     )
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="Cell dimension.*does not match"):
         estimator.fit(np.array([[4]]))
 
 

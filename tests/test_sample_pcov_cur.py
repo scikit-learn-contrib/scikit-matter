@@ -22,7 +22,7 @@ def test_known(X_y_idx):
     selector = PCovCUR(n_to_select=10, mixing=0.5)
     selector.fit(X, y)
 
-    assert np.allclose(selector.selected_idx_, idx)
+    np.testing.assert_allclose(selector.selected_idx_, idx)
 
 
 def test_restart(X_y_idx):
@@ -51,7 +51,7 @@ def test_non_it(X_y_idx):
     selector = PCovCUR(n_to_select=10, recompute_every=0)
     selector.fit(X, y)
 
-    assert np.allclose(selector.selected_idx_, idx)
+    np.testing.assert_allclose(selector.selected_idx_, idx)
 
 
 def test_multiple_k(X_y_idx):

@@ -69,5 +69,5 @@ def test_dimension_check(test_data):
     model = QuickShift(
         test_data["cuts"], metric_params={"cell_length": test_data["cell"]}
     )
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="Dimension.*does not match"):
         model.fit(np.array([[2]]))

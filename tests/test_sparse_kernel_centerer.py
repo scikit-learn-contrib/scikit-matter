@@ -29,8 +29,8 @@ def test_sample_weights(random_state):
     Knm_nonequal_weighted = weighted_model.fit_transform(
         Knm, Kmm, sample_weight=nonequal_wts
     )
-    assert (np.isclose(Knm_unweighted, Knm_equal_weighted, atol=1e-12)).all()
-    assert not (np.isclose(Knm_unweighted, Knm_nonequal_weighted, atol=1e-12)).all()
+    np.testing.assert_allclose(Knm_unweighted, Knm_equal_weighted, atol=1e-12)
+    assert not np.allclose(Knm_unweighted, Knm_nonequal_weighted, atol=1e-12)
 
 
 def test_invalid_sample_weights(random_state):
@@ -46,9 +46,9 @@ def test_invalid_sample_weights(random_state):
     wts_len = np.ones(len(Knm) + 1)
     wts_dim = np.ones((len(Knm), 2))
     model = SparseKernelCenterer()
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="sample_weight.shape"):
         model.fit_transform(Knm, Kmm, sample_weight=wts_len)
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="Sample weights must be"):
         model.fit_transform(Knm, Kmm, sample_weight=wts_dim)
 
 
@@ -61,9 +61,8 @@ def test_Square_Kmm(random_state):
     Kmm = X_sparse @ X.T
 
     model = SparseKernelCenterer()
-    with pytest.raises(ValueError) as cm:
+    with pytest.raises(ValueError, match="The active kernel is not square."):
         model.fit(Knm, Kmm)
-    assert str(cm.value) == "The active kernel is not square."
 
 
 def test_LatterDim(random_state):
@@ -77,11 +76,9 @@ def test_LatterDim(random_state):
     Kmm = X_sparse @ X_sparse.T
 
     model = SparseKernelCenterer()
-    with pytest.raises(ValueError) as cm:
+    match = "The reference kernel is not commensurate shape with the active kernel."
+    with pytest.raises(ValueError, match=match):
         model.fit(Knm, Kmm)
-    assert str(cm.value) == (
-        "The reference kernel is not commensurate shape with the active kernel."
-    )
 
 
 def test_new_kernel(random_state):
@@ -97,11 +94,9 @@ def test_new_kernel(random_state):
     Knm2 = X @ X.T
     model = SparseKernelCenterer()
     model = model.fit(Knm, Kmm)
-    with pytest.raises(ValueError) as cm:
+    match = "The reference kernel and received kernel have different shape"
+    with pytest.raises(ValueError, match=match):
         model.transform(Knm2)
-    assert str(cm.value) == (
-        "The reference kernel and received kernel have different shape"
-    )
 
 
 def test_NotFittedError_transform(random_state):
@@ -110,7 +105,8 @@ def test_NotFittedError_transform(random_state):
     """
     K = random_state.uniform(0, 100, size=(3, 3))
     model = SparseKernelCenterer()
-    with pytest.raises(sklearn.exceptions.NotFittedError):
+    match = "instance is not fitted"
+    with pytest.raises(sklearn.exceptions.NotFittedError, match=match):
         model.transform(K)
 
 
@@ -136,7 +132,7 @@ def test_fit_transform(random_state):
 
     Kc /= np.sqrt(np.trace(Khat) / Khat.shape[0])
 
-    assert (np.isclose(Ktr, Kc, atol=1e-12)).all()
+    np.testing.assert_allclose(Ktr, Kc, atol=1e-12)
 
 
 def test_center_only(random_state):
@@ -157,7 +153,7 @@ def test_center_only(random_state):
 
     Kc = Knm - Knm_mean
 
-    assert (np.isclose(Ktr, Kc, atol=1e-12)).all()
+    np.testing.assert_allclose(Ktr, Kc, atol=1e-12)
 
 
 def test_trace_only(random_state):
@@ -180,7 +176,7 @@ def test_trace_only(random_state):
 
     Kc /= np.sqrt(np.trace(Khat) / Khat.shape[0])
 
-    assert (np.isclose(Ktr, Kc, atol=1e-12)).all()
+    np.testing.assert_allclose(Ktr, Kc, atol=1e-12)
 
 
 def test_no_preprocessing(random_state):
@@ -198,4 +194,4 @@ def test_no_preprocessing(random_state):
 
     Kc = Knm.copy()
 
-    assert (np.isclose(Ktr, Kc, atol=1e-12)).all()
+    np.testing.assert_allclose(Ktr, Kc, atol=1e-12)

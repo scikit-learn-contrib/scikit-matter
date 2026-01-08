@@ -23,7 +23,7 @@ def test_sample_transform(X_and_n_select):
     selector = CUR(n_to_select=1)
     selector.fit(X)
     with pytest.raises(ValueError) as error:
-        _ = selector.transform(X)
+        selector.transform(X)
 
     assert "Transform is not currently supported for sample selection." == str(
         error.value
@@ -55,7 +55,7 @@ def test_non_it(X_and_n_select):
     selector = CUR(n_to_select=len(ref_idx), recompute_every=0)
     selector.fit(X)
 
-    assert np.allclose(selector.selected_idx_, ref_idx)
+    np.testing.assert_allclose(selector.selected_idx_, ref_idx)
 
 
 def test_unique_selected_idx_zero_score():

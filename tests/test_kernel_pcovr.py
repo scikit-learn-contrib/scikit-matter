@@ -147,8 +147,9 @@ def test_nonfitted_failure(X):
     `transform` is called before the model is fitted
     """
     kpcovr = KernelPCovR(mixing=0.5, n_components=2, tol=1e-12)
-    with pytest.raises(exceptions.NotFittedError):
-        _ = kpcovr.transform(X)
+    match = "instance is not fitted"
+    with pytest.raises(exceptions.NotFittedError, match=match):
+        kpcovr.transform(X)
 
 
 def test_no_arg_predict(X, Y):
@@ -158,8 +159,8 @@ def test_no_arg_predict(X, Y):
     """
     kpcovr = KernelPCovR(mixing=0.5, n_components=2, tol=1e-12)
     kpcovr.fit(X, Y)
-    with pytest.raises(ValueError):
-        _ = kpcovr.predict()
+    with pytest.raises(ValueError, match="Expected 2D array.*got scalar"):
+        kpcovr.predict()
 
 
 def test_T_shape(X, Y):
@@ -180,7 +181,7 @@ def test_no_centerer(kpcovr_model, X, Y):
     kpcovr = kpcovr_model(center=False)
     kpcovr.fit(X, Y)
 
-    with pytest.raises(AttributeError):
+    with pytest.raises(AttributeError, match="has no attribute.*centerer"):
         kpcovr.centerer_
 
 
@@ -190,9 +191,10 @@ def test_centerer(kpcovr_model, X, Y):
     kpcovr.fit(X, Y)
 
     assert hasattr(kpcovr, "centerer_")
-    _ = kpcovr.predict(X)
-    _ = kpcovr.transform(X)
-    _ = kpcovr.score(X, Y)
+
+    kpcovr.predict(X)
+    kpcovr.transform(X)
+    kpcovr.score(X, Y)
 
 
 def test_prefit_regressor(kpcovr_model, X, Y):

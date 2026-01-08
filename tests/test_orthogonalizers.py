@@ -118,16 +118,16 @@ def test_multiple_orthogonalizations(random_state, n_samples, n_features):
 
 def test_multicolumn(random_state, n_samples, n_features):
     # checks that an error is raised when x2 is the wrong shape for x1
-    with pytest.raises(ValueError) as cm:
-        X_orthogonalizer(
-            random_state.uniform(-3, 3, size=(n_samples, n_features)),
-            x2=random_state.uniform(-3, 3, size=(n_samples + 4, n_features)),
-        )
-    assert str(cm.value) == (
+    expected_msg = (
         "You can only orthogonalize a matrix using a vector with the same number "
         f"of rows. Matrix X has {n_samples} rows, whereas the "
         f"orthogonalizing matrix has {n_samples + 4} rows."
     )
+    with pytest.raises(ValueError, match=expected_msg):
+        X_orthogonalizer(
+            random_state.uniform(-3, 3, size=(n_samples, n_features)),
+            x2=random_state.uniform(-3, 3, size=(n_samples + 4, n_features)),
+        )
 
 
 def test_warning(n_samples, n_features):
