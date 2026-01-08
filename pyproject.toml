@@ -122,3 +122,6 @@ convention = "numpy"
     "D205",
     "D400",
 ]
+"tests/**" = [
+    "D103",
+]
