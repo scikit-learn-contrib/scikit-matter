@@ -3,10 +3,11 @@ import warnings
 
 import numpy as np
 from sklearn import exceptions
-from sklearn.calibration import LinearSVC
 from sklearn.datasets import load_iris as get_dataset
 from sklearn.decomposition import PCA
 from sklearn.linear_model import LogisticRegression, RidgeClassifier
+from sklearn.svm import LinearSVC
+from sklearn.multioutput import MultiOutputClassifier
 from sklearn.naive_bayes import GaussianNB
 from sklearn.preprocessing import StandardScaler
 from sklearn.utils.validation import check_X_y
@@ -99,6 +100,7 @@ class PCovCErrorTest(PCovCBaseTest):
 
                 pcovc.fit(self.X, self.Y)
                 Yp = pcovc.predict(self.X)
+
                 self.assertLessEqual(
                     np.linalg.norm(Yp - Yhat) ** 2.0 / np.linalg.norm(Yhat) ** 2.0,
                     self.error_tol,
@@ -566,9 +568,9 @@ class PCovCInfrastructureTest(PCovCBaseTest):
             str(cm.exception),
             "Classifier must be an instance of "
             "`LogisticRegression`, `LogisticRegressionCV`, `LinearSVC`, "
-            "`LinearDiscriminantAnalysis`, `RidgeClassifier`, "
-            "`RidgeClassifierCV`, `SGDClassifier`, `Perceptron`, "
-            "or `precomputed`",
+            "`LinearDiscriminantAnalysis`, `RidgeClassifier`, `RidgeClassifierCV`, "
+            "`SGDClassifier`, `Perceptron`, `MultiOutputClassifier`, "
+            "or `precomputed`.",
         )
 
     def test_none_classifier(self):
@@ -619,6 +621,120 @@ class PCovCInfrastructureTest(PCovCBaseTest):
 
         assert not np.allclose(
             pcovc_scaled.singular_values_, pcovc_unscaled.singular_values_
+        )
+
+
+class PCovCMultiOutputTest(PCovCBaseTest):
+    def test_prefit_multioutput(self):
+        """Check that PCovC works if a prefit classifier
+        is passed when `n_outputs > 1`.
+        """
+        classifier = MultiOutputClassifier(estimator=LogisticRegression())
+        Y_double = np.column_stack((self.Y, self.Y))
+
+        classifier.fit(self.X, Y_double)
+        pcovc = self.model(mixing=0.25, classifier=classifier)
+        pcovc.fit(self.X, Y_double)
+
+        W_classifier = np.hstack([est_.coef_.T for est_ in classifier.estimators_])
+        Z_classifier = self.X @ W_classifier
+
+        W_pcovc = np.hstack([est_.coef_.T for est_ in pcovc.z_classifier_.estimators_])
+        Z_pcovc = self.X @ W_pcovc
+
+        self.assertTrue(np.allclose(Z_classifier, Z_pcovc))
+        self.assertTrue(np.allclose(W_classifier, W_pcovc))
+
+    def test_precomputed_multioutput(self):
+        """Check that PCovC works if classifier=`precomputed` and `n_outputs > 1`."""
+        classifier = MultiOutputClassifier(estimator=LogisticRegression())
+        Y_double = np.column_stack((self.Y, self.Y))
+
+        classifier.fit(self.X, Y_double)
+        W = np.hstack([est_.coef_.T for est_ in classifier.estimators_])
+        print(W.shape)
+        pcovc1 = self.model(mixing=0.5, classifier="precomputed", n_components=1)
+        pcovc1.fit(self.X, Y_double, W)
+        t1 = pcovc1.transform(self.X)
+
+        pcovc2 = self.model(mixing=0.5, classifier=classifier, n_components=1)
+        pcovc2.fit(self.X, Y_double)
+        t2 = pcovc2.transform(self.X)
+
+        self.assertTrue(np.linalg.norm(t1 - t2) < self.error_tol)
+
+        # Now check for match when W is not passed:
+        pcovc3 = self.model(mixing=0.5, classifier="precomputed", n_components=1)
+        pcovc3.fit(self.X, Y_double)
+        t3 = pcovc3.transform(self.X)
+
+        self.assertTrue(np.linalg.norm(t3 - t2) < self.error_tol)
+        self.assertTrue(np.linalg.norm(t3 - t1) < self.error_tol)
+
+    def test_Z_shape_multioutput(self):
+        """Check that PCovC returns the evidence Z in the
+        desired form when `n_outputs > 1`.
+        """
+        pcovc = PCovC()
+
+        Y_double = np.column_stack((self.Y, self.Y))
+        pcovc.fit(self.X, Y_double)
+
+        Z = pcovc.decision_function(self.X)
+
+        # list of (n_samples, n_classes) arrays when each column of Y is multiclass
+        self.assertEqual(len(Z), Y_double.shape[1])
+
+        for est, z_slice in zip(pcovc.z_classifier_.estimators_, Z):
+            with self.subTest(type="z_arrays"):
+                # each array is shape (n_samples, n_classes):
+                self.assertEqual(self.X.shape[0], z_slice.shape[0])
+                self.assertEqual(est.coef_.shape[0], z_slice.shape[1])
+
+    def test_decision_function_multioutput(self):
+        """Check that PCovC's decision_function works in edge
+        cases when `n_outputs_ > 1`.
+        """
+        pcovc = self.model(
+            classifier=MultiOutputClassifier(estimator=LogisticRegression())
+        )
+        pcovc.fit(self.X, np.column_stack((self.Y, self.Y)))
+        with self.assertRaises(ValueError) as cm:
+            _ = pcovc.decision_function()
+        self.assertEqual(
+            str(cm.exception),
+            "Either X or T must be supplied.",
+        )
+
+        T = pcovc.transform(self.X)
+        _ = pcovc.decision_function(T=T)
+
+    def test_score(self):
+        """Check that PCovC's score behaves properly with multiple labels."""
+        pcovc_multi = self.model(
+            classifier=MultiOutputClassifier(estimator=LogisticRegression())
+        )
+        pcovc_multi.fit(self.X, np.column_stack((self.Y, self.Y)))
+        score_multi = pcovc_multi.score(self.X, np.column_stack((self.Y, self.Y)))
+
+        pcovc_single = self.model().fit(self.X, self.Y)
+        score_single = pcovc_single.score(self.X, self.Y)
+        self.assertEqual(score_single, score_multi)
+
+    def test_bad_multioutput_estimator(self):
+        """Check that PCovC returns an error when a MultiOutputClassifier
+        is improperly constructed.
+        """
+        with self.assertRaises(ValueError) as cm:
+            pcovc = self.model(classifier=MultiOutputClassifier(estimator=GaussianNB()))
+            pcovc.fit(self.X, np.column_stack((self.Y, self.Y)))
+        self.assertEqual(
+            str(cm.exception),
+            "The instance of MultiOutputClassifier passed as the PCovC classifier "
+            "contains `GaussianNB`, which is not supported. The MultiOutputClassifier "
+            "must contain an instance of `LogisticRegression`, `LogisticRegressionCV`, "
+            "`LinearSVC`, `LinearDiscriminantAnalysis`, `RidgeClassifier`, "
+            "`RidgeClassifierCV`, `SGDClassifier`, `Perceptron`, or `precomputed`.",
         )
 
 
