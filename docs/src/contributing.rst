@@ -36,7 +36,7 @@ supported tox environments please use
 Running the tests
 -----------------
 
-The testsuite is implemented using Python's `unittest`_ framework and should be set-up
+The testsuite is implemented using `pytest`_ framework and should be set-up
 and run in an isolated virtual environment with `tox`_. All tests can be run with
 
 .. code-block:: bash
@@ -51,15 +51,14 @@ If you wish to test only specific functionalities, for example:
   tox -e tests         # unit tests
   tox -e examples      # test the examples
 
-
 You can also use ``tox -e format`` to use tox to do actual formatting instead of just
 testing it. Also, you may want to setup your editor to automatically apply the `black
 <https://black.readthedocs.io/en/stable/>`_ code formatter when saving your files, there
 are plugins to do this with `all major editors
 <https://black.readthedocs.io/en/stable/editor_integration.html>`_.
 
-.. _unittest: https://docs.python.org/3/library/unittest.html
-.. _tox: https://tox.readthedocs.io/en/latest
+.. _pytest: https://pytest.org
+.. _tox: https://tox.readthedocs.io
 
 Contributing to the documentation
 ---------------------------------
@@ -195,20 +194,23 @@ properly. It should look something like this:
 
 .. code-block:: python
 
-    class MyDatasetTests(unittest.TestCase):
-        @classmethod
-        def setUpClass(cls):
-            cls.my_data = load_my_data()
+    import pytest
+    from skmatter.datasets import load_my_dataset
 
-        def test_load_my_data(self):
-            # test if representations and properties have commensurate shape
-            self.assertTrue(
-                self.my_data.data.X.shape[0] == self.my_data.data.y.shape[0]
-            )
 
-        def test_load_my_data_descr(self):
-            self.my_data.DESCR
+    @pytest.fixture
+    def my_data():
+        """Load my dataset for testing."""
+        return load_my_dataset()
 
+
+    def test_load_my_data(my_data):
+        # Test if representations and properties have commensurate shape
+        assert my_data.data.X.shape[0] == my_data.data.y.shape[0]
+
+
+    def test_load_my_data_descr(my_data):
+        assert my_data.DESCR
 
 You're good to go! Time to submit a `pull request.
 <https://github.com/lab-cosmo/scikit-matter/pulls>`_

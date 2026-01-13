@@ -1,6 +1,5 @@
-import unittest
-
 import numpy as np
+import pytest
 from sklearn import exceptions
 from sklearn.datasets import load_diabetes as get_dataset
 from sklearn.decomposition import PCA
@@ -8,516 +7,522 @@ from sklearn.kernel_ridge import KernelRidge
 from sklearn.linear_model import Ridge
 from sklearn.preprocessing import StandardScaler
 from sklearn.utils.validation import check_X_y
-import pytest
 
 from skmatter.decomposition import PCovR
 
 
-class PCovRBaseTest(unittest.TestCase):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+@pytest.fixture(scope="module")
+def pcovr_model():
+    """Factory fixture for PCovR model."""
 
-        self.model = lambda mixing=0.5, regressor=Ridge(
-            alpha=1e-8, fit_intercept=False, tol=1e-12
-        ), **kwargs: PCovR(mixing, regressor=regressor, **kwargs)
-        self.error_tol = 1e-5
+    def _model(
+        mixing=0.5,
+        regressor=Ridge(alpha=1e-8, fit_intercept=False, tol=1e-12),
+        **kwargs,
+    ):
+        return PCovR(mixing, regressor=regressor, **kwargs)
 
-        self.X, self.Y = get_dataset(return_X_y=True)
-        self.X = StandardScaler().fit_transform(self.X)
-        self.Y = StandardScaler().fit_transform(np.vstack(self.Y)).ravel()
-
-    def setUp(self):
-        pass
+    return _model
 
 
-class PCovRErrorTest(PCovRBaseTest):
-    def test_against_pca(self):
-        """Tests that mixing = 1.0 corresponds to PCA."""
-        pcovr = PCovR(
-            mixing=1.0, n_components=3, space="sample", svd_solver="full"
-        ).fit(self.X, self.Y)
-        pca = PCA(n_components=3, svd_solver="full").fit(self.X)
+@pytest.fixture(scope="module")
+def error_tol():
+    """Error tolerance for tests."""
+    return 1e-5
 
-        # tests that the SVD is equivalent
-        self.assertTrue(np.allclose(pca.singular_values_, pcovr.singular_values_))
-        self.assertTrue(np.allclose(pca.explained_variance_, pcovr.explained_variance_))
 
-        T_pcovr = pcovr.transform(self.X)
-        T_pca = pca.transform(self.X)
+@pytest.fixture(scope="module")
+def X():
+    """Feature matrix."""
+    X, _ = get_dataset(return_X_y=True)
+    return StandardScaler().fit_transform(X)
 
-        # tests that the projections are equivalent
-        self.assertLessEqual(
-            np.linalg.norm(T_pcovr @ T_pcovr.T - T_pca @ T_pca.T), 1e-8
+
+@pytest.fixture(scope="module")
+def Y():
+    """Target vector."""
+    _, Y = get_dataset(return_X_y=True)
+    return StandardScaler().fit_transform(np.vstack(Y)).ravel()
+
+
+def test_against_pca(X, Y):
+    """Tests that mixing = 1.0 corresponds to PCA."""
+    pcovr = PCovR(mixing=1.0, n_components=3, space="sample", svd_solver="full").fit(
+        X, Y
+    )
+    pca = PCA(n_components=3, svd_solver="full").fit(X)
+
+    # tests that the SVD is equivalent
+    np.testing.assert_allclose(pca.singular_values_, pcovr.singular_values_)
+    np.testing.assert_allclose(pca.explained_variance_, pcovr.explained_variance_)
+
+    T_pcovr = pcovr.transform(X)
+    T_pca = pca.transform(X)
+
+    # tests that the projections are equivalent
+    assert np.linalg.norm(T_pcovr @ T_pcovr.T - T_pca @ T_pca.T) <= 1e-8
+
+
+@pytest.mark.parametrize("space", ["feature", "sample", "auto"])
+def test_simple_reconstruction(pcovr_model, X, Y, error_tol, space):
+    """Check that PCovR with a full eigendecomposition at mixing=1 can fully
+    reconstruct the input matrix.
+    """
+    pcovr = pcovr_model(mixing=1.0, n_components=X.shape[-1], space=space)
+    pcovr.fit(X, Y)
+    Xr = pcovr.inverse_transform(pcovr.transform(X))
+    assert np.linalg.norm(X - Xr) ** 2.0 / np.linalg.norm(X) ** 2.0 <= error_tol, (
+        f"Reconstruction error too high for space={space}"
+    )
+
+
+@pytest.mark.parametrize("space", ["feature", "sample", "auto"])
+def test_simple_prediction(pcovr_model, X, Y, error_tol, space):
+    """
+    Check that PCovR with a full eigendecomposition at mixing=0
+    can reproduce a linear regression result.
+    """
+    pcovr = pcovr_model(mixing=0.0, n_components=1, space=space)
+
+    pcovr.regressor.fit(X, Y)
+    Yhat = pcovr.regressor.predict(X)
+
+    pcovr.fit(X, Y)
+    Yp = pcovr.predict(X)
+    assert (
+        np.linalg.norm(Yp - Yhat) ** 2.0 / np.linalg.norm(Yhat) ** 2.0 <= error_tol
+    ), f"Prediction error too high for space={space}"
+
+
+def test_lr_with_x_errors(pcovr_model, X, Y, error_tol):
+    """
+    Check that PCovR returns a non-null property prediction
+    and that the prediction error increases with `mixing`
+    """
+    prev_error = -1.0
+
+    for mixing in np.linspace(0, 1, 11):
+        pcovr = pcovr_model(mixing=mixing, n_components=2, tol=1e-12)
+        pcovr.fit(X, Y)
+
+        Yp = pcovr.predict(X=X)
+        error = np.linalg.norm(Y - Yp) ** 2.0 / np.linalg.norm(Y) ** 2.0
+
+        assert not np.isnan(error), f"Error is NaN for mixing={mixing}"
+        assert error >= prev_error - error_tol, (
+            f"Error decreased unexpectedly at mixing={round(mixing, 4)}"
         )
 
-    def test_simple_reconstruction(self):
-        """Check that PCovR with a full eigendecomposition at mixing=1 can fully
-        reconstruct the input matrix.
-        """
-        for space in ["feature", "sample", "auto"]:
-            with self.subTest(space=space):
-                pcovr = self.model(
-                    mixing=1.0, n_components=self.X.shape[-1], space=space
-                )
-                pcovr.fit(self.X, self.Y)
-                Xr = pcovr.inverse_transform(pcovr.transform(self.X))
-                self.assertLessEqual(
-                    np.linalg.norm(self.X - Xr) ** 2.0 / np.linalg.norm(self.X) ** 2.0,
-                    self.error_tol,
-                )
-
-    def test_simple_prediction(self):
-        """
-        Check that PCovR with a full eigendecomposition at mixing=0
-        can reproduce a linear regression result.
-        """
-        for space in ["feature", "sample", "auto"]:
-            with self.subTest(space=space):
-                pcovr = self.model(mixing=0.0, n_components=1, space=space)
-
-                pcovr.regressor.fit(self.X, self.Y)
-                Yhat = pcovr.regressor.predict(self.X)
-
-                pcovr.fit(self.X, self.Y)
-                Yp = pcovr.predict(self.X)
-                self.assertLessEqual(
-                    np.linalg.norm(Yp - Yhat) ** 2.0 / np.linalg.norm(Yhat) ** 2.0,
-                    self.error_tol,
-                )
-
-    def test_lr_with_x_errors(self):
-        """
-        Check that PCovR returns a non-null property prediction
-        and that the prediction error increases with `mixing`
-        """
-        prev_error = -1.0
-
-        for mixing in np.linspace(0, 1, 11):
-            pcovr = self.model(mixing=mixing, n_components=2, tol=1e-12)
-            pcovr.fit(self.X, self.Y)
-
-            Yp = pcovr.predict(X=self.X)
-            error = np.linalg.norm(self.Y - Yp) ** 2.0 / np.linalg.norm(self.Y) ** 2.0
-
-            with self.subTest(error=error):
-                self.assertFalse(np.isnan(error))
-            with self.subTest(error=error, alpha=round(mixing, 4)):
-                self.assertGreaterEqual(error, prev_error - self.error_tol)
-
-            prev_error = error
-
-    def test_lr_with_t_errors(self):
-        """Check that PCovR returns a non-null property prediction from the latent space
-        projection and that the prediction error increases with `mixing`.
-        """
-        prev_error = -1.0
-
-        for mixing in np.linspace(0, 1, 11):
-            pcovr = self.model(mixing=mixing, n_components=2, tol=1e-12)
-            pcovr.fit(self.X, self.Y)
-
-            T = pcovr.transform(self.X)
-            Yp = pcovr.predict(T=T)
-            error = np.linalg.norm(self.Y - Yp) ** 2.0 / np.linalg.norm(self.Y) ** 2.0
-
-            with self.subTest(error=error):
-                self.assertFalse(np.isnan(error))
-            with self.subTest(error=error, alpha=round(mixing, 4)):
-                self.assertGreaterEqual(error, prev_error - self.error_tol)
-
-            prev_error = error
-
-    def test_reconstruction_errors(self):
-        """Check that PCovR returns a non-null reconstructed X and that the
-        reconstruction error decreases with `mixing`.
-        """
-        prev_error = 1.0
-
-        for mixing in np.linspace(0, 1, 11):
-            pcovr = self.model(mixing=mixing, n_components=2, tol=1e-12)
-            pcovr.fit(self.X, self.Y)
-
-            Xr = pcovr.inverse_transform(pcovr.transform(self.X))
-            error = np.linalg.norm(self.X - Xr) ** 2.0 / np.linalg.norm(self.X) ** 2.0
-
-            with self.subTest(error=error):
-                self.assertFalse(np.isnan(error))
-            with self.subTest(error=error, alpha=round(mixing, 4)):
-                self.assertLessEqual(error, prev_error + self.error_tol)
-
-            prev_error = error
+        prev_error = error
 
 
-class PCovRSpaceTest(PCovRBaseTest):
-    def test_select_feature_space(self):
-        """
-        Check that PCovR implements the feature space version
-        when :math:`n_{features} < n_{samples}``.
-        """
-        pcovr = self.model(n_components=2, tol=1e-12)
-        pcovr.fit(self.X, self.Y)
+def test_lr_with_t_errors(pcovr_model, X, Y, error_tol):
+    """Check that PCovR returns a non-null property prediction from the latent space
+    projection and that the prediction error increases with `mixing`.
+    """
+    prev_error = -1.0
 
-        self.assertTrue(pcovr.space_ == "feature")
+    for mixing in np.linspace(0, 1, 11):
+        pcovr = pcovr_model(mixing=mixing, n_components=2, tol=1e-12)
+        pcovr.fit(X, Y)
 
-    def test_select_sample_space(self):
-        """
-        Check that PCovR implements the sample space version
-        when :math:`n_{features} > n_{samples}``.
-        """
-        pcovr = self.model(n_components=2, tol=1e-12)
+        T = pcovr.transform(X)
+        Yp = pcovr.predict(T=T)
+        error = np.linalg.norm(Y - Yp) ** 2.0 / np.linalg.norm(Y) ** 2.0
 
-        n_samples = self.X.shape[1] - 1
+        assert not np.isnan(error), f"Error is NaN for mixing={mixing}"
+        assert error >= prev_error - error_tol, (
+            f"Error decreased unexpectedly at mixing={round(mixing, 4)}"
+        )
 
-        with pytest.warns(match="class does not automatically center data"):
-            pcovr.fit(self.X[:n_samples], self.Y[:n_samples])
-
-        assert pcovr.space_ == "sample"
-
-    def test_bad_space(self):
-        """
-        Check that PCovR raises a ValueError when a non-valid
-        space is designated.
-        """
-        with self.assertRaises(ValueError):
-            pcovr = self.model(n_components=2, tol=1e-12, space="bad")
-            pcovr.fit(self.X, self.Y)
-
-    def test_override_spaceselection(self):
-        """
-        Check that PCovR implements the space provided in the
-        constructor, overriding that chosen by the input dimensions.
-        """
-        pcovr = self.model(n_components=2, tol=1e-12, space="sample")
-        pcovr.fit(self.X, self.Y)
-
-        self.assertTrue(pcovr.space_ == "sample")
-
-    def test_spaces_equivalent(self):
-        """
-        Check that the results from PCovR, regardless of the space,
-        are equivalent.
-        """
-        for alpha in np.linspace(0.01, 0.99, 11):
-            with self.subTest(alpha=alpha, type="prediction"):
-                pcovr_ss = self.model(
-                    n_components=2, mixing=alpha, tol=1e-12, space="sample"
-                )
-                pcovr_ss.fit(self.X, self.Y)
-
-                pcovr_fs = self.model(
-                    n_components=2, mixing=alpha, tol=1e-12, space="feature"
-                )
-                pcovr_fs.fit(self.X, self.Y)
-
-                self.assertTrue(
-                    np.allclose(
-                        pcovr_ss.predict(self.X),
-                        pcovr_fs.predict(self.X),
-                        self.error_tol,
-                    )
-                )
-
-            with self.subTest(alpha=alpha, type="reconstruction"):
-                pcovr_ss = self.model(
-                    n_components=2, mixing=alpha, tol=1e-12, space="sample"
-                )
-                pcovr_ss.fit(self.X, self.Y)
-
-                pcovr_fs = self.model(
-                    n_components=2, mixing=alpha, tol=1e-12, space="feature"
-                )
-                pcovr_fs.fit(self.X, self.Y)
-
-                self.assertTrue(
-                    np.allclose(
-                        pcovr_ss.inverse_transform(pcovr_ss.transform(self.X)),
-                        pcovr_fs.inverse_transform(pcovr_fs.transform(self.X)),
-                        self.error_tol,
-                    )
-                )
+        prev_error = error
 
 
-class PCovRTestSVDSolvers(PCovRBaseTest):
-    def test_svd_solvers(self):
-        """
-        Check that PCovR works with all svd_solver modes and assigns
-        the right n_components
-        """
-        for solver in ["arpack", "full", "randomized", "auto"]:
-            with self.subTest(solver=solver):
-                pcovr = self.model(tol=1e-12, svd_solver=solver)
-                pcovr.fit(self.X, self.Y)
+def test_reconstruction_errors(pcovr_model, X, Y, error_tol):
+    """Check that PCovR returns a non-null reconstructed X and that the
+    reconstruction error decreases with `mixing`.
+    """
+    prev_error = 1.0
 
-                if solver == "arpack":
-                    self.assertTrue(pcovr.n_components_ == min(self.X.shape) - 1)
-                else:
-                    self.assertTrue(pcovr.n_components_ == min(self.X.shape))
+    for mixing in np.linspace(0, 1, 11):
+        pcovr = pcovr_model(mixing=mixing, n_components=2, tol=1e-12)
+        pcovr.fit(X, Y)
 
-    def test_bad_solver(self):
-        """
-        Check that PCovR will not work with a solver that isn't in
-        ['arpack', 'full', 'randomized', 'auto']
-        """
-        for space in ["feature", "sample"]:
-            with self.assertRaises(ValueError) as cm:
-                pcovr = self.model(svd_solver="bad", space=space)
-                pcovr.fit(self.X, self.Y)
+        Xr = pcovr.inverse_transform(pcovr.transform(X))
+        error = np.linalg.norm(X - Xr) ** 2.0 / np.linalg.norm(X) ** 2.0
 
-            self.assertEqual(str(cm.exception), "Unrecognized svd_solver='bad'")
+        assert not np.isnan(error), f"Error is NaN for mixing={mixing}"
+        assert error <= prev_error + error_tol, (
+            f"Error increased unexpectedly at mixing={round(mixing, 4)}"
+        )
 
-    def test_good_n_components(self):
-        """Check that PCovR will work with any allowed values of n_components."""
+        prev_error = error
+
+
+def test_select_feature_space(pcovr_model, X, Y):
+    """
+    Check that PCovR implements the feature space version
+    when :math:`n_{features} < n_{samples}``.
+    """
+    pcovr = pcovr_model(n_components=2, tol=1e-12)
+    pcovr.fit(X, Y)
+
+    assert pcovr.space_ == "feature"
+
+
+def test_select_sample_space(pcovr_model, X, Y):
+    """
+    Check that PCovR implements the sample space version
+    when :math:`n_{features} > n_{samples}``.
+    """
+    pcovr = pcovr_model(n_components=2, tol=1e-12)
+
+    n_samples = X.shape[1] - 1
+
+    with pytest.warns(match="class does not automatically center data"):
+        pcovr.fit(X[:n_samples], Y[:n_samples])
+
+    assert pcovr.space_ == "sample"
+
+
+def test_bad_space(pcovr_model, X, Y):
+    """
+    Check that PCovR raises a ValueError when a non-valid
+    space is designated.
+    """
+    match = "Only feature and sample space are supported"
+    with pytest.raises(ValueError, match=match):
+        pcovr = pcovr_model(n_components=2, tol=1e-12, space="bad")
+        pcovr.fit(X, Y)
+
+
+def test_override_spaceselection(pcovr_model, X, Y):
+    """
+    Check that PCovR implements the space provided in the
+    constructor, overriding that chosen by the input dimensions.
+    """
+    pcovr = pcovr_model(n_components=2, tol=1e-12, space="sample")
+    pcovr.fit(X, Y)
+
+    assert pcovr.space_ == "sample"
+
+
+@pytest.mark.parametrize("alpha", np.linspace(0.01, 0.99, 11))
+def test_spaces_equivalent_prediction(pcovr_model, X, Y, error_tol, alpha):
+    """
+    Check that the results from PCovR, regardless of the space,
+    are equivalent for prediction.
+    """
+    pcovr_ss = pcovr_model(n_components=2, mixing=alpha, tol=1e-12, space="sample")
+    pcovr_ss.fit(X, Y)
+
+    pcovr_fs = pcovr_model(n_components=2, mixing=alpha, tol=1e-12, space="feature")
+    pcovr_fs.fit(X, Y)
+
+    np.testing.assert_allclose(pcovr_ss.predict(X), pcovr_fs.predict(X), atol=error_tol)
+
+
+@pytest.mark.parametrize("alpha", np.linspace(0.01, 0.99, 11))
+def test_spaces_equivalent_reconstruction(pcovr_model, X, Y, error_tol, alpha):
+    """
+    Check that the results from PCovR, regardless of the space,
+    are equivalent for reconstruction.
+    """
+    pcovr_ss = pcovr_model(n_components=2, mixing=alpha, tol=1e-12, space="sample")
+    pcovr_ss.fit(X, Y)
+
+    pcovr_fs = pcovr_model(n_components=2, mixing=alpha, tol=1e-12, space="feature")
+    pcovr_fs.fit(X, Y)
+
+    np.testing.assert_allclose(
+        pcovr_ss.inverse_transform(pcovr_ss.transform(X)),
+        pcovr_fs.inverse_transform(pcovr_fs.transform(X)),
+        atol=error_tol,
+    )
+
+
+@pytest.mark.parametrize("solver", ["arpack", "full", "randomized", "auto"])
+def test_svd_solvers(pcovr_model, X, Y, solver):
+    """
+    Check that PCovR works with all svd_solver modes and assigns
+    the right n_components
+    """
+    pcovr = pcovr_model(tol=1e-12, svd_solver=solver)
+    pcovr.fit(X, Y)
+
+    if solver == "arpack":
+        assert pcovr.n_components_ == min(X.shape) - 1
+    else:
+        assert pcovr.n_components_ == min(X.shape)
+
+
+@pytest.mark.parametrize("space", ["feature", "sample"])
+def test_bad_solver(pcovr_model, X, Y, space):
+    """
+    Check that PCovR will not work with a solver that isn't in
+    ['arpack', 'full', 'randomized', 'auto']
+    """
+    with pytest.raises(ValueError) as context:
+        pcovr = pcovr_model(svd_solver="bad", space=space)
+        pcovr.fit(X, Y)
+
+    assert str(context.value) == "Unrecognized svd_solver='bad'"
+
+
+def test_good_n_components(pcovr_model, X, Y):
+    """Check that PCovR will work with any allowed values of n_components."""
+    # this one should pass
+    pcovr = pcovr_model(n_components=0.5, svd_solver="full")
+    pcovr.fit(X, Y)
+
+    for svd_solver in ["auto", "full"]:
         # this one should pass
-        pcovr = self.model(n_components=0.5, svd_solver="full")
-        pcovr.fit(self.X, self.Y)
+        pcovr = pcovr_model(n_components=2, svd_solver=svd_solver)
+        pcovr.fit(X, Y)
 
-        for svd_solver in ["auto", "full"]:
-            # this one should pass
-            pcovr = self.model(n_components=2, svd_solver=svd_solver)
-            pcovr.fit(self.X, self.Y)
-
-            # this one should pass
-            pcovr = self.model(n_components="mle", svd_solver=svd_solver)
-            pcovr.fit(self.X, self.Y)
-
-    def test_bad_n_components(self):
-        """Check that PCovR will not work with any prohibited values of n_components."""
-        pcovr = self.model(n_components="mle", svd_solver="full")
-        m = "n_components='mle' is only supported if n_samples >= n_features"
-        with pytest.raises(ValueError, match=m):
-            with pytest.warns(match="class does not automatically center data"):
-                pcovr.fit(self.X[:2], self.Y[:2])
-
-        with self.subTest(type="negative_ncomponents"):
-            with self.assertRaises(ValueError) as cm:
-                pcovr = self.model(n_components=-1, svd_solver="auto")
-                pcovr.fit(self.X, self.Y)
-
-            self.assertEqual(
-                str(cm.exception),
-                "n_components=%r must be between 1 and "
-                "min(n_samples, n_features)=%r with "
-                "svd_solver='%s'"
-                % (
-                    pcovr.n_components_,
-                    min(self.X.shape),
-                    pcovr.svd_solver,
-                ),
-            )
-        with self.subTest(type="0_ncomponents"):
-            with self.assertRaises(ValueError) as cm:
-                pcovr = self.model(n_components=0, svd_solver="randomized")
-                pcovr.fit(self.X, self.Y)
-
-            self.assertEqual(
-                str(cm.exception),
-                "n_components=%r must be between 1 and "
-                "min(n_samples, n_features)=%r with "
-                "svd_solver='%s'"
-                % (
-                    pcovr.n_components_,
-                    min(self.X.shape),
-                    pcovr.svd_solver,
-                ),
-            )
-        with self.subTest(type="arpack_X_ncomponents"):
-            with self.assertRaises(ValueError) as cm:
-                pcovr = self.model(n_components=min(self.X.shape), svd_solver="arpack")
-                pcovr.fit(self.X, self.Y)
-            self.assertEqual(
-                str(cm.exception),
-                "n_components=%r must be strictly less than "
-                "min(n_samples, n_features)=%r with "
-                "svd_solver='%s'"
-                % (
-                    pcovr.n_components_,
-                    min(self.X.shape),
-                    pcovr.svd_solver,
-                ),
-            )
-
-        for svd_solver in ["auto", "full"]:
-            with self.subTest(type="pi_ncomponents"):
-                with self.assertRaises(ValueError) as cm:
-                    pcovr = self.model(n_components=np.pi, svd_solver=svd_solver)
-                    pcovr.fit(self.X, self.Y)
-                self.assertEqual(
-                    str(cm.exception),
-                    "n_components=%r must be of type int "
-                    "when greater than or equal to 1, was of type=%r"
-                    % (pcovr.n_components_, type(pcovr.n_components_)),
-                )
+        # this one should pass
+        pcovr = pcovr_model(n_components="mle", svd_solver=svd_solver)
+        pcovr.fit(X, Y)
 
 
-class PCovRInfrastructureTest(PCovRBaseTest):
-    def test_nonfitted_failure(self):
-        """
-        Check that PCovR will raise a `NonFittedError` if
-        `transform` is called before the pcovr is fitted
-        """
-        pcovr = self.model(n_components=2, tol=1e-12)
-        with self.assertRaises(exceptions.NotFittedError):
-            _ = pcovr.transform(self.X)
-
-    def test_no_arg_predict(self):
-        """
-        Check that PCovR will raise a `ValueError` if
-        `predict` is called without arguments
-        """
-        pcovr = self.model(n_components=2, tol=1e-12)
-        pcovr.fit(self.X, self.Y)
-        with self.assertRaises(ValueError):
-            _ = pcovr.predict()
-
-    def test_centering(self):
-        """
-        Check that PCovR raises a warning if
-        given uncentered data.
-        """
-        pcovr = self.model(n_components=2, tol=1e-12)
-        X = self.X.copy() + np.random.uniform(-1, 1, self.X.shape[1])
-        m = (
-            "This class does not automatically center data, and your data mean is "
-            "greater than the supplied tolerance."
-        )
-        with pytest.warns(match=m):
-            pcovr.fit(X, self.Y)
-
-    def test_T_shape(self):
-        """Check that PCovR returns a latent space projection consistent with the shape
-        of the input matrix.
-        """
-        n_components = 5
-        pcovr = self.model(n_components=n_components, tol=1e-12)
-        pcovr.fit(self.X, self.Y)
-        T = pcovr.transform(self.X)
-        self.assertTrue(check_X_y(self.X, T, multi_output=True) == (self.X, T))
-        self.assertTrue(T.shape[-1] == n_components)
-
-    def test_default_ncomponents(self):
-        pcovr = PCovR(mixing=0.5)
-        pcovr.fit(self.X, self.Y)
-
-        self.assertEqual(pcovr.n_components_, min(self.X.shape))
-
-    def test_Y_shape(self):
-        pcovr = self.model()
-        self.Y = np.vstack(self.Y)
-        pcovr.fit(self.X, self.Y)
-
-        self.assertEqual(pcovr.pxy_.shape[0], self.X.shape[1])
-        self.assertEqual(pcovr.pty_.shape[0], pcovr.n_components_)
-
-    def test_prefit_regressor(self):
-        regressor = Ridge(alpha=1e-8, fit_intercept=False, tol=1e-12)
-        regressor.fit(self.X, self.Y)
-        pcovr = self.model(mixing=0.5, regressor=regressor)
-        pcovr.fit(self.X, self.Y)
-
-        Yhat_regressor = regressor.predict(self.X).reshape(self.X.shape[0], -1)
-        W_regressor = regressor.coef_.T.reshape(self.X.shape[1], -1)
-
-        Yhat_pcovr = pcovr.regressor_.predict(self.X).reshape(self.X.shape[0], -1)
-        W_pcovr = pcovr.regressor_.coef_.T.reshape(self.X.shape[1], -1)
-
-        self.assertTrue(np.allclose(Yhat_regressor, Yhat_pcovr))
-        self.assertTrue(np.allclose(W_regressor, W_pcovr))
-
-    def test_prefit_regression(self):
-        regressor = Ridge(alpha=1e-8, fit_intercept=False, tol=1e-12)
-        regressor.fit(self.X, self.Y)
-        Yhat = regressor.predict(self.X)
-        W = regressor.coef_.reshape(self.X.shape[1], -1)
-
-        pcovr1 = self.model(mixing=0.5, regressor="precomputed", n_components=1)
-        pcovr1.fit(self.X, Yhat, W)
-        t1 = pcovr1.transform(self.X)
-
-        pcovr2 = self.model(mixing=0.5, regressor=regressor, n_components=1)
-        pcovr2.fit(self.X, self.Y)
-        t2 = pcovr2.transform(self.X)
-
-        self.assertTrue(np.linalg.norm(t1 - t2) < self.error_tol)
-
-    def test_regressor_modifications(self):
-        regressor = Ridge(alpha=1e-8)
-        pcovr = self.model(mixing=0.5, regressor=regressor)
-
-        # PCovR regressor matches the original
-        self.assertTrue(regressor.get_params() == pcovr.regressor.get_params())
-
-        # PCovR regressor updates its parameters
-        # to match the original regressor
-        regressor.set_params(alpha=1e-6)
-        self.assertTrue(regressor.get_params() == pcovr.regressor.get_params())
-
-        # Fitting regressor outside PCovR fits the PCovR regressor
-        regressor.fit(self.X, self.Y)
-        self.assertTrue(hasattr(pcovr.regressor, "coef_"))
-
-        # PCovR regressor doesn't change after fitting
-        pcovr.fit(self.X, self.Y)
-        regressor.set_params(alpha=1e-4)
-        self.assertTrue(hasattr(pcovr.regressor_, "coef_"))
-        self.assertTrue(regressor.get_params() != pcovr.regressor_.get_params())
-
-    def test_incompatible_regressor(self):
-        regressor = KernelRidge(alpha=1e-8, kernel="linear")
-        regressor.fit(self.X, self.Y)
-        pcovr = self.model(mixing=0.5, regressor=regressor)
-
-        with self.assertRaises(ValueError) as cm:
-            pcovr.fit(self.X, self.Y)
-        self.assertEqual(
-            str(cm.exception),
-            "Regressor must be an instance of `LinearRegression`, `Ridge`, `RidgeCV`, "
-            "or `precomputed`",
-        )
-
-    def test_none_regressor(self):
-        pcovr = PCovR(mixing=0.5, regressor=None)
-        pcovr.fit(self.X, self.Y)
-        self.assertTrue(pcovr.regressor is None)
-        self.assertTrue(pcovr.regressor_ is not None)
-
-    def test_incompatible_coef_dim(self):
-        # self.Y is 1D with one target
-        # Don't need to test X shape, since this should
-        # be caught by sklearn's validate_data
-        Y_2D = np.column_stack((self.Y, self.Y))
-        regressor = Ridge(alpha=1e-8, fit_intercept=False, tol=1e-12)
-        regressor.fit(self.X, Y_2D)
-        pcovr = self.model(mixing=0.5, regressor=regressor)
-
-        # Dimension mismatch
-        with self.assertRaises(ValueError) as cm:
-            pcovr.fit(self.X, self.Y)
-        self.assertEqual(
-            str(cm.exception),
-            "The regressor coefficients have a dimension incompatible with the "
-            "supplied target space. The coefficients have dimension 2 and the targets "
-            "have dimension 1",
-        )
-
-    def test_incompatible_coef_shape(self):
-        # Shape mismatch (number of targets)
-        Y_double = np.column_stack((self.Y, self.Y))
-        Y_triple = np.column_stack((Y_double, self.Y))
-
-        regressor = Ridge(alpha=1e-8, fit_intercept=False, tol=1e-12)
-        regressor.fit(self.X, Y_double)
-
-        pcovr = self.model(mixing=0.5, regressor=regressor)
-
-        with self.assertRaises(ValueError) as cm:
-            pcovr.fit(self.X, Y_triple)
-        self.assertEqual(
-            str(cm.exception),
-            "The regressor coefficients have a shape incompatible with the supplied "
-            "target space. The coefficients have shape %r and the targets have shape %r"
-            % (regressor.coef_.shape, Y_triple.shape),
-        )
+def test_bad_n_components_mle(pcovr_model, X, Y):
+    """Check that PCovR will not work with mle when n_samples < n_features."""
+    pcovr = pcovr_model(n_components="mle", svd_solver="full")
+    m = "n_components='mle' is only supported if n_samples >= n_features"
+    with pytest.raises(ValueError, match=m):
+        with pytest.warns(match="class does not automatically center data"):
+            pcovr.fit(X[:2], Y[:2])
 
 
-if __name__ == "__main__":
-    unittest.main(verbosity=2)
+def test_bad_n_components_negative(pcovr_model, X, Y):
+    """Check that PCovR rejects negative n_components."""
+    with pytest.raises(ValueError) as context:
+        pcovr = pcovr_model(n_components=-1, svd_solver="auto")
+        pcovr.fit(X, Y)
+
+    assert str(context.value) == (
+        "n_components=%r must be between 1 and "
+        "min(n_samples, n_features)=%r with "
+        "svd_solver='%s'" % (-1, min(X.shape), "auto")
+    )
+
+
+def test_bad_n_components_zero(pcovr_model, X, Y):
+    """Check that PCovR rejects zero n_components."""
+    with pytest.raises(ValueError) as context:
+        pcovr = pcovr_model(n_components=0, svd_solver="randomized")
+        pcovr.fit(X, Y)
+
+    assert str(context.value) == (
+        "n_components=%r must be between 1 and "
+        "min(n_samples, n_features)=%r with "
+        "svd_solver='%s'" % (0, min(X.shape), "randomized")
+    )
+
+
+def test_bad_n_components_arpack(pcovr_model, X, Y):
+    """Check that PCovR rejects n_components >= min(shape) with arpack."""
+    with pytest.raises(ValueError) as context:
+        pcovr = pcovr_model(n_components=min(X.shape), svd_solver="arpack")
+        pcovr.fit(X, Y)
+
+    assert str(context.value) == (
+        "n_components=%r must be strictly less than "
+        "min(n_samples, n_features)=%r with "
+        "svd_solver='%s'" % (min(X.shape), min(X.shape), "arpack")
+    )
+
+
+@pytest.mark.parametrize("svd_solver", ["auto", "full"])
+def test_bad_n_components_float(pcovr_model, X, Y, svd_solver):
+    """Check that PCovR rejects non-integer n_components >= 1."""
+    with pytest.raises(ValueError) as context:
+        pcovr = pcovr_model(n_components=np.pi, svd_solver=svd_solver)
+        pcovr.fit(X, Y)
+
+    assert str(context.value) == (
+        "n_components=%r must be of type int "
+        "when greater than or equal to 1, was of type=%r" % (np.pi, type(np.pi))
+    )
+
+
+def test_nonfitted_failure(pcovr_model, X):
+    """
+    Check that PCovR will raise a `NonFittedError` if
+    `transform` is called before the pcovr is fitted
+    """
+    pcovr = pcovr_model(n_components=2, tol=1e-12)
+    match = "instance is not fitted"
+    with pytest.raises(exceptions.NotFittedError, match=match):
+        pcovr.transform(X)
+
+
+def test_no_arg_predict(pcovr_model, X, Y):
+    """
+    Check that PCovR will raise a `ValueError` if
+    `predict` is called without arguments
+    """
+    pcovr = pcovr_model(n_components=2, tol=1e-12)
+    pcovr.fit(X, Y)
+    with pytest.raises(ValueError, match="Either X or T must be supplied"):
+        pcovr.predict()
+
+
+def test_centering(pcovr_model, X, Y):
+    """
+    Check that PCovR raises a warning if
+    given uncentered data.
+    """
+    pcovr = pcovr_model(n_components=2, tol=1e-12)
+    X_uncentered = X.copy() + np.random.uniform(-1, 1, X.shape[1])
+    m = (
+        "This class does not automatically center data, and your data mean is "
+        "greater than the supplied tolerance."
+    )
+    with pytest.warns(match=m):
+        pcovr.fit(X_uncentered, Y)
+
+
+def test_T_shape(pcovr_model, X, Y):
+    """Check that PCovR returns a latent space projection consistent with the shape
+    of the input matrix.
+    """
+    n_components = 5
+    pcovr = pcovr_model(n_components=n_components, tol=1e-12)
+    pcovr.fit(X, Y)
+    T = pcovr.transform(X)
+    assert check_X_y(X, T, multi_output=True) == (X, T)
+    assert T.shape[-1] == n_components
+
+
+def test_default_ncomponents(X, Y):
+    pcovr = PCovR(mixing=0.5)
+    pcovr.fit(X, Y)
+
+    assert pcovr.n_components_ == min(X.shape)
+
+
+def test_Y_shape(pcovr_model, X, Y):
+    pcovr = pcovr_model()
+    Y_2d = np.vstack(Y)
+    pcovr.fit(X, Y_2d)
+
+    assert pcovr.pxy_.shape[0] == X.shape[1]
+    assert pcovr.pty_.shape[0] == pcovr.n_components_
+
+
+def test_prefit_regressor(pcovr_model, X, Y):
+    regressor = Ridge(alpha=1e-8, fit_intercept=False, tol=1e-12)
+    regressor.fit(X, Y)
+    pcovr = pcovr_model(mixing=0.5, regressor=regressor)
+    pcovr.fit(X, Y)
+
+    Yhat_regressor = regressor.predict(X).reshape(X.shape[0], -1)
+    W_regressor = regressor.coef_.T.reshape(X.shape[1], -1)
+
+    Yhat_pcovr = pcovr.regressor_.predict(X).reshape(X.shape[0], -1)
+    W_pcovr = pcovr.regressor_.coef_.T.reshape(X.shape[1], -1)
+
+    np.testing.assert_allclose(Yhat_regressor, Yhat_pcovr)
+    np.testing.assert_allclose(W_regressor, W_pcovr)
+
+
+def test_prefit_regression(pcovr_model, X, Y, error_tol):
+    regressor = Ridge(alpha=1e-8, fit_intercept=False, tol=1e-12)
+    regressor.fit(X, Y)
+    Yhat = regressor.predict(X)
+    W = regressor.coef_.reshape(X.shape[1], -1)
+
+    pcovr1 = pcovr_model(mixing=0.5, regressor="precomputed", n_components=1)
+    pcovr1.fit(X, Yhat, W)
+    t1 = pcovr1.transform(X)
+
+    pcovr2 = pcovr_model(mixing=0.5, regressor=regressor, n_components=1)
+    pcovr2.fit(X, Y)
+    t2 = pcovr2.transform(X)
+
+    assert np.linalg.norm(t1 - t2) < error_tol
+
+
+def test_regressor_modifications(pcovr_model, X, Y):
+    regressor = Ridge(alpha=1e-8)
+    pcovr = pcovr_model(mixing=0.5, regressor=regressor)
+
+    # PCovR regressor matches the original
+    assert regressor.get_params() == pcovr.regressor.get_params()
+
+    # PCovR regressor updates its parameters
+    # to match the original regressor
+    regressor.set_params(alpha=1e-6)
+    assert regressor.get_params() == pcovr.regressor.get_params()
+
+    # Fitting regressor outside PCovR fits the PCovR regressor
+    regressor.fit(X, Y)
+    assert hasattr(pcovr.regressor, "coef_")
+
+    # PCovR regressor doesn't change after fitting
+    pcovr.fit(X, Y)
+    regressor.set_params(alpha=1e-4)
+    assert hasattr(pcovr.regressor_, "coef_")
+    assert regressor.get_params() != pcovr.regressor_.get_params()
+
+
+def test_incompatible_regressor(pcovr_model, X, Y):
+    regressor = KernelRidge(alpha=1e-8, kernel="linear")
+    regressor.fit(X, Y)
+    pcovr = pcovr_model(mixing=0.5, regressor=regressor)
+
+    with pytest.raises(ValueError) as context:
+        pcovr.fit(X, Y)
+
+    assert str(context.value) == (
+        "Regressor must be an instance of `LinearRegression`, `Ridge`, `RidgeCV`, "
+        "or `precomputed`"
+    )
+
+
+def test_none_regressor(X, Y):
+    pcovr = PCovR(mixing=0.5, regressor=None)
+    pcovr.fit(X, Y)
+    assert pcovr.regressor is None
+    assert pcovr.regressor_ is not None
+
+
+def test_incompatible_coef_dim(pcovr_model, X, Y):
+    # Y is 1D with one target
+    # Don't need to test X shape, since this should
+    # be caught by sklearn's validate_data
+    Y_2D = np.column_stack((Y, Y))
+    regressor = Ridge(alpha=1e-8, fit_intercept=False, tol=1e-12)
+    regressor.fit(X, Y_2D)
+    pcovr = pcovr_model(mixing=0.5, regressor=regressor)
+
+    # Dimension mismatch
+    with pytest.raises(ValueError) as context:
+        pcovr.fit(X, Y)
+
+    assert str(context.value) == (
+        "The regressor coefficients have a dimension incompatible with the "
+        "supplied target space. The coefficients have dimension 2 and the targets "
+        "have dimension 1"
+    )
+
+
+def test_incompatible_coef_shape(pcovr_model, X, Y):
+    # Shape mismatch (number of targets)
+    Y_double = np.column_stack((Y, Y))
+    Y_triple = np.column_stack((Y_double, Y))
+
+    regressor = Ridge(alpha=1e-8, fit_intercept=False, tol=1e-12)
+    regressor.fit(X, Y_double)
+
+    pcovr = pcovr_model(mixing=0.5, regressor=regressor)
+
+    with pytest.raises(ValueError) as context:
+        pcovr.fit(X, Y_triple)
+
+    assert str(context.value) == (
+        "The regressor coefficients have a shape incompatible with the supplied "
+        "target space. The coefficients have shape %r and the targets have shape %r"
+        % (regressor.coef_.shape, Y_triple.shape)
+    )
