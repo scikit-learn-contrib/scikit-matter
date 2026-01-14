@@ -70,3 +70,18 @@ Kernel PCovC
     .. automethod:: inverse_transform
     .. automethod:: decision_function
     .. automethod:: score
+
+.. _SketchMap-api:
+
+SketchMap
+---------
+
+.. autoclass:: skmatter.decomposition.SketchMap
+    :show-inheritance:
+    :special-members:
+
+    .. automethod:: fit
+    .. automethod:: transform
+    .. automethod:: fit_transform
+    .. automethod:: predict
+    .. automethod:: score
