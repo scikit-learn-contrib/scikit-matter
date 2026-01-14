@@ -295,7 +295,8 @@ class SketchMap(BaseEstimator, TransformerMixin):
         else:
             W = np.ones_like(dists, dtype=float)
 
-        # optimization: minimize combined direct+transformed stress over landmark low-d coords
+        # optimization: minimize combined direct+transformed stress over landmark low-d
+        # coords
         s_hd = self._tfun_hd.f(dists)
 
         nL = self.X_landmarks_.shape[0]
@@ -322,14 +323,12 @@ class SketchMap(BaseEstimator, TransformerMixin):
             # transformed distances and derivatives
             s_ld = self._tfun_ld.f(Dld)
             ds_dr = self._tfun_ld.df(Dld)
-            # differences
-            diff_direct = dists - Dld
-            diff_trans = s_hd - s_ld
             m = float(mixing_ratio)
             # avoid division by zero
             eps = np.finfo(float).eps
             inv_r = 1.0 / (Dld + eps)
-            # combined matrix M_{ij} = W_ij * [ m*(Dld - Dhd) + (1-m)*(s_ld - s_hd)*ds_dr ] / r
+            # combined matrix M_{ij} = W_ij * [ m*(Dld - Dhd) + (1-m)*(s_ld -
+            # s_hd)*ds_dr ] / r
             M = W * (m * (Dld - dists) + (1.0 - m) * (s_ld - s_hd) * ds_dr) * inv_r
             np.fill_diagonal(M, 0.0)
             row_sums = M.sum(axis=1)
@@ -369,8 +368,6 @@ class SketchMap(BaseEstimator, TransformerMixin):
                 best_res = res
             # if no improvement, try a global jittered restart
             if it < MAX_MIX:
-                # mix factor based on relative improvement (clamped)
-                prev_err = float(best_res.fun)
                 # jitter amplitude scales with IMIX and median pairwise HD distance
                 med = np.median(dists)
                 amp = IMIX * 0.01 * (med if med > 0 else 1.0)
