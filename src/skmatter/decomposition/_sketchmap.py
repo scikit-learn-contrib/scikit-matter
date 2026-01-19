@@ -466,3 +466,20 @@ class SketchMap(TransformerMixin, BaseEstimator):
     def transform(self, X):
         """Project new data (not implemented for out-of-sample)."""
         raise NotImplementedError("Out-of-sample projection not yet implemented")
+
+    def score(self, X, y=None):
+        """Return the negative stress as a score.
+
+        Parameters
+        ----------
+        X : array-like
+            Ignored, present for API consistency.
+        y : array-like
+            Ignored, present for API consistency.
+
+        Returns
+        -------
+        score : float
+            Negative of the final stress value.
+        """
+        return -self.stress_

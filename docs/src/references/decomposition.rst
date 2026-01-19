@@ -83,5 +83,4 @@ SketchMap
     .. automethod:: fit
     .. automethod:: transform
     .. automethod:: fit_transform
-    .. automethod:: predict
     .. automethod:: score
