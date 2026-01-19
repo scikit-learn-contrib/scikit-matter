@@ -12,7 +12,7 @@ from scipy.spatial.distance import pdist, squareform
 import warnings
 
 
-class SketchMap(BaseEstimator, TransformerMixin):
+class SketchMap(TransformerMixin, BaseEstimator):
     """Sketch-Map dimensionality reducer.
 
     Parameters
@@ -76,7 +76,7 @@ class SketchMap(BaseEstimator, TransformerMixin):
         mixing_ratio=0.0,
         center=True,
         random_state=None,
-        verbose=0,
+        verbose=False,
     ):
         self.n_components = n_components
         self.sigma = sigma
@@ -216,7 +216,7 @@ class SketchMap(BaseEstimator, TransformerMixin):
         )
 
         # Debug logging on first call
-        if self.verbose > 1 and self._first_stress_call:
+        if self.verbose and self._first_stress_call:
             print("\n=== First Stress Calculation Debug ===")
             print(f"High-dim distances (sample 3x3):\n{D_hd[:3, :3]}")
             print(f"\nLow-dim distances (sample 3x3):\n{D_ld[:3, :3]}")
@@ -299,7 +299,7 @@ class SketchMap(BaseEstimator, TransformerMixin):
             x0,
             method="L-BFGS-B",
             jac=gradient,
-            options={"maxiter": n_steps, "disp": self.verbose > 1},
+            options={"maxiter": n_steps, "disp": int(self.verbose)},
         )
 
         return result.x.reshape((n, self.n_components)), result.fun
@@ -334,18 +334,13 @@ class SketchMap(BaseEstimator, TransformerMixin):
         self.n_samples_ = n_samples
         self.n_features_ = n_features
 
-        # Use weights from fit() call if provided
-        weights_to_use = (
-            sample_weights if sample_weights is not None else self.sample_weights
-        )
-
         if self.verbose:
             print(f"Fitting Sketch-Map with {n_samples} samples, {n_features} features")
-            if weights_to_use is not None:
+            if sample_weights is not None:
                 print(
-                    f"Using sample weights: min={np.min(weights_to_use):.4f}, "
-                    f"max={np.max(weights_to_use):.4f}, "
-                    f"mean={np.mean(weights_to_use):.4f}"
+                    f"Using sample weights: min={np.min(sample_weights):.4f}, "
+                    f"max={np.max(sample_weights):.4f}, "
+                    f"mean={np.mean(sample_weights):.4f}"
                 )
 
         # Center data if requested
@@ -371,8 +366,8 @@ class SketchMap(BaseEstimator, TransformerMixin):
         S_hd = self._sigmoid_transform(D_hd, self.sigma_, self.a_hd, self.b_hd)
 
         # Setup weight matrix: W_ij = w_i * w_j
-        if weights_to_use is not None:
-            w = np.asarray(weights_to_use)
+        if sample_weights is not None:
+            w = np.asarray(sample_weights)
             if w.shape[0] != n_samples:
                 raise ValueError(
                     f"sample_weights must have length {n_samples}, got {w.shape[0]}"

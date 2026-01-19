@@ -1,6 +1,6 @@
 from sklearn.utils.estimator_checks import parametrize_with_checks
 
-from skmatter.decomposition import KernelPCovR, PCovC, PCovR
+from skmatter.decomposition import KernelPCovR, PCovC, PCovR, SketchMap
 from skmatter.feature_selection import CUR as fCUR
 from skmatter.feature_selection import FPS as fFPS
 from skmatter.feature_selection import PCovCUR as fPCovCUR
@@ -11,15 +11,16 @@ from skmatter.preprocessing import KernelNormalizer, StandardFlexibleScaler
 
 @parametrize_with_checks(
     [
-        KernelPCovR(mixing=0.5),
-        PCovR(mixing=0.5),
-        PCovC(mixing=0.5),
         fCUR(),
         fFPS(),
         fPCovCUR(),
         fPCovFPS(),
-        Ridge2FoldCV(),
         KernelNormalizer(),
+        KernelPCovR(mixing=0.5),
+        PCovC(mixing=0.5),
+        PCovR(mixing=0.5),
+        Ridge2FoldCV(),
+        SketchMap(),
         StandardFlexibleScaler(),
     ]
 )
