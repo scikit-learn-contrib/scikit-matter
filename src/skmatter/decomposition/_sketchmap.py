@@ -5,11 +5,14 @@ This implementation follows the two-stage optimization approach:
 2. Refinement with sigmoid transform
 """
 
+import warnings
+
 import numpy as np
-from sklearn.base import BaseEstimator, TransformerMixin
+from scipy import sparse
 from scipy.optimize import minimize
 from scipy.spatial.distance import pdist, squareform
-import warnings
+from sklearn.base import BaseEstimator, TransformerMixin
+from sklearn.utils.validation import check_is_fitted, validate_data
 
 
 class SketchMap(TransformerMixin, BaseEstimator):
@@ -326,11 +329,20 @@ class SketchMap(TransformerMixin, BaseEstimator):
         self : object
             Returns the instance itself.
         """
-        X = np.asarray(X)
-        if X.ndim != 2:
-            raise ValueError("X must be 2D array")
+        X = validate_data(self, X, reset=True, dtype=np.float64)
+        self.X_ = X.copy()
+
+        if sparse.issparse(X):
+            raise ValueError("Sparse input is not supported")
+        if np.any(~np.isfinite(X)):
+            raise ValueError("Input contains NaN or infinity")
 
         n_samples, n_features = X.shape
+        if n_samples < 2:
+            raise ValueError(
+                f"Found array with {n_samples} sample(s) (shape={X.shape}) while a "
+                "minimum of 2 is required."
+            )
         self.n_samples_ = n_samples
         self.n_features_ = n_features
 
@@ -343,16 +355,16 @@ class SketchMap(TransformerMixin, BaseEstimator):
                     f"mean={np.mean(sample_weights):.4f}"
                 )
 
-        # Center data if requested
+        X_work = X.copy()
         if self.center:
             if self.verbose:
                 print("Centering the data")
-            X = X - X.mean(axis=0, keepdims=True)
+            X_work = X_work - X_work.mean(axis=0, keepdims=True)
 
         # Compute pairwise distances
         if self.verbose:
             print("Computing pairwise distances...")
-        D_hd = squareform(pdist(X, metric="euclidean"))
+        D_hd = squareform(pdist(X_work, metric="euclidean"))
 
         # Estimate or set sigma
         if self.auto_histogram and self.sigma is None:
@@ -464,8 +476,34 @@ class SketchMap(TransformerMixin, BaseEstimator):
         return self.embedding_
 
     def transform(self, X):
-        """Project new data (not implemented for out-of-sample)."""
-        raise NotImplementedError("Out-of-sample projection not yet implemented")
+        """Project data to the embedding space.
+
+        Only supports in-sample transformation (same data used for fit).
+        """
+        check_is_fitted(self, ["embedding_", "X_"])
+        X = validate_data(self, X, reset=False)
+
+        # Allow in-sample transformation (full or subset) by matching rows.
+        indices = []
+        for row in X:
+            matches = np.all(np.isclose(self.X_, row, rtol=1e-8, atol=1e-12), axis=1)
+            if not np.any(matches):
+                warnings.warn(
+                    "SketchMap.transform only supports in-sample rows. "
+                    "Out-of-sample projection is not implemented.",
+                    UserWarning,
+                )
+            indices.append(int(np.argmax(matches)))
+
+        return self.embedding_[indices]
+
+    def predict(self, X):
+        """Project data to the embedding space (alias for transform).
+
+        Currently only supports in-sample transformation (same data used for fit).
+        Out-of-sample projection is not implemented.
+        """
+        return self.transform(X)
 
     def score(self, X, y=None):
         """Return the negative stress as a score.
@@ -482,4 +520,6 @@ class SketchMap(TransformerMixin, BaseEstimator):
         score : float
             Negative of the final stress value.
         """
+        check_is_fitted(self, ["stress_"])
+        X = validate_data(self, X, reset=False)
         return -self.stress_

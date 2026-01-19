@@ -39,8 +39,8 @@ weights = data[:, -1]
 # Fit SketchMap on the landmark set and provide `sample_weights`. We fit on the
 # landmarks only here (no FPS or internal selection).
 
-sm = SketchMap(n_components=2, auto_histogram=True, preopt_steps=50)
-sm.fit(X_land, sample_weights=weights, mixing_ratio=0.2, n_components=2)
+sm = SketchMap(n_components=2, auto_histogram=True, preopt_steps=50, mixing_ratio=0.2)
+sm.fit(X_land, sample_weights=weights)
 T = sm.embedding_
 
 # %%
