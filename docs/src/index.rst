@@ -82,6 +82,23 @@
                 </div>
                 </div>
             </div>
+            <div class="col-sm d-flex">
+                <div class="card text-center mb-4" style="background-color: transparent">
+                <div class="card-body">
+                    <h5 class="card-title" style="margin-top: 0px">
+
+.. only:: html
+
+  :ref:`getting_started-decomposition`
+
+.. raw:: html
+
+                    </h5>
+                    <p class="card-text">Non-linear dimensionality reduction using
+                    Sketch-map algorithm with transfer functions.</p>
+                </div>
+                </div>
+            </div>
         </div>
     </div>
     <br>

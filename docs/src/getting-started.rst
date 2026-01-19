@@ -52,3 +52,17 @@ Notebook Examples
    :start-line: 4
 .. include:: examples/pcovc/index.rst
    :start-line: 4
+
+.. _getting_started-decomposition:
+
+Non-linear Dimensionality Reduction
+-----------------------------------
+
+.. automodule:: skmatter.decomposition
+   :noindex:
+
+Notebook Examples
+^^^^^^^^^^^^^^^^^
+
+.. include:: examples/decomposition/index.rst
+   :start-line: 4

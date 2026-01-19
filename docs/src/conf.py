@@ -60,6 +60,7 @@ example_subdirs = [
     "regression",
     "reconstruction",
     "neighbors",
+    "decomposition",
 ]
 sphinx_gallery_conf = {
     "filename_pattern": "/*",

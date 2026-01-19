@@ -44,6 +44,8 @@ from ._pcovc import PCovC
 from ._kernel_pcovr import KernelPCovR
 from ._kernel_pcovc import KernelPCovC
 
+from ._sketchmap import SketchMap
+
 __all__ = [
     "_BasePCov",
     "_BaseKPCov",
@@ -51,4 +53,5 @@ __all__ = [
     "PCovC",
     "KernelPCovR",
     "KernelPCovC",
+    "SketchMap",
 ]
