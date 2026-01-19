@@ -95,7 +95,7 @@ addopts = [
 testpaths = ["tests"]
 
 [tool.ruff]
-exclude = ["docs/src/examples/", "src/torchpme/_version.py"]
+exclude = ["docs/src/examples/", "src/skmatter/_version.py"]
 lint.ignore = [
     "F401",
     "E203",
