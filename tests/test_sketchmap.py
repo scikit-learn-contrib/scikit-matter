@@ -210,7 +210,7 @@ class TestSketchMap:
             mds_opt_steps=10,
             preopt_steps=10,
             max_iter=10,
-            global_opt=None,
+            global_opt_steps=None,
             random_state=42,
         )
         sm_no_global.fit(X)
@@ -220,7 +220,7 @@ class TestSketchMap:
             mds_opt_steps=10,
             preopt_steps=10,
             max_iter=10,
-            global_opt=3,
+            global_opt_steps=3,
             random_state=42,
         )
         sm_with_global.fit(X)
@@ -237,10 +237,10 @@ class TestSketchMap:
             n_components=2,
             preopt_steps=5,
             max_iter=5,
-            global_opt=-1,
+            global_opt_steps=-1,
         )
 
-        match = "global_opt must be a positive int"
+        match = "global_opt_steps must be a positive int"
         with pytest.raises(ValueError, match=match):
             sm.fit(X)
 

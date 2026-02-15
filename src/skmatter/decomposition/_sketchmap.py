@@ -451,7 +451,7 @@ class SketchMap(TransformerMixin, BaseEstimator):
     max_iter : int, default=1000
         Maximum iterations for the main optimization stage.
 
-    global_opt : int or None, default=None
+    global_opt_steps : int or None, default=None
         Number of basin-hopping iterations for global optimization.
         Basin-hopping can escape local minima but is computationally expensive.
         Set to None to disable.
@@ -537,7 +537,7 @@ class SketchMap(TransformerMixin, BaseEstimator):
         optimizer="L-BFGS-B",
         preopt_steps=100,
         max_iter=1000,
-        global_opt=None,
+        global_opt_steps=None,
         mixing_ratio=0.0,
         center=True,
         init=None,
@@ -550,7 +550,7 @@ class SketchMap(TransformerMixin, BaseEstimator):
         self.optimizer = optimizer
         self.preopt_steps = preopt_steps
         self.max_iter = max_iter
-        self.global_opt = global_opt
+        self.global_opt_steps = global_opt_steps
         self.mixing_ratio = mixing_ratio
         self.center = center
         self.init = init
@@ -1140,10 +1140,11 @@ class SketchMap(TransformerMixin, BaseEstimator):
 
         # Global optimization
 
-        if self.global_opt is not None:
-            if not isinstance(self.global_opt, int) or self.global_opt < 1:
+        if self.global_opt_steps is not None:
+            if not isinstance(self.global_opt_steps, int) or self.global_opt_steps < 1:
                 raise ValueError(
-                    f"global_opt must be a positive int, got {self.global_opt}"
+                    "global_opt_steps must be a positive int, got "
+                    f"{self.global_opt_steps}"
                 )
 
             embedding, stress = self._global_optimize(
@@ -1152,7 +1153,7 @@ class SketchMap(TransformerMixin, BaseEstimator):
                 hd_transformed,
                 weights,
                 total_weight,
-                self.global_opt,
+                self.global_opt_steps,
             )
 
         # Store results
@@ -1162,8 +1163,8 @@ class SketchMap(TransformerMixin, BaseEstimator):
         # Track total iterations for sklearn compatibility
         n_iter = self.mds_opt_steps + self.preopt_steps + self.max_iter
 
-        if self.global_opt is not None:
-            n_iter += self.global_opt
+        if self.global_opt_steps is not None:
+            n_iter += self.global_opt_steps
 
         self.n_iter_ = n_iter
 
