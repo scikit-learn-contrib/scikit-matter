@@ -132,7 +132,7 @@ sm_py = SketchMap(
     n_components=2,
     params={"sigma": 7.0, "a_hd": 4.0, "b_hd": 2.0, "a_ld": 2.0, "b_ld": 2.0},
     verbose=True,
-    global_opt_steps=3,
+    global_opt_steps=4,
     random_state=42,
 )
 lowd_py = sm_py.fit_transform(X_hd, sample_weights=weights)
