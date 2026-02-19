@@ -130,7 +130,7 @@ print(f"C++ reference embedding shape: {lowd_cpp.shape}")
 
 sm_py = SketchMap(
     n_components=2,
-    params={"sigma": 7.0, "a_hd": 4.0, "b_hd": 2.0, "a_ld": 2.0, "b_ld": 2.0},
+    params={"sigma": 7.0, "a_high": 4.0, "b_high": 2.0, "a_low": 2.0, "b_low": 2.0},
     verbose=True,
     global_opt_steps=4,
     random_state=42,

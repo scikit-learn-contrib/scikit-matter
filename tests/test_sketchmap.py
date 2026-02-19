@@ -33,7 +33,7 @@ class TestSketchMap:
         assert sm.stress_ >= 0
         assert hasattr(sm, "params_")
         assert "sigma" in sm.params_
-        assert "a_hd" in sm.params_
+        assert "a_high" in sm.params_
 
     def test_n_components(self, sample_data):
         X = sample_data
@@ -83,10 +83,10 @@ class TestSketchMap:
 
         assert hasattr(sm, "params_")
         assert sm.params_["sigma"] > 0
-        assert sm.params_["a_hd"] > 0
-        assert sm.params_["b_hd"] > 0
-        assert sm.params_["a_ld"] > 0
-        assert sm.params_["b_ld"] > 0
+        assert sm.params_["a_high"] > 0
+        assert sm.params_["b_high"] > 0
+        assert sm.params_["a_low"] > 0
+        assert sm.params_["b_low"] > 0
         assert hasattr(sm, "suggested_params_")
         assert "sigma" in sm.suggested_params_
 
@@ -102,17 +102,17 @@ class TestSketchMap:
         sm.fit(X)
 
         assert sm.params_["sigma"] == 5.0
-        assert sm.params_["a_hd"] > 0
-        assert sm.params_["b_hd"] > 0
+        assert sm.params_["a_high"] > 0
+        assert sm.params_["b_high"] > 0
 
     def test_full_params(self, sample_data):
         X = sample_data
         params = {
             "sigma": 7.0,
-            "a_hd": 4.0,
-            "b_hd": 2.0,
-            "a_ld": 2.0,
-            "b_ld": 2.0,
+            "a_high": 4.0,
+            "b_high": 2.0,
+            "a_low": 2.0,
+            "b_low": 2.0,
         }
         sm = SketchMap(
             n_components=2,
@@ -330,10 +330,10 @@ class TestHelperFunctions:
         )
 
         assert "sigma" in params
-        assert "a_hd" in params
-        assert "b_hd" in params
-        assert "a_ld" in params
-        assert "b_ld" in params
+        assert "a_high" in params
+        assert "b_high" in params
+        assert "a_low" in params
+        assert "b_low" in params
 
         for value in params.values():
             assert value > 0
