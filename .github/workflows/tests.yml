@@ -36,7 +36,7 @@ jobs:
         coverage xml
 
     - name: upload to codecov.io
-      uses: codecov/codecov-action@v5
+      uses: codecov/codecov-action@v6
       with:
         files: ./tests/coverage.xml
         token: ${{ secrets.CODECOV_TOKEN }}
