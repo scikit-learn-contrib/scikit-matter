@@ -29,7 +29,7 @@ def effdim(cov):
     ----------
     https://ieeexplore.ieee.org/document/7098875
     """
-    eigval = np.linalg.eigvals(cov)
+    eigval = np.linalg.eigvalsh(cov)
     if (lowest_eigval := np.min(eigval)) <= -np.max(cov.shape) * np.finfo(
         cov.dtype
     ).eps:

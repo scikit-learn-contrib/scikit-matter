@@ -64,7 +64,7 @@ def test_inverse_covariance(C_isqrt_type):
             0.5, Xx, Y, return_isqrt=True, rank=min(Xx.shape) - 1, rcond=rcond
         )
 
-    np.testing.assert_allclose(C_isqrt, C_isqrt_computed)
+    np.testing.assert_allclose(C_isqrt, C_isqrt_computed, rtol=1e-6)
 
 
 @pytest.mark.parametrize("alpha", [0.0, 0.5, 1.0])

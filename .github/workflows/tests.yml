@@ -20,7 +20,7 @@ jobs:
           - "3.14"
 
     steps:
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@v7
 
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v6
@@ -36,7 +36,7 @@ jobs:
         coverage xml
 
     - name: upload to codecov.io
-      uses: codecov/codecov-action@v6
+      uses: codecov/codecov-action@v7
       with:
         files: ./tests/coverage.xml
         token: ${{ secrets.CODECOV_TOKEN }}
