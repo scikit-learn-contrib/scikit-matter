@@ -76,6 +76,13 @@ Kernel PCovC
 SketchMap
 ---------
 
+Sketch-Map [Ceriotti2011]_ is a nonlinear dimensionality-reduction
+algorithm that selectively preserves intermediate-range pairwise
+distances using sigmoid transforms. See
+:doc:`/examples/decomposition/sketchmap` for an end-to-end worked
+example reproducing the analysis from the MAD paper [Mazitov2025a]_,
+including validation against the reference C++ implementation.
+
 .. autoclass:: skmatter.decomposition.SketchMap
     :show-inheritance:
     :special-members:
@@ -83,4 +90,3 @@ SketchMap
     .. automethod:: fit
     .. automethod:: transform
     .. automethod:: fit_transform
-    .. automethod:: score

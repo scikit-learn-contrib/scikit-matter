@@ -1,3 +1,5 @@
+.. _bibliography:
+
 References
 ############
 
@@ -63,3 +65,15 @@ References
     "Interpretable Visualizations of Data Spaces for Classification Problems"
     2025 arXiv. 2503.05861.
     https://doi.org/10.48550/arXiv.2503.05861.
+
+.. [Mazitov2025a]
+    Arslan Mazitov, Sofiia Chorna, Guillaume Fraux, et al.,
+    "Massive Atomic Diversity: a compact universal dataset for atomistic
+    machine learning", Scientific Data **12**, 1857 (2025).
+    https://doi.org/10.1038/s41597-025-06109-y
+
+.. [Mazitov2025b]
+    Arslan Mazitov, Filippo Bigi, Matthias Kellner, et al.,
+    "PET-MAD as a lightweight universal interatomic potential for advanced
+    materials modeling", Nature Communications **16**, 10653 (2025).
+    https://doi.org/10.1038/s41467-025-65662-7

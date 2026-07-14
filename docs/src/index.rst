@@ -91,11 +91,15 @@
 
   :ref:`getting_started-decomposition`
 
+  .. image:: /examples/decomposition/images/thumb/sphx_glr_sketchmap_thumb.png
+    :alt:
+
 .. raw:: html
 
                     </h5>
                     <p class="card-text">Non-linear dimensionality reduction using
-                    Sketch-map algorithm with transfer functions.</p>
+                    Sketch-Map, a sigmoid-based method that preserves
+                    intermediate-range distances.</p>
                 </div>
                 </div>
             </div>

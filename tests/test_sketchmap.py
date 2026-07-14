@@ -1,10 +1,11 @@
 import numpy as np
 import pytest
 from scipy.spatial.distance import pdist, squareform
+from sklearn.base import clone
 from sklearn.datasets import load_digits
 
 from skmatter.decomposition import SketchMap
-from skmatter.decomposition._sketchmap import (
+from skmatter.decomposition._sketchmap_utils import (
     analyze_distance_distribution,
     classical_mds,
     sigmoid_derivative,
@@ -21,10 +22,17 @@ def sample_data():
     return X
 
 
+def quick_sketchmap(**kwargs):
+    """SketchMap with cheap settings for shape/API tests."""
+    kwargs.setdefault("max_iter", 10)
+    kwargs.setdefault("global_opt_steps", 0)
+    return SketchMap(**kwargs)
+
+
 class TestSketchMap:
     def test_basic_fit(self, sample_data):
         X = sample_data
-        sm = SketchMap(n_components=2, preopt_steps=10, max_iter=10)
+        sm = quick_sketchmap(n_components=2)
         sm.fit(X)
 
         assert hasattr(sm, "embedding_")
@@ -39,46 +47,112 @@ class TestSketchMap:
         X = sample_data
 
         for n_comp in [2, 3, 5]:
-            sm = SketchMap(n_components=n_comp, preopt_steps=5, max_iter=5)
+            sm = quick_sketchmap(n_components=n_comp, max_iter=5)
             sm.fit(X)
 
             assert sm.embedding_.shape == (X.shape[0], n_comp)
 
-    def test_sample_weights(self, sample_data):
+    def test_default_settings_any_dimension(self, sample_data):
+        # With the default global_opt_steps="auto", global optimization is
+        # skipped (instead of raising) for non-2D embeddings
+        X = sample_data[:30]
+        sm = SketchMap(n_components=3, max_iter=5)
+        sm.fit(X)
+        assert sm.embedding_.shape == (X.shape[0], 3)
+
+    def test_default_global_opt_runs_for_2d(self, sample_data):
+        X = sample_data[:30]
+        sm = SketchMap(max_iter=5, global_opt_steps=1)
+        sm.fit(X)
+        assert sm.embedding_.shape == (X.shape[0], 2)
+
+    def test_resolve_global_opt(self):
+        # auto: anneal geometrically from MDS-like (1.0) down to pure sigmoid (0)
+        schedule = SketchMap()._resolve_global_opt()
+        assert len(schedule) == 5
+        assert schedule[0] == 1.0
+        assert schedule[-1] == 0.0
+        assert all(x > y for x, y in zip(schedule, schedule[1:]))
+
+        # annealed gradient works in any dimension (no 2D restriction)
+        assert SketchMap(n_components=3)._resolve_global_opt() is not None
+
+        # explicit schedule passes through verbatim
+        schedule = SketchMap(
+            global_opt_steps=2, mixing_schedule=[1.0, 0.0]
+        )._resolve_global_opt()
+        assert schedule == (1.0, 0.0)
+
+        # disabled
+        for off in (0, None):
+            assert SketchMap(global_opt_steps=off)._resolve_global_opt() is None
+
+        # no annealing: a single relaxation at the fixed mixing_ratio
+        assert SketchMap(mixing_schedule=None)._resolve_global_opt() == (0.0,)
+
+    def test_sample_weight(self, sample_data):
         X = sample_data
         rng = np.random.default_rng(42)
         weights = rng.random(X.shape[0])
 
-        sm = SketchMap(n_components=2, preopt_steps=10, max_iter=10)
-        sm.fit(X, sample_weights=weights)
+        sm = quick_sketchmap()
+        sm.fit(X, sample_weight=weights)
 
         assert sm.embedding_.shape == (X.shape[0], 2)
         assert sm.stress_ >= 0
+
+    def test_unweighted_equals_explicit_ones(self, sample_data):
+        # the uniform (weights=None) fast path must match passing all-ones
+        # weights explicitly, which builds the full pairwise matrix
+        X = sample_data[:40]
+        a = quick_sketchmap(max_iter=20)
+        a.fit(X)
+        b = quick_sketchmap(max_iter=20)
+        b.fit(X, sample_weight=np.ones(X.shape[0]))
+        np.testing.assert_allclose(a.embedding_, b.embedding_, rtol=1e-9, atol=1e-9)
+        np.testing.assert_allclose(a.stress_, b.stress_, rtol=1e-9)
+
+    def test_float32_input(self, sample_data):
+        # float32 input is accepted and the heavy fit matrices stay float32
+        # (the returned embedding is float64 because scipy's optimizer is); the
+        # map should be close to the float64 one (a 2D map does not need float64)
+        X = sample_data[:60]
+        f64 = quick_sketchmap(max_iter=30)
+        f64.fit(X.astype(np.float64))
+        f32 = quick_sketchmap(max_iter=30)
+        f32.fit(X.astype(np.float32))
+
+        assert f32._X_processed_.dtype == np.float32
+        assert np.isfinite(f32.embedding_).all()
+        # same ballpark stress (float32 noise / a different basin are possible)
+        assert abs(f32.stress_ - f64.stress_) < 0.05 * max(f64.stress_, 1e-6) + 1e-3
 
     def test_init_parameter(self, sample_data):
         X = sample_data
         rng = np.random.default_rng(42)
         init = rng.standard_normal((X.shape[0], 2))
 
-        sm = SketchMap(n_components=2, preopt_steps=5, max_iter=5, init=init)
+        sm = quick_sketchmap(max_iter=5, init=init)
         sm.fit(X)
 
         assert sm.embedding_.shape == (X.shape[0], 2)
 
+    def test_invalid_init_shape(self, sample_data):
+        X = sample_data
+        sm = quick_sketchmap(init=np.zeros((3, 2)))
+        with pytest.raises(ValueError, match="init has shape"):
+            sm.fit(X)
+
     def test_stress_positive(self, sample_data):
         X = sample_data
-        sm = SketchMap(n_components=2, preopt_steps=20, max_iter=20)
+        sm = quick_sketchmap(max_iter=20)
         sm.fit(X)
 
         assert sm.stress_ > 0
 
     def test_auto_params(self, sample_data):
         X = sample_data
-        sm = SketchMap(
-            n_components=2,
-            preopt_steps=10,
-            max_iter=10,
-        )
+        sm = quick_sketchmap()
         sm.fit(X)
 
         assert hasattr(sm, "params_")
@@ -93,12 +167,7 @@ class TestSketchMap:
     def test_partial_params(self, sample_data):
         X = sample_data
 
-        sm = SketchMap(
-            n_components=2,
-            params={"sigma": 5.0},
-            preopt_steps=10,
-            max_iter=10,
-        )
+        sm = quick_sketchmap(sigma=5.0)
         sm.fit(X)
 
         assert sm.params_["sigma"] == 5.0
@@ -114,12 +183,7 @@ class TestSketchMap:
             "a_low": 2.0,
             "b_low": 2.0,
         }
-        sm = SketchMap(
-            n_components=2,
-            params=params,
-            preopt_steps=10,
-            max_iter=10,
-        )
+        sm = quick_sketchmap(**params)
         sm.fit(X)
 
         for key, value in params.items():
@@ -129,19 +193,14 @@ class TestSketchMap:
         X = sample_data
 
         for ratio in [0.0, 0.5, 1.0]:
-            sm = SketchMap(
-                n_components=2,
-                mixing_ratio=ratio,
-                preopt_steps=5,
-                max_iter=5,
-            )
+            sm = quick_sketchmap(mixing_ratio=ratio, max_iter=5)
             sm.fit(X)
 
             assert sm.embedding_.shape == (X.shape[0], 2)
 
     def test_transform(self, sample_data):
         X = sample_data
-        sm = SketchMap(n_components=2, preopt_steps=5, max_iter=5)
+        sm = quick_sketchmap(max_iter=5)
         sm.fit(X)
 
         result = sm.transform(X)
@@ -149,13 +208,51 @@ class TestSketchMap:
         assert result.shape == (X.shape[0], 2)
         np.testing.assert_allclose(result, sm.embedding_)
 
-    def test_reproducibility_with_random_state(self, sample_data):
+    def test_transform_out_of_sample(self, sample_data):
+        X = sample_data
+        X_train, X_new = X[:80], X[80:]
+
+        sm = quick_sketchmap()
+        sm.fit(X_train)
+
+        result = sm.transform(X_new)
+
+        assert result.shape == (X_new.shape[0], 2)
+        assert np.all(np.isfinite(result))
+        # Projections must land within the grid covering the landmark map
+        extent = np.max(np.abs(sm.embedding_)) * 1.2
+        assert np.all(np.abs(result) <= extent + 1e-10)
+
+    def test_transform_batched_and_parallel_match(self, sample_data):
+        # internal row-block batching and parallel projection must give the
+        # same coordinates as a single serial pass
+        from skmatter.decomposition import _sketchmap as m
+
+        X = sample_data
+        sm = quick_sketchmap()
+        sm.fit(X[:70])
+        X_new = X[70:] + 0.1
+
+        reference = sm.transform(X_new)
+        # force several small blocks
+        old = m._TRANSFORM_BATCH_ELEMENTS
+        try:
+            m._TRANSFORM_BATCH_ELEMENTS = 5 * sm._X_processed_.shape[0]
+            batched = sm.transform(X_new)
+            parallel = sm.transform(X_new, n_jobs=2)
+        finally:
+            m._TRANSFORM_BATCH_ELEMENTS = old
+
+        np.testing.assert_allclose(batched, reference, rtol=1e-9, atol=1e-9)
+        np.testing.assert_allclose(parallel, reference, rtol=1e-9, atol=1e-9)
+
+    def test_deterministic(self, sample_data):
         X = sample_data
 
-        sm1 = SketchMap(n_components=2, preopt_steps=10, max_iter=10, random_state=42)
+        sm1 = quick_sketchmap()
         sm1.fit(X)
 
-        sm2 = SketchMap(n_components=2, preopt_steps=10, max_iter=10, random_state=42)
+        sm2 = quick_sketchmap()
         sm2.fit(X)
 
         np.testing.assert_allclose(sm1.embedding_, sm2.embedding_, rtol=1e-10)
@@ -164,12 +261,10 @@ class TestSketchMap:
     def test_center_parameter(self, sample_data):
         X = sample_data
 
-        sm_centered = SketchMap(n_components=2, center=True, preopt_steps=5, max_iter=5)
+        sm_centered = quick_sketchmap(center=True, max_iter=5)
         sm_centered.fit(X)
 
-        sm_not_centered = SketchMap(
-            n_components=2, center=False, preopt_steps=5, max_iter=5
-        )
+        sm_not_centered = quick_sketchmap(center=False, max_iter=5)
         sm_not_centered.fit(X)
 
         assert sm_centered.embedding_.shape == (X.shape[0], 2)
@@ -178,22 +273,10 @@ class TestSketchMap:
     def test_mds_opt_steps(self, sample_data):
         X = sample_data
 
-        sm_no_preopt = SketchMap(
-            n_components=2,
-            mds_opt_steps=0,
-            preopt_steps=5,
-            max_iter=5,
-            random_state=42,
-        )
+        sm_no_preopt = quick_sketchmap(mds_opt_steps=0, max_iter=5)
         sm_no_preopt.fit(X)
 
-        sm_with_preopt = SketchMap(
-            n_components=2,
-            mds_opt_steps=10,
-            preopt_steps=5,
-            max_iter=5,
-            random_state=42,
-        )
+        sm_with_preopt = quick_sketchmap(mds_opt_steps=10, max_iter=5)
         sm_with_preopt.fit(X)
 
         assert sm_no_preopt.embedding_.shape == (X.shape[0], 2)
@@ -202,47 +285,67 @@ class TestSketchMap:
         assert sm_with_preopt.stress_ >= 0
         assert not np.allclose(sm_no_preopt.embedding_, sm_with_preopt.embedding_)
 
-    def test_global_opt(self, sample_data):
+    def test_global_opt_improves_stress(self, sample_data):
         X = sample_data
 
         sm_no_global = SketchMap(
-            n_components=2,
             mds_opt_steps=10,
-            preopt_steps=10,
             max_iter=10,
-            global_opt_steps=None,
-            random_state=42,
+            global_opt_steps=0,
         )
         sm_no_global.fit(X)
 
         sm_with_global = SketchMap(
-            n_components=2,
             mds_opt_steps=10,
-            preopt_steps=10,
             max_iter=10,
             global_opt_steps=3,
-            random_state=42,
         )
         sm_with_global.fit(X)
 
         assert sm_no_global.embedding_.shape == (X.shape[0], 2)
         assert sm_with_global.embedding_.shape == (X.shape[0], 2)
         assert sm_no_global.stress_ >= 0
-        assert sm_with_global.stress_ >= 0
+        # the extra grid cycles must not make the map worse
+        assert sm_with_global.stress_ <= sm_no_global.stress_ + 1e-12
 
     def test_global_opt_invalid_params(self, sample_data):
         X = sample_data
 
-        sm = SketchMap(
-            n_components=2,
-            preopt_steps=5,
-            max_iter=5,
-            global_opt_steps=-1,
-        )
-
-        match = "global_opt_steps must be a positive int"
-        with pytest.raises(ValueError, match=match):
+        sm = SketchMap(max_iter=5, global_opt_steps=-1)
+        with pytest.raises(ValueError, match="global_opt_steps must be"):
             sm.fit(X)
+
+        sm = SketchMap(mixing_schedule="bogus")
+        with pytest.raises(ValueError, match="mixing_schedule must be"):
+            sm.fit(X)
+
+    def test_global_opt_works_in_3d(self, sample_data):
+        # annealed gradient global optimization is not restricted to 2D
+        sm = SketchMap(n_components=3, max_iter=20, global_opt_steps=3)
+        sm.fit(sample_data[:40])
+        assert sm.embedding_.shape == (40, 3)
+        assert sm.stress_ >= 0
+
+    def test_invalid_optimizer(self, sample_data):
+        sm = SketchMap(optimizer="Nelder-Mead")
+        with pytest.raises(ValueError, match="optimizer must be"):
+            sm.fit(sample_data)
+
+    def test_progress_bar(self, sample_data):
+        pytest.importorskip("tqdm")
+        X = sample_data[:30]
+        sm = SketchMap(max_iter=5, global_opt_steps=1, progress_bar=True)
+        sm.fit(X)
+        result = sm.transform(X[:5] + 0.1)
+        assert result.shape == (5, 2)
+
+    def test_clone(self, sample_data):
+        # fit() must not modify constructor parameters (sklearn contract)
+        sm = quick_sketchmap(max_iter=5)
+        params_before = sm.get_params()
+        sm.fit(sample_data[:30])
+        assert sm.get_params() == params_before
+        clone(sm)
 
 
 class TestHelperFunctions:
@@ -294,6 +397,11 @@ class TestHelperFunctions:
 
         np.testing.assert_allclose(deriv, numerical_deriv, rtol=1e-5)
 
+    def test_sigmoid_derivative_at_zero(self):
+        deriv = sigmoid_derivative(np.array([0.0, 1.0]), 7.0, 2.0, 2.0)
+        assert deriv[0] == 0.0
+        assert np.isfinite(deriv).all()
+
     def test_classical_mds(self):
         rng = np.random.default_rng(42)
 
@@ -325,9 +433,7 @@ class TestHelperFunctions:
         distances = (distances + distances.T) / 2
         np.fill_diagonal(distances, 0)
 
-        params, _analysis = suggest_sigmoid_params(
-            distances, n_components=2, n_features=10
-        )
+        params, _analysis = suggest_sigmoid_params(distances, n_components=2)
 
         assert "sigma" in params
         assert "a_high" in params

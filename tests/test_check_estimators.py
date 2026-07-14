@@ -9,6 +9,18 @@ from skmatter.linear_model import Ridge2FoldCV  # OrthogonalRegression,
 from skmatter.preprocessing import KernelNormalizer, StandardFlexibleScaler
 
 
+def _expected_failed_checks(estimator):
+    if isinstance(estimator, SketchMap):
+        return {
+            "check_sample_weight_equivalence_on_dense_data": (
+                "Sketch-Map minimizes a non-convex stress; weighting samples and "
+                "repeating them give the same objective only at the exact global "
+                "optimum, which the iterative optimizer is not guaranteed to reach."
+            ),
+        }
+    return {}
+
+
 @parametrize_with_checks(
     [
         fCUR(),
@@ -22,7 +34,8 @@ from skmatter.preprocessing import KernelNormalizer, StandardFlexibleScaler
         Ridge2FoldCV(),
         SketchMap(),
         StandardFlexibleScaler(),
-    ]
+    ],
+    expected_failed_checks=_expected_failed_checks,
 )
 def test_sklearn_compatible_estimator(estimator, check):
     """Test of the estimators are compatible with sklearn."""
