@@ -5,9 +5,6 @@ from scipy.linalg import eigh
 from scipy.optimize import curve_fit
 
 
-# Sigmoid transformation functions
-
-
 def sigmoid_transform(distances, sigma, a, b):
     r"""Apply the Sketch-Map sigmoid transformation to distances.
 
@@ -137,9 +134,6 @@ def _sigmoid_fdf(distances, sigma, a, b):
     return f, df
 
 
-# Utility functions
-
-
 def classical_mds(distances, n_components):
     """Compute a classical MDS embedding as initialization.
 
@@ -153,8 +147,7 @@ def classical_mds(distances, n_components):
     n_components : int
         Number of dimensions for the embedding.
     """
-    # Double-centering to obtain the Gram matrix (distances**2 is a copy, so
-    # the caller's distance matrix is never modified)
+    # double-centering the squared distances gives the Gram matrix
     gram_matrix = distances**2
     gram_matrix *= -0.5
     gram_matrix -= gram_matrix.mean(axis=0, keepdims=True)
@@ -169,7 +162,7 @@ def classical_mds(distances, n_components):
 
     coordinates = eigenvectors * np.sqrt(np.maximum(eigenvalues, 0.0))
 
-    # Consistent sign convention: largest-magnitude entry of each column positive
+    # sign convention: the largest-magnitude entry of each column is positive
     for i in range(coordinates.shape[1]):
         col = coordinates[:, i]
         if col[np.argmax(np.abs(col))] < 0:
@@ -199,9 +192,6 @@ def _maybe_tqdm(iterable, enabled, **tqdm_kwargs):
             "install it with 'pip install tqdm'"
         ) from error
     return tqdm(iterable, **tqdm_kwargs)
-
-
-# Distance distribution analysis
 
 
 def analyze_distance_distribution(distances, n_bins=200):
@@ -249,8 +239,7 @@ def analyze_distance_distribution(distances, n_bins=200):
         "max_distance": max_distance,
     }
 
-    # Estimate the Gaussian fluctuation range by fitting the left side of the
-    # peak; this characterizes the short-range noise regime.
+    # the left side of the peak characterises the short-range noise regime
     left_mask = bin_centers <= peak_distance
     if np.sum(left_mask) > 3:
         try:
@@ -263,14 +252,13 @@ def analyze_distance_distribution(distances, n_bins=200):
                 maxfev=5000,
             )
             analysis["gaussian_std"] = abs(optimal_params[2])
-            # Gaussian range extends ~3 sigma from the peak
+            # the Gaussian range reaches about 3 sigma from the peak
             analysis["gaussian_range"] = peak_distance + 3 * analysis["gaussian_std"]
         except (RuntimeError, ValueError):
             analysis["gaussian_std"] = peak_distance / 3.0
             analysis["gaussian_range"] = peak_distance * 2.0
 
-    # Estimate the high-dimensional cutoff as the right-side distance where the
-    # density drops to 10% of the peak value.
+    # the cutoff is where the right-side density falls to 10% of the peak
     right_mask = bin_centers > peak_distance
     right_density = prob_density[right_mask]
 
@@ -284,7 +272,7 @@ def analyze_distance_distribution(distances, n_bins=200):
         else:
             analysis["uniform_cutoff"] = np.percentile(d, 90)
 
-    # Ensure gaussian_range < uniform_cutoff
+    # keep gaussian_range below uniform_cutoff
     if (
         analysis["gaussian_range"] is not None
         and analysis["uniform_cutoff"] is not None

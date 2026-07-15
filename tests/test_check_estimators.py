@@ -23,16 +23,16 @@ def _expected_failed_checks(estimator):
 
 @parametrize_with_checks(
     [
+        KernelPCovR(mixing=0.5),
+        PCovR(mixing=0.5),
+        PCovC(mixing=0.5),
+        SketchMap(),
         fCUR(),
         fFPS(),
         fPCovCUR(),
         fPCovFPS(),
-        KernelNormalizer(),
-        KernelPCovR(mixing=0.5),
-        PCovC(mixing=0.5),
-        PCovR(mixing=0.5),
         Ridge2FoldCV(),
-        SketchMap(),
+        KernelNormalizer(),
         StandardFlexibleScaler(),
     ],
     expected_failed_checks=_expected_failed_checks,

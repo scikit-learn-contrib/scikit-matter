@@ -82,27 +82,6 @@
                 </div>
                 </div>
             </div>
-            <div class="col-sm d-flex">
-                <div class="card text-center mb-4" style="background-color: transparent">
-                <div class="card-body">
-                    <h5 class="card-title" style="margin-top: 0px">
-
-.. only:: html
-
-  :ref:`getting_started-decomposition`
-
-  .. image:: /examples/decomposition/images/thumb/sphx_glr_sketchmap_thumb.png
-    :alt:
-
-.. raw:: html
-
-                    </h5>
-                    <p class="card-text">Non-linear dimensionality reduction using
-                    Sketch-Map, a sigmoid-based method that preserves
-                    intermediate-range distances.</p>
-                </div>
-                </div>
-            </div>
         </div>
     </div>
     <br>

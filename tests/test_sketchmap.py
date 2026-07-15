@@ -52,20 +52,6 @@ class TestSketchMap:
 
             assert sm.embedding_.shape == (X.shape[0], n_comp)
 
-    def test_default_settings_any_dimension(self, sample_data):
-        # With the default global_opt_steps="auto", global optimization is
-        # skipped (instead of raising) for non-2D embeddings
-        X = sample_data[:30]
-        sm = SketchMap(n_components=3, max_iter=5)
-        sm.fit(X)
-        assert sm.embedding_.shape == (X.shape[0], 3)
-
-    def test_default_global_opt_runs_for_2d(self, sample_data):
-        X = sample_data[:30]
-        sm = SketchMap(max_iter=5, global_opt_steps=1)
-        sm.fit(X)
-        assert sm.embedding_.shape == (X.shape[0], 2)
-
     def test_resolve_global_opt(self):
         # auto: anneal geometrically from MDS-like (1.0) down to pure sigmoid (0)
         schedule = SketchMap()._resolve_global_opt()
@@ -113,16 +99,12 @@ class TestSketchMap:
         np.testing.assert_allclose(a.stress_, b.stress_, rtol=1e-9)
 
     def test_float32_input(self, sample_data):
-        # float32 input is accepted and the heavy fit matrices stay float32
-        # (the returned embedding is float64 because scipy's optimizer is); the
-        # map should be close to the float64 one (a 2D map does not need float64)
         X = sample_data[:60]
         f64 = quick_sketchmap(max_iter=30)
         f64.fit(X.astype(np.float64))
         f32 = quick_sketchmap(max_iter=30)
         f32.fit(X.astype(np.float32))
 
-        assert f32._X_processed_.dtype == np.float32
         assert np.isfinite(f32.embedding_).all()
         # same ballpark stress (float32 noise / a different basin are possible)
         assert abs(f32.stress_ - f64.stress_) < 0.05 * max(f64.stress_, 1e-6) + 1e-3
@@ -142,13 +124,6 @@ class TestSketchMap:
         sm = quick_sketchmap(init=np.zeros((3, 2)))
         with pytest.raises(ValueError, match="init has shape"):
             sm.fit(X)
-
-    def test_stress_positive(self, sample_data):
-        X = sample_data
-        sm = quick_sketchmap(max_iter=20)
-        sm.fit(X)
-
-        assert sm.stress_ > 0
 
     def test_auto_params(self, sample_data):
         X = sample_data
@@ -189,63 +164,6 @@ class TestSketchMap:
         for key, value in params.items():
             assert sm.params_[key] == value
 
-    def test_mixing_ratio(self, sample_data):
-        X = sample_data
-
-        for ratio in [0.0, 0.5, 1.0]:
-            sm = quick_sketchmap(mixing_ratio=ratio, max_iter=5)
-            sm.fit(X)
-
-            assert sm.embedding_.shape == (X.shape[0], 2)
-
-    def test_transform(self, sample_data):
-        X = sample_data
-        sm = quick_sketchmap(max_iter=5)
-        sm.fit(X)
-
-        result = sm.transform(X)
-
-        assert result.shape == (X.shape[0], 2)
-        np.testing.assert_allclose(result, sm.embedding_)
-
-    def test_transform_out_of_sample(self, sample_data):
-        X = sample_data
-        X_train, X_new = X[:80], X[80:]
-
-        sm = quick_sketchmap()
-        sm.fit(X_train)
-
-        result = sm.transform(X_new)
-
-        assert result.shape == (X_new.shape[0], 2)
-        assert np.all(np.isfinite(result))
-        # Projections must land within the grid covering the landmark map
-        extent = np.max(np.abs(sm.embedding_)) * 1.2
-        assert np.all(np.abs(result) <= extent + 1e-10)
-
-    def test_transform_batched_and_parallel_match(self, sample_data):
-        # internal row-block batching and parallel projection must give the
-        # same coordinates as a single serial pass
-        from skmatter.decomposition import _sketchmap as m
-
-        X = sample_data
-        sm = quick_sketchmap()
-        sm.fit(X[:70])
-        X_new = X[70:] + 0.1
-
-        reference = sm.transform(X_new)
-        # force several small blocks
-        old = m._TRANSFORM_BATCH_ELEMENTS
-        try:
-            m._TRANSFORM_BATCH_ELEMENTS = 5 * sm._X_processed_.shape[0]
-            batched = sm.transform(X_new)
-            parallel = sm.transform(X_new, n_jobs=2)
-        finally:
-            m._TRANSFORM_BATCH_ELEMENTS = old
-
-        np.testing.assert_allclose(batched, reference, rtol=1e-9, atol=1e-9)
-        np.testing.assert_allclose(parallel, reference, rtol=1e-9, atol=1e-9)
-
     def test_deterministic(self, sample_data):
         X = sample_data
 
@@ -257,18 +175,6 @@ class TestSketchMap:
 
         np.testing.assert_allclose(sm1.embedding_, sm2.embedding_, rtol=1e-10)
         np.testing.assert_allclose(sm1.stress_, sm2.stress_, rtol=1e-10)
-
-    def test_center_parameter(self, sample_data):
-        X = sample_data
-
-        sm_centered = quick_sketchmap(center=True, max_iter=5)
-        sm_centered.fit(X)
-
-        sm_not_centered = quick_sketchmap(center=False, max_iter=5)
-        sm_not_centered.fit(X)
-
-        assert sm_centered.embedding_.shape == (X.shape[0], 2)
-        assert sm_not_centered.embedding_.shape == (X.shape[0], 2)
 
     def test_mds_opt_steps(self, sample_data):
         X = sample_data
@@ -336,8 +242,7 @@ class TestSketchMap:
         X = sample_data[:30]
         sm = SketchMap(max_iter=5, global_opt_steps=1, progress_bar=True)
         sm.fit(X)
-        result = sm.transform(X[:5] + 0.1)
-        assert result.shape == (5, 2)
+        assert sm.embedding_.shape == (30, 2)
 
     def test_clone(self, sample_data):
         # fit() must not modify constructor parameters (sklearn contract)

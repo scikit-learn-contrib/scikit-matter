@@ -11,9 +11,7 @@ the embedding more strongly than sparse outliers.
 import numpy as np
 from sklearn.metrics import pairwise_distances
 
-# Cap on the (block x n_landmarks) distance matrix, in elements: 4e7 ~= 320 MB
-# at float64. X_full is processed in row-blocks of this size so the full matrix
-# is never built (it would be ~16 GB for 677k points and 3k landmarks).
+# Cap on the (block x n_landmarks) distance matrix
 _CHUNK_ELEMENTS = 40_000_000
 
 
@@ -75,8 +73,7 @@ def voronoi_weights(X_full, X_landmarks, sample_weights=None, normalize=True):
     n_landmarks = X_landmarks.shape[0]
     chunk = max(1, _CHUNK_ELEMENTS // max(n_landmarks, 1))
 
-    # Assign each point to its nearest landmark in row-blocks, accumulating the
-    # (weighted) cell populations, so the distance matrix is never built whole.
+    # accumulate cell populations in row-blocks
     weights = np.zeros(n_landmarks, dtype=float)
     for start in range(0, X_full.shape[0], chunk):
         block = X_full[start : start + chunk]

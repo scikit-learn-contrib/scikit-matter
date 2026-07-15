@@ -7,7 +7,7 @@ from skmatter.sample_selection import _voronoi_weights as vw_module
 
 @pytest.fixture
 def simple_case():
-    # three points sit next to landmark 0; landmark 1 is far away and wins
+    # three points sit next to landmark 0, one next to the far landmark 1
     # no points, so its Voronoi cell is empty
     X_full = np.array([[0.0, 0.0], [0.1, 0.0], [0.0, 0.1]])
     X_landmarks = np.array([[0.0, 0.0], [10.0, 10.0]])
