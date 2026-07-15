@@ -70,3 +70,19 @@ Kernel PCovC
     .. automethod:: inverse_transform
     .. automethod:: decision_function
     .. automethod:: score
+
+.. _SketchMap-api:
+
+SketchMap
+---------
+
+Sketch-Map [Ceriotti2011]_ is a nonlinear dimensionality-reduction
+algorithm that selectively preserves intermediate-range pairwise
+distances using sigmoid transforms.
+
+.. autoclass:: skmatter.decomposition.SketchMap
+    :show-inheritance:
+    :special-members:
+
+    .. automethod:: fit
+    .. automethod:: fit_transform

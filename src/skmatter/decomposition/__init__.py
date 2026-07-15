@@ -19,6 +19,11 @@ now interpolates between kernel ridge regression (:math:`\alpha = 0`) and
 kernel principal components analysis (KPCA, :math:`\alpha = 1`). A non-linear version
 of PCovC, Kernel Principal Covariates Classification (KPCovC), is also provided.
 
+Sketch-Map, introduced in [Ceriotti2011]_, is a nonlinear dimensionality reduction
+technique that selectively focuses on intermediate-range pairwise distances using
+sigmoid transformations. A follow-up study [Ceriotti2013]_ demonstrated its
+transferability and descriptive power.
+
 The module includes:
 
 * :ref:`PCovR-api` the standard Principal Covariates Regression. Utilises a
@@ -33,6 +38,7 @@ The module includes:
   original PCovR method, proposed in [Helfrecht2020]_.
 * :ref:`KPCovC-api` the Kernel Principal Covariates Classification.
   A kernel-based modification on the original PCovC method.
+* :ref:`SketchMap-api` the Sketch-Map algorithm for nonlinear dimensionality reduction.
 """
 
 from ._pcov import _BasePCov
@@ -44,6 +50,8 @@ from ._pcovc import PCovC
 from ._kernel_pcovr import KernelPCovR
 from ._kernel_pcovc import KernelPCovC
 
+from ._sketchmap import SketchMap
+
 __all__ = [
     "_BasePCov",
     "_BaseKPCov",
@@ -51,4 +59,5 @@ __all__ = [
     "PCovC",
     "KernelPCovR",
     "KernelPCovC",
+    "SketchMap",
 ]
