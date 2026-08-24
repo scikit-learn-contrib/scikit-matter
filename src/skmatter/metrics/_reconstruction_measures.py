@@ -60,6 +60,16 @@ def pointwise_global_reconstruction_error(
     -------
     pointwise_global_reconstruction_error : numpy.ndarray
         The global reconstruction error for each test sample/point.
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> from skmatter.metrics import pointwise_global_reconstruction_error
+    >>> X = np.random.RandomState(0).randn(100, 10)
+    >>> Y = X[:, :5]
+    >>> errors = pointwise_global_reconstruction_error(X, Y)
+    >>> errors.shape[0] == 50
+    True
     """
     train_idx, test_idx, scaler, estimator = check_global_reconstruction_measures_input(
         X, Y, train_idx, test_idx, scaler, estimator
@@ -126,6 +136,16 @@ def global_reconstruction_error(
     -------
     global_reconstruction_error : ndarray
         The global reconstruction error
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> from skmatter.metrics import global_reconstruction_error
+    >>> X = np.random.RandomState(0).randn(100, 10)
+    >>> Y = X[:, :5]
+    >>> gre = global_reconstruction_error(X, Y)
+    >>> bool(gre < 1e-10)
+    True
     """
     pointwise_global_reconstruction_error_values = (
         pointwise_global_reconstruction_error(
