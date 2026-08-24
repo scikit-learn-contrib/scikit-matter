@@ -1139,18 +1139,26 @@ class _PCovFPS(GreedySelector):
 
         self.norms_ = np.diag(self.pcovr_distance_)
 
-        if self.initialize == "random":
-            random_state = check_random_state(self.random_state)
-            initialize = random_state.randint(X.shape[self._axis])
-        elif isinstance(self.initialize, numbers.Integral):
-            initialize = self.initialize
-        else:
-            raise ValueError("Invalid value of the initialize parameter")
-
-        self.selected_idx_[0] = initialize
         self.hausdorff_ = np.full(X.shape[self._axis], np.inf)
         self.hausdorff_at_select_ = np.full(X.shape[self._axis], np.inf)
-        self._update_post_selection(X, y, self.selected_idx_[0])
+
+        if isinstance(self.initialize, (np.ndarray, list)):
+            if all(isinstance(i, numbers.Integral) for i in self.initialize):
+                for i, val in enumerate(self.initialize):
+                    self.selected_idx_[i] = val
+                    self._update_post_selection(X, y, self.selected_idx_[i])
+            else:
+                raise ValueError("Invalid value of the initialize parameter")
+        elif self.initialize == "random":
+            random_state = check_random_state(self.random_state)
+            initialize = random_state.randint(X.shape[self._axis])
+            self.selected_idx_[0] = initialize
+            self._update_post_selection(X, y, self.selected_idx_[0])
+        elif isinstance(self.initialize, numbers.Integral):
+            self.selected_idx_[0] = self.initialize
+            self._update_post_selection(X, y, self.selected_idx_[0])
+        else:
+            raise ValueError("Invalid value of the initialize parameter")
 
     def _update_hausdorff(self, X, y, last_selected):
         self.hausdorff_at_select_[last_selected] = self.hausdorff_[last_selected]
