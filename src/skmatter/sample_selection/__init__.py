@@ -11,5 +11,14 @@ from ._base import (
     PCovFPS,
 )
 from ._voronoi_fps import VoronoiFPS
+from ._voronoi_weights import voronoi_weights
 
-__all__ = ["PCovFPS", "PCovCUR", "FPS", "CUR", "DirectionalConvexHull", "VoronoiFPS"]
+__all__ = [
+    "PCovFPS",
+    "PCovCUR",
+    "FPS",
+    "CUR",
+    "DirectionalConvexHull",
+    "VoronoiFPS",
+    "voronoi_weights",
+]

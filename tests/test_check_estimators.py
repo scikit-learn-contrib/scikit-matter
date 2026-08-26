@@ -1,6 +1,6 @@
 from sklearn.utils.estimator_checks import parametrize_with_checks
 
-from skmatter.decomposition import KernelPCovR, PCovC, PCovR
+from skmatter.decomposition import KernelPCovR, PCovC, PCovR, SketchMap
 from skmatter.feature_selection import CUR as fCUR
 from skmatter.feature_selection import FPS as fFPS
 from skmatter.feature_selection import PCovCUR as fPCovCUR
@@ -14,6 +14,7 @@ from skmatter.preprocessing import KernelNormalizer, StandardFlexibleScaler
         KernelPCovR(mixing=0.5),
         PCovR(mixing=0.5),
         PCovC(mixing=0.5),
+        SketchMap(),
         fCUR(),
         fFPS(),
         fPCovCUR(),
@@ -21,7 +22,7 @@ from skmatter.preprocessing import KernelNormalizer, StandardFlexibleScaler
         Ridge2FoldCV(),
         KernelNormalizer(),
         StandardFlexibleScaler(),
-    ]
+    ],
 )
 def test_sklearn_compatible_estimator(estimator, check):
     """Test of the estimators are compatible with sklearn."""

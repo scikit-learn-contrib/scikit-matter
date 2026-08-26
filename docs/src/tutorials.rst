@@ -8,3 +8,4 @@
   examples/regression/index
   examples/reconstruction/index
   examples/neighbors/index
+  examples/decomposition/index

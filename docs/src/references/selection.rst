@@ -150,3 +150,19 @@ Directional Convex Hull (DCH)
    :members:
    :undoc-members:
    :inherited-members:
+
+
+.. _voronoi-weights-api:
+
+Voronoi Weights
+---------------
+
+Landmark selections such as :ref:`FPS-api` cover a dataset evenly, and in doing so
+discard how densely each region was sampled.
+:func:`~skmatter.sample_selection.voronoi_weights` puts that information back by
+weighting every landmark with the number of points of the full dataset that fall in its
+Voronoi cell. The weights are ``sample_weight`` for a weighted sketch-map fit
+(:ref:`SketchMap-api`), or for any other landmark-based method where dense regions
+should count in proportion to their population [Ceriotti2013]_.
+
+.. autofunction:: skmatter.sample_selection.voronoi_weights

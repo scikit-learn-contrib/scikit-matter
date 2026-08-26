@@ -1,3 +1,5 @@
+.. _bibliography:
+
 References
 ############
 
@@ -23,6 +25,17 @@ References
     Sandip De, Edgar A. Engel, and Andrea Anelli. "Chemical Shifts in Molecular Solids
     by Machine Learning Datasets", Materials Cloud Archive 2019.0023/v2 (2019),
     https://doi.org/10.24435/materialscloud:2019.0023/v2.
+
+.. [Ceriotti2011]
+    Michele Ceriotti, Gareth A. Tribello, and Michele Parrinello, "Simplifying the
+    representation of complex free-energy landscapes using sketch-map", Proceedings of
+    the National Academy of Sciences, 108(32), 13023-13028 (2011).
+    https://doi.org/10.1073/pnas.1108486108
+
+.. [Ceriotti2013]
+    Michele Ceriotti, Gareth A. Tribello, and Michele Parrinello, "Demonstrating the
+    transferability and the descriptive power of sketch-map", Journal of Chemical Theory
+    and Computation, 9(3), 1521-1532 (2013). https://doi.org/10.1021/ct3010563
 
 .. [Helfrecht2020]
     Benjamin A Helfrecht, Rose K Cersonsky, Guillaume Fraux, and Michele Ceriotti,

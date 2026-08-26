@@ -52,3 +52,17 @@ Notebook Examples
    :start-line: 4
 .. include:: examples/pcovc/index.rst
    :start-line: 4
+
+.. _getting_started-decomposition:
+
+Non-linear Dimensionality Reduction
+-----------------------------------
+
+``scikit-matter`` provides :ref:`sketch-map <SketchMap-api>` [Ceriotti2011]_, a
+nonlinear projection method introduced in the example below.
+
+Notebook Examples
+^^^^^^^^^^^^^^^^^
+
+.. include:: examples/decomposition/index.rst
+   :start-line: 4
