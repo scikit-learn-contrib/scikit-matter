@@ -13,6 +13,10 @@ The rules for CHANGELOG file:
 
 Unreleased
 ----------
+
+0.4.0 (2026/08/26)
+------------------
+
 - Add ``SketchMap``, a nonlinear dimensionality-reduction method validated against the
   reference C++ implementation, together with a gallery example
 
