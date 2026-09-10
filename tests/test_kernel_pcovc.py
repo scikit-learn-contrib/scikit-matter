@@ -43,7 +43,7 @@ def Y(random_state):
 def kpcovc_model():
     def _model(
         mixing=0.5,
-        classifier=LogisticRegression(),
+        classifier=LogisticRegression(max_iter=2000),
         n_components=4,
         scale_z=True,
         **kwargs,
@@ -178,7 +178,8 @@ def test_prefit_classifier(X, Y):
     classifier = LinearSVC()
     classifier.fit(K, Y)
     kpcovc = KernelPCovC(mixing=0.5, classifier=classifier, **kernel_params)
-    kpcovc.fit(X, Y)
+    with pytest.warns(match="does not automatically center Z"):
+        kpcovc.fit(X, Y)
     Z_classifier = classifier.decision_function(K)
     W_classifier = classifier.coef_.T
     Z_kpcovc = kpcovc.z_classifier_.decision_function(K)
@@ -240,14 +241,17 @@ def test_precomputed_classification(X, Y, error_tol):
     classifier.fit(K, Y)
     W = classifier.coef_.T
     kpcovc1 = KernelPCovC(mixing=0.5, classifier="precomputed", **kernel_params)
-    kpcovc1.fit(X, Y, W)
+    with pytest.warns(match="does not automatically center Z"):
+        kpcovc1.fit(X, Y, W)
     t1 = kpcovc1.transform(X)
     kpcovc2 = KernelPCovC(mixing=0.5, classifier=classifier, **kernel_params)
-    kpcovc2.fit(X, Y)
+    with pytest.warns(match="does not automatically center Z"):
+        kpcovc2.fit(X, Y)
     t2 = kpcovc2.transform(X)
     assert np.linalg.norm(t1 - t2) < error_tol
     kpcovc3 = KernelPCovC(mixing=0.5, classifier="precomputed", **kernel_params)
-    kpcovc3.fit(X, Y)
+    with pytest.warns(match="does not automatically (center|scale) Z"):
+        kpcovc3.fit(X, Y)
     t3 = kpcovc3.transform(X)
     assert np.linalg.norm(t3 - t2) < error_tol
     assert np.linalg.norm(t3 - t1) < error_tol
@@ -266,6 +270,7 @@ def test_z_scaling(kpcovc_model, X, Y):
     kpcovc.fit(X, Y)
     kpcovc = kpcovc_model(n_components=2, scale_z=False, z_mean_tol=0, z_var_tol=0)
     with warnings.catch_warnings(record=True) as w:
+        warnings.simplefilter("always")
         kpcovc.fit(X, Y)
         messages = [str(wi.message) for wi in w]
         assert any("does not automatically center Z" in m for m in messages)
@@ -288,7 +293,7 @@ def test_kernel_types(X, Y):
         kpcovc = KernelPCovC(
             mixing=0.5,
             n_components=2,
-            classifier=LogisticRegression(),
+            classifier=LogisticRegression(max_iter=2000),
             kernel=kernel,
             **kernel_params.get(kernel, {}),
         )
@@ -321,7 +326,8 @@ def test_svd_solvers(kpcovc_model, X, Y):
             Yr = np.hstack(np.repeat(Y.copy(), n_copies)).reshape(
                 X.shape[0] * n_copies, -1
             )
-            kpcovc.fit(Xr, Yr)
+            with pytest.warns(exceptions.DataConversionWarning):
+                kpcovc.fit(Xr, Yr)
         else:
             kpcovc.fit(X, Y)
         assert kpcovc.fit_svd_solver_ == solver
