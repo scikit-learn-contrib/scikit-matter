@@ -1,6 +1,8 @@
+import warnings
+
 import numpy as np
 from scipy.linalg import eigh
-from scipy.optimize import curve_fit
+from scipy.optimize import OptimizeWarning, curve_fit
 
 
 def _sigmoid_transform(distances, sigma, a, b):
@@ -220,9 +222,12 @@ def _analyze_distance_distribution(distances, n_bins=200, sample_weight=None):
 
     max_distance = np.percentile(d, 99.9)
     bin_edges = np.linspace(0, max_distance, n_bins + 1)
-    prob_density, _ = np.histogram(
-        d, bins=bin_edges, density=True, weights=pair_weights
-    )
+    if max_distance == 0 or (pair_weights is not None and pair_weights.sum() == 0):
+        prob_density = np.zeros(n_bins)
+    else:
+        prob_density, _ = np.histogram(
+            d, bins=bin_edges, density=True, weights=pair_weights
+        )
     bin_centers = 0.5 * (bin_edges[:-1] + bin_edges[1:])
 
     peak_idx = np.argmax(prob_density)
@@ -243,13 +248,15 @@ def _analyze_distance_distribution(distances, n_bins=200, sample_weight=None):
     if np.sum(left_mask) > 3:
         try:
             initial_guess = [np.max(prob_density), peak_distance, 1.0]
-            optimal_params, _ = curve_fit(
-                _gaussian,
-                bin_centers[left_mask],
-                prob_density[left_mask],
-                p0=initial_guess,
-                maxfev=5000,
-            )
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore", OptimizeWarning)
+                optimal_params, _ = curve_fit(
+                    _gaussian,
+                    bin_centers[left_mask],
+                    prob_density[left_mask],
+                    p0=initial_guess,
+                    maxfev=5000,
+                )
             analysis["gaussian_std"] = abs(optimal_params[2])
 
             # the gaussian range reaches about 3 sigma from the peak

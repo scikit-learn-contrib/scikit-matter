@@ -312,6 +312,7 @@ def test_precomputed_regression(kpcovr_model, X, Y, error_tol):
     assert np.linalg.norm(t1 - t2) < error_tol
 
 
+@pytest.mark.filterwarnings("ignore:Singular matrix:UserWarning")
 @pytest.mark.parametrize(
     "kernel,kernel_params",
     [
