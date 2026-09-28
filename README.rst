@@ -1,7 +1,7 @@
 scikit-matter
 =============
 
-.. image::skmatterlogo.png
+.. image:: /skmatterlogo.png
    :alt: scikit-matter logo
 
 |tests| |codecov| |pypi| |conda| |docs-stable| |docs-latest| |doi|
