@@ -1,6 +1,9 @@
 scikit-matter
 =============
 
+..image:: skmatterlogo.png
+   :alt: scikit-matter logo
+
 |tests| |codecov| |pypi| |conda| |docs-stable| |docs-latest| |doi|
 
 A collection of ``scikit-learn`` compatible utilities that implement methods born out of
