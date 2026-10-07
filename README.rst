@@ -1,5 +1,8 @@
-scikit-matter
+.. image:: /skmatterlogo.png
+   :alt: scikit-matter logo
+   :width: 200px
 =============
+
 
 |tests| |codecov| |pypi| |conda| |docs-stable| |docs-latest| |doi|
 
