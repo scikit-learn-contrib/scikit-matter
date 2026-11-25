@@ -101,7 +101,7 @@ Thanks goes to all people that make scikit-matter possible:
    :alt: Code coverage
    :target: https://codecov.io/gh/scikit-learn-contrib/scikit-matter/
 
-.. |docs-stable| image:: https://img.shields.io/badge/📚_Documentation-stable-sucess
+.. |docs-stable| image:: https://img.shields.io/badge/📚_Documentation-stable-success
    :alt: Documentation of stable released version
    :target: `documentation`_
 
