@@ -425,9 +425,15 @@ class KernelPCovR(_BaseKPCov):
         K_VV = self._get_kernel(X)
 
         if self.center:
+            K_VN_row_means = np.mean(K_VN, axis=1)
+            K_VV = (
+                K_VV
+                - K_VN_row_means[:, np.newaxis]
+                - K_VN_row_means[np.newaxis, :]
+                + self.centerer_.K_fit_all_
+            ) / self.centerer_.scale_
             K_NN = self.centerer_.transform(K_NN)
             K_VN = self.centerer_.transform(K_VN)
-            K_VV = self.centerer_.transform(K_VV)
 
         ypred = K_VN @ self.pky_
         Lkrr = np.linalg.norm(y - ypred) ** 2 / np.linalg.norm(y) ** 2
@@ -440,6 +446,6 @@ class KernelPCovR(_BaseKPCov):
             @ np.linalg.lstsq(t_n.T @ t_n, np.eye(t_n.shape[1]), rcond=self.tol)[0]
             @ t_v.T
         )
-        Lkpca = np.trace(K_VV - 2 * K_VN @ w + w.T @ K_VV @ w) / np.trace(K_VV)
+        Lkpca = np.trace(K_VV - 2 * K_VN @ w + w.T @ K_NN @ w) / np.trace(K_VV)
 
         return -sum([Lkpca, Lkrr])

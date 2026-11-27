@@ -141,6 +141,49 @@ def test_kpcovr_error(kpcovr_model, X, Y, error_tol):
         assert np.isclose(kpcovr.score(X, Y), -sum([Lkpca, Lkrr]), error_tol)
 
 
+@pytest.mark.parametrize("center", [False, True])
+@pytest.mark.parametrize("n_val", [15, 60])
+def test_score_out_of_sample(X, Y, error_tol, center, n_val):
+    """Check KernelPCovR.score on validation sets with different and equal sizes."""
+    X_train, Y_train = X[:60], Y[:60]
+    X_val, Y_val = X[100 - n_val :], Y[100 - n_val :]
+
+    kpcovr = KernelPCovR(
+        mixing=0.5,
+        n_components=4,
+        kernel="linear",
+        center=center,
+        svd_solver="full",
+    )
+    kpcovr.fit(X_train, Y_train)
+
+    if center:
+        mean = np.mean(X_train, axis=0)
+        scale = np.sqrt(kpcovr.centerer_.scale_)
+        X_train_feat = (X_train - mean) / scale
+        X_val_feat = (X_val - mean) / scale
+    else:
+        X_train_feat = X_train
+        X_val_feat = X_val
+
+    t_n = kpcovr.transform(X_train)
+    t_v = kpcovr.transform(X_val)
+    w = (
+        t_n
+        @ np.linalg.lstsq(t_n.T @ t_n, np.eye(t_n.shape[1]), rcond=kpcovr.tol)[0]
+        @ t_v.T
+    )
+    Lkpca = (
+        np.linalg.norm(X_val_feat - w.T @ X_train_feat) ** 2
+        / np.linalg.norm(X_val_feat) ** 2
+    )
+    Lkrr = (
+        np.linalg.norm(Y_val - kpcovr.predict(X_val)) ** 2 / np.linalg.norm(Y_val) ** 2
+    )
+
+    assert np.isclose(kpcovr.score(X_val, Y_val), -(Lkpca + Lkrr), rtol=error_tol)
+
+
 def test_nonfitted_failure(X):
     """
     Check that KernelPCovR will raise a `NonFittedError` if
