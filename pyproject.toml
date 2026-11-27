@@ -89,9 +89,16 @@ addopts = [
     "--cov-report=",
     "--import-mode=append",
 ]
-# filterwarnings = [
-#     "error",
-# ]
+filterwarnings = [
+    "error",
+    "ignore:Setting the shape on a NumPy array has been deprecated:DeprecationWarning",
+    "ignore:Passing a non-Collection iterable to parametrize is deprecated:pytest.PytestRemovedIn10Warning",
+    "ignore:This class does not automatically center Z:UserWarning",
+    "ignore:This class does not automatically scale Z:UserWarning",
+    "ignore:This class does not automatically center data:UserWarning",
+    "ignore:Column vector contains only zeros:UserWarning",
+    "ignore:Score threshold of:UserWarning",
+]
 testpaths = ["tests"]
 
 [tool.ruff]

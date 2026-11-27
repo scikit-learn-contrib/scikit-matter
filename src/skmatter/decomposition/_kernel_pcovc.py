@@ -323,15 +323,9 @@ class KernelPCovC(LinearClassifierMixin, _BaseKPCov):
 
         if self.classifier != "precomputed":
             if self.classifier is None:
-                classifier = LogisticRegression()
+                classifier = LogisticRegression(max_iter=2000)
             else:
                 classifier = self.classifier
-
-            # for convergence warnings
-            if hasattr(classifier, "max_iter") and (
-                classifier.max_iter is None or classifier.max_iter < 500
-            ):
-                classifier.max_iter = 500
 
             # Check if classifier is fitted; if not, fit with precomputed K
             self.z_classifier_ = check_cl_fit(classifier, K, Y)
@@ -339,9 +333,9 @@ class KernelPCovC(LinearClassifierMixin, _BaseKPCov):
 
         else:
             # If precomputed, use default classifier to predict Y from T
-            classifier = LogisticRegression(max_iter=500)
+            classifier = LogisticRegression(max_iter=2000)
             if W is None:
-                W = LogisticRegression().fit(K, Y).coef_.T
+                W = LogisticRegression(max_iter=2000).fit(K, Y).coef_.T
 
         Z = K @ W
         if self.scale_z:

@@ -608,12 +608,13 @@ class TestReferenceCpp:
     cpp_stress = 0.0129757
 
     @pytest.fixture(scope="class")
-    def fitted(self):
+    @classmethod
+    def fitted(cls):
         X = load_digits().data[:64].astype(np.float64)
         cpp_map = np.loadtxt(
             join(dirname(__file__), "data", "sketchmap_dimred_reference.dat")
         )
-        sm = SketchMap(n_components=2, **self.params).fit(X)
+        sm = SketchMap(n_components=2, **cls.params).fit(X)
         return X, cpp_map, sm
 
     def test_objective_matches_cpp(self, fitted):

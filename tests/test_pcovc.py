@@ -44,9 +44,10 @@ def Y():
 
 
 def test_against_pca(X, Y):
-    pcovc = PCovC(mixing=1.0, n_components=2, space="feature", svd_solver="full").fit(
-        X, Y
-    )
+    with pytest.warns(match="does not automatically scale Z"):
+        pcovc = PCovC(
+            mixing=1.0, n_components=2, space="feature", svd_solver="full"
+        ).fit(X, Y)
     pca = PCA(n_components=2, svd_solver="full").fit(X)
     np.testing.assert_allclose(pca.singular_values_, pcovc.singular_values_)
     np.testing.assert_allclose(pca.explained_variance_, pcovc.explained_variance_)
@@ -194,7 +195,8 @@ def test_bad_n_components(pcovc_model, X, Y):
         pcovc = pcovc_model(
             n_components="mle", classifier=LinearSVC(), svd_solver="full"
         )
-        pcovc.fit(X[49:51], Y[49:51])
+        with pytest.warns(match="does not automatically center data"):
+            pcovc.fit(X[49:51], Y[49:51])
 
     with pytest.raises(ValueError, match="n_components=.*must be between"):
         pcovc = pcovc_model(n_components=-1, svd_solver="auto")
@@ -246,6 +248,7 @@ def test_z_scaling(pcovc_model, X, Y):
     pcovc.fit(X, Y)
     pcovc = pcovc_model(n_components=2, scale_z=False, z_mean_tol=0, z_var_tol=0)
     with warnings.catch_warnings(record=True) as w:
+        warnings.simplefilter("always")
         pcovc.fit(X, Y)
         msg0 = str(w[0].message)
         msg1 = str(w[1].message)
@@ -265,7 +268,8 @@ def test_T_shape(pcovc_model, X, Y):
 def test_Y_Shape(pcovc_model, X, Y):
     pcovc = pcovc_model()
     Y2 = np.vstack(Y)
-    pcovc.fit(X, Y2)
+    with pytest.warns(exceptions.DataConversionWarning, match="column-vector"):
+        pcovc.fit(X, Y2)
     assert pcovc.pxz_.shape[0] == X.shape[1]
     assert pcovc.ptz_.shape[0] == pcovc.n_components_
 
@@ -294,7 +298,8 @@ def test_decision_function(pcovc_model, X, Y):
 
 def test_default_ncomponents(X, Y):
     pcovc = PCovC(mixing=0.5)
-    pcovc.fit(X, Y)
+    with pytest.warns(match="does not automatically scale Z"):
+        pcovc.fit(X, Y)
     assert pcovc.n_components_ == min(X.shape)
 
 
@@ -382,7 +387,8 @@ def test_scale_z_parameter(pcovc_model, X, Y):
     pcovc_scaled = pcovc_model(scale_z=True)
     pcovc_scaled.fit(X, Y)
     pcovc_unscaled = pcovc_model(scale_z=False)
-    pcovc_unscaled.fit(X, Y)
+    with pytest.warns(match="does not automatically scale Z"):
+        pcovc_unscaled.fit(X, Y)
     assert not np.allclose(
         pcovc_scaled.singular_values_, pcovc_unscaled.singular_values_
     )
